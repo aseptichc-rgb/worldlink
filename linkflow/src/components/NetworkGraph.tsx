@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import * as d3Force from 'd3-force';
 import { GraphNode, GraphLink, Member, getCategoryColor } from '@/types';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
@@ -69,9 +70,17 @@ export default function NetworkGraph({
     const categoryMatch = selectedCategories.length === 0 ||
       selectedCategories.some(cat => node.category.includes(cat));
 
+    const query = searchQuery.toLowerCase();
+    const member = node.member;
     const searchMatch = searchQuery === '' ||
-      node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      node.company.toLowerCase().includes(searchQuery.toLowerCase());
+      node.name.toLowerCase().includes(query) ||
+      node.company.toLowerCase().includes(query) ||
+      node.category.toLowerCase().includes(query) ||
+      member.phone.includes(searchQuery) ||
+      member.email.toLowerCase().includes(query) ||
+      member.description.toLowerCase().includes(query) ||
+      member.role.toLowerCase().includes(query) ||
+      member.tags.some(tag => tag.toLowerCase().includes(query));
 
     return categoryMatch && searchMatch;
   });
@@ -84,22 +93,39 @@ export default function NetworkGraph({
     return filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId);
   });
 
-  // 검색어가 있으면 해당 노드로 포커스
+  // 필터링된 노드들의 중심으로 포커스
   useEffect(() => {
-    if (searchQuery && fgRef.current) {
-      const matchedNode = filteredNodes.find(
-        n => n.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      if (matchedNode) {
-        fgRef.current.centerAt(matchedNode.x, matchedNode.y, 1000);
-        fgRef.current.zoom(2, 1000);
-      }
+    if (fgRef.current && filteredNodes.length > 0) {
+      // 필터링된 노드들의 중심점 계산
+      const sumX = filteredNodes.reduce((acc, n) => acc + (n.x || 0), 0);
+      const sumY = filteredNodes.reduce((acc, n) => acc + (n.y || 0), 0);
+      const centerX = sumX / filteredNodes.length;
+      const centerY = sumY / filteredNodes.length;
+
+      // 노드들의 범위 계산
+      const minX = Math.min(...filteredNodes.map(n => n.x || 0));
+      const maxX = Math.max(...filteredNodes.map(n => n.x || 0));
+      const minY = Math.min(...filteredNodes.map(n => n.y || 0));
+      const maxY = Math.max(...filteredNodes.map(n => n.y || 0));
+      const rangeX = maxX - minX;
+      const rangeY = maxY - minY;
+
+      // 범위에 따라 줌 레벨 계산
+      const padding = 100;
+      const zoomX = dimensions.width / (rangeX + padding * 2);
+      const zoomY = dimensions.height / (rangeY + padding * 2);
+      const zoom = Math.min(zoomX, zoomY, 3); // 최대 줌 3배 제한
+
+      setTimeout(() => {
+        fgRef.current.centerAt(centerX, centerY, 500);
+        fgRef.current.zoom(zoom, 500);
+      }, 100);
     }
-  }, [searchQuery, filteredNodes]);
+  }, [searchQuery, selectedCategories, filteredNodes.length, dimensions]);
 
   // 노드 그리기 함수
   const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const size = node.val * 2;
+    const size = node.val * 1.5; // 노드 크기 줄임
     const fontSize = Math.max(10 / globalScale, 3);
     const isHovered = hoveredNode?.id === node.id;
     const isHighlighted = searchQuery && (
@@ -153,17 +179,16 @@ export default function NetworkGraph({
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 
-    // 이름 라벨 (호버 또는 줌 시)
-    if (isHovered || isHighlighted || globalScale > 1.5) {
-      ctx.font = `${fontSize}px Sans-Serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = '#fff';
-      ctx.fillText(node.name, node.x, node.y + size + 3);
-    }
+    // 이름 라벨 - 항상 표시
+    const labelFontSize = Math.max(12 / globalScale, 4);
+    ctx.font = `bold ${labelFontSize}px Sans-Serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = isHovered || isHighlighted ? '#fff' : 'rgba(255,255,255,0.9)';
+    ctx.fillText(node.name, node.x, node.y + size + 5);
   }, [imageCache, hoveredNode, searchQuery]);
 
-  // 링크 그리기
+  // 링크 그리기 - 같은 카테고리(초록)와 타 카테고리(보라) 구분
   const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D) => {
     const start = link.source;
     const end = link.target;
@@ -174,21 +199,31 @@ export default function NetworkGraph({
     ctx.moveTo(start.x, start.y);
     ctx.lineTo(end.x, end.y);
 
+    // 연결 강도에 따라 선 굵기와 투명도 조절
+    const strength = link.strength || 0.1;
+
+    // 같은 카테고리: 초록색, 타 카테고리: 보라색
     if (link.type === 'category') {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(34, 197, 94, ${0.3 + strength * 0.5})`;
     } else {
-      ctx.strokeStyle = 'rgba(147, 51, 234, 0.3)';
-      ctx.lineWidth = 0.5;
-      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = `rgba(168, 85, 247, ${0.3 + strength * 0.5})`;
     }
+    ctx.lineWidth = 1 + strength * 2;
 
     ctx.stroke();
-    ctx.setLineDash([]);
+  }, []);
+
+  // 초기 줌 설정 - 전체가 보이도록
+  useEffect(() => {
+    if (fgRef.current) {
+      setTimeout(() => {
+        fgRef.current.zoomToFit(500, 100);
+      }, 300);
+    }
   }, []);
 
   return (
-    <div className="bg-gray-900">
+    <div className="bg-gray-900" style={{ cursor: 'grab' }}>
       <ForceGraph2D
         ref={fgRef}
         graphData={{ nodes: filteredNodes, links: filteredLinks }}
@@ -199,14 +234,27 @@ export default function NetworkGraph({
         linkCanvasObject={linkCanvasObject}
         nodeRelSize={6}
         linkDirectionalParticles={0}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        cooldownTicks={100}
-        onNodeClick={(node: any) => onNodeClick(node as GraphNode)}
+        d3AlphaDecay={1}
+        d3VelocityDecay={1}
+        cooldownTicks={0}
+        warmupTicks={0}
+        onNodeClick={(node: any) => {
+          if (node) {
+            onNodeClick(node as GraphNode);
+          }
+        }}
         onNodeHover={(node: any) => onNodeHover(node as GraphNode | null)}
-        enableNodeDrag={true}
-        enableZoomInteraction={true}
-        enablePanInteraction={true}
+        nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
+          const size = (node.val || 8) * 2;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI, false);
+          ctx.fill();
+        }}
+        enableNodeDrag={false}
+        enableZoomPanInteraction={true}
+        minZoom={0.1}
+        maxZoom={10}
       />
     </div>
   );

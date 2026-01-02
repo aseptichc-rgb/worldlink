@@ -9,6 +9,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 메인 네트워크 페이지에서만 스크롤 숨김 */
+body:has(.network-page) {
   overflow: hidden;
 }
 

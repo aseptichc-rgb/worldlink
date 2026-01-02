@@ -54,7 +54,7 @@ export default function Sidebar({
         <div className="relative">
           <input
             type="text"
-            placeholder="이름 또는 소속 검색..."
+            placeholder="이름, 소속, 전화번호, 이메일..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
