@@ -10,7 +10,14 @@
       "Bash(start http://localhost:3000)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd LinkFlow healthcare network visualization web app\n\n- Next.js + TypeScript + Tailwind CSS 기반 인맥 시각화 플랫폼\n- react-force-graph-2d를 이용한 인터랙티브 네트워크 그래프\n- 50명 헬스케어 인맥 데이터 및 얼굴 사진 포함\n- 카테고리별 필터링, 검색, 프로필 카드 기능\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(cmd /c \"dir /s /b *.json *.html 2>nul\")",
+      "Bash(cmd /c \"dir c:\\\\You are great\\\\ /b\")",
+      "Bash(cmd /c \"dir \"c:You are great\" /b\")",
+      "Bash(cmd /c \"git log --oneline -5\")",
+      "Bash(cmd /c \"cd /d c:\\\\You are great\\\\connect && git log --oneline -5\")",
+      "Bash(cmd /c \"cd c:\\\\You are great\\\\connect & git log --oneline\")",
+      "Bash(git checkout:*)"
     ]
   }
 }

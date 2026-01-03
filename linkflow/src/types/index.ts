@@ -21,11 +21,6 @@ export interface GraphNode {
   val: number;
   color: string;
   member: Member;
-  // 고정 좌표
-  x?: number;
-  y?: number;
-  fx?: number;
-  fy?: number;
 }
 
 export interface GraphLink {
