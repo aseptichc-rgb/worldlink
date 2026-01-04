@@ -6,11 +6,15 @@ import membersData from '../../../data/members.json';
 import EditMemberModal from '@/components/EditMemberModal';
 
 const MAIN_CATEGORIES = [
-  '의료기기/솔루션',
-  '투자/법률/특허',
-  '제약/바이오',
+  '의료기기',
+  '솔루션',
+  '투자',
+  '법률',
+  '특허',
+  '제약',
+  '바이오',
   '의료기관',
-  '기타',
+  '비즈니스',
 ];
 
 export default function AdminPage() {
@@ -110,9 +114,10 @@ export default function AdminPage() {
       phone: '',
       email: '',
       description: '',
-      category: '의료기기/솔루션',
+      category: '의료기기',
       tags: [],
       photoUrl: null,
+      specialRole: null,
     };
     setEditingMember(newMember);
     setIsAddingNew(true);
@@ -212,6 +217,11 @@ export default function AdminPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
                     <h3 className="text-lg font-semibold">{member.name}</h3>
+                    {member.specialRole && (
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-600 text-white">
+                        {member.specialRole}
+                      </span>
+                    )}
                     <span
                       className="px-2 py-0.5 rounded text-xs font-medium"
                       style={{

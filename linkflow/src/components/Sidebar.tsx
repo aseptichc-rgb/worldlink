@@ -1,7 +1,5 @@
 'use client';
 
-import { CATEGORY_COLORS } from '@/types';
-
 interface SidebarProps {
   categories: string[];
   selectedCategories: string[];
@@ -13,11 +11,15 @@ interface SidebarProps {
 }
 
 const MAIN_CATEGORIES = [
-  '의료기기/솔루션',
-  '투자/법률/특허',
-  '제약/바이오',
-  '의료기관',
-  '기타',
+  { name: '의료기기', color: '#3B82F6' },
+  { name: '솔루션', color: '#06B6D4' },
+  { name: '투자', color: '#EF4444' },
+  { name: '법률', color: '#F97316' },
+  { name: '특허', color: '#FB923C' },
+  { name: '제약', color: '#8B5CF6' },
+  { name: '바이오', color: '#A855F7' },
+  { name: '의료기관', color: '#10B981' },
+  { name: '비즈니스', color: '#F59E0B' },
 ];
 
 export default function Sidebar({
@@ -90,15 +92,13 @@ export default function Sidebar({
         </div>
 
         <div className="space-y-2">
-          {MAIN_CATEGORIES.map((category) => {
-            const color = CATEGORY_COLORS[category] || '#6B7280';
-            const isSelected = selectedCategories.length === 0 || selectedCategories.includes(category);
-            const count = categories.filter(c => c.includes(category) || category.includes(c.split('/')[0])).length;
+          {MAIN_CATEGORIES.map((cat) => {
+            const isSelected = selectedCategories.length === 0 || selectedCategories.includes(cat.name);
 
             return (
               <button
-                key={category}
-                onClick={() => handleCategoryToggle(category)}
+                key={cat.name}
+                onClick={() => handleCategoryToggle(cat.name)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                   isSelected
                     ? 'bg-gray-800 text-white'
@@ -107,9 +107,9 @@ export default function Sidebar({
               >
                 <span
                   className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: color, opacity: isSelected ? 1 : 0.4 }}
+                  style={{ backgroundColor: cat.color, opacity: isSelected ? 1 : 0.4 }}
                 />
-                <span className="flex-1 text-left text-sm">{category}</span>
+                <span className="flex-1 text-left text-sm">{cat.name}</span>
                 {isSelected && (
                   <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

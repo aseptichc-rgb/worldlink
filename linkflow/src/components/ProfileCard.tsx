@@ -19,14 +19,8 @@ export default function ProfileCard({ node, onClose }: ProfileCardProps) {
 
   return (
     <>
-      {/* 배경 오버레이 */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-      />
-
-      {/* 카드 */}
-      <div className="fixed right-0 top-0 h-screen w-[400px] bg-gray-900 border-l border-gray-800 z-50 overflow-y-auto animate-slide-in">
+      {/* 카드 - 오버레이 없이 사이드 패널만 표시 */}
+      <div className="fixed right-0 top-0 h-screen w-[380px] bg-gray-900 border-l border-gray-700 z-50 overflow-y-auto animate-slide-in shadow-2xl">
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}

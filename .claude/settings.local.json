@@ -17,7 +17,10 @@
       "Bash(cmd /c \"git log --oneline -5\")",
       "Bash(cmd /c \"cd /d c:\\\\You are great\\\\connect && git log --oneline -5\")",
       "Bash(cmd /c \"cd c:\\\\You are great\\\\connect & git log --oneline\")",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(cd c:You are greatconnectlinkflow)",
+      "Bash(cat:*)",
+      "Bash(cd:*)"
     ]
   }
 }

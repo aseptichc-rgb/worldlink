@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { Member } from '@/types';
 
 const MAIN_CATEGORIES = [
-  '의료기기/솔루션',
-  '투자/법률/특허',
-  '제약/바이오',
+  '의료기기',
+  '솔루션',
+  '투자',
+  '법률',
+  '특허',
+  '제약',
+  '바이오',
   '의료기관',
-  '기타',
+  '비즈니스',
 ];
 
 interface EditMemberModalProps {
@@ -39,6 +43,7 @@ export default function EditMemberModal({
     onSave({
       ...formData,
       tags,
+      specialRole: formData.specialRole?.trim() || null,
     });
   };
 
@@ -129,6 +134,24 @@ export default function EditMemberModal({
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
               />
             </div>
+          </div>
+
+          {/* 특별 보직 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              특별 보직
+            </label>
+            <input
+              type="text"
+              name="specialRole"
+              value={formData.specialRole || ''}
+              onChange={handleChange}
+              placeholder="예: 👑 회장, 부회장, 고문 등"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              네트워크 그래프에서 이름 아래 금색으로 표시됩니다. (비워두면 표시되지 않음)
+            </p>
           </div>
 
           {/* 연락처 */}

@@ -9,6 +9,7 @@ export interface Member {
   category: string;
   tags: string[];
   photoUrl: string | null;
+  specialRole?: string | null; // 특별 보직 (회장, 부회장 등)
 }
 
 export interface GraphNode {
@@ -21,6 +22,7 @@ export interface GraphNode {
   val: number;
   color: string;
   member: Member;
+  specialRole?: string | null;
 }
 
 export interface GraphLink {
@@ -36,15 +38,15 @@ export interface GraphData {
 }
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  '의료기기/솔루션': '#3B82F6',    // 파랑
-  '투자/법률/특허': '#EF4444',     // 빨강
-  '제약/바이오': '#8B5CF6',        // 보라
-  '의료기관': '#10B981',           // 초록
-  '기타': '#F59E0B',               // 노랑
-  '기타/공공': '#F59E0B',          // 노랑
-  '의료기관/솔루션': '#06B6D4',    // 청록
-  '의료기관/투자': '#14B8A6',      // 틸
-  '의료기관/바이오': '#22C55E',    // 라임
+  '의료기기': '#3B82F6',     // 파랑
+  '솔루션': '#06B6D4',       // 청록
+  '투자': '#EF4444',         // 빨강
+  '법률': '#F97316',         // 오렌지
+  '특허': '#FB923C',         // 연오렌지
+  '제약': '#8B5CF6',         // 보라
+  '바이오': '#A855F7',       // 연보라
+  '의료기관': '#10B981',     // 초록
+  '비즈니스': '#F59E0B',     // 노랑
 };
 
 export const getCategoryColor = (category: string): string => {
