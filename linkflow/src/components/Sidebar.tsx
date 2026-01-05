@@ -48,7 +48,7 @@ export default function Sidebar({
       {/* 헤더 */}
       <div className="p-6 border-b border-gray-800">
         <h1 className="text-2xl font-bold text-white mb-1">LinkFlow</h1>
-        <p className="text-sm text-gray-400">헬스케어 인사이트 네트워크</p>
+        <p className="text-sm text-gray-400">원우들의 인맥을 시각화해서 새로운 기회를 발견해보세요</p>
       </div>
 
       {/* 검색바 */}
