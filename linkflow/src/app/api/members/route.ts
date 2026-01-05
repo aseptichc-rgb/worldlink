@@ -6,13 +6,14 @@ const MEMBERS_KEY = 'linkflow:members';
 
 // Upstash Redis 클라이언트 초기화
 const getRedis = () => {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  // Vercel의 Upstash 통합은 KV_REST_API_* 형식 사용
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
     return null;
   }
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+  return new Redis({ url, token });
 };
 
 export async function GET() {
