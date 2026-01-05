@@ -23,6 +23,11 @@ export interface GraphNode {
   color: string;
   member: Member;
   specialRole?: string | null;
+  // force-graph 위치 속성
+  x?: number;
+  y?: number;
+  fx?: number;
+  fy?: number;
 }
 
 export interface GraphLink {
