@@ -4,10 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://connect-cyan-sigma.vercel.app"),
   title: "LinkFlow - 헬스케어 인사이트 네트워크",
-  description: "헬스케어 산업 인맥을 시각화하고 연결 고리를 발견하세요",
+  description: "헬스케어 퓨처포럼 2기 주소록",
   openGraph: {
     title: "LinkFlow - 헬스케어 인사이트 네트워크",
-    description: "헬스케어 산업 인맥을 시각화하고 연결 고리를 발견하세요",
+    description: "헬스케어 퓨처포럼 2기 주소록",
     images: [
       {
         url: "/og-image.png",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "LinkFlow - 헬스케어 인사이트 네트워크",
-    description: "헬스케어 산업 인맥을 시각화하고 연결 고리를 발견하세요",
+    description: "헬스케어 퓨처포럼 2기 주소록",
     images: ["/og-image.png"],
   },
 };
