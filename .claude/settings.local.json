@@ -26,7 +26,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(git commit:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(git remote set-url:*)"
     ]
   }
 }
