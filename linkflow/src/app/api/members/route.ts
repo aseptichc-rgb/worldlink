@@ -16,13 +16,19 @@ const getRedis = () => {
   return new Redis({ url, token });
 };
 
+// 캐싱 비활성화
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const redis = getRedis();
 
     // Redis 연결이 없으면 로컬 데이터 반환
     if (!redis) {
-      return NextResponse.json(membersData);
+      return NextResponse.json(membersData, {
+        headers: { 'Cache-Control': 'no-store, max-age=0' }
+      });
     }
 
     // Redis에서 데이터 가져오기
@@ -30,14 +36,20 @@ export async function GET() {
 
     // Redis에 데이터가 없으면 로컬 JSON 파일에서 로드
     if (!members) {
-      return NextResponse.json(membersData);
+      return NextResponse.json(membersData, {
+        headers: { 'Cache-Control': 'no-store, max-age=0' }
+      });
     }
 
-    return NextResponse.json(members);
+    return NextResponse.json(members, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' }
+    });
   } catch (error) {
     console.error('데이터 읽기 오류:', error);
     // Redis 연결 실패 시 로컬 데이터 반환
-    return NextResponse.json(membersData);
+    return NextResponse.json(membersData, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' }
+    });
   }
 }
 
