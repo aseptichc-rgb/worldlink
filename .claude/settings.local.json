@@ -24,7 +24,8 @@
       "Bash(dir /b \"c:\\\\You are great\\\\connect\\\\extracted_faces\")",
       "Bash(start http://localhost:3001)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

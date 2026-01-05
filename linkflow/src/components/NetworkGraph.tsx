@@ -42,7 +42,7 @@ export default function NetworkGraph({
   onNodeHover,
   selectedNode,
 }: NetworkGraphProps) {
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [imageCache, setImageCache] = useState<Record<string, HTMLImageElement>>({});
 
