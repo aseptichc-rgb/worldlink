@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import NetworkGraph from '@/components/NetworkGraph';
 import Sidebar from '@/components/Sidebar';
 import ProfileCard from '@/components/ProfileCard';
 import { Member, GraphNode, GraphLink, getCategoryColor } from '@/types';
-import membersData from '../../data/members.json';
 
 // 직급 기반 노드 크기 계산
 function getNodeSize(role: string): number {
@@ -25,13 +24,30 @@ function getNodeSize(role: string): number {
 }
 
 export default function Home() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
 
-  // Members 데이터 로드
-  const members: Member[] = membersData as Member[];
+  // API에서 데이터 로드
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        const response = await fetch('/api/members');
+        if (response.ok) {
+          const data = await response.json();
+          setMembers(data);
+        }
+      } catch (error) {
+        console.error('데이터 로드 오류:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadMembers();
+  }, []);
 
   // 그래프 데이터 생성
   const graphData = useMemo(() => {
@@ -118,6 +134,15 @@ export default function Home() {
       return categoryMatch && searchMatch;
     }).length;
   }, [graphData.nodes, selectedCategories, searchQuery]);
+
+  // 로딩 중일 때 표시
+  if (isLoading) {
+    return (
+      <main className="flex h-screen bg-gray-900 items-center justify-center">
+        <div className="text-white text-lg">데이터를 불러오는 중...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex h-screen bg-gray-900">

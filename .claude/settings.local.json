@@ -29,7 +29,8 @@
       "Bash(npm uninstall:*)",
       "Bash(git remote set-url:*)",
       "Bash(git push:*)",
-      "Bash(gh auth status:*)"
+      "Bash(gh auth status:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

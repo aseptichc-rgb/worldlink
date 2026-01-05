@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Member, CATEGORY_COLORS } from '@/types';
-import membersData from '../../../data/members.json';
 import EditMemberModal from '@/components/EditMemberModal';
 
 const ADMIN_PASSWORD = 'admin1234';
@@ -23,8 +22,27 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [members, setMembers] = useState<Member[]>(membersData as Member[]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // API에서 데이터 로드
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        const response = await fetch('/api/members');
+        if (response.ok) {
+          const data = await response.json();
+          setMembers(data);
+        }
+      } catch (error) {
+        console.error('데이터 로드 오류:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadMembers();
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -144,6 +162,15 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     setPassword('');
   };
+
+  // 로딩 중일 때 표시
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-lg">데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   // 인증되지 않은 경우 로그인 화면 표시
   if (!isAuthenticated) {
