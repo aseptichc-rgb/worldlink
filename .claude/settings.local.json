@@ -20,7 +20,11 @@
       "Bash(git checkout:*)",
       "Bash(cd c:You are greatconnectlinkflow)",
       "Bash(cat:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(dir /b \"c:\\\\You are great\\\\connect\\\\extracted_faces\")",
+      "Bash(start http://localhost:3001)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

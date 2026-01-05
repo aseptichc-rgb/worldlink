@@ -5,6 +5,8 @@ import { Member, CATEGORY_COLORS } from '@/types';
 import membersData from '../../../data/members.json';
 import EditMemberModal from '@/components/EditMemberModal';
 
+const ADMIN_PASSWORD = 'admin1234';
+
 const MAIN_CATEGORIES = [
   '의료기기',
   '솔루션',
@@ -18,6 +20,9 @@ const MAIN_CATEGORIES = [
 ];
 
 export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [members, setMembers] = useState<Member[]>(membersData as Member[]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -123,8 +128,75 @@ export default function AdminPage() {
     setIsAddingNew(true);
   };
 
+  // 로그인 핸들러
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('비밀번호가 올바르지 않습니다.');
+    }
+  };
+
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPassword('');
+  };
+
+  // 인증되지 않은 경우 로그인 화면 표시
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-gray-800 p-8 rounded-xl border border-gray-700 w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-white mb-2">LinkFlow Admin</h1>
+            <p className="text-gray-400">관리자 페이지에 접속하려면 비밀번호를 입력하세요</p>
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                비밀번호
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                placeholder="비밀번호 입력"
+                autoFocus
+              />
+            </div>
+
+            {loginError && (
+              <p className="text-red-400 text-sm mb-4">{loginError}</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              로그인
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <a
+              href="/"
+              className="text-gray-400 hover:text-white text-sm transition-colors"
+            >
+              ← 메인으로 돌아가기
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white overflow-y-auto">
+    <div className="h-screen bg-gray-900 text-white overflow-y-auto">
       {/* 헤더 */}
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -150,6 +222,12 @@ export default function AdminPage() {
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors"
               >
                 + 새 멤버 추가
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
+              >
+                로그아웃
               </button>
             </div>
           </div>

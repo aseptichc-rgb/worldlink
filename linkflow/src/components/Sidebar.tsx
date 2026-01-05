@@ -123,12 +123,18 @@ export default function Sidebar({
 
       {/* 푸터 통계 */}
       <div className="p-4 border-t border-gray-800">
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-sm mb-3">
           <span className="text-gray-500">표시 중</span>
           <span className="text-white font-medium">
             {filteredCount} / {memberCount}명
           </span>
         </div>
+        <a
+          href="/admin"
+          className="block w-full py-2 px-3 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white text-center text-sm rounded-lg transition-colors"
+        >
+          관리자 페이지
+        </a>
       </div>
     </div>
   );
