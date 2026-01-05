@@ -25,7 +25,8 @@
       "Bash(start http://localhost:3001)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }
