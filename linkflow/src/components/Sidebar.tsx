@@ -59,6 +59,8 @@ export default function Sidebar({
             placeholder="이름, 소속, 직책, 태그 검색..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
           <svg
