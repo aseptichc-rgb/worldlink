@@ -6,6 +6,7 @@
       "Bash(npx create-next-app:*)",
       "Bash(npm install:*)",
       "Bash(curl:*)",
+<<<<<<< Updated upstream
       "Bash(npm run dev:*)",
       "Bash(start http://localhost:3000)",
       "Bash(git add:*)",
@@ -34,6 +35,10 @@
       "Bash(dir:*)",
       "Bash(cp:*)",
       "Bash(npx sharp-cli:*)"
+=======
+      "Bash(py -m pip install:*)",
+      "Bash(cmd /c \"pip install PyMuPDF opencv-python numpy\")"
+>>>>>>> Stashed changes
     ]
   }
 }
