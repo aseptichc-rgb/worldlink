@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const memberName = formData.get('memberName') as string;
 
     if (!file) {
       return NextResponse.json(
@@ -24,45 +21,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 파일 크기 확인 (5MB 제한)
-    if (file.size > 5 * 1024 * 1024) {
+    // 파일 크기 확인 (2MB 제한 - Base64는 크기가 커지므로)
+    if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { error: '파일 크기가 5MB를 초과합니다.' },
+        { error: '파일 크기가 2MB를 초과합니다.' },
         { status: 400 }
       );
     }
 
-    // 파일명 생성 (한글 이름 + 타임스탬프)
-    const ext = file.name.split('.').pop() || 'jpg';
-    const safeName = memberName
-      ? encodeURIComponent(memberName).replace(/%/g, '')
-      : 'photo';
-    const fileName = `${safeName}_${Date.now()}.${ext}`;
-
-    // faces 디렉토리 경로
-    const facesDir = path.join(process.cwd(), 'public', 'faces');
-
-    // 디렉토리가 없으면 생성
-    try {
-      await mkdir(facesDir, { recursive: true });
-    } catch {
-      // 이미 존재하면 무시
-    }
-
-    // 파일 저장
+    // 파일을 Base64로 변환
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filePath = path.join(facesDir, fileName);
-
-    await writeFile(filePath, buffer);
-
-    // 저장된 이미지 URL 반환
-    const imageUrl = `/faces/${fileName}`;
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
     return NextResponse.json({
       success: true,
-      url: imageUrl,
-      fileName
+      url: dataUrl,
     });
   } catch (error) {
     console.error('업로드 오류:', error);

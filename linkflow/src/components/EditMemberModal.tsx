@@ -304,7 +304,7 @@ export default function EditMemberModal({
                 )}
 
                 <p className="text-xs text-gray-500">
-                  JPG, PNG, GIF, WEBP (최대 5MB)
+                  JPG, PNG, GIF, WEBP (최대 2MB)
                 </p>
               </div>
             </div>
