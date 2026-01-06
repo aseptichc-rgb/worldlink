@@ -30,6 +30,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // API에서 데이터 로드
   useEffect(() => {
@@ -145,7 +146,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex h-screen bg-gray-900">
+    <main className="flex h-screen bg-gray-900 overflow-hidden">
       {/* 사이드바 */}
       <Sidebar
         categories={categories}
@@ -155,10 +156,32 @@ export default function Home() {
         onSearchChange={setSearchQuery}
         memberCount={members.length}
         filteredCount={filteredCount}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
       {/* 네트워크 그래프 */}
       <div className="flex-1 relative">
+        {/* 모바일 햄버거 메뉴 버튼 */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="absolute top-4 left-4 z-30 p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-700 text-white md:hidden"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        {/* 모바일 검색 버튼 */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="absolute top-4 left-16 z-30 p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-700 text-white md:hidden"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+
         <NetworkGraph
           nodes={graphData.nodes}
           links={graphData.links}
@@ -170,8 +193,8 @@ export default function Home() {
           selectedNode={selectedNode}
         />
 
-        {/* 범례 */}
-        <div className="absolute bottom-6 left-6 bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
+        {/* 범례 - 데스크탑에서만 표시 */}
+        <div className="hidden md:block absolute bottom-6 left-6 bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
           <h3 className="text-sm font-semibold text-gray-400 mb-3">범례</h3>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <div className="flex items-center gap-2">
@@ -223,13 +246,20 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 조작 가이드 */}
-        <div className="absolute top-6 right-6 bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 border border-gray-700">
+        {/* 조작 가이드 - 데스크탑에서만 표시 */}
+        <div className="hidden md:block absolute top-6 right-6 bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 border border-gray-700">
           <div className="text-xs text-gray-400 space-y-1">
             <p>마우스 휠: 줌</p>
             <p>드래그: 이동</p>
             <p>노드 클릭: 상세 정보</p>
           </div>
+        </div>
+
+        {/* 모바일 인원 표시 */}
+        <div className="md:hidden absolute bottom-4 left-4 bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700">
+          <span className="text-sm text-gray-300">
+            {filteredCount} / {members.length}명
+          </span>
         </div>
       </div>
 
