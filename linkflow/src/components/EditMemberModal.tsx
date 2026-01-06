@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Member } from '@/types';
 
 const MAIN_CATEGORIES = [
@@ -30,6 +30,45 @@ export default function EditMemberModal({
 }: EditMemberModalProps) {
   const [formData, setFormData] = useState<Member>({ ...member });
   const [tagsInput, setTagsInput] = useState(member.tags.join(', '));
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 파일 업로드 핸들러
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('memberName', formData.name || 'member');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setFormData(prev => ({ ...prev, photoUrl: result.url }));
+      } else {
+        setUploadError(result.error || '업로드 실패');
+      }
+    } catch (error) {
+      setUploadError('업로드 중 오류가 발생했습니다.');
+    } finally {
+      setIsUploading(false);
+      // 파일 입력 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,32 +223,106 @@ export default function EditMemberModal({
             </div>
           </div>
 
-          {/* 프로필 이미지 URL */}
+          {/* 프로필 이미지 */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              프로필 이미지 URL
+            <label className="block text-sm font-medium text-gray-400 mb-2">
+              프로필 이미지
             </label>
-            <input
-              type="text"
-              name="photoUrl"
-              value={formData.photoUrl || ''}
-              onChange={handleChange}
-              placeholder="/faces/example.jpg 또는 https://..."
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
-            />
-            {formData.photoUrl && (
-              <div className="mt-2 flex items-center gap-2">
-                <img
-                  src={formData.photoUrl}
-                  alt="미리보기"
-                  className="w-12 h-12 rounded-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-                <span className="text-sm text-gray-500">미리보기</span>
+
+            {/* 현재 이미지 미리보기 */}
+            <div className="flex items-start gap-4 mb-3">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
+                {formData.photoUrl ? (
+                  <img
+                    src={formData.photoUrl}
+                    alt="프로필"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '';
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-500">
+                    {formData.name?.charAt(0) || '?'}
+                  </div>
+                )}
               </div>
-            )}
+
+              <div className="flex-1 space-y-2">
+                {/* 파일 업로드 버튼 */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="photo-upload"
+                />
+                <label
+                  htmlFor="photo-upload"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+                    isUploading
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-500 text-white'
+                  }`}
+                >
+                  {isUploading ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      업로드 중...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      사진 업로드
+                    </>
+                  )}
+                </label>
+
+                {/* 이미지 삭제 버튼 */}
+                {formData.photoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, photoUrl: null }))}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg text-sm transition-colors ml-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    삭제
+                  </button>
+                )}
+
+                {uploadError && (
+                  <p className="text-red-400 text-sm">{uploadError}</p>
+                )}
+
+                <p className="text-xs text-gray-500">
+                  JPG, PNG, GIF, WEBP (최대 5MB)
+                </p>
+              </div>
+            </div>
+
+            {/* URL 직접 입력 (고급) */}
+            <details className="mt-2">
+              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
+                URL 직접 입력 (고급)
+              </summary>
+              <input
+                type="text"
+                name="photoUrl"
+                value={formData.photoUrl || ''}
+                onChange={handleChange}
+                placeholder="/faces/example.jpg 또는 https://..."
+                className="w-full mt-2 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </details>
           </div>
 
           {/* 설명 */}
