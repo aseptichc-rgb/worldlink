@@ -49,7 +49,9 @@ export default function NetworkGraph({
   // 윈도우 크기 감지
   useEffect(() => {
     const updateDimensions = () => {
-      const sidebarWidth = 280;
+      // 모바일(768px 미만)에서는 사이드바가 숨겨지므로 전체 너비 사용
+      const isMobile = window.innerWidth < 768;
+      const sidebarWidth = isMobile ? 0 : 280;
       setDimensions({
         width: window.innerWidth - sidebarWidth,
         height: window.innerHeight,
