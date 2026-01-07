@@ -18,10 +18,8 @@ export default function Home() {
         router.push('/network');
       } else {
         setUser(null);
-        // Show landing page briefly then redirect to login
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+        // Redirect to login immediately
+        router.push('/login');
       }
       setLoading(false);
     });
