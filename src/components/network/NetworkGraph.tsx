@@ -57,26 +57,50 @@ export default function NetworkGraph() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Initialize nodes with physics
+  // Initialize nodes with fixed positions (no physics)
   useEffect(() => {
-    if (nodes.length === 0) return;
+    if (nodes.length === 0 || dimensions.width === 0) return;
 
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
 
-    nodesRef.current = nodes.map((node, i) => {
-      // Position based on degree
-      let angle = (i / nodes.filter(n => n.degree === node.degree).length) * Math.PI * 2;
-      let radius = node.degree === 0 ? 0 : node.degree === 1 ? 150 : 300;
+    // Group nodes by degree
+    const degree0Nodes = nodes.filter(n => n.degree === 0);
+    const degree1Nodes = nodes.filter(n => n.degree === 1);
+    const degree2Nodes = nodes.filter(n => n.degree === 2);
+
+    nodesRef.current = nodes.map((node) => {
+      let x = centerX;
+      let y = centerY;
+
+      if (node.degree === 0) {
+        // Center node
+        x = centerX;
+        y = centerY;
+      } else if (node.degree === 1) {
+        // 1st degree - arrange in circle around center
+        const index = degree1Nodes.findIndex(n => n.id === node.id);
+        const angle = (index / degree1Nodes.length) * Math.PI * 2 - Math.PI / 2;
+        const radius = 160;
+        x = centerX + Math.cos(angle) * radius;
+        y = centerY + Math.sin(angle) * radius;
+      } else if (node.degree === 2) {
+        // 2nd degree - arrange in outer circle
+        const index = degree2Nodes.findIndex(n => n.id === node.id);
+        const angle = (index / degree2Nodes.length) * Math.PI * 2 - Math.PI / 2;
+        const radius = 320;
+        x = centerX + Math.cos(angle) * radius;
+        y = centerY + Math.sin(angle) * radius;
+      }
 
       return {
         ...node,
-        x: centerX + Math.cos(angle) * radius + (Math.random() - 0.5) * 50,
-        y: centerY + Math.sin(angle) * radius + (Math.random() - 0.5) * 50,
+        x,
+        y,
         vx: 0,
         vy: 0,
-        fx: node.degree === 0 ? centerX : null,
-        fy: node.degree === 0 ? centerY : null,
+        fx: x, // Fixed position
+        fy: y, // Fixed position
       };
     });
 
@@ -275,10 +299,10 @@ export default function NetworkGraph() {
     ctx.restore();
   }, [transform, highlightedKeyword, hoveredNode]);
 
-  // Animation loop
+  // Animation loop (render only, no physics simulation)
   useEffect(() => {
     const animate = () => {
-      simulate();
+      // simulate(); // Disabled physics simulation for fixed positions
       render();
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -289,7 +313,7 @@ export default function NetworkGraph() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [simulate, render]);
+  }, [render]);
 
   // Mouse interactions
   const getNodeAtPosition = (x: number, y: number): GraphNode | null => {
@@ -357,8 +381,9 @@ export default function NetworkGraph() {
 
   const handleMouseUp = () => {
     if (draggedNode) {
-      draggedNode.fx = null;
-      draggedNode.fy = null;
+      // Keep the node fixed at the new position after drag
+      draggedNode.x = draggedNode.fx ?? draggedNode.x;
+      draggedNode.y = draggedNode.fy ?? draggedNode.y;
       setDraggedNode(null);
     }
     setIsDragging(false);

@@ -279,7 +279,17 @@ export const getPendingConnections = async (userId: string): Promise<Connection[
 
 // ==================== NETWORK GRAPH SERVICES ====================
 
+import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs } from './demo-data';
+
 export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
+  // 먼저 Firebase에서 실제 연결 데이터 확인
+  const directConnections = await getDirectConnections(userId);
+
+  // 실제 연결이 없으면 데모 데이터 사용
+  if (directConnections.length === 0) {
+    return getDemoNetworkGraph(userId);
+  }
+
   const nodes: NetworkNode[] = [];
   const edges: NetworkEdge[] = [];
   const userMap = new Map<string, User>();
@@ -302,7 +312,6 @@ export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkN
   userMap.set(currentUser.id, currentUser);
 
   // Get 1st degree connections
-  const directConnections = await getDirectConnections(userId);
   const firstDegreeIds = new Set<string>();
 
   for (const conn of directConnections) {
@@ -492,6 +501,12 @@ export const getPendingCoffeeChatRequests = async (userId: string): Promise<Coff
 // ==================== RECOMMENDATION SERVICES ====================
 
 export const getRecommendations = async (userId: string, count: number = 3): Promise<Recommendation[]> => {
+  // 실제 연결이 없으면 데모 추천 데이터 사용
+  const directConnections = await getDirectConnections(userId);
+  if (directConnections.length === 0) {
+    return getDemoRecs(userId).slice(0, count);
+  }
+
   const currentUser = await getUser(userId);
   if (!currentUser) return [];
 
