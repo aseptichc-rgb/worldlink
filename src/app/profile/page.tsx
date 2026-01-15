@@ -6,35 +6,19 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Camera,
-  Settings,
   Share2,
-  Coffee,
-  Users,
   Edit2,
-  Plus,
-  Trash2,
-  Clock,
   LogOut,
 } from 'lucide-react';
-import { Avatar, Button, Input, Tag, Card, Modal } from '@/components/ui';
+import { Avatar, Button, Input, Tag, Card } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore';
 import {
   updateUser,
-  createTimeSlot,
-  getUserTimeSlots,
   uploadProfileImage,
   logoutUser,
   onAuthChange,
   getUser,
 } from '@/lib/firebase-services';
-import { TimeSlot } from '@/types';
-
-const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
-const coffeeStatuses = [
-  { id: 'available', label: '커피챗 가능', color: 'bg-[#00E676]' },
-  { id: 'busy', label: '바쁨', color: 'bg-[#FF4081]' },
-  { id: 'pending', label: '제안 대기', color: 'bg-[#FFA726]' },
-] as const;
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -43,13 +27,6 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
   const [newKeyword, setNewKeyword] = useState('');
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [showSlotModal, setShowSlotModal] = useState(false);
-  const [newSlot, setNewSlot] = useState({
-    dayOfWeek: 1,
-    startTime: '10:00',
-    endTime: '11:00',
-  });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -67,19 +44,6 @@ export default function ProfilePage() {
 
     return () => unsubscribe();
   }, [setUser, setLoading, router]);
-
-  useEffect(() => {
-    const loadTimeSlots = async () => {
-      if (!user) return;
-      try {
-        const slots = await getUserTimeSlots(user.id);
-        setTimeSlots(slots);
-      } catch (error) {
-        console.error('Error loading time slots:', error);
-      }
-    };
-    loadTimeSlots();
-  }, [user]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,8 +70,7 @@ export default function ProfilePage() {
         position: editedUser.position,
         bio: editedUser.bio,
         keywords: editedUser.keywords,
-        coffeeStatus: editedUser.coffeeStatus,
-      });
+        });
       setUser(editedUser);
       setIsEditing(false);
     } catch (error) {
@@ -135,25 +98,6 @@ export default function ProfilePage() {
       ...editedUser,
       keywords: editedUser.keywords.filter(k => k !== keyword),
     });
-  };
-
-  const handleAddSlot = async () => {
-    if (!user) return;
-
-    try {
-      const slot = await createTimeSlot({
-        userId: user.id,
-        dayOfWeek: newSlot.dayOfWeek,
-        startTime: newSlot.startTime,
-        endTime: newSlot.endTime,
-        isRecurring: true,
-        isAvailable: true,
-      });
-      setTimeSlots([...timeSlots, slot]);
-      setShowSlotModal(false);
-    } catch (error) {
-      console.error('Error adding slot:', error);
-    }
   };
 
   const handleLogout = async () => {
@@ -261,33 +205,6 @@ export default function ProfilePage() {
           )}
         </motion.div>
 
-        {/* Coffee Status */}
-        <Card className="p-4 mb-6">
-          <h3 className="text-sm font-medium text-[#8B949E] mb-3 flex items-center gap-2">
-            <Coffee size={16} />
-            커피챗 상태
-          </h3>
-          <div className="flex gap-2">
-            {coffeeStatuses.map((status) => (
-              <button
-                key={status.id}
-                onClick={() => isEditing && setEditedUser({ ...editedUser, coffeeStatus: status.id })}
-                className={`
-                  flex-1 py-2.5 rounded-xl text-sm font-medium
-                  transition-all duration-200
-                  ${editedUser.coffeeStatus === status.id
-                    ? `${status.color} text-black`
-                    : 'bg-[#161B22] text-[#8B949E] hover:bg-[#21262D]'
-                  }
-                  ${!isEditing && 'cursor-default'}
-                `}
-              >
-                {status.label}
-              </button>
-            ))}
-          </div>
-        </Card>
-
         {/* Bio */}
         <Card className="p-4 mb-6">
           <h3 className="text-sm font-medium text-[#8B949E] mb-3">한 줄 소개</h3>
@@ -343,49 +260,6 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        {/* Time Slots */}
-        <Card className="p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-[#8B949E] flex items-center gap-2">
-              <Clock size={16} />
-              커피챗 가능 시간
-            </h3>
-            <button
-              onClick={() => setShowSlotModal(true)}
-              className="text-[#00E5FF] text-sm flex items-center gap-1"
-            >
-              <Plus size={16} />
-              추가
-            </button>
-          </div>
-          {timeSlots.length > 0 ? (
-            <div className="space-y-2">
-              {timeSlots.map((slot) => (
-                <div
-                  key={slot.id}
-                  className="flex items-center justify-between p-3 bg-[#161B22] rounded-xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 bg-[#21262D] rounded-lg flex items-center justify-center text-sm text-white">
-                      {daysOfWeek[slot.dayOfWeek]}
-                    </span>
-                    <span className="text-white text-sm">
-                      {slot.startTime} - {slot.endTime}
-                    </span>
-                  </div>
-                  {slot.isRecurring && (
-                    <span className="text-xs text-[#484F58]">매주</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[#484F58] text-sm text-center py-4">
-              아직 등록된 시간이 없습니다
-            </p>
-          )}
-        </Card>
-
         {/* Invite Code */}
         <Card className="p-4 mb-6">
           <h3 className="text-sm font-medium text-[#8B949E] mb-3 flex items-center gap-2">
@@ -419,60 +293,6 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Add Slot Modal */}
-      <Modal
-        isOpen={showSlotModal}
-        onClose={() => setShowSlotModal(false)}
-        title="커피챗 시간 추가"
-      >
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm text-[#8B949E] mb-2">요일</label>
-            <div className="flex gap-2">
-              {daysOfWeek.map((day, i) => (
-                <button
-                  key={day}
-                  onClick={() => setNewSlot({ ...newSlot, dayOfWeek: i })}
-                  className={`
-                    w-10 h-10 rounded-lg text-sm
-                    ${newSlot.dayOfWeek === i
-                      ? 'bg-[#00E5FF] text-black'
-                      : 'bg-[#161B22] text-[#8B949E]'
-                    }
-                  `}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm text-[#8B949E] mb-2">시작 시간</label>
-              <input
-                type="time"
-                value={newSlot.startTime}
-                onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                className="input-dark"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm text-[#8B949E] mb-2">종료 시간</label>
-              <input
-                type="time"
-                value={newSlot.endTime}
-                onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                className="input-dark"
-              />
-            </div>
-          </div>
-
-          <Button onClick={handleAddSlot} className="w-full" size="lg">
-            추가하기
-          </Button>
-        </div>
-      </Modal>
     </div>
   );
 }

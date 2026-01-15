@@ -13,6 +13,7 @@ interface ProfileSetupProps {
 
 export interface ProfileData {
   name: string;
+  phone: string;
   company: string;
   position: string;
   bio: string;
@@ -30,6 +31,7 @@ export default function ProfileSetup({ onComplete, isLoading }: ProfileSetupProp
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<ProfileData>({
     name: '',
+    phone: '',
     company: '',
     position: '',
     bio: '',
@@ -90,6 +92,11 @@ export default function ProfileSetup({ onComplete, isLoading }: ProfileSetupProp
 
     if (!profile.name.trim()) {
       newErrors.name = '이름을 입력해주세요';
+    }
+    if (!profile.phone.trim()) {
+      newErrors.phone = '전화번호를 입력해주세요';
+    } else if (!/^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$/.test(profile.phone.replace(/-/g, ''))) {
+      newErrors.phone = '올바른 전화번호 형식이 아닙니다';
     }
     if (!profile.company.trim()) {
       newErrors.company = '소속을 입력해주세요';
@@ -194,6 +201,15 @@ export default function ProfileSetup({ onComplete, isLoading }: ProfileSetupProp
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               error={errors.name}
+            />
+
+            <Input
+              type="tel"
+              label="전화번호"
+              placeholder="010-1234-5678"
+              value={profile.phone}
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+              error={errors.phone}
             />
 
             <Input

@@ -83,6 +83,7 @@ function OnboardingContent() {
       const newUser = await createUser({
         id: firebaseUser.uid,
         email: email,
+        phone: profile.phone,
         name: profile.name,
         company: profile.company,
         position: profile.position,

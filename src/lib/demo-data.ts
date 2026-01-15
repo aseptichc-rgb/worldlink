@@ -7,6 +7,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-1',
     name: '김민수',
     email: 'minsu@example.com',
+    phone: '010-1234-5678',
     company: 'TechStartup Inc.',
     position: 'CEO & Founder',
     bio: '기술로 세상을 바꾸는 꿈을 꾸고 있습니다',
@@ -23,6 +24,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-2',
     name: '이서연',
     email: 'seoyeon@example.com',
+    phone: '010-2345-6789',
     company: 'DesignLab',
     position: 'Creative Director',
     bio: '디자인으로 브랜드의 가치를 높입니다',
@@ -38,6 +40,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-3',
     name: '박준영',
     email: 'junyoung@example.com',
+    phone: '010-3456-7890',
     company: 'Alpha Ventures',
     position: 'Partner',
     bio: '혁신적인 스타트업을 발굴하고 성장시킵니다',
@@ -53,6 +56,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-4',
     name: '최지은',
     email: 'jieun@example.com',
+    phone: '010-4567-8901',
     company: 'GrowthHackers',
     position: 'CMO',
     bio: '데이터 기반 마케팅 전략 전문가',
@@ -68,6 +72,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-5',
     name: '정현우',
     email: 'hyunwoo@example.com',
+    phone: '010-5678-9012',
     company: 'CodeFactory',
     position: 'CTO',
     bio: '확장 가능한 아키텍처를 설계합니다',
@@ -83,6 +88,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-6',
     name: '강예진',
     email: 'yejin@example.com',
+    phone: '010-6789-0123',
     company: 'MediCare Plus',
     position: 'Product Manager',
     bio: '헬스케어의 미래를 만들어갑니다',
@@ -98,6 +104,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-7',
     name: '윤성민',
     email: 'sungmin@example.com',
+    phone: '010-7890-1234',
     company: 'EduNext',
     position: 'CEO',
     bio: '교육의 패러다임을 바꾸는 에듀테크',
@@ -113,6 +120,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-8',
     name: '한소희',
     email: 'sohee@example.com',
+    phone: '010-8901-2345',
     company: 'Naver',
     position: 'Senior Engineer',
     bio: '검색 알고리즘 최적화 전문가',
@@ -128,6 +136,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-9',
     name: '오진우',
     email: 'jinwoo@example.com',
+    phone: '010-9012-3456',
     company: 'Kakao',
     position: 'Product Owner',
     bio: '사용자 중심의 제품을 만듭니다',
@@ -144,6 +153,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-10',
     name: '임지현',
     email: 'jihyun@example.com',
+    phone: '010-1122-3344',
     company: 'BrandStudio',
     position: 'Brand Manager',
     bio: '브랜드 스토리텔링의 힘을 믿습니다',
@@ -159,6 +169,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-11',
     name: '송태현',
     email: 'taehyun@example.com',
+    phone: '010-2233-4455',
     company: 'DataInsight',
     position: 'Data Scientist',
     bio: '데이터에서 인사이트를 발굴합니다',
@@ -174,6 +185,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-12',
     name: '한수진',
     email: 'sujin@example.com',
+    phone: '010-3344-5566',
     company: 'FinanceHub',
     position: 'CFO',
     bio: '스타트업 재무 전략 전문가',
@@ -189,6 +201,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-13',
     name: '권도윤',
     email: 'doyun@example.com',
+    phone: '010-4455-6677',
     company: 'BlockChain Labs',
     position: 'Blockchain Developer',
     bio: '탈중앙화 금융의 미래를 만듭니다',
@@ -204,6 +217,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-14',
     name: '신유나',
     email: 'yuna@example.com',
+    phone: '010-5566-7788',
     company: 'ContentFirst',
     position: 'Content Strategist',
     bio: '콘텐츠로 성장을 이끕니다',
@@ -219,6 +233,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-15',
     name: '조민재',
     email: 'minjae@example.com',
+    phone: '010-6677-8899',
     company: 'Samsung Electronics',
     position: 'AI Researcher',
     bio: '차세대 AI 기술을 연구합니다',
@@ -234,6 +249,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-16',
     name: '백서영',
     email: 'seoyoung@example.com',
+    phone: '010-7788-9900',
     company: 'HR Partners',
     position: 'HR Director',
     bio: '인재 채용과 조직문화 전문가',
@@ -249,6 +265,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-17',
     name: '류준혁',
     email: 'junhyuk@example.com',
+    phone: '010-8899-0011',
     company: 'LegalTech',
     position: 'Legal Counsel',
     bio: '스타트업 법률 자문 전문가',
@@ -264,6 +281,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-18',
     name: '장하은',
     email: 'haeun@example.com',
+    phone: '010-9900-1122',
     company: 'FoodTech Korea',
     position: 'Operations Manager',
     bio: '푸드테크 서비스 운영 전문가',
@@ -279,6 +297,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-19',
     name: '김동현',
     email: 'donghyun@example.com',
+    phone: '010-1111-2222',
     company: 'TravelNow',
     position: 'CEO',
     bio: '여행의 새로운 경험을 만듭니다',
@@ -294,6 +313,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-20',
     name: '이수빈',
     email: 'subin@example.com',
+    phone: '010-2222-3333',
     company: 'PropTech Solutions',
     position: 'Business Developer',
     bio: '부동산 테크 비즈니스 개발',
@@ -309,6 +329,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-21',
     name: '박예린',
     email: 'yerin@example.com',
+    phone: '010-3333-4444',
     company: 'Fashion Forward',
     position: 'Creative Lead',
     bio: '패션과 테크의 만남',
@@ -324,6 +345,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-22',
     name: '문성훈',
     email: 'sunghoon@example.com',
+    phone: '010-4444-5555',
     company: 'GameDev Studio',
     position: 'Game Director',
     bio: '재미있는 게임을 만듭니다',
@@ -339,6 +361,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-23',
     name: '서민지',
     email: 'minji@example.com',
+    phone: '010-5555-6666',
     company: 'CleanEnergy',
     position: 'Sustainability Manager',
     bio: '지속가능한 미래를 위해',
@@ -354,6 +377,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-24',
     name: '황재민',
     email: 'jaemin@example.com',
+    phone: '010-6666-7777',
     company: 'RoboTech',
     position: 'Robotics Engineer',
     bio: '로봇 자동화의 미래',
@@ -369,6 +393,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-25',
     name: '안지영',
     email: 'jiyoung@example.com',
+    phone: '010-7777-8888',
     company: 'Beauty Tech',
     position: 'Product Director',
     bio: '뷰티 산업의 디지털 혁신',
@@ -384,6 +409,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-26',
     name: '노현석',
     email: 'hyunseok@example.com',
+    phone: '010-8888-9999',
     company: 'Security First',
     position: 'Security Engineer',
     bio: '사이버 보안 전문가',
@@ -399,6 +425,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-27',
     name: '유다은',
     email: 'daeun@example.com',
+    phone: '010-9999-0000',
     company: 'PetCare',
     position: 'Marketing Manager',
     bio: '반려동물 시장의 성장을 이끕니다',
@@ -414,6 +441,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-28',
     name: '홍승우',
     email: 'seungwoo@example.com',
+    phone: '010-0000-1111',
     company: 'AgriTech',
     position: 'CEO',
     bio: '스마트팜으로 농업의 미래를',
@@ -429,6 +457,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-29',
     name: '차민서',
     email: 'minseo@example.com',
+    phone: '010-1212-3434',
     company: 'Coupang',
     position: 'UX Designer',
     bio: '사용자 경험을 디자인합니다',
@@ -444,6 +473,7 @@ export const demoUsers: User[] = [
     id: 'demo-user-30',
     name: '고은채',
     email: 'eunchae@example.com',
+    phone: '010-5656-7878',
     company: 'MusicTech',
     position: 'Business Manager',
     bio: '음악 산업의 디지털 전환',
@@ -931,3 +961,148 @@ export const demoInviteCodes = [
   'JKL-012',
   'MNO-345',
 ];
+
+// 데모 사용자 연결 관계 (export)
+export const demoConnections: Record<string, string[]> = {
+  'demo-user-1': ['demo-user-2', 'demo-user-3', 'demo-user-4', 'demo-user-5', 'demo-user-6', 'demo-user-7', 'demo-user-8', 'demo-user-9', 'demo-user-15', 'demo-user-11'],
+  'demo-user-2': ['demo-user-1', 'demo-user-10', 'demo-user-21', 'demo-user-29', 'demo-user-4', 'demo-user-25', 'demo-user-27', 'demo-user-14', 'demo-user-7', 'demo-user-6'],
+  'demo-user-3': ['demo-user-1', 'demo-user-12', 'demo-user-13', 'demo-user-19', 'demo-user-28', 'demo-user-5', 'demo-user-7', 'demo-user-17', 'demo-user-22', 'demo-user-20'],
+  'demo-user-4': ['demo-user-1', 'demo-user-2', 'demo-user-14', 'demo-user-27', 'demo-user-10', 'demo-user-21', 'demo-user-30', 'demo-user-18', 'demo-user-9', 'demo-user-6'],
+  'demo-user-5': ['demo-user-1', 'demo-user-11', 'demo-user-15', 'demo-user-24', 'demo-user-26', 'demo-user-8', 'demo-user-3', 'demo-user-22', 'demo-user-13', 'demo-user-23'],
+  'demo-user-6': ['demo-user-1', 'demo-user-16', 'demo-user-25', 'demo-user-2', 'demo-user-4', 'demo-user-9', 'demo-user-18', 'demo-user-20', 'demo-user-17', 'demo-user-7'],
+  'demo-user-7': ['demo-user-1', 'demo-user-17', 'demo-user-22', 'demo-user-30', 'demo-user-2', 'demo-user-3', 'demo-user-6', 'demo-user-14', 'demo-user-19', 'demo-user-28'],
+  'demo-user-8': ['demo-user-1', 'demo-user-15', 'demo-user-11', 'demo-user-29', 'demo-user-5', 'demo-user-24', 'demo-user-26', 'demo-user-9', 'demo-user-23', 'demo-user-16'],
+  'demo-user-9': ['demo-user-1', 'demo-user-18', 'demo-user-20', 'demo-user-23', 'demo-user-4', 'demo-user-6', 'demo-user-8', 'demo-user-27', 'demo-user-19', 'demo-user-29'],
+  'demo-user-10': ['demo-user-2', 'demo-user-4', 'demo-user-14', 'demo-user-21', 'demo-user-27', 'demo-user-30', 'demo-user-25', 'demo-user-7', 'demo-user-18', 'demo-user-29'],
+  'demo-user-11': ['demo-user-5', 'demo-user-8', 'demo-user-15', 'demo-user-24', 'demo-user-26', 'demo-user-1', 'demo-user-13', 'demo-user-23', 'demo-user-22', 'demo-user-3'],
+  'demo-user-12': ['demo-user-3', 'demo-user-13', 'demo-user-17', 'demo-user-19', 'demo-user-20', 'demo-user-28', 'demo-user-16', 'demo-user-6', 'demo-user-7', 'demo-user-23'],
+  'demo-user-13': ['demo-user-3', 'demo-user-12', 'demo-user-5', 'demo-user-11', 'demo-user-22', 'demo-user-28', 'demo-user-24', 'demo-user-26', 'demo-user-19', 'demo-user-15'],
+  'demo-user-14': ['demo-user-4', 'demo-user-10', 'demo-user-27', 'demo-user-30', 'demo-user-7', 'demo-user-2', 'demo-user-21', 'demo-user-22', 'demo-user-18', 'demo-user-25'],
+  'demo-user-15': ['demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-24', 'demo-user-1', 'demo-user-13', 'demo-user-26', 'demo-user-29', 'demo-user-23', 'demo-user-16'],
+  'demo-user-16': ['demo-user-6', 'demo-user-17', 'demo-user-12', 'demo-user-8', 'demo-user-15', 'demo-user-7', 'demo-user-19', 'demo-user-28', 'demo-user-20', 'demo-user-25'],
+  'demo-user-17': ['demo-user-7', 'demo-user-3', 'demo-user-12', 'demo-user-16', 'demo-user-6', 'demo-user-19', 'demo-user-28', 'demo-user-20', 'demo-user-22', 'demo-user-30'],
+  'demo-user-18': ['demo-user-9', 'demo-user-20', 'demo-user-23', 'demo-user-4', 'demo-user-6', 'demo-user-10', 'demo-user-14', 'demo-user-27', 'demo-user-19', 'demo-user-21'],
+  'demo-user-19': ['demo-user-3', 'demo-user-7', 'demo-user-9', 'demo-user-12', 'demo-user-13', 'demo-user-16', 'demo-user-17', 'demo-user-18', 'demo-user-20', 'demo-user-28'],
+  'demo-user-20': ['demo-user-9', 'demo-user-12', 'demo-user-16', 'demo-user-17', 'demo-user-18', 'demo-user-19', 'demo-user-23', 'demo-user-6', 'demo-user-3', 'demo-user-28'],
+  'demo-user-21': ['demo-user-2', 'demo-user-10', 'demo-user-25', 'demo-user-27', 'demo-user-14', 'demo-user-4', 'demo-user-18', 'demo-user-30', 'demo-user-29', 'demo-user-7'],
+  'demo-user-22': ['demo-user-7', 'demo-user-13', 'demo-user-5', 'demo-user-11', 'demo-user-14', 'demo-user-17', 'demo-user-30', 'demo-user-24', 'demo-user-3', 'demo-user-26'],
+  'demo-user-23': ['demo-user-9', 'demo-user-18', 'demo-user-20', 'demo-user-28', 'demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-12', 'demo-user-15', 'demo-user-24'],
+  'demo-user-24': ['demo-user-5', 'demo-user-11', 'demo-user-15', 'demo-user-8', 'demo-user-13', 'demo-user-22', 'demo-user-23', 'demo-user-26', 'demo-user-28', 'demo-user-1'],
+  'demo-user-25': ['demo-user-6', 'demo-user-2', 'demo-user-10', 'demo-user-14', 'demo-user-16', 'demo-user-21', 'demo-user-27', 'demo-user-4', 'demo-user-29', 'demo-user-30'],
+  'demo-user-26': ['demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-13', 'demo-user-15', 'demo-user-22', 'demo-user-24', 'demo-user-23', 'demo-user-28', 'demo-user-1'],
+  'demo-user-27': ['demo-user-4', 'demo-user-10', 'demo-user-14', 'demo-user-21', 'demo-user-25', 'demo-user-9', 'demo-user-18', 'demo-user-2', 'demo-user-30', 'demo-user-6'],
+  'demo-user-28': ['demo-user-3', 'demo-user-7', 'demo-user-12', 'demo-user-13', 'demo-user-16', 'demo-user-17', 'demo-user-19', 'demo-user-20', 'demo-user-23', 'demo-user-24'],
+  'demo-user-29': ['demo-user-2', 'demo-user-8', 'demo-user-9', 'demo-user-10', 'demo-user-15', 'demo-user-21', 'demo-user-25', 'demo-user-4', 'demo-user-1', 'demo-user-30'],
+  'demo-user-30': ['demo-user-7', 'demo-user-14', 'demo-user-17', 'demo-user-21', 'demo-user-22', 'demo-user-25', 'demo-user-27', 'demo-user-4', 'demo-user-10', 'demo-user-29'],
+};
+
+// BFS로 두 사용자 간의 최단 연결 경로 찾기
+export const findDemoConnectionPath = (fromUserId: string, toUserId: string): string[] => {
+  if (fromUserId === toUserId) return [fromUserId];
+
+  const visited = new Set<string>();
+  const queue: { userId: string; path: string[] }[] = [{ userId: fromUserId, path: [fromUserId] }];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const { userId, path } = current;
+
+    if (userId === toUserId) {
+      return path;
+    }
+
+    if (visited.has(userId)) continue;
+    visited.add(userId);
+
+    const connections = demoConnections[userId] || [];
+    for (const connId of connections) {
+      if (!visited.has(connId)) {
+        queue.push({ userId: connId, path: [...path, connId] });
+      }
+    }
+  }
+
+  return [];
+};
+
+// 특정 사용자 중심의 네트워크 그래프 동적 생성
+export const getDemoNetworkGraphForUser = (centerId: string): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
+  const centerUser = demoUsers.find(u => u.id === centerId);
+  if (!centerUser) return { nodes: [], edges: [] };
+
+  const nodes: NetworkNode[] = [];
+  const edges: NetworkEdge[] = [];
+  const addedNodeIds = new Set<string>();
+
+  // 중심 노드 추가 (degree: 0)
+  nodes.push({
+    id: centerUser.id,
+    name: centerUser.name,
+    profileImage: centerUser.profileImage,
+    company: centerUser.company,
+    position: centerUser.position,
+    keywords: centerUser.keywords,
+    degree: 0,
+    connectionCount: demoConnections[centerId]?.length || 0,
+  });
+  addedNodeIds.add(centerId);
+
+  // 1촌 연결 추가
+  const firstDegreeIds = demoConnections[centerId] || [];
+  for (const connId of firstDegreeIds) {
+    const connUser = demoUsers.find(u => u.id === connId);
+    if (connUser && !addedNodeIds.has(connId)) {
+      nodes.push({
+        id: connUser.id,
+        name: connUser.name,
+        profileImage: connUser.profileImage,
+        company: connUser.company,
+        position: connUser.position,
+        keywords: connUser.keywords,
+        degree: 1,
+        connectionCount: demoConnections[connId]?.length || 0,
+      });
+      addedNodeIds.add(connId);
+
+      edges.push({
+        source: centerId,
+        degree: 1,
+        target: connId,
+      });
+    }
+  }
+
+  // 2촌 연결 추가 (1촌의 연결)
+  for (const firstDegreeId of firstDegreeIds) {
+    const secondDegreeIds = demoConnections[firstDegreeId] || [];
+    for (const secondId of secondDegreeIds) {
+      if (secondId === centerId) continue; // 중심 노드 제외
+
+      const secondUser = demoUsers.find(u => u.id === secondId);
+      if (secondUser && !addedNodeIds.has(secondId)) {
+        nodes.push({
+          id: secondUser.id,
+          name: secondUser.name,
+          profileImage: secondUser.profileImage,
+          company: secondUser.company,
+          position: secondUser.position,
+          keywords: secondUser.keywords,
+          degree: 2,
+          connectionCount: demoConnections[secondId]?.length || 0,
+        });
+        addedNodeIds.add(secondId);
+      }
+
+      // 1촌과 2촌 사이의 엣지 추가
+      if (addedNodeIds.has(secondId)) {
+        edges.push({
+          source: firstDegreeId,
+          degree: 2,
+          target: secondId,
+        });
+      }
+    }
+  }
+
+  return { nodes, edges };
+};

@@ -3,15 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
 import CoffeeChatModal from '@/components/coffee-chat/CoffeeChatModal';
+import ConnectionRequestModal from '@/components/connection/ConnectionRequestModal';
 import RecommendationCard from '@/components/coffee-chat/RecommendationCard';
 import { Avatar, Button } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
+import { useMessageStore, Message } from '@/store/messageStore';
+import { demoUsers } from '@/lib/demo-data';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
 
@@ -19,10 +22,34 @@ export default function NetworkPage() {
   const router = useRouter();
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading } = useAuthStore();
   const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading } = useNetworkStore();
+  const { messages, setMessages } = useMessageStore();
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+
+  // 데모 메세지 생성 함수
+  const generateDemoMessages = (currentUserId: string): Message[] => {
+    const otherUsers = demoUsers.filter(u => u.id !== currentUserId).slice(0, 5);
+    return [
+      {
+        id: 'msg-1',
+        fromUserId: otherUsers[0]?.id || 'demo-user-2',
+        toUserId: currentUserId,
+        content: '안녕하세요! 프로필 보고 연락드립니다. AI 관련해서 이야기 나눠보고 싶어요.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 30),
+        isRead: false,
+      },
+      {
+        id: 'msg-2',
+        fromUserId: otherUsers[1]?.id || 'demo-user-3',
+        toUserId: currentUserId,
+        content: '스타트업 투자 관련해서 조언 부탁드려도 될까요?',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
+        isRead: false,
+      },
+    ];
+  };
 
   // Auth state listener
   useEffect(() => {
@@ -70,6 +97,19 @@ export default function NetworkPage() {
     loadNetworkData();
   }, [user, setNodes, setEdges, setNetworkLoading]);
 
+  // Load demo messages
+  useEffect(() => {
+    if (user && messages.length === 0) {
+      const currentUserId = user.id.startsWith('demo-user-') ? user.id : 'demo-user-1';
+      const demoMessages = generateDemoMessages(currentUserId);
+      setMessages(demoMessages);
+    }
+  }, [user, messages.length, setMessages]);
+
+  // 읽지 않은 메세지 수
+  const currentUserId = user?.id.startsWith('demo-user-') ? user.id : 'demo-user-1';
+  const unreadCount = messages.filter(m => m.toUserId === currentUserId && !m.isRead).length;
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -114,9 +154,19 @@ export default function NetworkPage() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push('/messages')}
+                className="p-2 rounded-xl hover:bg-[#21262D] transition-colors relative"
+              >
+                <Mail size={22} className="text-[#8B949E]" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#FF4081] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
               <button className="p-2 rounded-xl hover:bg-[#21262D] transition-colors relative">
                 <Bell size={22} className="text-[#8B949E]" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF4081] rounded-full" />
               </button>
               <button
                 onClick={() => router.push('/profile')}
@@ -134,7 +184,7 @@ export default function NetworkPage() {
         </div>
       </div>
 
-      {/* Recommendations Panel */}
+      {/* Recommendations Panel - ProfileSheet보다 낮은 z-index */}
       <motion.div
         initial={false}
         animate={{
@@ -201,15 +251,15 @@ export default function NetworkPage() {
 
       {/* Network Stats */}
       <div className="fixed bottom-4 left-4 z-20">
-        <div className="glass-light rounded-2xl px-4 py-3 flex items-center gap-6">
-          <div className="text-center">
+        <div className="glass-light rounded-2xl px-4 py-3 flex items-center gap-4">
+          <div className="text-center min-w-[48px]">
             <p className="text-2xl font-bold text-[#00E5FF]">
               {useNetworkStore.getState().nodes.filter(n => n.degree === 1).length}
             </p>
             <p className="text-xs text-[#8B949E]">1촌</p>
           </div>
           <div className="w-px h-8 bg-[#21262D]" />
-          <div className="text-center">
+          <div className="text-center min-w-[48px]">
             <p className="text-2xl font-bold text-[#7C4DFF]">
               {useNetworkStore.getState().nodes.filter(n => n.degree === 2).length}
             </p>
@@ -262,12 +312,12 @@ export default function NetworkPage() {
               <button
                 onClick={() => {
                   setShowMenu(false);
-                  router.push('/coffee-chat');
+                  router.push('/messages');
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#161B22] hover:text-white transition-colors"
               >
-                <Sparkles size={20} />
-                <span>커피챗 관리</span>
+                <MessageCircle size={20} />
+                <span>메세지</span>
               </button>
             </nav>
 
@@ -289,6 +339,9 @@ export default function NetworkPage() {
 
       {/* Coffee Chat Modal */}
       <CoffeeChatModal />
+
+      {/* Connection Request Modal */}
+      <ConnectionRequestModal />
 
       {/* Loading Overlay */}
       {networkLoading && (
