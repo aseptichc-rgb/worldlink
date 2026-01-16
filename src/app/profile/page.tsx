@@ -6,11 +6,11 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Camera,
-  Share2,
   Edit2,
   LogOut,
 } from 'lucide-react';
 import { Avatar, Button, Input, Tag, Card } from '@/components/ui';
+import { InviteShareCard } from '@/components/share/InviteShareCard';
 import { useAuthStore } from '@/store/authStore';
 import {
   updateUser,
@@ -260,28 +260,14 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        {/* Invite Code */}
-        <Card className="p-4 mb-6">
-          <h3 className="text-sm font-medium text-[#8B949E] mb-3 flex items-center gap-2">
-            <Share2 size={16} />
-            초대 코드
-          </h3>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-mono text-xl text-[#00E5FF]">{user.inviteCode}</p>
-              <p className="text-xs text-[#484F58] mt-1">
-                남은 초대권: {user.invitesRemaining}개
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigator.clipboard.writeText(user.inviteCode)}
-            >
-              복사
-            </Button>
-          </div>
-        </Card>
+        {/* Invite Share */}
+        <div className="mb-6">
+          <InviteShareCard
+            inviteCode={user.inviteCode}
+            invitesRemaining={user.invitesRemaining}
+            userName={user.name}
+          />
+        </div>
 
         {/* Logout */}
         <button

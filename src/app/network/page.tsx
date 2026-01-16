@@ -136,37 +136,37 @@ export default function NetworkPage() {
       </div>
 
       {/* Top Bar */}
-      <div className="fixed top-0 left-0 right-0 z-30">
+      <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
         <div className="glass-light mx-4 mt-4 rounded-2xl px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             {/* Menu Button */}
             <button
               onClick={() => setShowMenu(true)}
-              className="p-2 rounded-xl hover:bg-[#21262D] transition-colors"
+              className="flex-shrink-0 p-2 rounded-xl hover:bg-[#21262D] transition-colors"
             >
-              <Menu size={22} className="text-[#8B949E]" />
+              <Menu size={20} className="text-[#8B949E]" />
             </button>
 
             {/* Search Bar */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <SearchBar />
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex-shrink-0 flex items-center gap-1">
               <button
                 onClick={() => router.push('/messages')}
                 className="p-2 rounded-xl hover:bg-[#21262D] transition-colors relative"
               >
-                <Mail size={22} className="text-[#8B949E]" />
+                <Mail size={20} className="text-[#8B949E]" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#FF4081] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#FF4081] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
                     {unreadCount}
                   </span>
                 )}
               </button>
               <button className="p-2 rounded-xl hover:bg-[#21262D] transition-colors relative">
-                <Bell size={22} className="text-[#8B949E]" />
+                <Bell size={20} className="text-[#8B949E]" />
               </button>
               <button
                 onClick={() => router.push('/profile')}

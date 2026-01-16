@@ -74,16 +74,16 @@ export default function SearchBar() {
           if (user) {
             // 이름, 회사, 직책, 키워드로 검색
             const nameMatch = user.name.toLowerCase().includes(query);
-            const companyMatch = user.company.toLowerCase().includes(query);
-            const positionMatch = user.position.toLowerCase().includes(query);
+            const companyMatch = user.company?.toLowerCase().includes(query) ?? false;
+            const positionMatch = user.position?.toLowerCase().includes(query) ?? false;
             const keywordMatch = user.keywords.some(k => k.toLowerCase().includes(query));
 
             if (nameMatch || companyMatch || positionMatch || keywordMatch) {
               results.push({
                 id: user.id,
                 name: user.name,
-                company: user.company,
-                position: user.position,
+                company: user.company ?? "",
+                position: user.position ?? "",
                 profileImage: user.profileImage,
                 keywords: user.keywords,
                 degree: degree,
@@ -187,19 +187,15 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div className="relative w-full">
       {/* Search Input */}
       <div className={`
         relative flex items-center
         bg-[rgba(13,17,23,0.8)] backdrop-blur-xl
-        border rounded-2xl
+        border rounded-xl
         transition-all duration-300
-        ${isFocused ? 'border-[#00E5FF] shadow-[0_0_0_3px_rgba(0,229,255,0.15)]' : 'border-[#21262D]'}
+        ${isFocused ? 'border-[#00E5FF] shadow-[0_0_0_2px_rgba(0,229,255,0.15)]' : 'border-[#21262D]'}
       `}>
-        <Search
-          size={18}
-          className={`absolute left-5 transition-colors ${isFocused ? 'text-[#00E5FF]' : 'text-[#484F58]'}`}
-        />
         <input
           ref={inputRef}
           type="text"
@@ -221,7 +217,7 @@ export default function SearchBar() {
           placeholder="이름, 회사, 키워드로 인맥 검색"
           className="
             w-full bg-transparent text-white
-            py-4 pl-12 pr-12
+            py-2.5 px-4
             text-sm
             placeholder:text-[#484F58]
             focus:outline-none
@@ -230,9 +226,9 @@ export default function SearchBar() {
         {(query || highlightedKeyword) && (
           <button
             onClick={clearSearch}
-            className="absolute right-4 text-[#484F58] hover:text-white transition-colors"
+            className="absolute right-3 text-[#484F58] hover:text-white transition-colors"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         )}
       </div>

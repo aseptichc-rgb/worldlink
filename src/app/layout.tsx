@@ -1,15 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSansKR = Noto_Sans_KR({
+  variable: "--font-noto-sans-kr",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -32,7 +29,30 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    apple: [
+      { url: "/icons/icon-152x152.png", sizes: "152x152" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "NEXUS",
+    startupImage: [
+      {
+        url: "/splash/splash-1170x2532.png",
+        media: "(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)",
+      },
+    ],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "NEXUS",
   },
 };
 
@@ -52,9 +72,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
+        className={`${notoSansKR.variable} antialiased bg-black text-white`}
       >
         {children}
+        <InstallPrompt />
       </body>
     </html>
   );

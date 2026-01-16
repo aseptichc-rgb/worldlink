@@ -49,3 +49,9 @@ next-env.d.ts
 # Firebase
 .firebase/
 firebase-debug.log
+
+# PWA - Service Worker (auto-generated)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
