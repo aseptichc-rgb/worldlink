@@ -39,6 +39,20 @@ export interface InviteCode {
   isValid: boolean;
 }
 
+// Invitation Types (초대 발송 기록)
+export interface Invitation {
+  id: string;
+  senderId: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  inviteCode: string;
+  method: 'email' | 'kakao' | 'sms' | 'link';
+  status: 'pending' | 'sent' | 'accepted' | 'expired';
+  sentAt: Date;
+  acceptedAt?: Date;
+  acceptedBy?: string;
+}
+
 // Keyword Types
 export interface Keyword {
   id: string;

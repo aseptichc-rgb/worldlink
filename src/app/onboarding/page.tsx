@@ -13,6 +13,7 @@ import {
   createConnection,
   generateInviteCode,
   uploadProfileImage,
+  acceptInvitation,
 } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
 import { Mail, Lock } from 'lucide-react';
@@ -91,12 +92,15 @@ function OnboardingContent() {
         keywords: profile.keywords,
         profileImage: profileImageUrl,
         inviteCode: userInviteCode,
-        invitesRemaining: 3,
+        invitesRemaining: 10,
         invitedBy: inviterId,
         coffeeStatus: 'available',
       });
 
       await useInviteCode(inviteCode, firebaseUser.uid);
+
+      // 초대장 수락 처리 (발송 기록이 있는 경우)
+      await acceptInvitation(inviteCode, firebaseUser.uid);
 
       if (inviterId) {
         await createConnection(inviterId, firebaseUser.uid, 'invite');

@@ -10,7 +10,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { Avatar, Button, Input, Tag, Card } from '@/components/ui';
-import { InviteShareCard } from '@/components/share/InviteShareCard';
+import { InviteManager } from '@/components/invite/InviteManager';
 import { useAuthStore } from '@/store/authStore';
 import {
   updateUser,
@@ -260,12 +260,20 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        {/* Invite Share */}
+        {/* Invite Manager */}
         <div className="mb-6">
-          <InviteShareCard
-            inviteCode={user.inviteCode}
+          <InviteManager
+            userId={user.id}
             invitesRemaining={user.invitesRemaining}
             userName={user.name}
+            onInviteSent={async () => {
+              // 초대 발송 후 사용자 정보 새로고침
+              const updatedUser = await getUser(user.id);
+              if (updatedUser) {
+                setUser(updatedUser);
+                setEditedUser(updatedUser);
+              }
+            }}
           />
         </div>
 

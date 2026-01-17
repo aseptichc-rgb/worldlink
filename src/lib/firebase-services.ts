@@ -24,7 +24,7 @@ import {
 } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage } from './firebase';
-import { User, Connection, InviteCode, TimeSlot, CoffeeChatRequest, NetworkNode, NetworkEdge, Recommendation } from '@/types';
+import { User, Connection, InviteCode, Invitation, TimeSlot, CoffeeChatRequest, NetworkNode, NetworkEdge, Recommendation } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // ==================== AUTH SERVICES ====================
@@ -176,6 +176,125 @@ export const useInviteCode = async (code: string, userId: string): Promise<void>
     usedAt: serverTimestamp(),
     isValid: false,
   });
+};
+
+// ==================== INVITATION SERVICES ====================
+
+// 초대장 발송 기록 생성
+export const createInvitation = async (
+  senderId: string,
+  method: Invitation['method'],
+  recipientEmail?: string,
+  recipientPhone?: string
+): Promise<Invitation> => {
+  // 먼저 사용자의 남은 초대 횟수 확인
+  const sender = await getUser(senderId);
+  if (!sender) throw new Error('사용자를 찾을 수 없습니다');
+  if (sender.invitesRemaining <= 0) throw new Error('초대 가능 횟수를 모두 사용했습니다');
+
+  // 새로운 초대 코드 생성
+  const inviteCode = await createInviteCode(senderId);
+
+  const invitationRef = doc(collection(db, 'invitations'));
+
+  const invitation: Invitation = {
+    id: invitationRef.id,
+    senderId,
+    recipientEmail,
+    recipientPhone,
+    inviteCode: inviteCode.code,
+    method,
+    status: 'pending',
+    sentAt: new Date(),
+  };
+
+  await setDoc(invitationRef, {
+    ...invitation,
+    sentAt: serverTimestamp(),
+  });
+
+  // 초대 횟수 감소
+  await updateDoc(doc(db, 'users', senderId), {
+    invitesRemaining: sender.invitesRemaining - 1,
+    updatedAt: serverTimestamp(),
+  });
+
+  return invitation;
+};
+
+// 초대 상태 업데이트
+export const updateInvitationStatus = async (
+  invitationId: string,
+  status: Invitation['status'],
+  acceptedBy?: string
+): Promise<void> => {
+  const invitationRef = doc(db, 'invitations', invitationId);
+  const updates: Record<string, unknown> = { status };
+
+  if (status === 'accepted' && acceptedBy) {
+    updates.acceptedAt = serverTimestamp();
+    updates.acceptedBy = acceptedBy;
+  }
+
+  await updateDoc(invitationRef, updates);
+};
+
+// 사용자의 발송한 초대 목록 조회
+export const getSentInvitations = async (userId: string): Promise<Invitation[]> => {
+  const invitationsRef = collection(db, 'invitations');
+  const q = query(
+    invitationsRef,
+    where('senderId', '==', userId),
+    orderBy('sentAt', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      id: doc.id,
+      sentAt: data.sentAt?.toDate() || new Date(),
+      acceptedAt: data.acceptedAt?.toDate(),
+    };
+  }) as Invitation[];
+};
+
+// 초대 코드로 초대 정보 조회 (가입 시 연결용)
+export const getInvitationByCode = async (code: string): Promise<Invitation | null> => {
+  const invitationsRef = collection(db, 'invitations');
+  const q = query(
+    invitationsRef,
+    where('inviteCode', '==', code.toUpperCase()),
+    where('status', '==', 'pending'),
+    limit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+
+  const doc = snapshot.docs[0];
+  const data = doc.data();
+  return {
+    ...data,
+    id: doc.id,
+    sentAt: data.sentAt?.toDate() || new Date(),
+    acceptedAt: data.acceptedAt?.toDate(),
+  } as Invitation;
+};
+
+// 초대 수락 처리 (가입 완료 시)
+export const acceptInvitation = async (inviteCode: string, acceptedUserId: string): Promise<void> => {
+  const invitation = await getInvitationByCode(inviteCode);
+  if (invitation) {
+    await updateInvitationStatus(invitation.id, 'accepted', acceptedUserId);
+  }
+};
+
+// 초대 링크 생성
+export const generateInviteLink = (inviteCode: string): string => {
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || '';
+  return `${baseUrl}/onboarding?code=${inviteCode}`;
 };
 
 // ==================== CONNECTION SERVICES ====================
