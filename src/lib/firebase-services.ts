@@ -187,10 +187,10 @@ export const createInvitation = async (
   recipientEmail?: string,
   recipientPhone?: string
 ): Promise<Invitation> => {
-  // 먼저 사용자의 남은 초대 횟수 확인
+  // 사용자 확인
   const sender = await getUser(senderId);
   if (!sender) throw new Error('사용자를 찾을 수 없습니다');
-  if (sender.invitesRemaining <= 0) throw new Error('초대 가능 횟수를 모두 사용했습니다');
+  // 초대 횟수 무제한
 
   // 새로운 초대 코드 생성
   const inviteCode = await createInviteCode(senderId);
@@ -208,16 +208,23 @@ export const createInvitation = async (
     sentAt: new Date(),
   };
 
-  await setDoc(invitationRef, {
-    ...invitation,
+  // Firebase에 저장할 때 undefined 값 제거
+  const firestoreData: Record<string, unknown> = {
+    id: invitationRef.id,
+    senderId,
+    inviteCode: inviteCode.code,
+    method,
+    status: 'pending',
     sentAt: serverTimestamp(),
-  });
+  };
 
-  // 초대 횟수 감소
-  await updateDoc(doc(db, 'users', senderId), {
-    invitesRemaining: sender.invitesRemaining - 1,
-    updatedAt: serverTimestamp(),
-  });
+  // undefined가 아닌 경우에만 추가
+  if (recipientEmail) firestoreData.recipientEmail = recipientEmail;
+  if (recipientPhone) firestoreData.recipientPhone = recipientPhone;
+
+  await setDoc(invitationRef, firestoreData);
+
+  // 초대 횟수 무제한이므로 감소하지 않음
 
   return invitation;
 };
