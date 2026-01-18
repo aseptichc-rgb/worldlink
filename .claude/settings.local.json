@@ -17,7 +17,9 @@
       "Bash(cd:*)",
       "Bash(npx tsc:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nUI 개선 및 프로필 페이지 정리\n\n- 네트워크 페이지 1촌/2촌 통계 좌우 여백 균형 수정\n- 프로필 페이지에서 커피챗 상태, 커피챗 가능 시간 기능 제거\n- 프로필 헤더와 아바타 겹침 문제 수정\n- ProfileSheet, SearchBar, NetworkGraph 기능 개선\n- 메시지, 연결 요청 관련 신규 컴포넌트 추가\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd unlimited invites and fix clipboard API\n\n- Remove invite count limit \\(now unlimited\\)\n- Add clipboard fallback for browsers without Clipboard API\n- Fix undefined field error in Firebase\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd unlimited invites and fix clipboard API\n\n- Remove invite count limit \\(now unlimited\\)\n- Add clipboard fallback for browsers without Clipboard API\n- Fix undefined field error in Firebase\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npx vercel:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

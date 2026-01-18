@@ -32,7 +32,7 @@ export default function Tag({
       onClick={onClick}
       className={`
         inline-flex items-center gap-1.5 rounded-full font-medium
-        transition-all duration-200 cursor-pointer
+        transition-all duration-200 cursor-pointer max-w-full
         ${sizeStyles[size]}
         ${isActive
           ? 'bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black border-transparent'
@@ -42,8 +42,8 @@ export default function Tag({
         }
       `}
     >
-      <span>#</span>
-      {label}
+      <span className="flex-shrink-0">#</span>
+      <span className="truncate">{label}</span>
       {onRemove && (
         <button
           onClick={(e) => {

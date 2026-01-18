@@ -230,9 +230,9 @@ export default function ProfilePage() {
         </Card>
 
         {/* Keywords */}
-        <Card className="p-4 mb-6">
+        <Card className="p-4 mb-6 overflow-hidden">
           <h3 className="text-sm font-medium text-[#8B949E] mb-3">관심 키워드</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 overflow-hidden">
             {editedUser.keywords.map((keyword) => (
               <Tag
                 key={keyword}
