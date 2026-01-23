@@ -188,9 +188,9 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
         )}
       </AnimatePresence>
 
-      <p className="mt-8 text-[#484F58] text-sm text-center">
+      <p className="mt-8 text-[#6E7681] text-sm text-center leading-relaxed">
         NEXUS는 초대를 통해서만 가입할 수 있습니다.<br />
-        신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.
+        <span className="text-[#484F58]">신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.</span>
       </p>
     </motion.div>
   );

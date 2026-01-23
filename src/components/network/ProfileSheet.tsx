@@ -2,7 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, MessageCircle, Building, Briefcase, Users, ArrowRight, X, UserPlus, StickyNote, Check, Pencil, Trash2, Mail, Phone } from 'lucide-react';
+import {
+  Star,
+  MessageCircle,
+  Building,
+  Briefcase,
+  Users,
+  ArrowRight,
+  X,
+  UserPlus,
+  StickyNote,
+  Check,
+  Pencil,
+  Trash2,
+  Mail,
+  Phone,
+  Link2,
+  Hash,
+} from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
 import { useNetworkStore } from '@/store/networkStore';
 import { useCoffeeChatStore } from '@/store/coffeeChatStore';
@@ -54,7 +71,6 @@ export default function ProfileSheet() {
           });
           setConnectionPath(pathUsers);
 
-          // 선택된 유저의 전체 데이터 가져오기
           const demoUserData = demoUsers.find(u => u.id === selectedNode.id);
           setSelectedUserData(demoUserData || null);
 
@@ -75,7 +91,6 @@ export default function ProfileSheet() {
           setConnectionPath(pathUsers);
           setTheirConnections([]);
 
-          // 선택된 유저의 전체 데이터 가져오기
           const userData = await getUser(selectedNode.id);
           setSelectedUserData(userData);
         }
@@ -123,20 +138,15 @@ export default function ProfileSheet() {
 
   // 인맥 클릭 시 해당 인물로 이동
   const handleConnectionClick = (user: User) => {
-    // 현재 사용자(나)는 클릭 불가
     const currentUserId = currentUser?.id.startsWith('demo-user-') ? currentUser.id : 'demo-user-1';
     if (user.id === currentUserId) return;
 
-    // 그래프에 있는 노드인지 확인
     const existingNode = nodes.find(n => n.id === user.id);
 
     if (existingNode) {
-      // 그래프에 있으면 해당 노드 선택 및 포커스
       setSelectedNode(existingNode);
       setFocusedNodeId(user.id);
     } else {
-      // 그래프에 없으면 새 노드 객체 생성
-      // 연결 경로를 통해 degree 계산
       const pathIds = findDemoConnectionPath(currentUserId, user.id);
       const degree = pathIds.length > 0 ? pathIds.length - 1 : 2;
 
@@ -151,7 +161,6 @@ export default function ProfileSheet() {
         connectionCount: demoConnections[user.id]?.length || 0,
       };
       setSelectedNode(newNode);
-      // 그래프에 없으므로 포커스는 설정하지 않음
     }
   };
 
@@ -167,301 +176,351 @@ export default function ProfileSheet() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-0 right-0 bottom-0 w-full max-w-[360px] z-30 pointer-events-auto"
+          className="fixed top-0 right-0 bottom-0 w-full max-w-[380px] z-30 pointer-events-auto"
         >
-          {/* Panel Container - 투명 배경으로 그래프가 보이도록 */}
-          <div className="h-full bg-gradient-to-l from-[#0D1117]/95 via-[#0D1117]/90 to-transparent">
-            {/* Content Area - 오른쪽에 고정 */}
-            <div className="h-full w-[320px] ml-auto bg-[#0D1117]/95 backdrop-blur-xl border-l border-[#21262D]/50 overflow-hidden flex flex-col">
+          {/* Panel Container */}
+          <div className="h-full bg-gradient-to-l from-[#0A0E1A]/98 via-[#0D1117]/95 to-transparent">
+            {/* Content Area */}
+            <div className="h-full w-[340px] ml-auto bg-[#0D1117]/98 backdrop-blur-2xl border-l border-[#21262D]/60 overflow-hidden flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[#21262D]/50">
-                <span className="text-sm text-[#8B949E]">인물 정보</span>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#21262D]/50 bg-[#0A0E1A]/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+                  <span className="text-sm font-medium text-[#8B949E]">프로필</span>
+                </div>
                 <button
                   onClick={handleClose}
-                  className="p-1.5 rounded-lg hover:bg-[#21262D] transition-colors"
+                  className="p-2 rounded-lg hover:bg-[#21262D] transition-all duration-200 group"
                 >
-                  <X size={18} className="text-[#8B949E]" />
+                  <X size={18} className="text-[#8B949E] group-hover:text-white transition-colors" />
                 </button>
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto no-scrollbar px-4 py-4">
-                {/* Profile Header - 컴팩트하게 */}
-                <div className="flex items-center gap-3 mb-4">
-                  <Avatar
-                    src={selectedNode.profileImage}
-                    name={selectedNode.name}
-                    size="lg"
-                    hasGlow={selectedNode.degree === 1}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-bold text-white truncate">
-                      {selectedNode.name}
-                    </h2>
-                    <div className="flex items-center gap-1.5 text-[#8B949E] text-sm">
-                      <Building size={12} />
-                      <span className="truncate">{selectedNode.company}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[#8B949E] text-sm">
-                      <Briefcase size={12} />
-                      <span className="truncate">{selectedNode.position}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Connection Badge */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#FFB800]/20 text-[#FFB800] font-medium">
-                    {connectionDegree}단계 거리
-                  </span>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#00E5FF]/20 text-[#00E5FF]">
-                    {selectedNode.connectionCount}명 연결
-                  </span>
-                </div>
-
-                {/* Contact Info - 1촌에게만 표시 */}
-                {selectedNode.degree === 1 && selectedUserData && (
-                  <div className="mb-4">
-                    <h3 className="text-xs font-medium text-[#8B949E] mb-2">연락처</h3>
-                    <div className="bg-[#161B22]/80 rounded-xl p-3 space-y-2">
-                      {selectedUserData.email && (
-                        <a
-                          href={`mailto:${selectedUserData.email}`}
-                          className="flex items-center gap-2 text-sm text-[#8B949E] hover:text-[#00E5FF] transition-colors"
-                        >
-                          <Mail size={14} className="text-[#00E5FF]" />
-                          <span>{selectedUserData.email}</span>
-                        </a>
-                      )}
-                      {selectedUserData.phone && (
-                        <a
-                          href={`tel:${selectedUserData.phone}`}
-                          className="flex items-center gap-2 text-sm text-[#8B949E] hover:text-[#00E5FF] transition-colors"
-                        >
-                          <Phone size={14} className="text-[#00E5FF]" />
-                          <span>{selectedUserData.phone}</span>
-                        </a>
+              <div className="flex-1 overflow-y-auto no-scrollbar">
+                {/* Profile Header Section */}
+                <div className="px-5 py-5 bg-gradient-to-b from-[#0A0E1A]/80 to-transparent">
+                  <div className="flex items-start gap-4">
+                    <div className="relative">
+                      <Avatar
+                        src={selectedNode.profileImage}
+                        name={selectedNode.name}
+                        size="xl"
+                        hasGlow={selectedNode.degree === 1}
+                      />
+                      {selectedNode.degree === 1 && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#00E5FF] flex items-center justify-center">
+                          <Link2 size={12} className="text-[#0A0E1A]" />
+                        </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* Connection Path */}
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-[#8B949E] mb-2">나와의 연결 경로</h3>
-                  {isLoadingPath ? (
-                    <div className="flex items-center justify-center py-3">
-                      <div className="spinner w-5 h-5" />
-                    </div>
-                  ) : connectionPath.length > 0 ? (
-                    <div className="bg-[#161B22]/80 rounded-xl p-3">
-                      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                        {connectionPath.map((user, idx) => (
-                          <div key={user.id} className="flex items-center gap-1.5 flex-shrink-0">
-                            <div className="flex flex-col items-center">
-                              <Avatar
-                                src={user.profileImage}
-                                name={user.name}
-                                size="xs"
-                                hasGlow={idx === 0 || idx === connectionPath.length - 1}
-                              />
-                              <span className="text-[10px] text-[#8B949E] mt-0.5 max-w-[40px] truncate">
-                                {idx === 0 ? '나' : user.name.slice(0, 3)}
-                              </span>
-                            </div>
-                            {idx < connectionPath.length - 1 && (
-                              <ArrowRight size={12} className={`flex-shrink-0 ${idx === 0 ? 'text-[#00E5FF]' : 'text-[#7C4DFF]'}`} />
-                            )}
-                          </div>
-                        ))}
+                    <div className="flex-1 min-w-0 pt-1">
+                      <h2 className="text-xl font-bold text-white truncate tracking-tight">
+                        {selectedNode.name}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1.5 text-[#8B949E] text-sm">
+                        <Building size={14} className="text-[#4A90E2] flex-shrink-0" />
+                        <span className="truncate">{selectedNode.company || '회사 정보 없음'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 text-[#8B949E] text-sm">
+                        <Briefcase size={14} className="text-[#7B68EE] flex-shrink-0" />
+                        <span className="truncate">{selectedNode.position || '직책 정보 없음'}</span>
                       </div>
                     </div>
-                  ) : (
-                    <p className="text-[#484F58] text-xs">연결 경로를 찾을 수 없습니다</p>
-                  )}
-                </div>
+                  </div>
 
-                {/* Keywords */}
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-[#8B949E] mb-2">관심 분야</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedNode.keywords.map((keyword) => {
-                      const isMatching = currentUser?.keywords.includes(keyword);
-                      return (
-                        <Tag
-                          key={keyword}
-                          label={keyword}
-                          isHighlighted={isMatching}
-                          size="sm"
-                        />
-                      );
-                    })}
+                  {/* Stats Badges */}
+                  <div className="flex items-center gap-3 mt-5">
+                    <div className="stat-badge flex-1">
+                      <span className="stat-badge-value text-[#FFB800]">{connectionDegree}</span>
+                      <span className="stat-badge-label">단계 거리</span>
+                    </div>
+                    <div className="stat-badge flex-1">
+                      <span className="stat-badge-value text-[#00E5FF]">{selectedNode.connectionCount}</span>
+                      <span className="stat-badge-label">연결된 인맥</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Memo - 1촌에게만 메모 남기기 가능 */}
-                {selectedNode.degree === 1 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xs font-medium text-[#8B949E] flex items-center gap-1">
-                        <StickyNote size={12} />
-                        나만의 메모
+                <div className="px-5 pb-5 space-y-5">
+                  {/* Contact Info - 1촌에게만 표시 */}
+                  {selectedNode.degree === 1 && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
+                    <section>
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
+                        <Mail size={12} />
+                        연락처
                       </h3>
-                      {currentMemo && !isEditingMemo && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => {
-                              setMemoText(currentMemo.content);
-                              setIsEditingMemo(true);
-                            }}
-                            className="p-1 rounded hover:bg-[#21262D] transition-colors"
+                      <div className="info-card space-y-2.5">
+                        {selectedUserData.email && (
+                          <a
+                            href={`mailto:${selectedUserData.email}`}
+                            className="flex items-center gap-3 text-sm text-[#8B949E] hover:text-[#00E5FF] transition-colors group"
                           >
-                            <Pencil size={12} className="text-[#8B949E]" />
-                          </button>
-                          <button
-                            onClick={handleDeleteMemo}
-                            className="p-1 rounded hover:bg-[#21262D] transition-colors"
+                            <div className="w-8 h-8 rounded-lg bg-[#21262D] flex items-center justify-center group-hover:bg-[#00E5FF]/10 transition-colors">
+                              <Mail size={14} className="text-[#00E5FF]" />
+                            </div>
+                            <span className="truncate">{selectedUserData.email}</span>
+                          </a>
+                        )}
+                        {selectedUserData.phone && (
+                          <a
+                            href={`tel:${selectedUserData.phone}`}
+                            className="flex items-center gap-3 text-sm text-[#8B949E] hover:text-[#00E5FF] transition-colors group"
                           >
-                            <Trash2 size={12} className="text-[#FF4081]" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {isEditingMemo ? (
-                      <div className="bg-[#161B22]/80 rounded-xl p-3">
-                        <textarea
-                          value={memoText}
-                          onChange={(e) => setMemoText(e.target.value)}
-                          placeholder="이 인물에 대한 메모를 남겨보세요..."
-                          maxLength={200}
-                          className="
-                            w-full bg-transparent text-white text-sm
-                            resize-none focus:outline-none
-                            placeholder:text-[#484F58]
-                          "
-                          rows={3}
-                          autoFocus
-                        />
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-[10px] text-[#484F58]">{memoText.length}/200</span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setIsEditingMemo(false);
-                                setMemoText(currentMemo?.content || '');
-                              }}
-                              className="text-xs text-[#8B949E] hover:text-white transition-colors"
-                            >
-                              취소
-                            </button>
-                            <button
-                              onClick={handleSaveMemo}
-                              disabled={!memoText.trim()}
-                              className="flex items-center gap-1 text-xs text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Check size={12} />
-                              저장
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ) : currentMemo ? (
-                      <div className="bg-[#161B22]/80 rounded-xl p-3">
-                        <p className="text-sm text-white whitespace-pre-wrap">{currentMemo.content}</p>
-                        <p className="text-[10px] text-[#484F58] mt-2">
-                          {new Date(currentMemo.updatedAt).toLocaleDateString('ko-KR')} 수정됨
-                        </p>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setIsEditingMemo(true)}
-                        className="w-full bg-[#161B22]/80 rounded-xl p-3 border border-dashed border-[#21262D] hover:border-[#00E5FF]/50 transition-colors text-left"
-                      >
-                        <p className="text-xs text-[#484F58]">
-                          + 메모 추가하기
-                        </p>
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Their Network - 1촌만 실제 인맥 표시, 2촌 이상은 흐리게 처리 */}
-                {theirConnections.length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-xs font-medium text-[#8B949E] mb-2">
-                      <Users size={12} className="inline mr-1" />
-                      {selectedNode.name}님의 인맥 ({theirConnections.length}명)
-                    </h3>
-                    {selectedNode.degree === 1 ? (
-                      // 1촌인 경우: 실제 인맥 목록 표시 (클릭 가능)
-                      <div className="bg-[#161B22]/80 rounded-xl p-3">
-                        <div className="grid grid-cols-5 gap-2">
-                          {theirConnections.slice(0, 10).map((user) => (
-                            <button
-                              key={user.id}
-                              onClick={() => handleConnectionClick(user)}
-                              className="flex flex-col items-center hover:opacity-80 transition-opacity cursor-pointer"
-                            >
-                              <Avatar
-                                src={user.profileImage}
-                                name={user.name}
-                                size="xs"
-                              />
-                              <span className="text-[10px] text-[#8B949E] mt-0.5 max-w-[40px] truncate text-center">
-                                {user.name.slice(0, 3)}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                        {theirConnections.length > 10 && (
-                          <p className="text-[10px] text-[#484F58] text-center mt-2">
-                            +{theirConnections.length - 10}명 더
-                          </p>
+                            <div className="w-8 h-8 rounded-lg bg-[#21262D] flex items-center justify-center group-hover:bg-[#00E5FF]/10 transition-colors">
+                              <Phone size={14} className="text-[#00E5FF]" />
+                            </div>
+                            <span>{selectedUserData.phone}</span>
+                          </a>
                         )}
                       </div>
-                    ) : (
-                      // 2촌 이상인 경우: 흐리게 처리하고 숫자만 표시
-                      <div className="bg-[#161B22]/80 rounded-xl p-4 relative overflow-hidden">
-                        {/* 흐린 아바타 배경 (장식용) */}
-                        <div className="grid grid-cols-5 gap-2 opacity-20 blur-[2px]">
-                          {Array.from({ length: Math.min(10, theirConnections.length) }).map((_, idx) => (
-                            <div key={idx} className="flex flex-col items-center">
-                              <div className="w-6 h-6 rounded-full bg-[#484F58]" />
-                              <div className="w-8 h-2 mt-1 rounded bg-[#484F58]" />
+                    </section>
+                  )}
+
+                  {/* Connection Path */}
+                  <section>
+                    <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
+                      <Link2 size={12} />
+                      연결 경로
+                    </h3>
+                    {isLoadingPath ? (
+                      <div className="info-card flex items-center justify-center py-6">
+                        <div className="spinner w-6 h-6" />
+                      </div>
+                    ) : connectionPath.length > 0 ? (
+                      <div className="info-card info-card-highlight">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                          {connectionPath.map((user, idx) => (
+                            <div key={user.id} className="flex items-center gap-2 flex-shrink-0">
+                              <div className="flex flex-col items-center">
+                                <div className="relative">
+                                  <Avatar
+                                    src={user.profileImage}
+                                    name={user.name}
+                                    size="sm"
+                                    hasGlow={idx === 0 || idx === connectionPath.length - 1}
+                                  />
+                                  {idx === 0 && (
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#00E5FF] flex items-center justify-center text-[8px] font-bold text-[#0A0E1A]">
+                                      나
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-[#8B949E] mt-1.5 max-w-[48px] truncate text-center font-medium">
+                                  {idx === 0 ? '나' : user.name.slice(0, 4)}
+                                </span>
+                              </div>
+                              {idx < connectionPath.length - 1 && (
+                                <div className="flex items-center">
+                                  <div className={`w-6 h-0.5 ${idx === 0 ? 'bg-[#00E5FF]' : 'bg-[#7B68EE]'}`} />
+                                  <ArrowRight size={14} className={`flex-shrink-0 -mx-1 ${idx === 0 ? 'text-[#00E5FF]' : 'text-[#7B68EE]'}`} />
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
-                        {/* 잠금 오버레이 */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#161B22]/60 backdrop-blur-[1px]">
-                          <div className="flex items-center gap-2 text-[#8B949E]">
-                            <Users size={16} />
-                            <span className="text-lg font-bold text-white">{theirConnections.length}명</span>
-                          </div>
-                          <p className="text-[10px] text-[#484F58] mt-1">
-                            1촌과 연결하면 볼 수 있어요
-                          </p>
-                        </div>
+                      </div>
+                    ) : (
+                      <div className="info-card">
+                        <p className="text-[#484F58] text-sm text-center py-2">연결 경로를 찾을 수 없습니다</p>
                       </div>
                     )}
-                  </div>
-                )}
+                  </section>
+
+                  {/* Keywords */}
+                  {selectedNode.keywords.length > 0 && (
+                    <section>
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
+                        <Hash size={12} />
+                        관심 분야
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedNode.keywords.map((keyword) => {
+                          const isMatching = currentUser?.keywords.includes(keyword);
+                          return (
+                            <Tag
+                              key={keyword}
+                              label={keyword}
+                              isHighlighted={isMatching}
+                              size="sm"
+                            />
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Memo - 1촌에게만 메모 남기기 가능 */}
+                  {selectedNode.degree === 1 && (
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider">
+                          <StickyNote size={12} />
+                          나만의 메모
+                        </h3>
+                        {currentMemo && !isEditingMemo && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setMemoText(currentMemo.content);
+                                setIsEditingMemo(true);
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-[#21262D] transition-colors"
+                            >
+                              <Pencil size={12} className="text-[#8B949E]" />
+                            </button>
+                            <button
+                              onClick={handleDeleteMemo}
+                              className="p-1.5 rounded-lg hover:bg-[#21262D] transition-colors"
+                            >
+                              <Trash2 size={12} className="text-[#FF5252]" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {isEditingMemo ? (
+                        <div className="info-card">
+                          <textarea
+                            value={memoText}
+                            onChange={(e) => setMemoText(e.target.value)}
+                            placeholder="이 인물에 대한 메모를 남겨보세요..."
+                            maxLength={200}
+                            className="
+                              w-full bg-transparent text-white text-sm
+                              resize-none focus:outline-none
+                              placeholder:text-[#484F58]
+                              min-h-[80px]
+                            "
+                            autoFocus
+                          />
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#21262D]/50">
+                            <span className="text-[10px] text-[#484F58]">{memoText.length}/200</span>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => {
+                                  setIsEditingMemo(false);
+                                  setMemoText(currentMemo?.content || '');
+                                }}
+                                className="text-xs text-[#8B949E] hover:text-white transition-colors"
+                              >
+                                취소
+                              </button>
+                              <button
+                                onClick={handleSaveMemo}
+                                disabled={!memoText.trim()}
+                                className="flex items-center gap-1.5 text-xs font-medium text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Check size={12} />
+                                저장
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : currentMemo ? (
+                        <div className="info-card">
+                          <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{currentMemo.content}</p>
+                          <p className="text-[10px] text-[#484F58] mt-3 pt-2 border-t border-[#21262D]/50">
+                            {new Date(currentMemo.updatedAt).toLocaleDateString('ko-KR')} 수정됨
+                          </p>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setIsEditingMemo(true)}
+                          className="w-full info-card border-2 border-dashed border-[#21262D] hover:border-[#00E5FF]/50 transition-all duration-200 text-left group"
+                        >
+                          <div className="flex items-center gap-3 py-1">
+                            <div className="w-8 h-8 rounded-lg bg-[#21262D] flex items-center justify-center group-hover:bg-[#00E5FF]/10 transition-colors">
+                              <StickyNote size={14} className="text-[#484F58] group-hover:text-[#00E5FF] transition-colors" />
+                            </div>
+                            <span className="text-sm text-[#484F58] group-hover:text-[#8B949E] transition-colors">
+                              메모 추가하기
+                            </span>
+                          </div>
+                        </button>
+                      )}
+                    </section>
+                  )}
+
+                  {/* Their Network */}
+                  {theirConnections.length > 0 && (
+                    <section>
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
+                        <Users size={12} />
+                        {selectedNode.name}님의 인맥
+                        <span className="text-[#00E5FF]">({theirConnections.length})</span>
+                      </h3>
+                      {selectedNode.degree === 1 ? (
+                        <div className="info-card">
+                          <div className="grid grid-cols-5 gap-3">
+                            {theirConnections.slice(0, 10).map((user) => (
+                              <button
+                                key={user.id}
+                                onClick={() => handleConnectionClick(user)}
+                                className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
+                              >
+                                <div className="relative">
+                                  <Avatar
+                                    src={user.profileImage}
+                                    name={user.name}
+                                    size="sm"
+                                  />
+                                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#00E5FF]/50 transition-colors" />
+                                </div>
+                                <span className="text-[10px] text-[#8B949E] mt-1.5 max-w-[48px] truncate text-center">
+                                  {user.name.slice(0, 4)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          {theirConnections.length > 10 && (
+                            <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#21262D]/50">
+                              +{theirConnections.length - 10}명 더
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="info-card relative overflow-hidden">
+                          {/* 흐린 아바타 배경 */}
+                          <div className="grid grid-cols-5 gap-3 opacity-20 blur-[2px]">
+                            {Array.from({ length: Math.min(10, theirConnections.length) }).map((_, idx) => (
+                              <div key={idx} className="flex flex-col items-center">
+                                <div className="w-8 h-8 rounded-full bg-[#484F58]" />
+                                <div className="w-10 h-2 mt-1.5 rounded bg-[#484F58]" />
+                              </div>
+                            ))}
+                          </div>
+                          {/* 잠금 오버레이 */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#161B22]/70 backdrop-blur-[1px]">
+                            <div className="flex items-center gap-2 text-[#8B949E] mb-2">
+                              <Users size={18} />
+                              <span className="text-xl font-bold text-white">{theirConnections.length}</span>
+                              <span className="text-sm">명</span>
+                            </div>
+                            <p className="text-xs text-[#484F58]">
+                              1촌과 연결하면 볼 수 있어요
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons - 하단 고정 */}
-              <div className="px-4 py-3 border-t border-[#21262D]/50 bg-[#0D1117]">
+              <div className="px-5 py-4 border-t border-[#21262D]/50 bg-[#0A0E1A]/80 backdrop-blur-xl">
                 {selectedNode.degree === 1 ? (
-                  // 1촌인 경우: 관심 + 메세지 버튼
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Button
                       variant="secondary"
-                      className="flex-1 text-sm py-2"
+                      className="flex-1 text-sm py-2.5"
                       leftIcon={<Star size={16} />}
                     >
                       관심
                     </Button>
                     <Button
-                      className="flex-1 text-sm py-2"
+                      className="flex-1 text-sm py-2.5"
                       leftIcon={<MessageCircle size={16} />}
                       onClick={handleCoffeeChatClick}
                     >
@@ -469,26 +528,25 @@ export default function ProfileSheet() {
                     </Button>
                   </div>
                 ) : (
-                  // 2촌 이상인 경우: 인맥 신청 + 메세지 버튼
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-3">
                     <Button
-                      className="w-full text-sm py-2.5 bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF]"
+                      className="w-full text-sm py-3 bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF] transition-all duration-300"
                       leftIcon={<UserPlus size={16} />}
                       onClick={handleConnectionRequestClick}
                     >
                       인맥 신청하기
                     </Button>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <Button
                         variant="secondary"
-                        className="flex-1 text-sm py-2"
+                        className="flex-1 text-sm py-2.5"
                         leftIcon={<Star size={16} />}
                       >
                         관심
                       </Button>
                       <Button
                         variant="secondary"
-                        className="flex-1 text-sm py-2"
+                        className="flex-1 text-sm py-2.5"
                         leftIcon={<MessageCircle size={16} />}
                         onClick={handleCoffeeChatClick}
                       >

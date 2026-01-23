@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { Input, Button } from '@/components/ui';
 import { loginWithEmail, getUser } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
@@ -47,39 +47,55 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Stars Background */}
+    <div className="min-h-screen bg-[#0A0E1A] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Effects */}
       <div className="stars-bg" />
 
-      {/* Logo */}
+      {/* Gradient Orbs */}
+      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#00E5FF]/10 rounded-full blur-[100px]" />
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#7B68EE]/10 rounded-full blur-[100px]" />
+
+      {/* Logo Section */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-12 text-center"
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="mb-10 text-center"
       >
-        <h1 className="text-4xl md:text-5xl font-bold gradient-text breathing">
-          NEXUS
-        </h1>
-        <p className="text-[#8B949E] mt-2 text-sm md:text-base">
+        <div className="relative inline-block">
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-[#00D9FF] via-[#00E5FF] to-[#7B68EE] bg-clip-text text-transparent">
+              NEXUS
+            </span>
+          </h1>
+          {/* Subtle glow effect - 절제된 방식 */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#00E5FF]/20 to-[#7B68EE]/20 blur-2xl -z-10" />
+        </div>
+        <p className="text-[#6E7681] mt-3 text-sm md:text-base font-medium tracking-wide">
           신뢰 기반 비즈니스 네트워크
         </p>
       </motion.div>
 
-      {/* Login Form */}
+      {/* Login Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-full max-w-[400px]"
       >
-        <div className="glass rounded-2xl p-6 md:p-8">
-          <h2 className="text-xl font-bold text-white mb-2 text-center">
-            다시 만나서 반갑습니다
-          </h2>
-          <p className="text-[#8B949E] text-sm text-center mb-6">
-            네트워크로 돌아가기
-          </p>
+        <div className="bg-[#0D1117]/80 backdrop-blur-2xl border border-[#21262D]/60 rounded-2xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              다시 만나서 반갑습니다
+            </h2>
+            <p className="text-[#6E7681] text-sm mt-2">
+              네트워크로 돌아가기
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               type="email"
               label="이메일"
@@ -103,27 +119,48 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full mt-2 bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF] transition-all duration-300"
               size="lg"
               isLoading={isLoading}
+              rightIcon={!isLoading ? <ArrowRight size={18} /> : undefined}
             >
               로그인
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-[#8B949E] text-sm">
-              아직 계정이 없으신가요?{' '}
-              <button
-                onClick={() => router.push('/onboarding')}
-                className="text-[#00E5FF] hover:underline"
-              >
-                초대 코드로 가입
-              </button>
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-[#21262D]" />
+            <span className="text-[#484F58] text-xs">또는</span>
+            <div className="flex-1 h-px bg-[#21262D]" />
+          </div>
+
+          {/* Sign Up Link */}
+          <div className="text-center">
+            <p className="text-[#6E7681] text-sm">
+              아직 계정이 없으신가요?
             </p>
+            <button
+              onClick={() => router.push('/onboarding')}
+              className="mt-2 inline-flex items-center gap-2 text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors text-sm font-medium group"
+            >
+              <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+              초대 코드로 가입하기
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </motion.div>
+
+      {/* Footer */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="mt-8 text-[#484F58] text-xs text-center"
+      >
+        로그인 시 서비스 이용약관 및 개인정보처리방침에 동의합니다
+      </motion.p>
     </div>
   );
 }

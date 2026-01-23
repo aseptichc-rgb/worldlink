@@ -14,6 +14,8 @@ interface InputProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   maxLength?: number;
   disabled?: boolean;
@@ -22,18 +24,23 @@ interface InputProps {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, leftIcon, rightIcon, type = 'text', className = '', ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     const isPassword = type === 'password';
 
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#8B949E] mb-2">
+          <label className="block text-sm font-medium text-[#8B949E] mb-2 tracking-wide">
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#484F58]">
+            <div className={`
+              absolute left-4 top-1/2 -translate-y-1/2
+              transition-colors duration-200
+              ${isFocused ? 'text-[#00E5FF]' : 'text-[#484F58]'}
+            `}>
               {leftIcon}
             </div>
           )}
@@ -41,17 +48,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={`
-              w-full bg-[#0D1117] border border-[#21262D] text-white
-              rounded-xl py-3.5 px-4 text-base
-              transition-all duration-300
-              focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]
-              placeholder:text-[#484F58]
-              hover:border-[#484F58]
+              w-full bg-[#0D1117]/80 border border-[#21262D]/60 text-white
+              rounded-xl py-3.5 px-4 text-base font-medium
+              transition-all duration-300 ease-out
+              focus:outline-none focus:border-[#00E5FF]/60 focus:shadow-[0_0_20px_rgba(0,229,255,0.15)]
+              placeholder:text-[#6E7681]
+              hover:border-[#21262D]
               ${leftIcon ? 'pl-12' : ''}
               ${rightIcon || isPassword ? 'pr-12' : ''}
-              ${error ? 'border-[#FF4081] focus:border-[#FF4081] focus:shadow-[0_0_0_3px_rgba(255,64,129,0.25)]' : ''}
+              ${error ? 'border-[#FF4081]/60 focus:border-[#FF4081]/60 focus:shadow-[0_0_20px_rgba(255,64,129,0.15)]' : ''}
               ${className}
             `}
+            onFocus={(e) => {
+              setIsFocused(true);
+              props.onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              props.onBlur?.(e);
+            }}
             {...props}
           />
           {isPassword && (

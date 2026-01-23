@@ -137,14 +137,14 @@ export default function NetworkPage() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
-        <div className="glass-light mx-4 mt-4 rounded-2xl px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="mx-5 mt-4 bg-[#0D1117]/80 backdrop-blur-2xl border border-[#21262D]/50 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-4">
             {/* Menu Button */}
             <button
               onClick={() => setShowMenu(true)}
-              className="flex-shrink-0 p-2 rounded-xl hover:bg-[#21262D] transition-colors"
+              className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#21262D]/80 transition-all duration-200 group"
             >
-              <Menu size={20} className="text-[#8B949E]" />
+              <Menu size={20} className="text-[#6E7681] group-hover:text-white transition-colors" />
             </button>
 
             {/* Search Bar */}
@@ -152,32 +152,40 @@ export default function NetworkPage() {
               <SearchBar />
             </div>
 
-            {/* Right Actions */}
-            <div className="flex-shrink-0 flex items-center gap-1">
+            {/* Right Actions - 통일된 아이콘 스타일 */}
+            <div className="flex-shrink-0 flex items-center gap-2">
+              {/* Messages */}
               <button
                 onClick={() => router.push('/messages')}
-                className="p-2 rounded-xl hover:bg-[#21262D] transition-colors relative"
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#21262D]/80 transition-all duration-200 relative group"
               >
-                <Mail size={20} className="text-[#8B949E]" />
+                <Mail size={20} className="text-[#6E7681] group-hover:text-white transition-colors" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#FF4081] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+                  <span className="absolute top-1 right-1 min-w-[16px] h-[16px] bg-[#FF4081] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
                     {unreadCount}
                   </span>
                 )}
               </button>
-              <button className="p-2 rounded-xl hover:bg-[#21262D] transition-colors relative">
-                <Bell size={20} className="text-[#8B949E]" />
+
+              {/* Notifications */}
+              <button className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#21262D]/80 transition-all duration-200 group">
+                <Bell size={20} className="text-[#6E7681] group-hover:text-white transition-colors" />
               </button>
+
+              {/* Profile - 절제된 글로우 효과 */}
               <button
                 onClick={() => router.push('/profile')}
-                className="p-1"
+                className="ml-1 relative group"
               >
-                <Avatar
-                  src={user.profileImage}
-                  name={user.name}
-                  size="sm"
-                  hasGlow
-                />
+                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#21262D] group-hover:border-[#00E5FF]/50 transition-all duration-300">
+                  <Avatar
+                    src={user.profileImage}
+                    name={user.name}
+                    size="sm"
+                  />
+                </div>
+                {/* 온라인 상태 표시 (항상 켜진 글로우 대신) */}
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#00E676] border-2 border-[#0D1117] rounded-full" />
               </button>
             </div>
           </div>

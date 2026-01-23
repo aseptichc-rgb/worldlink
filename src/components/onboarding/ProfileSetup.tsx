@@ -9,6 +9,7 @@ import { getPopularKeywords } from '@/lib/firebase-services';
 interface ProfileSetupProps {
   onComplete: (profile: ProfileData) => void;
   isLoading?: boolean;
+  onBack?: () => void;
 }
 
 export interface ProfileData {
@@ -27,7 +28,7 @@ const suggestedKeywords = [
   'Web3', '핀테크', '이커머스', '헬스케어', '에듀테크', 'HR'
 ];
 
-export default function ProfileSetup({ onComplete, isLoading }: ProfileSetupProps) {
+export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileSetupProps) {
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<ProfileData>({
     name: '',
@@ -251,13 +252,25 @@ export default function ProfileSetup({ onComplete, isLoading }: ProfileSetupProp
               </p>
             </div>
 
-            <Button
-              onClick={handleNext}
-              className="w-full"
-              size="lg"
-            >
-              다음
-            </Button>
+            <div className={`flex gap-3 ${onBack ? '' : ''}`}>
+              {onBack && (
+                <Button
+                  variant="secondary"
+                  onClick={onBack}
+                  className="flex-1"
+                  size="lg"
+                >
+                  이전
+                </Button>
+              )}
+              <Button
+                onClick={handleNext}
+                className={onBack ? "flex-[2] bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]" : "w-full bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"}
+                size="lg"
+              >
+                다음
+              </Button>
+            </div>
           </motion.div>
         )}
 
@@ -349,7 +362,7 @@ export default function ProfileSetup({ onComplete, isLoading }: ProfileSetupProp
               </Button>
               <Button
                 onClick={handleNext}
-                className="flex-1"
+                className="flex-[2] bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"
                 size="lg"
                 isLoading={isLoading}
                 disabled={profile.keywords.length === 0}

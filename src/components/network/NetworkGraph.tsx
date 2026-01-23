@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkStore } from '@/store/networkStore';
 import { NetworkNode } from '@/types';
+import { Plus, Minus, Maximize2, RotateCcw } from 'lucide-react';
 
 interface GraphNode extends NetworkNode {
   x?: number;
@@ -20,12 +21,58 @@ interface GraphEdge {
   degree: number;
 }
 
+// 색상 상수 - 계층별 차별화
+const COLORS = {
+  // 노드 색상
+  nodeCore: '#00D9FF',           // 중앙 노드 - 밝은 청색
+  nodePrimary: '#4A90E2',        // 1차 연결 - 청색
+  nodeSecondary: '#7B68EE',      // 2차 연결 - 보라색
+  nodeTertiary: '#9B8ED9',       // 3차 연결 - 연보라
+
+  // 엣지 색상
+  edgePrimary: '#4A90E2',        // 1차 연결선
+  edgeSecondary: '#7B68EE',      // 2차 연결선
+  edgeTertiary: '#9B8ED9',       // 3차 연결선
+  edgeHighlighted: '#FFB800',    // 강조된 연결선
+
+  // 상호작용 색상
+  hover: '#00FFFF',
+  selected: '#FFD700',
+  focused: '#FFB800',
+
+  // 배경 색상
+  nodeBg: '#161B22',
+  nodeBgHover: '#2D3748',
+
+  // 텍스트 색상
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textDimmed: 'rgba(139, 148, 158, 0.3)',
+};
+
+// 노드 크기 상수 - 계층별 차별화
+const NODE_SIZES = {
+  core: 36,        // 중앙 노드 (크게)
+  primary: 26,     // 1차 연결 (기존보다 20% 확대)
+  secondary: 18,   // 2차 연결 (기존보다 10% 축소)
+  tertiary: 14,    // 3차 연결 (최소)
+};
+
+// 폰트 크기 상수
+const FONT_SIZES = {
+  core: 16,
+  primary: 14,
+  secondary: 12,
+  tertiary: 11,
+};
+
 export default function NetworkGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>(0);
   const nodesRef = useRef<GraphNode[]>([]);
   const edgesRef = useRef<GraphEdge[]>([]);
+  const edgeAnimationRef = useRef<number>(0);
 
   const {
     nodes,
@@ -42,7 +89,9 @@ export default function NetworkGraph() {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedNode, setDraggedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphNode } | null>(null);
   const lastPosRef = useRef({ x: 0, y: 0 });
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize dimensions
   useEffect(() => {
@@ -60,7 +109,21 @@ export default function NetworkGraph() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Initialize nodes with fixed positions (no physics)
+  // Edge animation offset
+  useEffect(() => {
+    const animate = () => {
+      edgeAnimationRef.current = (edgeAnimationRef.current + 0.5) % 20;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Initialize nodes with fixed positions
   useEffect(() => {
     if (nodes.length === 0 || dimensions.width === 0) return;
 
@@ -77,21 +140,18 @@ export default function NetworkGraph() {
       let y = centerY;
 
       if (node.degree === 0) {
-        // Center node
         x = centerX;
         y = centerY;
       } else if (node.degree === 1) {
-        // 1st degree - arrange in circle around center
         const index = degree1Nodes.findIndex(n => n.id === node.id);
         const angle = (index / degree1Nodes.length) * Math.PI * 2 - Math.PI / 2;
-        const radius = 160;
+        const radius = 180; // 약간 넓게
         x = centerX + Math.cos(angle) * radius;
         y = centerY + Math.sin(angle) * radius;
       } else if (node.degree === 2) {
-        // 2nd degree - arrange in outer circle
         const index = degree2Nodes.findIndex(n => n.id === node.id);
         const angle = (index / degree2Nodes.length) * Math.PI * 2 - Math.PI / 2;
-        const radius = 320;
+        const radius = 360; // 더 넓게
         x = centerX + Math.cos(angle) * radius;
         y = centerY + Math.sin(angle) * radius;
       }
@@ -102,8 +162,8 @@ export default function NetworkGraph() {
         y,
         vx: 0,
         vy: 0,
-        fx: x, // Fixed position
-        fy: y, // Fixed position
+        fx: x,
+        fy: y,
       };
     });
 
@@ -113,87 +173,6 @@ export default function NetworkGraph() {
       target: edge.target,
     }));
   }, [nodes, edges, dimensions]);
-
-  // Physics simulation
-  const simulate = useCallback(() => {
-    const nodes = nodesRef.current;
-    const edges = edgesRef.current;
-
-    if (nodes.length === 0) return;
-
-    // Apply forces
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      if (node.fx !== null && node.fx !== undefined) {
-        node.x = node.fx;
-        node.vx = 0;
-      }
-      if (node.fy !== null && node.fy !== undefined) {
-        node.y = node.fy;
-        node.vy = 0;
-      }
-
-      // Repulsion between nodes
-      for (let j = i + 1; j < nodes.length; j++) {
-        const other = nodes[j];
-        const dx = (other.x || 0) - (node.x || 0);
-        const dy = (other.y || 0) - (node.y || 0);
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const force = 2000 / (dist * dist);
-
-        if (node.fx === null || node.fx === undefined) {
-          node.vx = (node.vx || 0) - (dx / dist) * force * 0.1;
-          node.vy = (node.vy || 0) - (dy / dist) * force * 0.1;
-        }
-        if (other.fx === null || other.fx === undefined) {
-          other.vx = (other.vx || 0) + (dx / dist) * force * 0.1;
-          other.vy = (other.vy || 0) + (dy / dist) * force * 0.1;
-        }
-      }
-    }
-
-    // Attraction along edges
-    for (const edge of edges) {
-      const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
-      const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
-
-      if (!source || !target) continue;
-
-      const dx = (target.x || 0) - (source.x || 0);
-      const dy = (target.y || 0) - (source.y || 0);
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const targetDist = edge.degree === 1 ? 150 : 200;
-      const force = (dist - targetDist) * 0.02;
-
-      if (source.fx === null || source.fx === undefined) {
-        source.vx = (source.vx || 0) + (dx / dist) * force;
-        source.vy = (source.vy || 0) + (dy / dist) * force;
-      }
-      if (target.fx === null || target.fx === undefined) {
-        target.vx = (target.vx || 0) - (dx / dist) * force;
-        target.vy = (target.vy || 0) - (dy / dist) * force;
-      }
-    }
-
-    // Update positions with damping
-    for (const node of nodes) {
-      if (node.fx !== null && node.fx !== undefined) continue;
-
-      node.vx = (node.vx || 0) * 0.9;
-      node.vy = (node.vy || 0) * 0.9;
-      node.x = (node.x || 0) + (node.vx || 0);
-      node.y = (node.y || 0) + (node.vy || 0);
-
-      // Boundary constraints
-      const padding = 50;
-      if (node.x !== undefined) {
-        node.x = Math.max(padding, Math.min(dimensions.width - padding, node.x));
-      }
-      if (node.y !== undefined) {
-        node.y = Math.max(padding, Math.min(dimensions.height - padding, node.y));
-      }
-    }
-  }, [dimensions]);
 
   // 포커스된 노드와 연결된 노드 ID들을 계산
   const getConnectedNodeIds = useCallback((nodeId: string | null): Set<string> => {
@@ -216,6 +195,136 @@ export default function NetworkGraph() {
     return connectedIds;
   }, []);
 
+  // 노드 크기 계산
+  const getNodeSize = useCallback((node: GraphNode, isHovered: boolean, isFocused: boolean): number => {
+    let size = node.degree === 0 ? NODE_SIZES.core :
+               node.degree === 1 ? NODE_SIZES.primary :
+               node.degree === 2 ? NODE_SIZES.secondary : NODE_SIZES.tertiary;
+
+    if (isHovered) size += 6;
+    if (isFocused && node.degree !== 0) size += 4;
+
+    return size;
+  }, []);
+
+  // 노드 색상 계산
+  const getNodeColor = useCallback((node: GraphNode, isDimmed: boolean): string => {
+    if (isDimmed) {
+      return node.degree === 0 ? 'rgba(0, 217, 255, 0.3)' :
+             node.degree === 1 ? 'rgba(74, 144, 226, 0.3)' :
+             'rgba(123, 104, 238, 0.3)';
+    }
+    return node.degree === 0 ? COLORS.nodeCore :
+           node.degree === 1 ? COLORS.nodePrimary : COLORS.nodeSecondary;
+  }, []);
+
+  // 노드 그리기 헬퍼 함수
+  const drawNode = useCallback((
+    ctx: CanvasRenderingContext2D,
+    node: GraphNode,
+    options: {
+      isHovered: boolean;
+      isFocused: boolean;
+      isConnected: boolean;
+      isDimmed: boolean;
+      isHighlighted: boolean;
+    }
+  ) => {
+    const { isHovered, isFocused, isConnected, isDimmed, isHighlighted } = options;
+    const radius = getNodeSize(node, isHovered, isFocused);
+    const x = node.x || 0;
+    const y = node.y || 0;
+
+    // 1. Outer Glow Effect
+    if ((node.degree === 0 || isHighlighted || isHovered || isFocused || isConnected) && !isDimmed) {
+      const glowRadius = radius * (isHovered || isFocused ? 3 : 2.5);
+      const gradient = ctx.createRadialGradient(x, y, radius, x, y, glowRadius);
+
+      if (isFocused && node.degree !== 0) {
+        gradient.addColorStop(0, 'rgba(255, 184, 0, 0.6)');
+      } else if (isConnected && !isFocused) {
+        gradient.addColorStop(0, 'rgba(255, 184, 0, 0.4)');
+      } else if (node.degree === 0) {
+        gradient.addColorStop(0, 'rgba(0, 217, 255, 0.5)');
+      } else if (isHighlighted) {
+        gradient.addColorStop(0, 'rgba(0, 229, 255, 0.5)');
+      } else if (node.degree === 1) {
+        gradient.addColorStop(0, 'rgba(74, 144, 226, 0.4)');
+      } else {
+        gradient.addColorStop(0, 'rgba(123, 104, 238, 0.3)');
+      }
+      gradient.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    // 2. Node Circle
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+
+    if (node.degree === 0) {
+      // 중앙 노드: 그라디언트
+      const gradient = ctx.createLinearGradient(x - radius, y - radius, x + radius, y + radius);
+      gradient.addColorStop(0, isDimmed ? 'rgba(0, 217, 255, 0.3)' : COLORS.nodeCore);
+      gradient.addColorStop(1, isDimmed ? 'rgba(123, 104, 238, 0.3)' : COLORS.nodeSecondary);
+      ctx.fillStyle = gradient;
+    } else if (isFocused) {
+      ctx.fillStyle = COLORS.focused;
+    } else if (isConnected) {
+      ctx.fillStyle = COLORS.nodeBgHover;
+    } else {
+      ctx.fillStyle = isDimmed ? 'rgba(22, 27, 34, 0.3)' : COLORS.nodeBg;
+    }
+    ctx.fill();
+
+    // 3. Border
+    ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : 2;
+    if (isDimmed) {
+      ctx.strokeStyle = 'rgba(33, 38, 45, 0.3)';
+    } else if (isFocused && node.degree !== 0) {
+      ctx.strokeStyle = COLORS.selected;
+    } else if (isConnected && node.degree !== 0) {
+      ctx.strokeStyle = COLORS.focused;
+    } else if (isHighlighted) {
+      ctx.strokeStyle = COLORS.hover;
+    } else if (node.degree === 0) {
+      ctx.strokeStyle = COLORS.nodeCore;
+    } else if (node.degree === 1) {
+      ctx.strokeStyle = COLORS.nodePrimary;
+    } else {
+      ctx.strokeStyle = COLORS.nodeSecondary;
+    }
+    ctx.stroke();
+
+    // 4. Name Label with background
+    const fontSize = node.degree === 0 ? FONT_SIZES.core :
+                     node.degree === 1 ? FONT_SIZES.primary :
+                     FONT_SIZES.secondary;
+
+    ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const name = node.name.length > 6 ? node.name.slice(0, 6) + '...' : node.name;
+    const labelY = y + radius + 18;
+
+    // Label background
+    if (!isDimmed) {
+      const textWidth = ctx.measureText(name).width;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.beginPath();
+      ctx.roundRect(x - textWidth / 2 - 6, labelY - 8, textWidth + 12, 16, 4);
+      ctx.fill();
+    }
+
+    // Label text
+    ctx.fillStyle = isDimmed ? COLORS.textDimmed : COLORS.textPrimary;
+    ctx.fillText(name, x, labelY);
+  }, [getNodeSize]);
+
   // Render
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -225,7 +334,6 @@ export default function NetworkGraph() {
     const nodes = nodesRef.current;
     const edges = edgesRef.current;
 
-    // 포커스된 노드와 연결된 노드들 계산
     const connectedNodeIds = getConnectedNodeIds(focusedNodeId);
     const hasFocusedNode = focusedNodeId !== null;
 
@@ -234,145 +342,98 @@ export default function NetworkGraph() {
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.scale, transform.scale);
 
-    // Draw edges (연결되지 않은 것들 먼저 - 뒤에 그려짐)
+    // ===== Draw Edges =====
+    // 1. Non-connected edges first (drawn behind)
     for (const edge of edges) {
       const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
       const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
-
       if (!source || !target) continue;
 
       const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
       const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+      const isConnectedToFocused = hasFocusedNode && (sourceId === focusedNodeId || targetId === focusedNodeId);
 
-      // 포커스된 노드와 연결된 엣지인지 확인
-      const isConnectedToFocused = hasFocusedNode &&
-        (sourceId === focusedNodeId || targetId === focusedNodeId);
+      if (isConnectedToFocused) continue;
 
       const isHighlighted = highlightedKeyword &&
         (source.keywords.includes(highlightedKeyword) || target.keywords.includes(highlightedKeyword));
-
-      // 연결된 엣지는 나중에 그림 (앞에 보이도록)
-      if (isConnectedToFocused) continue;
+      const dimmedByFocus = hasFocusedNode && !isConnectedToFocused;
 
       ctx.beginPath();
       ctx.moveTo(source.x || 0, source.y || 0);
       ctx.lineTo(target.x || 0, target.y || 0);
 
-      // 포커스된 노드가 있을 때, 연결되지 않은 엣지는 흐리게
-      const dimmedByFocus = hasFocusedNode && !isConnectedToFocused;
-
       if (edge.degree === 1) {
         ctx.strokeStyle = dimmedByFocus
-          ? 'rgba(0, 229, 255, 0.1)'
-          : isHighlighted ? '#00E5FF' : 'rgba(0, 229, 255, 0.4)';
-        ctx.lineWidth = isHighlighted ? 2 : 1;
+          ? 'rgba(74, 144, 226, 0.1)'
+          : isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.5)';
+        ctx.lineWidth = isHighlighted ? 2.5 : 1.5;
         ctx.setLineDash([]);
       } else {
         ctx.strokeStyle = dimmedByFocus
-          ? 'rgba(124, 77, 255, 0.08)'
-          : isHighlighted ? '#7C4DFF' : 'rgba(124, 77, 255, 0.3)';
+          ? 'rgba(123, 104, 238, 0.08)'
+          : isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.35)';
         ctx.lineWidth = 1;
-        ctx.setLineDash([5, 5]);
+        ctx.setLineDash([6, 6]);
       }
-
       ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    // Draw connected edges (포커스된 노드와 연결된 엣지들 - 앞에 그려짐)
+    // 2. Connected edges (drawn on top with animation)
     for (const edge of edges) {
       const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
       const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
-
       if (!source || !target) continue;
 
       const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
       const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
-
-      const isConnectedToFocused = hasFocusedNode &&
-        (sourceId === focusedNodeId || targetId === focusedNodeId);
+      const isConnectedToFocused = hasFocusedNode && (sourceId === focusedNodeId || targetId === focusedNodeId);
 
       if (!isConnectedToFocused) continue;
 
+      // Main edge
       ctx.beginPath();
       ctx.moveTo(source.x || 0, source.y || 0);
       ctx.lineTo(target.x || 0, target.y || 0);
-
-      // 연결된 엣지는 밝은 주황색/노란색으로 강조
-      ctx.strokeStyle = '#FFB800';
+      ctx.strokeStyle = COLORS.edgeHighlighted;
       ctx.lineWidth = 3;
       ctx.setLineDash([]);
       ctx.stroke();
+
+      // Animated flow effect
+      ctx.beginPath();
+      ctx.moveTo(source.x || 0, source.y || 0);
+      ctx.lineTo(target.x || 0, target.y || 0);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 16]);
+      ctx.lineDashOffset = -edgeAnimationRef.current;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
     }
 
-    // Draw nodes (연결되지 않은 것들 먼저)
+    // ===== Draw Nodes =====
+    // 1. Non-connected nodes first
     for (const node of nodes) {
       const isConnectedToFocused = connectedNodeIds.has(node.id);
-
-      // 연결된 노드는 나중에 그림
       if (hasFocusedNode && isConnectedToFocused) continue;
 
-      const isHighlighted = highlightedKeyword && node.keywords.includes(highlightedKeyword);
+      const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
-      const isDimmed = (highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
+      const isDimmed = !!(highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
 
-      // Node size based on degree
-      let radius = node.degree === 0 ? 30 : node.degree === 1 ? 20 : 15;
-      if (isHovered) radius += 5;
-
-      // Glow effect
-      if ((node.degree === 0 || isHighlighted || isHovered) && !isDimmed) {
-        const gradient = ctx.createRadialGradient(
-          node.x || 0, node.y || 0, radius,
-          node.x || 0, node.y || 0, radius * 2.5
-        );
-        gradient.addColorStop(0, node.degree === 0 ? 'rgba(0, 229, 255, 0.4)' : 'rgba(124, 77, 255, 0.4)');
-        gradient.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(node.x || 0, node.y || 0, radius * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-      }
-
-      // Node circle
-      ctx.beginPath();
-      ctx.arc(node.x || 0, node.y || 0, radius, 0, Math.PI * 2);
-
-      if (node.degree === 0) {
-        const gradient = ctx.createLinearGradient(
-          (node.x || 0) - radius, (node.y || 0) - radius,
-          (node.x || 0) + radius, (node.y || 0) + radius
-        );
-        gradient.addColorStop(0, isDimmed ? 'rgba(0, 229, 255, 0.3)' : '#00E5FF');
-        gradient.addColorStop(1, isDimmed ? 'rgba(124, 77, 255, 0.3)' : '#7C4DFF');
-        ctx.fillStyle = gradient;
-      } else {
-        ctx.fillStyle = isDimmed ? 'rgba(22, 27, 34, 0.3)' : '#161B22';
-      }
-      ctx.fill();
-
-      // Border
-      ctx.strokeStyle = isDimmed
-        ? 'rgba(33, 38, 45, 0.3)'
-        : isHighlighted
-          ? '#00E5FF'
-          : node.degree === 1
-            ? '#00E5FF'
-            : '#7C4DFF';
-      ctx.lineWidth = isHovered ? 3 : 2;
-      ctx.stroke();
-
-      // Name label
-      ctx.fillStyle = isDimmed ? 'rgba(139, 148, 158, 0.3)' : '#FFFFFF';
-      ctx.font = `${node.degree === 0 ? 14 : 12}px -apple-system, BlinkMacSystemFont, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      const name = node.name.length > 8 ? node.name.slice(0, 8) + '...' : node.name;
-      ctx.fillText(name, node.x || 0, (node.y || 0) + radius + 16);
+      drawNode(ctx, node, {
+        isHovered,
+        isFocused: false,
+        isConnected: false,
+        isDimmed,
+        isHighlighted,
+      });
     }
 
-    // Draw connected nodes (포커스된 노드와 연결된 노드들 - 앞에 그려짐)
+    // 2. Connected nodes (drawn on top)
     if (hasFocusedNode) {
       for (const node of nodes) {
         const isConnectedToFocused = connectedNodeIds.has(node.id);
@@ -381,74 +442,18 @@ export default function NetworkGraph() {
         const isFocused = focusedNodeId === node.id;
         const isHovered = hoveredNode?.id === node.id;
 
-        // Node size based on degree
-        let radius = node.degree === 0 ? 30 : node.degree === 1 ? 20 : 15;
-        if (isHovered || isFocused) radius += 5;
-
-        // Glow effect for connected/focused nodes
-        const gradient = ctx.createRadialGradient(
-          node.x || 0, node.y || 0, radius,
-          node.x || 0, node.y || 0, radius * 2.5
-        );
-        if (isFocused && node.degree !== 0) {
-          gradient.addColorStop(0, 'rgba(255, 184, 0, 0.7)');
-        } else if (node.degree === 0) {
-          gradient.addColorStop(0, 'rgba(0, 229, 255, 0.5)');
-        } else {
-          gradient.addColorStop(0, 'rgba(255, 184, 0, 0.4)');
-        }
-        gradient.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(node.x || 0, node.y || 0, radius * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // Node circle
-        ctx.beginPath();
-        ctx.arc(node.x || 0, node.y || 0, radius, 0, Math.PI * 2);
-
-        if (node.degree === 0) {
-          const grad = ctx.createLinearGradient(
-            (node.x || 0) - radius, (node.y || 0) - radius,
-            (node.x || 0) + radius, (node.y || 0) + radius
-          );
-          grad.addColorStop(0, '#00E5FF');
-          grad.addColorStop(1, '#7C4DFF');
-          ctx.fillStyle = grad;
-        } else if (isFocused) {
-          ctx.fillStyle = '#FFB800';
-        } else {
-          // 연결된 노드는 밝은 배경
-          ctx.fillStyle = '#2D3748';
-        }
-        ctx.fill();
-
-        // Border
-        if (isFocused && node.degree !== 0) {
-          ctx.strokeStyle = '#FFD700';
-          ctx.lineWidth = 4;
-        } else if (node.degree === 0) {
-          ctx.strokeStyle = '#00E5FF';
-          ctx.lineWidth = 2;
-        } else {
-          ctx.strokeStyle = '#FFB800';
-          ctx.lineWidth = 3;
-        }
-        ctx.stroke();
-
-        // Name label
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = `${node.degree === 0 || isFocused ? 14 : 13}px -apple-system, BlinkMacSystemFont, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        const name = node.name.length > 8 ? node.name.slice(0, 8) + '...' : node.name;
-        ctx.fillText(name, node.x || 0, (node.y || 0) + radius + 16);
+        drawNode(ctx, node, {
+          isHovered,
+          isFocused,
+          isConnected: true,
+          isDimmed: false,
+          isHighlighted: false,
+        });
       }
     }
 
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, drawNode]);
 
   // Smooth animation to target transform
   useEffect(() => {
@@ -459,15 +464,12 @@ export default function NetworkGraph() {
         const dx = targetTransform.x - prev.x;
         const dy = targetTransform.y - prev.y;
         const ds = targetTransform.scale - prev.scale;
-
-        // Easing factor (0.1 = smooth, 0.3 = faster)
         const ease = 0.12;
 
         const newX = prev.x + dx * ease;
         const newY = prev.y + dy * ease;
         const newScale = prev.scale + ds * ease;
 
-        // Check if we're close enough to stop
         if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(ds) < 0.01) {
           setTargetTransform(null);
           return targetTransform;
@@ -477,14 +479,13 @@ export default function NetworkGraph() {
       });
     };
 
-    const intervalId = setInterval(animateToTarget, 16); // ~60fps
+    const intervalId = setInterval(animateToTarget, 16);
     return () => clearInterval(intervalId);
   }, [targetTransform]);
 
-  // Animation loop (render only, no physics simulation)
+  // Animation loop
   useEffect(() => {
     const animate = () => {
-      // simulate(); // Disabled physics simulation for fixed positions
       render();
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -505,9 +506,10 @@ export default function NetworkGraph() {
     for (const node of nodesRef.current) {
       const dx = (node.x || 0) - adjustedX;
       const dy = (node.y || 0) - adjustedY;
-      const radius = node.degree === 0 ? 30 : node.degree === 1 ? 20 : 15;
+      const radius = node.degree === 0 ? NODE_SIZES.core :
+                     node.degree === 1 ? NODE_SIZES.primary : NODE_SIZES.secondary;
 
-      if (dx * dx + dy * dy < radius * radius) {
+      if (dx * dx + dy * dy < (radius + 10) * (radius + 10)) {
         return node;
       }
     }
@@ -531,6 +533,12 @@ export default function NetworkGraph() {
     }
 
     lastPosRef.current = { x: e.clientX, y: e.clientY };
+
+    // Clear tooltip
+    setTooltip(null);
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -543,6 +551,7 @@ export default function NetworkGraph() {
     if (draggedNode) {
       draggedNode.fx = (x - transform.x) / transform.scale;
       draggedNode.fy = (y - transform.y) / transform.scale;
+      setTooltip(null);
     } else if (isDragging) {
       const dx = e.clientX - lastPosRef.current.x;
       const dy = e.clientY - lastPosRef.current.y;
@@ -552,18 +561,32 @@ export default function NetworkGraph() {
         y: prev.y + dy,
       }));
       lastPosRef.current = { x: e.clientX, y: e.clientY };
+      setTooltip(null);
     } else {
       const node = getNodeAtPosition(x, y);
       setHoveredNode(node);
+
       if (canvasRef.current) {
         canvasRef.current.style.cursor = node ? 'pointer' : 'grab';
+      }
+
+      // Tooltip logic with delay
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+
+      if (node && node.degree !== 0) {
+        hoverTimeoutRef.current = setTimeout(() => {
+          setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top - 60, node });
+        }, 500);
+      } else {
+        setTooltip(null);
       }
     }
   };
 
   const handleMouseUp = () => {
     if (draggedNode) {
-      // Keep the node fixed at the new position after drag
       draggedNode.x = draggedNode.fx ?? draggedNode.x;
       draggedNode.y = draggedNode.fy ?? draggedNode.y;
       setDraggedNode(null);
@@ -571,14 +594,21 @@ export default function NetworkGraph() {
     setIsDragging(false);
   };
 
-  // 특정 노드를 화면 중앙으로 부드럽게 이동
+  const handleMouseLeave = () => {
+    handleMouseUp();
+    setHoveredNode(null);
+    setTooltip(null);
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+  };
+
   const focusOnNode = (node: GraphNode) => {
     if (!node.x || !node.y) return;
 
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
 
-    // 노드를 화면 중앙에 위치시키기 위한 transform 계산
     const targetX = centerX - node.x * transform.scale;
     const targetY = centerY - node.y * transform.scale;
 
@@ -588,7 +618,6 @@ export default function NetworkGraph() {
       scale: transform.scale,
     });
 
-    // 포커스된 노드 설정
     setFocusedNodeId(node.id);
   };
 
@@ -601,15 +630,11 @@ export default function NetworkGraph() {
     const node = getNodeAtPosition(x, y);
 
     if (node) {
-      // 노드 클릭 시 부드럽게 해당 노드로 이동
       focusOnNode(node);
-
-      // degree가 0이 아닌 경우에만 프로필 시트 열기
       if (node.degree !== 0) {
         setSelectedNode(node);
       }
     } else {
-      // 빈 공간 클릭 시 포커스 해제
       setFocusedNodeId(null);
     }
   };
@@ -631,11 +656,33 @@ export default function NetworkGraph() {
     }));
   };
 
+  const handleZoomIn = () => {
+    setTransform(prev => ({
+      ...prev,
+      scale: Math.min(3, prev.scale * 1.25),
+    }));
+  };
+
+  const handleZoomOut = () => {
+    setTransform(prev => ({
+      ...prev,
+      scale: Math.max(0.3, prev.scale * 0.8),
+    }));
+  };
+
+  const handleFitToScreen = () => {
+    setTransform({ x: 0, y: 0, scale: 1 });
+    setFocusedNodeId(null);
+  };
+
+  const handleReset = () => {
+    setTransform({ x: 0, y: 0, scale: 1 });
+    setFocusedNodeId(null);
+    setSelectedNode(null);
+  };
+
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full relative"
-    >
+    <div ref={containerRef} className="w-full h-full relative">
       <canvas
         ref={canvasRef}
         width={dimensions.width}
@@ -643,32 +690,75 @@ export default function NetworkGraph() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onClick={handleClick}
         onWheel={handleWheel}
         className="cursor-grab active:cursor-grabbing"
       />
 
+      {/* Tooltip */}
+      <AnimatePresence>
+        {tooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="absolute pointer-events-none z-50"
+            style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
+          >
+            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#21262D] rounded-xl px-4 py-3 shadow-2xl">
+              <div className="text-sm font-semibold text-white mb-1">{tooltip.node.name}</div>
+              <div className="text-xs text-[#8B949E]">{tooltip.node.company}</div>
+              <div className="text-xs text-[#8B949E]">{tooltip.node.position}</div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800]">
+                  {tooltip.node.degree}단계
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00E5FF]/20 text-[#00E5FF]">
+                  {tooltip.node.connectionCount}명 연결
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Zoom Controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+      <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-10">
         <button
-          onClick={() => setTransform(prev => ({ ...prev, scale: Math.min(3, prev.scale * 1.2) }))}
-          className="w-10 h-10 rounded-full bg-[#161B22] border border-[#21262D] text-white hover:border-[#00E5FF] transition-colors flex items-center justify-center"
+          onClick={handleZoomIn}
+          className="zoom-btn group"
+          title="확대"
         >
-          +
+          <Plus size={20} className="group-hover:text-[#00E5FF] transition-colors" />
         </button>
         <button
-          onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(0.3, prev.scale * 0.8) }))}
-          className="w-10 h-10 rounded-full bg-[#161B22] border border-[#21262D] text-white hover:border-[#00E5FF] transition-colors flex items-center justify-center"
+          onClick={handleZoomOut}
+          className="zoom-btn group"
+          title="축소"
         >
-          -
+          <Minus size={20} className="group-hover:text-[#00E5FF] transition-colors" />
         </button>
         <button
-          onClick={() => setTransform({ x: 0, y: 0, scale: 1 })}
-          className="w-10 h-10 rounded-full bg-[#161B22] border border-[#21262D] text-[#8B949E] hover:border-[#00E5FF] hover:text-white transition-colors flex items-center justify-center text-xs"
+          onClick={handleFitToScreen}
+          className="zoom-btn group"
+          title="전체 보기"
         >
-          1:1
+          <Maximize2 size={18} className="group-hover:text-[#00E5FF] transition-colors" />
         </button>
+        <button
+          onClick={handleReset}
+          className="zoom-btn group"
+          title="초기화"
+        >
+          <RotateCcw size={18} className="group-hover:text-[#00E5FF] transition-colors" />
+        </button>
+      </div>
+
+      {/* Zoom Level Indicator */}
+      <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#161B22]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#21262D]">
+        {Math.round(transform.scale * 100)}%
       </div>
     </div>
   );

@@ -190,12 +190,22 @@ export default function SearchBar() {
     <div className="relative w-full">
       {/* Search Input */}
       <div className={`
-        relative flex items-center
-        bg-[rgba(13,17,23,0.8)] backdrop-blur-xl
+        relative flex items-center gap-3
+        bg-[#0D1117]/90 backdrop-blur-xl
         border rounded-xl
-        transition-all duration-300
-        ${isFocused ? 'border-[#00E5FF] shadow-[0_0_0_2px_rgba(0,229,255,0.15)]' : 'border-[#21262D]'}
+        transition-all duration-300 ease-out
+        ${isFocused
+          ? 'border-[#00E5FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.15)]'
+          : 'border-[#21262D]/80 hover:border-[#21262D]'}
       `}>
+        {/* Search Icon */}
+        <div className={`
+          pl-4 transition-colors duration-200
+          ${isFocused ? 'text-[#00E5FF]' : 'text-[#484F58]'}
+        `}>
+          <Search size={18} />
+        </div>
+
         <input
           ref={inputRef}
           type="text"
@@ -214,19 +224,22 @@ export default function SearchBar() {
               }
             }
           }}
-          placeholder="이름, 회사, 키워드로 인맥 검색"
+          placeholder="이름, 회사, 키워드로 검색"
           className="
-            w-full bg-transparent text-white
-            py-2.5 px-4
-            text-sm
-            placeholder:text-[#484F58]
+            flex-1 bg-transparent text-white
+            py-3 pr-4
+            text-sm font-medium
+            placeholder:text-[#6E7681]
             focus:outline-none
+            tracking-wide
           "
         />
+
+        {/* Clear Button */}
         {(query || highlightedKeyword) && (
           <button
             onClick={clearSearch}
-            className="absolute right-3 text-[#484F58] hover:text-white transition-colors"
+            className="pr-4 text-[#484F58] hover:text-[#00E5FF] transition-colors duration-200"
           >
             <X size={16} />
           </button>
