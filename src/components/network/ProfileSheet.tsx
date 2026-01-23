@@ -28,6 +28,7 @@ import { useMemoStore } from '@/store/memoStore';
 import { useAuthStore } from '@/store/authStore';
 import { findConnectionPath, getUser } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections } from '@/lib/demo-data';
+import { getDisplayInfo } from '@/lib/privacy-utils';
 import { User, NetworkNode } from '@/types';
 
 export default function ProfileSheet() {
@@ -203,7 +204,7 @@ export default function ProfileSheet() {
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <Avatar
-                        src={selectedNode.profileImage}
+                        src={selectedNode.degree === 1 ? selectedNode.profileImage : undefined}
                         name={selectedNode.name}
                         size="xl"
                         hasGlow={selectedNode.degree === 1}
@@ -215,17 +216,43 @@ export default function ProfileSheet() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                      <h2 className="text-xl font-bold text-white truncate tracking-tight">
-                        {selectedNode.name}
-                      </h2>
-                      <div className="flex items-center gap-2 mt-1.5 text-[#8B949E] text-sm">
-                        <Building size={14} className="text-[#4A90E2] flex-shrink-0" />
-                        <span className="truncate">{selectedNode.company || '회사 정보 없음'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1 text-[#8B949E] text-sm">
-                        <Briefcase size={14} className="text-[#7B68EE] flex-shrink-0" />
-                        <span className="truncate">{selectedNode.position || '직책 정보 없음'}</span>
-                      </div>
+                      {/* 1촌이면 전체 정보, 아니면 비식별화된 정보 표시 */}
+                      {(() => {
+                        const isConnected = selectedNode.degree === 1;
+                        const displayInfo = selectedUserData
+                          ? getDisplayInfo(selectedUserData, isConnected)
+                          : {
+                              name: isConnected ? selectedNode.name : `${selectedNode.name?.[0] || '?'}*님`,
+                              company: isConnected ? selectedNode.company : null,
+                              position: isConnected ? selectedNode.position : null,
+                              isPublic: true
+                            };
+
+                        return (
+                          <>
+                            <h2 className="text-xl font-bold text-white truncate tracking-tight">
+                              {displayInfo.name}
+                            </h2>
+                            {displayInfo.company && (
+                              <div className="flex items-center gap-2 mt-1.5 text-[#8B949E] text-sm">
+                                <Building size={14} className="text-[#4A90E2] flex-shrink-0" />
+                                <span className="truncate">{displayInfo.company}</span>
+                              </div>
+                            )}
+                            {displayInfo.position && (
+                              <div className="flex items-center gap-2 mt-1 text-[#8B949E] text-sm">
+                                <Briefcase size={14} className="text-[#7B68EE] flex-shrink-0" />
+                                <span className="truncate">{displayInfo.position}</span>
+                              </div>
+                            )}
+                            {!displayInfo.company && !displayInfo.position && !isConnected && (
+                              <div className="flex items-center gap-2 mt-1.5 text-[#484F58] text-sm">
+                                <span className="text-xs">1촌 연결 시 상세 정보 확인 가능</span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 

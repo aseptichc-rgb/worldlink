@@ -14,6 +14,20 @@ export const metadata: Metadata = {
   description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다. 초대 기반 폐쇄형 비즈니스 인맥 플랫폼",
   keywords: ["비즈니스 네트워크", "인맥 관리", "커피챗", "네트워킹", "스타트업"],
   authors: [{ name: "NEXUS" }],
+  // 검색 엔진 인덱싱 차단 - 개인정보 보호
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: "NEXUS - 신뢰 기반 비즈니스 네트워크",
     description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다",

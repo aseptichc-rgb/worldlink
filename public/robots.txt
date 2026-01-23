@@ -1,0 +1,45 @@
+# NEXUS - 비즈니스 네트워크 앱
+# 개인정보 보호를 위해 검색 엔진 크롤링 차단
+
+# 모든 검색 엔진 봇 차단
+User-agent: *
+Disallow: /
+
+# 구글봇 명시적 차단
+User-agent: Googlebot
+Disallow: /
+
+# 빙봇 차단
+User-agent: Bingbot
+Disallow: /
+
+# 네이버봇 차단
+User-agent: Yeti
+Disallow: /
+
+# 다음봇 차단
+User-agent: Daumoa
+Disallow: /
+
+# 기타 주요 검색 엔진 봇 차단
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+# 소셜 미디어 크롤러 차단
+User-agent: facebookexternalhit
+Disallow: /
+
+User-agent: Twitterbot
+Disallow: /
+
+User-agent: LinkedInBot
+Disallow: /
+
+# 사이트맵 없음 (의도적)
+# Sitemap: 제공하지 않음

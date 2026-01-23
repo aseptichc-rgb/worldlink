@@ -15,7 +15,7 @@ export default function Home() {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
         setUser(userData);
-        router.push('/network');
+        router.push('/card');
       } else {
         setUser(null);
         // Redirect to login immediately

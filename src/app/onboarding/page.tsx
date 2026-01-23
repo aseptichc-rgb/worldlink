@@ -1,53 +1,32 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import InviteCodeInput from '@/components/onboarding/InviteCodeInput';
 import ProfileSetup, { ProfileData } from '@/components/onboarding/ProfileSetup';
 import { Input, Button } from '@/components/ui';
 import {
   registerWithEmail,
   createUser,
-  useInviteCode,
-  createConnection,
   generateInviteCode,
   uploadProfileImage,
-  acceptInvitation,
 } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
-import { Mail, Lock, ArrowRight, ArrowLeft, User, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight, User } from 'lucide-react';
 
-type OnboardingStep = 'invite' | 'auth' | 'profile';
+type OnboardingStep = 'auth' | 'profile';
 
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setUser, inviteCode: storedInviteCode } = useAuthStore();
+  const { setUser } = useAuthStore();
 
-  const [step, setStep] = useState<OnboardingStep>('invite');
-  const [inviteCode, setInviteCode] = useState('');
-  const [inviterId, setInviterId] = useState('');
+  const [step, setStep] = useState<OnboardingStep>('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const urlCode = searchParams.get('code');
-    if (urlCode) {
-      setInviteCode(urlCode);
-    } else if (storedInviteCode) {
-      setInviteCode(storedInviteCode);
-    }
-  }, [searchParams, storedInviteCode]);
-
-  const handleValidCode = (code: string, inviter: string) => {
-    setInviteCode(code);
-    setInviterId(inviter);
-    setStep('auth');
-  };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,24 +67,25 @@ function OnboardingContent() {
         name: profile.name,
         company: profile.company,
         position: profile.position,
+        companySize: profile.companySize,
+        industry: profile.industry,
+        positionLevel: profile.positionLevel,
         bio: profile.bio,
         keywords: profile.keywords,
         profileImage: profileImageUrl,
         inviteCode: userInviteCode,
         invitesRemaining: 10,
-        invitedBy: inviterId,
         coffeeStatus: 'available',
+        privacySettings: {
+          allowProfileDiscovery: profile.privacyConsent.allowProfileDiscovery,
+          displaySettings: profile.privacyConsent.displaySettings,
+          consentedAt: new Date(),
+          updatedAt: new Date(),
+        },
       });
 
-      await useInviteCode(inviteCode, firebaseUser.uid);
-      await acceptInvitation(inviteCode, firebaseUser.uid);
-
-      if (inviterId) {
-        await createConnection(inviterId, firebaseUser.uid, 'invite');
-      }
-
       setUser(newUser);
-      router.push('/network');
+      router.push('/card');
     } catch (err: any) {
       console.error('Registration error:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -121,7 +101,6 @@ function OnboardingContent() {
 
   // Step indicator
   const steps = [
-    { key: 'invite', label: '초대 코드', icon: Sparkles },
     { key: 'auth', label: '계정 생성', icon: Mail },
     { key: 'profile', label: '프로필 설정', icon: User },
   ];
@@ -195,30 +174,6 @@ function OnboardingContent() {
 
       {/* Content */}
       <AnimatePresence mode="wait">
-        {step === 'invite' && (
-          <motion.div
-            key="invite"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-[420px]"
-          >
-            <div className="bg-[#0D1117]/80 backdrop-blur-2xl border border-[#21262D]/60 rounded-2xl p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-white tracking-tight">
-                  초대 코드 입력
-                </h2>
-                <p className="text-[#6E7681] text-sm mt-2">
-                  초대받은 코드를 입력해주세요
-                </p>
-              </div>
-
-              <InviteCodeInput onValidCode={handleValidCode} />
-            </div>
-          </motion.div>
-        )}
-
         {step === 'auth' && (
           <motion.div
             key="auth"
@@ -270,26 +225,14 @@ function OnboardingContent() {
                   required
                 />
 
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="flex-1"
-                    size="lg"
-                    leftIcon={<ArrowLeft size={18} />}
-                    onClick={() => setStep('invite')}
-                  >
-                    이전
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-[2] bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"
-                    size="lg"
-                    rightIcon={<ArrowRight size={18} />}
-                  >
-                    다음
-                  </Button>
-                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"
+                  size="lg"
+                  rightIcon={<ArrowRight size={18} />}
+                >
+                  다음
+                </Button>
               </form>
             </div>
           </motion.div>
@@ -325,7 +268,7 @@ function OnboardingContent() {
       </AnimatePresence>
 
       {/* Login Link */}
-      {step === 'invite' && (
+      {step === 'auth' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

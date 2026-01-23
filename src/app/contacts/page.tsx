@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useContactStore } from '@/store/contactStore';
-import { CATEGORY_INFO, ContactCategory, Contact } from '@/types/contacts';
+import { useContactStore, InvitableContact } from '@/store/contactStore';
+import { CATEGORY_INFO, ContactCategory } from '@/types/contacts';
 import ContactGraph from '@/components/contacts/ContactGraph';
 import ContactList from '@/components/contacts/ContactList';
 import ContactDetail from '@/components/contacts/ContactDetail';
 import CategoryFilter from '@/components/contacts/CategoryFilter';
-import { Search, LayoutGrid, Network, Users, ChevronLeft, Loader2 } from 'lucide-react';
+import { Search, LayoutGrid, Network, Users, ChevronLeft, Loader2, UserPlus, Check, Filter } from 'lucide-react';
 
 type ViewMode = 'graph' | 'list';
+type FilterMode = 'all' | 'invited' | 'pending';
 
 export default function ContactsPage() {
   const {
@@ -23,15 +24,25 @@ export default function ContactsPage() {
     loadContacts,
     setSelectedCategory,
     setSelectedContact,
-    setSearchQuery
+    setSearchQuery,
+    inviteContact,
+    getInvitedContacts,
+    getPendingContacts,
   } = useContactStore();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('graph');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchContacts = async () => {
+      // 이미 로드된 데이터가 있으면 스킵
+      if (contacts.length > 0) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         const response = await fetch('/contacts.csv');
@@ -50,13 +61,33 @@ export default function ContactsPage() {
     };
 
     fetchContacts();
-  }, [loadContacts]);
+  }, [loadContacts, contacts.length]);
 
   const handleBack = () => {
     if (selectedContact) {
       setSelectedContact(null);
     }
   };
+
+  const handleInvite = (contactId: string) => {
+    inviteContact(contactId);
+  };
+
+  // 필터 적용된 연락처
+  const getDisplayContacts = (): InvitableContact[] => {
+    let displayContacts = filteredContacts;
+
+    if (filterMode === 'invited') {
+      displayContacts = displayContacts.filter(c => c.isInvited);
+    } else if (filterMode === 'pending') {
+      displayContacts = displayContacts.filter(c => !c.isInvited);
+    }
+
+    return displayContacts;
+  };
+
+  const invitedCount = contacts.filter(c => c.isInvited).length;
+  const pendingCount = contacts.filter(c => !c.isInvited).length;
 
   if (isLoading) {
     return (
@@ -102,24 +133,16 @@ export default function ContactsPage() {
                   <Users size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold">내 네트워크</h1>
-                  <p className="text-xs text-[#8B949E]">{contacts.length}명의 연락처</p>
+                  <h1 className="text-lg font-bold">내 연락처</h1>
+                  <p className="text-xs text-[#8B949E]">
+                    {contacts.length}명 중 {invitedCount}명 초대됨
+                  </p>
                 </div>
               </div>
             )}
 
             {!selectedContact && (
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode('graph')}
-                  className={`p-2 rounded-lg transition-all ${
-                    viewMode === 'graph'
-                      ? 'bg-[#00D9FF]/20 text-[#00D9FF]'
-                      : 'text-[#8B949E] hover:text-white'
-                  }`}
-                >
-                  <Network size={20} />
-                </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-lg transition-all ${
@@ -130,13 +153,23 @@ export default function ContactsPage() {
                 >
                   <LayoutGrid size={20} />
                 </button>
+                <button
+                  onClick={() => setViewMode('graph')}
+                  className={`p-2 rounded-lg transition-all ${
+                    viewMode === 'graph'
+                      ? 'bg-[#00D9FF]/20 text-[#00D9FF]'
+                      : 'text-[#8B949E] hover:text-white'
+                  }`}
+                >
+                  <Network size={20} />
+                </button>
               </div>
             )}
           </div>
 
           {/* Search */}
           {!selectedContact && (
-            <div className="relative">
+            <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484F58]" size={18} />
               <input
                 type="text"
@@ -145,6 +178,44 @@ export default function ContactsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-[#161B22] border border-[#21262D] rounded-xl text-white placeholder-[#484F58] focus:outline-none focus:border-[#00D9FF]/50 transition-colors"
               />
+            </div>
+          )}
+
+          {/* Filter Tabs */}
+          {!selectedContact && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterMode('all')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                  filterMode === 'all'
+                    ? 'bg-[#00D9FF]/20 text-[#00D9FF] border border-[#00D9FF]/50'
+                    : 'bg-[#161B22] text-[#8B949E] border border-[#21262D]'
+                }`}
+              >
+                전체 ({contacts.length})
+              </button>
+              <button
+                onClick={() => setFilterMode('pending')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+                  filterMode === 'pending'
+                    ? 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/50'
+                    : 'bg-[#161B22] text-[#8B949E] border border-[#21262D]'
+                }`}
+              >
+                <UserPlus size={14} />
+                대기 ({pendingCount})
+              </button>
+              <button
+                onClick={() => setFilterMode('invited')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+                  filterMode === 'invited'
+                    ? 'bg-[#3FB950]/20 text-[#3FB950] border border-[#3FB950]/50'
+                    : 'bg-[#161B22] text-[#8B949E] border border-[#21262D]'
+                }`}
+              >
+                <Check size={14} />
+                초대됨 ({invitedCount})
+              </button>
             </div>
           )}
         </div>
@@ -177,10 +248,10 @@ export default function ContactsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-[calc(100vh-180px)]"
+              className="h-[calc(100vh-220px)]"
             >
               <ContactGraph
-                contacts={filteredContacts}
+                contacts={getDisplayContacts()}
                 onSelectContact={setSelectedContact}
               />
             </motion.div>
@@ -192,8 +263,10 @@ export default function ContactsPage() {
               exit={{ opacity: 0 }}
             >
               <ContactList
-                contacts={filteredContacts}
+                contacts={getDisplayContacts()}
                 onSelectContact={setSelectedContact}
+                onInvite={handleInvite}
+                showInviteButton={true}
               />
             </motion.div>
           )}

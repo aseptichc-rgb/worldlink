@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Contact, ContactCategory, CATEGORY_INFO } from '@/types/contacts';
+import { ContactCategory, CATEGORY_INFO } from '@/types/contacts';
+import { InvitableContact } from '@/store/contactStore';
 import { Plus, Minus, RotateCcw, Link2, Building2, Star } from 'lucide-react';
 
 interface GraphNode {
@@ -14,7 +15,7 @@ interface GraphNode {
   x: number;
   y: number;
   radius: number;
-  contact: Contact;
+  contact: InvitableContact;
   companyId: string; // For grouping same company
   isHub: boolean; // Has connections to multiple categories
   hubScore: number;
@@ -35,8 +36,8 @@ interface CategoryCluster {
 }
 
 interface ContactGraphProps {
-  contacts: Contact[];
-  onSelectContact: (contact: Contact) => void;
+  contacts: InvitableContact[];
+  onSelectContact: (contact: InvitableContact) => void;
 }
 
 // Normalize company name for matching
@@ -135,7 +136,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
     const centerY = dimensions.height / 2;
 
     // Group contacts by category
-    const categoryGroups = new Map<ContactCategory, Contact[]>();
+    const categoryGroups = new Map<ContactCategory, InvitableContact[]>();
     for (const contact of contacts) {
       const list = categoryGroups.get(contact.category) || [];
       list.push(contact);
@@ -143,7 +144,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
     }
 
     // Find people in same companies (cross-category connections)
-    const companyMap = new Map<string, Contact[]>();
+    const companyMap = new Map<string, InvitableContact[]>();
     for (const contact of contacts) {
       const normalizedCompany = normalizeCompany(contact.company);
       if (normalizedCompany && normalizedCompany.length > 2) {

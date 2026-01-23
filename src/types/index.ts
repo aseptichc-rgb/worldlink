@@ -1,3 +1,40 @@
+// 개인정보 공개 설정 타입
+export interface PrivacySettings {
+  // 등록 현황 공개 동의 (네트워크에 표시되기 위한 필수 조건)
+  allowProfileDiscovery: boolean;
+  // 공개 범위 설정
+  displaySettings: {
+    // 이름 표시 방식: 'full' = 전체, 'partial' = 성씨만 (예: 김*님)
+    nameDisplay: 'full' | 'partial';
+    // 회사 표시 방식: 'full' = 회사명, 'industry' = 업종만 (예: IT/통신), 'size' = 규모만 (예: 대기업)
+    companyDisplay: 'full' | 'industry' | 'size' | 'hidden';
+    // 직책 표시 방식: 'full' = 전체, 'level' = 직급 수준 (예: 실무자급, 관리자급)
+    positionDisplay: 'full' | 'level' | 'hidden';
+  };
+  // 동의 일시
+  consentedAt?: Date;
+  // 마지막 수정 일시
+  updatedAt?: Date;
+}
+
+// 구독 플랜 타입
+export type SubscriptionPlan = 'free' | 'premium';
+
+// 구독 정보 타입
+export interface Subscription {
+  plan: SubscriptionPlan;
+  // 구독 시작일
+  startedAt?: Date;
+  // 구독 만료일 (premium인 경우)
+  expiresAt?: Date;
+  // 자동 갱신 여부
+  autoRenew?: boolean;
+  // 결제 방법
+  paymentMethod?: 'card' | 'kakao' | 'apple' | 'google';
+  // 마지막 결제일
+  lastPaymentAt?: Date;
+}
+
 // User Types
 export interface User {
   id: string;
@@ -8,12 +45,22 @@ export interface User {
   profileImage?: string;
   company?: string;
   position?: string;
+  // 회사 규모 (비식별화 표시용)
+  companySize?: 'startup' | 'sme' | 'enterprise' | 'freelance';
+  // 업종 (비식별화 표시용)
+  industry?: string;
+  // 직급 수준 (비식별화 표시용)
+  positionLevel?: 'entry' | 'staff' | 'manager' | 'executive';
   bio?: string;
   keywords: string[];
   inviteCode: string;
   invitesRemaining: number;
   invitedBy?: string;
   coffeeStatus: 'available' | 'busy' | 'pending';
+  // 개인정보 공개 설정
+  privacySettings?: PrivacySettings;
+  // 구독 정보
+  subscription?: Subscription;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -141,4 +188,51 @@ export interface SearchResult {
   users: NetworkNode[];
   total: number;
   hasMore: boolean;
+}
+
+// Business Card Types (QR 명함)
+export interface BusinessCard {
+  id: string;
+  userId: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  bio?: string;
+  profileImage?: string;
+  keywords: string[];
+  // 인맥 공개 설정
+  networkVisibility: 'public' | 'connections_only' | 'private';
+  // QR 코드용 고유 식별자
+  qrCode: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 저장된 명함 (내가 받은 명함)
+export interface SavedCard {
+  id: string;
+  ownerId: string; // 명함을 저장한 사용자
+  cardId: string; // 저장된 명함의 ID
+  card: BusinessCard; // 명함 정보
+  memo?: string; // 메모
+  tags?: string[]; // 커스텀 태그
+  savedAt: Date;
+  lastViewedAt?: Date;
+}
+
+// 소개 요청
+export interface IntroductionRequest {
+  id: string;
+  requesterId: string; // 요청자
+  introducerId: string; // 소개해주는 사람 (중간 연결자)
+  targetId: string; // 소개받고 싶은 사람
+  message: string; // 요청 메시지
+  purpose: 'business' | 'collaboration' | 'hiring' | 'networking' | 'other';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  requesterCard?: BusinessCard;
+  createdAt: Date;
+  respondedAt?: Date;
+  completedAt?: Date;
 }

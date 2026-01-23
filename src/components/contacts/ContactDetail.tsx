@@ -1,12 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Contact, CATEGORY_INFO } from '@/types/contacts';
+import { CATEGORY_INFO } from '@/types/contacts';
+import { InvitableContact } from '@/store/contactStore';
 import { Phone, Mail, Building2, MapPin, Calendar, Briefcase, Copy, ExternalLink, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 
 interface ContactDetailProps {
-  contact: Contact;
+  contact: InvitableContact;
 }
 
 export default function ContactDetail({ contact }: ContactDetailProps) {

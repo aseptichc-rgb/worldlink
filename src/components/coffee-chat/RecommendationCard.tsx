@@ -6,6 +6,7 @@ import { Avatar, Tag, Card } from '@/components/ui';
 import { Recommendation } from '@/types';
 import { useCoffeeChatStore } from '@/store/coffeeChatStore';
 import { useNetworkStore } from '@/store/networkStore';
+import { getDisplayInfo } from '@/lib/privacy-utils';
 
 interface RecommendationCardProps {
   recommendation: Recommendation;
@@ -16,6 +17,9 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
   const { openRequestModal } = useCoffeeChatStore();
   const { setHighlightedKeyword } = useNetworkStore();
 
+  // 추천에서는 아직 1촌이 아니므로 비식별화된 정보 표시
+  const displayInfo = getDisplayInfo(recommendation.user, false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -25,21 +29,21 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
       <Card hoverable className="p-4">
         <div className="flex items-start gap-3">
           <Avatar
-            src={recommendation.user.profileImage}
-            name={recommendation.user.name}
+            src={undefined} // 비식별화를 위해 프로필 이미지 숨김
+            name={displayInfo.name}
             size="lg"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-white truncate">
-                {recommendation.user.name}
+                {displayInfo.name}
               </h3>
               <span className="text-xs text-[#7C4DFF] bg-[#7C4DFF]/20 px-2 py-0.5 rounded-full">
                 {recommendation.connectionPath.length - 1}촌
               </span>
             </div>
             <p className="text-sm text-[#8B949E] truncate">
-              {recommendation.user.company} · {recommendation.user.position}
+              {[displayInfo.company, displayInfo.position].filter(Boolean).join(' · ') || '정보 비공개'}
             </p>
 
             {/* Reason */}

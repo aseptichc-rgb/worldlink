@@ -1,498 +1,127 @@
 import { User, NetworkNode, NetworkEdge, Recommendation } from '@/types';
 
-// Demo users for testing without Firebase
+// 김재영 프로필 (본인) - 중심 유저
 export const demoUsers: User[] = [
-  // 현재 가입자 (중심 유저)
   {
-    id: 'demo-user-1',
-    name: '김민수',
-    email: 'minsu@example.com',
-    phone: '010-1234-5678',
-    company: 'TechStartup Inc.',
-    position: 'CEO & Founder',
-    bio: '기술로 세상을 바꾸는 꿈을 꾸고 있습니다',
-    keywords: ['스타트업', 'AI', '투자', 'B2B', 'SaaS'],
+    id: 'user-jaeyoung',
+    name: '김재영',
+    email: 'jaeyoung.kim@example.com',
+    phone: '010-8286-0906',
+    company: '',
+    position: '',
+    companySize: 'startup',
+    industry: 'IT/소프트웨어',
+    positionLevel: 'executive',
+    bio: '다양한 분야의 전문가들과 네트워크를 구축하고 있습니다',
+    keywords: ['네트워킹', '투자', '헬스케어', 'AI', '스타트업'],
     profileImage: undefined,
-    inviteCode: 'NEX-001',
-    invitesRemaining: 3,
+    inviteCode: 'JYK-001',
+    invitesRemaining: 999,
     coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  // 1차 연결 (직접 연결된 사람들) - 8명
-  {
-    id: 'demo-user-2',
-    name: '이서연',
-    email: 'seoyeon@example.com',
-    phone: '010-2345-6789',
-    company: 'DesignLab',
-    position: 'Creative Director',
-    bio: '디자인으로 브랜드의 가치를 높입니다',
-    keywords: ['UX디자인', '브랜딩', '스타트업', '마케팅'],
-    profileImage: undefined,
-    inviteCode: 'NEX-002',
-    invitesRemaining: 2,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-3',
-    name: '박준영',
-    email: 'junyoung@example.com',
-    phone: '010-3456-7890',
-    company: 'Alpha Ventures',
-    position: 'Partner',
-    bio: '혁신적인 스타트업을 발굴하고 성장시킵니다',
-    keywords: ['투자', '스타트업', '핀테크', 'Web3'],
-    profileImage: undefined,
-    inviteCode: 'NEX-003',
-    invitesRemaining: 5,
-    coffeeStatus: 'busy',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-4',
-    name: '최지은',
-    email: 'jieun@example.com',
-    phone: '010-4567-8901',
-    company: 'GrowthHackers',
-    position: 'CMO',
-    bio: '데이터 기반 마케팅 전략 전문가',
-    keywords: ['마케팅', '그로스해킹', 'B2B', '콘텐츠'],
-    profileImage: undefined,
-    inviteCode: 'NEX-004',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-5',
-    name: '정현우',
-    email: 'hyunwoo@example.com',
-    phone: '010-5678-9012',
-    company: 'CodeFactory',
-    position: 'CTO',
-    bio: '확장 가능한 아키텍처를 설계합니다',
-    keywords: ['개발', 'AI', 'SaaS', '클라우드'],
-    profileImage: undefined,
-    inviteCode: 'NEX-005',
-    invitesRemaining: 4,
-    coffeeStatus: 'pending',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-6',
-    name: '강예진',
-    email: 'yejin@example.com',
-    phone: '010-6789-0123',
-    company: 'MediCare Plus',
-    position: 'Product Manager',
-    bio: '헬스케어의 미래를 만들어갑니다',
-    keywords: ['헬스케어', 'PM', '스타트업', 'B2B'],
-    profileImage: undefined,
-    inviteCode: 'NEX-006',
-    invitesRemaining: 2,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-7',
-    name: '윤성민',
-    email: 'sungmin@example.com',
-    phone: '010-7890-1234',
-    company: 'EduNext',
-    position: 'CEO',
-    bio: '교육의 패러다임을 바꾸는 에듀테크',
-    keywords: ['에듀테크', '스타트업', 'AI', '콘텐츠'],
-    profileImage: undefined,
-    inviteCode: 'NEX-007',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-8',
-    name: '한소희',
-    email: 'sohee@example.com',
-    phone: '010-8901-2345',
-    company: 'Naver',
-    position: 'Senior Engineer',
-    bio: '검색 알고리즘 최적화 전문가',
-    keywords: ['검색', 'AI', '머신러닝', '대기업'],
-    profileImage: undefined,
-    inviteCode: 'NEX-008',
-    invitesRemaining: 4,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-9',
-    name: '오진우',
-    email: 'jinwoo@example.com',
-    phone: '010-9012-3456',
-    company: 'Kakao',
-    position: 'Product Owner',
-    bio: '사용자 중심의 제품을 만듭니다',
-    keywords: ['PM', '플랫폼', 'B2C', '모빌리티'],
-    profileImage: undefined,
-    inviteCode: 'NEX-009',
-    invitesRemaining: 3,
-    coffeeStatus: 'busy',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  // 2차 연결 (친구의 친구) - 21명
-  {
-    id: 'demo-user-10',
-    name: '임지현',
-    email: 'jihyun@example.com',
-    phone: '010-1122-3344',
-    company: 'BrandStudio',
-    position: 'Brand Manager',
-    bio: '브랜드 스토리텔링의 힘을 믿습니다',
-    keywords: ['브랜딩', '마케팅', '콘텐츠', '광고'],
-    profileImage: undefined,
-    inviteCode: 'NEX-010',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-11',
-    name: '송태현',
-    email: 'taehyun@example.com',
-    phone: '010-2233-4455',
-    company: 'DataInsight',
-    position: 'Data Scientist',
-    bio: '데이터에서 인사이트를 발굴합니다',
-    keywords: ['AI', '데이터', 'SaaS', '머신러닝'],
-    profileImage: undefined,
-    inviteCode: 'NEX-011',
-    invitesRemaining: 2,
-    coffeeStatus: 'pending',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-12',
-    name: '한수진',
-    email: 'sujin@example.com',
-    phone: '010-3344-5566',
-    company: 'FinanceHub',
-    position: 'CFO',
-    bio: '스타트업 재무 전략 전문가',
-    keywords: ['핀테크', '투자', 'Web3', '재무'],
-    profileImage: undefined,
-    inviteCode: 'NEX-012',
-    invitesRemaining: 4,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-13',
-    name: '권도윤',
-    email: 'doyun@example.com',
-    phone: '010-4455-6677',
-    company: 'BlockChain Labs',
-    position: 'Blockchain Developer',
-    bio: '탈중앙화 금융의 미래를 만듭니다',
-    keywords: ['Web3', '블록체인', '크립토', 'DeFi'],
-    profileImage: undefined,
-    inviteCode: 'NEX-013',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-14',
-    name: '신유나',
-    email: 'yuna@example.com',
-    phone: '010-5566-7788',
-    company: 'ContentFirst',
-    position: 'Content Strategist',
-    bio: '콘텐츠로 성장을 이끕니다',
-    keywords: ['콘텐츠', '마케팅', 'SNS', '인플루언서'],
-    profileImage: undefined,
-    inviteCode: 'NEX-014',
-    invitesRemaining: 2,
-    coffeeStatus: 'busy',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-15',
-    name: '조민재',
-    email: 'minjae@example.com',
-    phone: '010-6677-8899',
-    company: 'Samsung Electronics',
-    position: 'AI Researcher',
-    bio: '차세대 AI 기술을 연구합니다',
-    keywords: ['AI', '딥러닝', '연구', '대기업'],
-    profileImage: undefined,
-    inviteCode: 'NEX-015',
-    invitesRemaining: 5,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-16',
-    name: '백서영',
-    email: 'seoyoung@example.com',
-    phone: '010-7788-9900',
-    company: 'HR Partners',
-    position: 'HR Director',
-    bio: '인재 채용과 조직문화 전문가',
-    keywords: ['HR', '채용', '조직문화', '스타트업'],
-    profileImage: undefined,
-    inviteCode: 'NEX-016',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-17',
-    name: '류준혁',
-    email: 'junhyuk@example.com',
-    phone: '010-8899-0011',
-    company: 'LegalTech',
-    position: 'Legal Counsel',
-    bio: '스타트업 법률 자문 전문가',
-    keywords: ['법률', '스타트업', '계약', '지식재산'],
-    profileImage: undefined,
-    inviteCode: 'NEX-017',
-    invitesRemaining: 2,
-    coffeeStatus: 'pending',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-18',
-    name: '장하은',
-    email: 'haeun@example.com',
-    phone: '010-9900-1122',
-    company: 'FoodTech Korea',
-    position: 'Operations Manager',
-    bio: '푸드테크 서비스 운영 전문가',
-    keywords: ['푸드테크', '운영', 'O2O', '물류'],
-    profileImage: undefined,
-    inviteCode: 'NEX-018',
-    invitesRemaining: 4,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-19',
-    name: '김동현',
-    email: 'donghyun@example.com',
-    phone: '010-1111-2222',
-    company: 'TravelNow',
-    position: 'CEO',
-    bio: '여행의 새로운 경험을 만듭니다',
-    keywords: ['트래블테크', '스타트업', 'B2C', '여행'],
-    profileImage: undefined,
-    inviteCode: 'NEX-019',
-    invitesRemaining: 3,
-    coffeeStatus: 'busy',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-20',
-    name: '이수빈',
-    email: 'subin@example.com',
-    phone: '010-2222-3333',
-    company: 'PropTech Solutions',
-    position: 'Business Developer',
-    bio: '부동산 테크 비즈니스 개발',
-    keywords: ['프롭테크', '부동산', 'B2B', '영업'],
-    profileImage: undefined,
-    inviteCode: 'NEX-020',
-    invitesRemaining: 2,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-21',
-    name: '박예린',
-    email: 'yerin@example.com',
-    phone: '010-3333-4444',
-    company: 'Fashion Forward',
-    position: 'Creative Lead',
-    bio: '패션과 테크의 만남',
-    keywords: ['패션테크', 'D2C', '이커머스', '브랜딩'],
-    profileImage: undefined,
-    inviteCode: 'NEX-021',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-22',
-    name: '문성훈',
-    email: 'sunghoon@example.com',
-    phone: '010-4444-5555',
-    company: 'GameDev Studio',
-    position: 'Game Director',
-    bio: '재미있는 게임을 만듭니다',
-    keywords: ['게임', '메타버스', '콘텐츠', 'NFT'],
-    profileImage: undefined,
-    inviteCode: 'NEX-022',
-    invitesRemaining: 4,
-    coffeeStatus: 'pending',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-23',
-    name: '서민지',
-    email: 'minji@example.com',
-    phone: '010-5555-6666',
-    company: 'CleanEnergy',
-    position: 'Sustainability Manager',
-    bio: '지속가능한 미래를 위해',
-    keywords: ['ESG', '그린테크', '에너지', '지속가능성'],
-    profileImage: undefined,
-    inviteCode: 'NEX-023',
-    invitesRemaining: 2,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-24',
-    name: '황재민',
-    email: 'jaemin@example.com',
-    phone: '010-6666-7777',
-    company: 'RoboTech',
-    position: 'Robotics Engineer',
-    bio: '로봇 자동화의 미래',
-    keywords: ['로보틱스', 'AI', '자동화', '하드웨어'],
-    profileImage: undefined,
-    inviteCode: 'NEX-024',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-25',
-    name: '안지영',
-    email: 'jiyoung@example.com',
-    phone: '010-7777-8888',
-    company: 'Beauty Tech',
-    position: 'Product Director',
-    bio: '뷰티 산업의 디지털 혁신',
-    keywords: ['뷰티테크', 'D2C', '이커머스', 'PM'],
-    profileImage: undefined,
-    inviteCode: 'NEX-025',
-    invitesRemaining: 4,
-    coffeeStatus: 'busy',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-26',
-    name: '노현석',
-    email: 'hyunseok@example.com',
-    phone: '010-8888-9999',
-    company: 'Security First',
-    position: 'Security Engineer',
-    bio: '사이버 보안 전문가',
-    keywords: ['보안', '클라우드', '인프라', '개발'],
-    profileImage: undefined,
-    inviteCode: 'NEX-026',
-    invitesRemaining: 2,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-27',
-    name: '유다은',
-    email: 'daeun@example.com',
-    phone: '010-9999-0000',
-    company: 'PetCare',
-    position: 'Marketing Manager',
-    bio: '반려동물 시장의 성장을 이끕니다',
-    keywords: ['펫테크', '마케팅', 'B2C', '브랜딩'],
-    profileImage: undefined,
-    inviteCode: 'NEX-027',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-28',
-    name: '홍승우',
-    email: 'seungwoo@example.com',
-    phone: '010-0000-1111',
-    company: 'AgriTech',
-    position: 'CEO',
-    bio: '스마트팜으로 농업의 미래를',
-    keywords: ['애그테크', '스타트업', 'IoT', '지속가능성'],
-    profileImage: undefined,
-    inviteCode: 'NEX-028',
-    invitesRemaining: 5,
-    coffeeStatus: 'pending',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-29',
-    name: '차민서',
-    email: 'minseo@example.com',
-    phone: '010-1212-3434',
-    company: 'Coupang',
-    position: 'UX Designer',
-    bio: '사용자 경험을 디자인합니다',
-    keywords: ['UX디자인', '이커머스', '대기업', '리서치'],
-    profileImage: undefined,
-    inviteCode: 'NEX-029',
-    invitesRemaining: 3,
-    coffeeStatus: 'available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: 'demo-user-30',
-    name: '고은채',
-    email: 'eunchae@example.com',
-    phone: '010-5656-7878',
-    company: 'MusicTech',
-    position: 'Business Manager',
-    bio: '음악 산업의 디지털 전환',
-    keywords: ['뮤직테크', '콘텐츠', '엔터테인먼트', 'B2B'],
-    profileImage: undefined,
-    inviteCode: 'NEX-030',
-    invitesRemaining: 2,
-    coffeeStatus: 'available',
+    // 개인정보 공개 설정
+    privacySettings: {
+      allowProfileDiscovery: true,
+      displaySettings: {
+        nameDisplay: 'full',
+        companyDisplay: 'full',
+        positionDisplay: 'full',
+      },
+      consentedAt: new Date(),
+      updatedAt: new Date(),
+    },
     createdAt: new Date(),
     updatedAt: new Date(),
   },
 ];
 
-// Demo network graph
+// CSV 주소록 연락처 (초대 대상) - 202601191412_remember.csv 기반
+export interface Contact {
+  id: string;
+  name: string;
+  phone: string;
+  company: string;
+  department: string;
+  position: string;
+  email: string;
+  registeredAt: string;
+  isInvited: boolean;
+  invitedAt?: Date;
+}
+
+export const contacts: Contact[] = [
+  { id: 'contact-1', name: '김요한', phone: '010-4442-2512', company: '현대미학성형외과의원', department: '성형외과', position: '원장 / 성형외과 전문의', email: '', registeredAt: '2022년 08월 19일', isInvited: false },
+  { id: 'contact-2', name: '최성민', phone: '010-3170-2181', company: 'MEDIHUB', department: '경영지원팀', position: '리더', email: 'smc@medihub.kr', registeredAt: '2022년 08월 20일', isInvited: false },
+  { id: 'contact-3', name: '금상호', phone: '010-7507-0043', company: '', department: '', position: '', email: '', registeredAt: '2022년 09월 07일', isInvited: false },
+  { id: 'contact-4', name: '모건식', phone: '010-9492-1981', company: 'SEOJUNG ART', department: '영업', position: '이사', email: 'm01094921981@gmail.com', registeredAt: '2024년 10월 23일', isInvited: false },
+  { id: 'contact-5', name: '최형섭', phone: '010-5475-0001', company: 'BIG MOVE VENTURES', department: '', position: 'CEO', email: 'matthew@bigmoveventures.com', registeredAt: '2022년 10월 17일', isInvited: false },
+  { id: 'contact-6', name: '김병진', phone: '010-8840-7321', company: '원익투자파트너스', department: '벤처투자부문', position: '투자이사', email: 'bkim7321@wonik.com', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-7', name: '장백산', phone: '010-6284-7315', company: '제이앤엘 글로벌 그룹', department: '', position: '대표', email: 'jang@jnl.kr', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-8', name: '박민우', phone: '010-5131-2960', company: '크라우드웍스', department: '', position: '의장 / Founder', email: 'minupark@crowdworks.kr', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-9', name: '유준일', phone: '010-3242-4980', company: '대한근감소증학회', department: '정형외과', position: '총무이사 / 교수', email: 'furim@daum.net', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-10', name: '김영웅', phone: '010-5593-9876', company: '한국디지털헬스산업협회', department: '', position: '회장', email: 'yeongwoong.kim@lulumedic.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-11', name: '박우진', phone: '010-3697-7693', company: '뮤토피아랩', department: '', position: 'CEO / Co-Founder / Medical Doctor', email: 'woojin@mutopialab.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-12', name: '황보율', phone: '010-8885-2812', company: '위뉴', department: 'Healthcare Content Platform', position: 'M.D. / Ph.D. / Co-founder / 대표', email: 'yulhwangbo@weknew.com', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-13', name: '백철현', phone: '010-4403-6653', company: '이지케어텍', department: '기업문화혁신실', position: '실장 / 상무', email: 'white@ezcaretech.com', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-14', name: '정원호', phone: '010-6201-7276', company: 'SKS프라이빗에쿼티', department: '신사업개발실', position: '상무 / 실장', email: 'whchung@skspe.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-15', name: '김태규', phone: '010-3001-7053', company: '(주)딥노이드', department: '', position: '전무이사', email: 'great@deepnoid.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-16', name: '이용석', phone: '010-6569-1433', company: '피오인베스트먼트', department: '', position: '투자본부장(CIO) / 공인회계사', email: 'ylee@pio-investment.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-17', name: '조규훈', phone: '010-3204-2811', company: 'IBK벤처투자', department: '', position: '경영학박사 / 투자본부장 / 상무 / CIO', email: 'khcho@ibkvc.kr', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-18', name: '구평모', phone: '010-8828-5303', company: '코리아에셋투자증권', department: '중소벤처기업금융센터', position: 'CFA / 이사', email: 'ping.gu@kasset.co.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-19', name: '김재학', phone: '010-3785-8510', company: '뷰브레인헬스케어', department: '', position: 'Ph. D. / MBA / CEO', email: 'jhak111@beaubrain.bio', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-20', name: '조상운', phone: '010-2628-5411', company: 'Huray', department: '사업개발팀', position: '수석', email: 'swcho@huray.net', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-21', name: '김종호', phone: '010-3283-3157', company: '', department: '', position: '', email: '', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-22', name: '송종안', phone: '010-9545-1140', company: '올바른개원', department: '', position: '대표이사', email: 'allbarun@hanmail.net', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-23', name: '안근용', phone: '010-3297-4901', company: '뷰브레인헬스케어', department: '', position: 'KICPA / CFO', email: 'annssam@beaubrain.bio', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-24', name: '최우식', phone: '010-2712-3056', company: 'DEEP NOID', department: '', position: '대표이사', email: 'adnwap@deepnoid.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-25', name: '이주호', phone: '010-7570-2739', company: '지오영', department: '기획조정본부', position: '부사장', email: 'juhoyi@geo-young.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-26', name: '오병엽', phone: '010-5183-0621', company: '케어스퀘어', department: '', position: '대표이사', email: 'brian@caresquare.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-27', name: '구인회', phone: '010-8976-0852', company: '피오인베스트먼트', department: '', position: '대표이사 / 공인회계사', email: 'kyle.ikoo@gmail.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-28', name: '김창인', phone: '010-8856-7114', company: '', department: '', position: '', email: '', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-29', name: '이현영', phone: '010-6879-4001', company: 'YMF', department: '', position: '대표이사', email: 'aloha_ymf@naver.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-30', name: '이수진', phone: '010-8649-7772', company: 'KKR Korea LLC', department: '', position: '부장', email: 'sophia.lee@kkr.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-31', name: '지용구', phone: '010-4266-7935', company: '더존비즈온', department: '성장전략부문 / AI연구소 / 더존TIPS', position: '부사장 / CGO', email: 'todcode@douzone.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-32', name: '고진수', phone: '010-4236-2625', company: '뉴로핏(주)', department: 'Business Div.', position: 'Director', email: 'jsko@neurophet.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-33', name: '김연준', phone: '010-6362-1332', company: 'BIOCONNECT', department: '', position: '대표이사', email: 'cso@bioconnect.co.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-34', name: '이후정', phone: '010-3747-5691', company: '이화여자대학교의료원', department: '이화의생명연구원', position: '연구부원장', email: 'tallhjlee@naver.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-35', name: '조원양', phone: '010-9531-8863', company: 'SMARTSOUND Corporation.', department: '연구개발본부 / IAI융합팀', position: '부문장 / 이사', email: 'wycho@ismartsound.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-36', name: '김창섭', phone: '010-4084-4820', company: '도체오', department: '', position: '이사/대표원장', email: 'changseopkorea@gmail.com', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-37', name: '이은미', phone: '010-7535-3138', company: '', department: '', position: '', email: '', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-38', name: '배수현', phone: '010-3280-6767', company: '메이크어스', department: '', position: 'COO', email: 'soohyunbae@makeus.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-39', name: '임종혁', phone: '010-2815-7440', company: '케어스퀘어', department: '', position: '부사장 / COO', email: 'tom@caresquare.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-40', name: '김경식', phone: '010-3357-7988', company: '', department: '헬스케어사업본부', position: '이사 / 본부장', email: 'kimks@medizencare.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-41', name: '최승우', phone: '010-8845-7749', company: '아이센스', department: 'PM팀', position: '대리', email: 'swchoe@i-sens.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-42', name: '정대한', phone: '010-3935-0403', company: '삼도회계법인', department: '', position: '파트너 / 공인회계사(한국,미국) / CFA', email: 'dajung@samdovn.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-43', name: '하성민', phone: '010-4073-7271', company: '연세대학교', department: '의료영상처리 및 분석연구팀', position: '책임연구원', email: 'seongminha@yonsei.ac.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-44', name: '마영민', phone: '010-4317-6939', company: '케어캠프', department: '사업개발부', position: '이사', email: 'ym.ma@carecamp.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-45', name: '윤제선', phone: '010-7522-4043', company: '법무법인 창천', department: '', position: '변호사', email: 'jsyoon@lawcc.co.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-46', name: '김용현', phone: '010-9327-7831', company: 'envisioning partners', department: '', position: '대표', email: 'yong.kim@envisioning.partners', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-47', name: '서보성', phone: '010-3280-0227', company: '세나클소프트', department: 'Strategy&Planning, Business', position: '사업기획 팀장', email: 's1b1s@cenacle.com', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-48', name: '송유석', phone: '010-5047-6764', company: '민트 벤처파트너스', department: '사업개발', position: '수석팀장', email: 'yoosuk.song@mintventures.bio', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-49', name: '한태화', phone: '010-3469-6191', company: '연세대학교 의료원', department: '의과대학 뇌심혈관질환연구센터', position: '연구부교수', email: 'hanth2015@yuhs.ac', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-50', name: '허창영', phone: '010-5124-3957', company: '특허그룹정성/테크비즈랩정성', department: '총괄', position: '대표/변리사/기술거래사', email: 'cyher@trueheart.co.kr', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-51', name: '김병주', phone: '010-4757-1226', company: '참약사', department: '', position: '대표이사', email: 'ceo@charmacist.com', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-52', name: '이완희', phone: '010-6213-3242', company: '에비드넷', department: 'Data Technology Group', position: 'CTO & CISO / 상무', email: 'whlee21@evidnet.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-53', name: '서광희', phone: '010-6306-0744', company: '지앤넷', department: '', position: '대표이사', email: 'black@gnnet.co.kr', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-54', name: '김선욱', phone: '010-5195-3284', company: '한국전자통신연구원', department: '인공지능연구소 초성능컴퓨팅연구본부', position: '책임연구원 / 전산학박사', email: 'swkim99@etri.re.kr', registeredAt: '2024년 06월 03일', isInvited: false },
+  { id: 'contact-55', name: '이슬아', phone: '010-4563-1233', company: 'Accel.B', department: '', position: '대표이사', email: 'stella@accelb.co.kr', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-56', name: '강훈모', phone: '010-7334-8480', company: '하나벤처스', department: '투자본부', position: '상무 / 변리사', email: 'hunmo.kang@hanafn.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-57', name: '엄현진', phone: '010-9033-9827', company: 'DEEP NOID', department: '의료AI영업본부 / 제품인사이트팀', position: '과장', email: 'hjeom@deepnoid.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-58', name: '김상욱', phone: '010-6669-0311', company: 'Huray', department: '사업개발팀', position: '책임', email: 'swkim@huray.net', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-59', name: '김지혜', phone: '010-2690-8323', company: 'DEEP NOID', department: '보안AI사업본부 / 보안영업팀', position: '과장', email: 'dighkdbal@deepnoid.com', registeredAt: '2023년 02월 27일', isInvited: false },
+  { id: 'contact-60', name: '김동명', phone: '010-2883-4301', company: 'IT조선', department: '디지털플랫폼부 (제약바이오 담당)', position: '기자', email: 'simalo@chosunbiz.com', registeredAt: '2024년 06월 03일', isInvited: false },
+];
+
+// 연결 관계 - 초기에는 빈 상태 (초대 수락 시 연결됨)
+export const demoConnections: Record<string, string[]> = {
+  'user-jaeyoung': [],
+};
+
+// Demo network graph - 초기에는 본인만 표시
 export const getDemoNetworkGraph = (userId: string): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
   const currentUser = demoUsers.find(u => u.id === userId) || demoUsers[0];
+  const userConnections = demoConnections[currentUser.id] || [];
 
   const nodes: NetworkNode[] = [
-    // Center node (current user)
     {
       id: currentUser.id,
       name: currentUser.name,
@@ -501,500 +130,47 @@ export const getDemoNetworkGraph = (userId: string): { nodes: NetworkNode[]; edg
       position: currentUser.position,
       keywords: currentUser.keywords,
       degree: 0,
-      connectionCount: 8,
-    },
-    // 1st degree connections (8명)
-    {
-      id: 'demo-user-2',
-      name: '이서연',
-      company: 'DesignLab',
-      position: 'Creative Director',
-      keywords: ['UX디자인', '브랜딩', '스타트업', '마케팅'],
-      degree: 1,
-      connectionCount: 4,
-    },
-    {
-      id: 'demo-user-3',
-      name: '박준영',
-      company: 'Alpha Ventures',
-      position: 'Partner',
-      keywords: ['투자', '스타트업', '핀테크', 'Web3'],
-      degree: 1,
-      connectionCount: 5,
-    },
-    {
-      id: 'demo-user-4',
-      name: '최지은',
-      company: 'GrowthHackers',
-      position: 'CMO',
-      keywords: ['마케팅', '그로스해킹', 'B2B', '콘텐츠'],
-      degree: 1,
-      connectionCount: 4,
-    },
-    {
-      id: 'demo-user-5',
-      name: '정현우',
-      company: 'CodeFactory',
-      position: 'CTO',
-      keywords: ['개발', 'AI', 'SaaS', '클라우드'],
-      degree: 1,
-      connectionCount: 5,
-    },
-    {
-      id: 'demo-user-6',
-      name: '강예진',
-      company: 'MediCare Plus',
-      position: 'Product Manager',
-      keywords: ['헬스케어', 'PM', '스타트업', 'B2B'],
-      degree: 1,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-7',
-      name: '윤성민',
-      company: 'EduNext',
-      position: 'CEO',
-      keywords: ['에듀테크', '스타트업', 'AI', '콘텐츠'],
-      degree: 1,
-      connectionCount: 4,
-    },
-    {
-      id: 'demo-user-8',
-      name: '한소희',
-      company: 'Naver',
-      position: 'Senior Engineer',
-      keywords: ['검색', 'AI', '머신러닝', '대기업'],
-      degree: 1,
-      connectionCount: 4,
-    },
-    {
-      id: 'demo-user-9',
-      name: '오진우',
-      company: 'Kakao',
-      position: 'Product Owner',
-      keywords: ['PM', '플랫폼', 'B2C', '모빌리티'],
-      degree: 1,
-      connectionCount: 3,
-    },
-    // 2nd degree connections (21명)
-    {
-      id: 'demo-user-10',
-      name: '임지현',
-      company: 'BrandStudio',
-      position: 'Brand Manager',
-      keywords: ['브랜딩', '마케팅', '콘텐츠', '광고'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-11',
-      name: '송태현',
-      company: 'DataInsight',
-      position: 'Data Scientist',
-      keywords: ['AI', '데이터', 'SaaS', '머신러닝'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-12',
-      name: '한수진',
-      company: 'FinanceHub',
-      position: 'CFO',
-      keywords: ['핀테크', '투자', 'Web3', '재무'],
-      degree: 2,
-      connectionCount: 4,
-    },
-    {
-      id: 'demo-user-13',
-      name: '권도윤',
-      company: 'BlockChain Labs',
-      position: 'Blockchain Developer',
-      keywords: ['Web3', '블록체인', '크립토', 'DeFi'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-14',
-      name: '신유나',
-      company: 'ContentFirst',
-      position: 'Content Strategist',
-      keywords: ['콘텐츠', '마케팅', 'SNS', '인플루언서'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-15',
-      name: '조민재',
-      company: 'Samsung Electronics',
-      position: 'AI Researcher',
-      keywords: ['AI', '딥러닝', '연구', '대기업'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-16',
-      name: '백서영',
-      company: 'HR Partners',
-      position: 'HR Director',
-      keywords: ['HR', '채용', '조직문화', '스타트업'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-17',
-      name: '류준혁',
-      company: 'LegalTech',
-      position: 'Legal Counsel',
-      keywords: ['법률', '스타트업', '계약', '지식재산'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-18',
-      name: '장하은',
-      company: 'FoodTech Korea',
-      position: 'Operations Manager',
-      keywords: ['푸드테크', '운영', 'O2O', '물류'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-19',
-      name: '김동현',
-      company: 'TravelNow',
-      position: 'CEO',
-      keywords: ['트래블테크', '스타트업', 'B2C', '여행'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-20',
-      name: '이수빈',
-      company: 'PropTech Solutions',
-      position: 'Business Developer',
-      keywords: ['프롭테크', '부동산', 'B2B', '영업'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-21',
-      name: '박예린',
-      company: 'Fashion Forward',
-      position: 'Creative Lead',
-      keywords: ['패션테크', 'D2C', '이커머스', '브랜딩'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-22',
-      name: '문성훈',
-      company: 'GameDev Studio',
-      position: 'Game Director',
-      keywords: ['게임', '메타버스', '콘텐츠', 'NFT'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-23',
-      name: '서민지',
-      company: 'CleanEnergy',
-      position: 'Sustainability Manager',
-      keywords: ['ESG', '그린테크', '에너지', '지속가능성'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-24',
-      name: '황재민',
-      company: 'RoboTech',
-      position: 'Robotics Engineer',
-      keywords: ['로보틱스', 'AI', '자동화', '하드웨어'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-25',
-      name: '안지영',
-      company: 'Beauty Tech',
-      position: 'Product Director',
-      keywords: ['뷰티테크', 'D2C', '이커머스', 'PM'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-26',
-      name: '노현석',
-      company: 'Security First',
-      position: 'Security Engineer',
-      keywords: ['보안', '클라우드', '인프라', '개발'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-27',
-      name: '유다은',
-      company: 'PetCare',
-      position: 'Marketing Manager',
-      keywords: ['펫테크', '마케팅', 'B2C', '브랜딩'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-28',
-      name: '홍승우',
-      company: 'AgriTech',
-      position: 'CEO',
-      keywords: ['애그테크', '스타트업', 'IoT', '지속가능성'],
-      degree: 2,
-      connectionCount: 2,
-    },
-    {
-      id: 'demo-user-29',
-      name: '차민서',
-      company: 'Coupang',
-      position: 'UX Designer',
-      keywords: ['UX디자인', '이커머스', '대기업', '리서치'],
-      degree: 2,
-      connectionCount: 3,
-    },
-    {
-      id: 'demo-user-30',
-      name: '고은채',
-      company: 'MusicTech',
-      position: 'Business Manager',
-      keywords: ['뮤직테크', '콘텐츠', '엔터테인먼트', 'B2B'],
-      degree: 2,
-      connectionCount: 2,
+      connectionCount: userConnections.length,
     },
   ];
 
-  // 각 사용자별 인맥 관계 정의 (각 사용자당 약 10명씩)
-  const allConnections: Record<string, string[]> = {
-    // 김민수(1) - CEO & Founder: 스타트업, AI, 투자 관련 인맥
-    'demo-user-1': ['demo-user-2', 'demo-user-3', 'demo-user-4', 'demo-user-5', 'demo-user-6', 'demo-user-7', 'demo-user-8', 'demo-user-9', 'demo-user-15', 'demo-user-11'],
-    // 이서연(2) - Creative Director: UX디자인, 브랜딩 인맥
-    'demo-user-2': ['demo-user-1', 'demo-user-10', 'demo-user-21', 'demo-user-29', 'demo-user-4', 'demo-user-25', 'demo-user-27', 'demo-user-14', 'demo-user-7', 'demo-user-6'],
-    // 박준영(3) - VC Partner: 투자, 핀테크, Web3 인맥
-    'demo-user-3': ['demo-user-1', 'demo-user-12', 'demo-user-13', 'demo-user-19', 'demo-user-28', 'demo-user-5', 'demo-user-7', 'demo-user-17', 'demo-user-22', 'demo-user-20'],
-    // 최지은(4) - CMO: 마케팅, 그로스해킹 인맥
-    'demo-user-4': ['demo-user-1', 'demo-user-2', 'demo-user-14', 'demo-user-27', 'demo-user-10', 'demo-user-21', 'demo-user-30', 'demo-user-18', 'demo-user-9', 'demo-user-6'],
-    // 정현우(5) - CTO: 개발, AI, SaaS 인맥
-    'demo-user-5': ['demo-user-1', 'demo-user-11', 'demo-user-15', 'demo-user-24', 'demo-user-26', 'demo-user-8', 'demo-user-3', 'demo-user-22', 'demo-user-13', 'demo-user-23'],
-    // 강예진(6) - PM: 헬스케어, B2B 인맥
-    'demo-user-6': ['demo-user-1', 'demo-user-16', 'demo-user-25', 'demo-user-2', 'demo-user-4', 'demo-user-9', 'demo-user-18', 'demo-user-20', 'demo-user-17', 'demo-user-7'],
-    // 윤성민(7) - CEO: 에듀테크, 콘텐츠 인맥
-    'demo-user-7': ['demo-user-1', 'demo-user-17', 'demo-user-22', 'demo-user-30', 'demo-user-2', 'demo-user-3', 'demo-user-6', 'demo-user-14', 'demo-user-19', 'demo-user-28'],
-    // 한소희(8) - Senior Engineer: AI, 대기업 인맥
-    'demo-user-8': ['demo-user-1', 'demo-user-15', 'demo-user-11', 'demo-user-29', 'demo-user-5', 'demo-user-24', 'demo-user-26', 'demo-user-9', 'demo-user-23', 'demo-user-16'],
-    // 오진우(9) - Product Owner: 플랫폼, B2C 인맥
-    'demo-user-9': ['demo-user-1', 'demo-user-18', 'demo-user-20', 'demo-user-23', 'demo-user-4', 'demo-user-6', 'demo-user-8', 'demo-user-27', 'demo-user-19', 'demo-user-29'],
-    // 임지현(10) - Brand Manager: 브랜딩, 마케팅 인맥
-    'demo-user-10': ['demo-user-2', 'demo-user-4', 'demo-user-14', 'demo-user-21', 'demo-user-27', 'demo-user-30', 'demo-user-25', 'demo-user-7', 'demo-user-18', 'demo-user-29'],
-    // 송태현(11) - Data Scientist: AI, 데이터 인맥
-    'demo-user-11': ['demo-user-5', 'demo-user-8', 'demo-user-15', 'demo-user-24', 'demo-user-26', 'demo-user-1', 'demo-user-13', 'demo-user-23', 'demo-user-22', 'demo-user-3'],
-    // 한수진(12) - CFO: 핀테크, 투자 인맥
-    'demo-user-12': ['demo-user-3', 'demo-user-13', 'demo-user-17', 'demo-user-19', 'demo-user-20', 'demo-user-28', 'demo-user-16', 'demo-user-6', 'demo-user-7', 'demo-user-23'],
-    // 권도윤(13) - Blockchain Dev: Web3, 블록체인 인맥
-    'demo-user-13': ['demo-user-3', 'demo-user-12', 'demo-user-5', 'demo-user-11', 'demo-user-22', 'demo-user-28', 'demo-user-24', 'demo-user-26', 'demo-user-19', 'demo-user-15'],
-    // 신유나(14) - Content Strategist: 콘텐츠, 마케팅 인맥
-    'demo-user-14': ['demo-user-4', 'demo-user-10', 'demo-user-27', 'demo-user-30', 'demo-user-7', 'demo-user-2', 'demo-user-21', 'demo-user-22', 'demo-user-18', 'demo-user-25'],
-    // 조민재(15) - AI Researcher: AI, 딥러닝 인맥
-    'demo-user-15': ['demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-24', 'demo-user-1', 'demo-user-13', 'demo-user-26', 'demo-user-29', 'demo-user-23', 'demo-user-16'],
-    // 백서영(16) - HR Director: HR, 조직문화 인맥
-    'demo-user-16': ['demo-user-6', 'demo-user-17', 'demo-user-12', 'demo-user-8', 'demo-user-15', 'demo-user-7', 'demo-user-19', 'demo-user-28', 'demo-user-20', 'demo-user-25'],
-    // 류준혁(17) - Legal Counsel: 법률, 스타트업 인맥
-    'demo-user-17': ['demo-user-7', 'demo-user-3', 'demo-user-12', 'demo-user-16', 'demo-user-6', 'demo-user-19', 'demo-user-28', 'demo-user-20', 'demo-user-22', 'demo-user-30'],
-    // 장하은(18) - Operations Manager: 푸드테크, O2O 인맥
-    'demo-user-18': ['demo-user-9', 'demo-user-20', 'demo-user-23', 'demo-user-4', 'demo-user-6', 'demo-user-10', 'demo-user-14', 'demo-user-27', 'demo-user-19', 'demo-user-21'],
-    // 김동현(19) - CEO: 트래블테크, B2C 인맥
-    'demo-user-19': ['demo-user-3', 'demo-user-7', 'demo-user-9', 'demo-user-12', 'demo-user-13', 'demo-user-16', 'demo-user-17', 'demo-user-18', 'demo-user-20', 'demo-user-28'],
-    // 이수빈(20) - Business Dev: 프롭테크, B2B 인맥
-    'demo-user-20': ['demo-user-9', 'demo-user-12', 'demo-user-16', 'demo-user-17', 'demo-user-18', 'demo-user-19', 'demo-user-23', 'demo-user-6', 'demo-user-3', 'demo-user-28'],
-    // 박예린(21) - Creative Lead: 패션테크, D2C 인맥
-    'demo-user-21': ['demo-user-2', 'demo-user-10', 'demo-user-25', 'demo-user-27', 'demo-user-14', 'demo-user-4', 'demo-user-18', 'demo-user-30', 'demo-user-29', 'demo-user-7'],
-    // 문성훈(22) - Game Director: 게임, 메타버스 인맥
-    'demo-user-22': ['demo-user-7', 'demo-user-13', 'demo-user-5', 'demo-user-11', 'demo-user-14', 'demo-user-17', 'demo-user-30', 'demo-user-24', 'demo-user-3', 'demo-user-26'],
-    // 서민지(23) - Sustainability Manager: ESG, 그린테크 인맥
-    'demo-user-23': ['demo-user-9', 'demo-user-18', 'demo-user-20', 'demo-user-28', 'demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-12', 'demo-user-15', 'demo-user-24'],
-    // 황재민(24) - Robotics Engineer: 로보틱스, AI 인맥
-    'demo-user-24': ['demo-user-5', 'demo-user-11', 'demo-user-15', 'demo-user-8', 'demo-user-13', 'demo-user-22', 'demo-user-23', 'demo-user-26', 'demo-user-28', 'demo-user-1'],
-    // 안지영(25) - Product Director: 뷰티테크, D2C 인맥
-    'demo-user-25': ['demo-user-6', 'demo-user-2', 'demo-user-10', 'demo-user-14', 'demo-user-16', 'demo-user-21', 'demo-user-27', 'demo-user-4', 'demo-user-29', 'demo-user-30'],
-    // 노현석(26) - Security Engineer: 보안, 클라우드 인맥
-    'demo-user-26': ['demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-13', 'demo-user-15', 'demo-user-22', 'demo-user-24', 'demo-user-23', 'demo-user-28', 'demo-user-1'],
-    // 유다은(27) - Marketing Manager: 펫테크, 마케팅 인맥
-    'demo-user-27': ['demo-user-4', 'demo-user-10', 'demo-user-14', 'demo-user-21', 'demo-user-25', 'demo-user-9', 'demo-user-18', 'demo-user-2', 'demo-user-30', 'demo-user-6'],
-    // 홍승우(28) - CEO: 애그테크, IoT 인맥
-    'demo-user-28': ['demo-user-3', 'demo-user-7', 'demo-user-12', 'demo-user-13', 'demo-user-16', 'demo-user-17', 'demo-user-19', 'demo-user-20', 'demo-user-23', 'demo-user-24'],
-    // 차민서(29) - UX Designer: UX디자인, 이커머스 인맥
-    'demo-user-29': ['demo-user-2', 'demo-user-8', 'demo-user-9', 'demo-user-10', 'demo-user-15', 'demo-user-21', 'demo-user-25', 'demo-user-4', 'demo-user-1', 'demo-user-30'],
-    // 고은채(30) - Business Manager: 뮤직테크, 콘텐츠 인맥
-    'demo-user-30': ['demo-user-7', 'demo-user-14', 'demo-user-17', 'demo-user-21', 'demo-user-22', 'demo-user-25', 'demo-user-27', 'demo-user-4', 'demo-user-10', 'demo-user-29'],
-  };
-
-  // 현재 사용자의 1차 연결 가져오기
-  const userConnections = allConnections[currentUser.id] || allConnections['demo-user-1'];
-  const firstDegreeIds = new Set(userConnections);
-
-  // 2차 연결 찾기 (1차 연결의 연결 중 현재 사용자와 1차 연결이 아닌 사람들)
-  const secondDegreeIds = new Set<string>();
-  const secondDegreeConnections: { firstDegree: string; secondDegree: string }[] = [];
-
-  userConnections.forEach(firstDegreeId => {
-    const theirConnections = allConnections[firstDegreeId] || [];
-    theirConnections.forEach(connId => {
-      if (connId !== currentUser.id && !firstDegreeIds.has(connId)) {
-        if (!secondDegreeIds.has(connId)) {
-          secondDegreeIds.add(connId);
-        }
-        secondDegreeConnections.push({ firstDegree: firstDegreeId, secondDegree: connId });
-      }
-    });
-  });
-
-  // 노드 업데이트 - degree 재계산
-  const updatedNodes = nodes.map(node => {
-    if (node.id === currentUser.id) {
-      return { ...node, degree: 0, connectionCount: userConnections.length };
-    } else if (firstDegreeIds.has(node.id)) {
-      return { ...node, degree: 1, connectionCount: (allConnections[node.id] || []).length };
-    } else if (secondDegreeIds.has(node.id)) {
-      return { ...node, degree: 2, connectionCount: (allConnections[node.id] || []).length };
-    }
-    return node;
-  }).filter(node =>
-    node.id === currentUser.id || firstDegreeIds.has(node.id) || secondDegreeIds.has(node.id)
-  );
-
-  // 엣지 생성
-  const edges: NetworkEdge[] = [];
-
-  // 1차 연결 엣지
+  // 1촌 연결이 있으면 추가
   userConnections.forEach(connId => {
-    edges.push({ source: currentUser.id, target: connId, degree: 1 });
-  });
-
-  // 2차 연결 엣지 (중복 제거)
-  const edgeSet = new Set<string>();
-  secondDegreeConnections.forEach(({ firstDegree, secondDegree }) => {
-    const edgeKey = `${firstDegree}-${secondDegree}`;
-    if (!edgeSet.has(edgeKey)) {
-      edgeSet.add(edgeKey);
-      edges.push({ source: firstDegree, target: secondDegree, degree: 2 });
+    const connUser = demoUsers.find(u => u.id === connId);
+    if (connUser) {
+      nodes.push({
+        id: connUser.id,
+        name: connUser.name,
+        profileImage: connUser.profileImage,
+        company: connUser.company,
+        position: connUser.position,
+        keywords: connUser.keywords,
+        degree: 1,
+        connectionCount: (demoConnections[connUser.id] || []).length,
+      });
     }
   });
 
-  return { nodes: updatedNodes, edges };
+  const edges: NetworkEdge[] = userConnections.map(connId => ({
+    source: currentUser.id,
+    target: connId,
+    degree: 1,
+  }));
+
+  return { nodes, edges };
 };
 
-// Demo recommendations
+// Demo recommendations - 빈 상태
 export const getDemoRecommendations = (userId: string): Recommendation[] => {
-  return [
-    {
-      userId: 'demo-user-11',
-      user: demoUsers[10],
-      score: 0.92,
-      keywordMatch: 0.8,
-      proximityScore: 0.6,
-      mutualConnections: 2,
-      connectionPath: [userId, 'demo-user-5', 'demo-user-11'],
-      reason: 'AI, SaaS에 대한 깊은 관심이 있습니다',
-    },
-    {
-      userId: 'demo-user-15',
-      user: demoUsers[14],
-      score: 0.88,
-      keywordMatch: 0.75,
-      proximityScore: 0.5,
-      mutualConnections: 2,
-      connectionPath: [userId, 'demo-user-8', 'demo-user-15'],
-      reason: 'AI 분야 전문가입니다',
-    },
-    {
-      userId: 'demo-user-12',
-      user: demoUsers[11],
-      score: 0.85,
-      keywordMatch: 0.6,
-      proximityScore: 0.5,
-      mutualConnections: 1,
-      connectionPath: [userId, 'demo-user-3', 'demo-user-12'],
-      reason: '투자/핀테크 분야 경험이 풍부합니다',
-    },
-    {
-      userId: 'demo-user-24',
-      user: demoUsers[23],
-      score: 0.82,
-      keywordMatch: 0.7,
-      proximityScore: 0.5,
-      mutualConnections: 1,
-      connectionPath: [userId, 'demo-user-5', 'demo-user-24'],
-      reason: 'AI, 자동화 기술에 관심이 있습니다',
-    },
-    {
-      userId: 'demo-user-13',
-      user: demoUsers[12],
-      score: 0.78,
-      keywordMatch: 0.5,
-      proximityScore: 0.5,
-      mutualConnections: 1,
-      connectionPath: [userId, 'demo-user-3', 'demo-user-13'],
-      reason: 'Web3/블록체인 전문가입니다',
-    },
-    {
-      userId: 'demo-user-28',
-      user: demoUsers[27],
-      score: 0.75,
-      keywordMatch: 0.55,
-      proximityScore: 0.5,
-      mutualConnections: 1,
-      connectionPath: [userId, 'demo-user-3', 'demo-user-28'],
-      reason: '스타트업 CEO로서 IoT 분야에서 활동 중입니다',
-    },
-  ];
+  return [];
 };
 
 // Initial invite codes for demo
 export const demoInviteCodes = [
-  'ABC-123',
-  'DEF-456',
-  'GHI-789',
-  'JKL-012',
-  'MNO-345',
+  'JYK-001',
+  'NEX-001',
+  'DEV-123',
 ];
-
-// 데모 사용자 연결 관계 (export)
-export const demoConnections: Record<string, string[]> = {
-  'demo-user-1': ['demo-user-2', 'demo-user-3', 'demo-user-4', 'demo-user-5', 'demo-user-6', 'demo-user-7', 'demo-user-8', 'demo-user-9', 'demo-user-15', 'demo-user-11'],
-  'demo-user-2': ['demo-user-1', 'demo-user-10', 'demo-user-21', 'demo-user-29', 'demo-user-4', 'demo-user-25', 'demo-user-27', 'demo-user-14', 'demo-user-7', 'demo-user-6'],
-  'demo-user-3': ['demo-user-1', 'demo-user-12', 'demo-user-13', 'demo-user-19', 'demo-user-28', 'demo-user-5', 'demo-user-7', 'demo-user-17', 'demo-user-22', 'demo-user-20'],
-  'demo-user-4': ['demo-user-1', 'demo-user-2', 'demo-user-14', 'demo-user-27', 'demo-user-10', 'demo-user-21', 'demo-user-30', 'demo-user-18', 'demo-user-9', 'demo-user-6'],
-  'demo-user-5': ['demo-user-1', 'demo-user-11', 'demo-user-15', 'demo-user-24', 'demo-user-26', 'demo-user-8', 'demo-user-3', 'demo-user-22', 'demo-user-13', 'demo-user-23'],
-  'demo-user-6': ['demo-user-1', 'demo-user-16', 'demo-user-25', 'demo-user-2', 'demo-user-4', 'demo-user-9', 'demo-user-18', 'demo-user-20', 'demo-user-17', 'demo-user-7'],
-  'demo-user-7': ['demo-user-1', 'demo-user-17', 'demo-user-22', 'demo-user-30', 'demo-user-2', 'demo-user-3', 'demo-user-6', 'demo-user-14', 'demo-user-19', 'demo-user-28'],
-  'demo-user-8': ['demo-user-1', 'demo-user-15', 'demo-user-11', 'demo-user-29', 'demo-user-5', 'demo-user-24', 'demo-user-26', 'demo-user-9', 'demo-user-23', 'demo-user-16'],
-  'demo-user-9': ['demo-user-1', 'demo-user-18', 'demo-user-20', 'demo-user-23', 'demo-user-4', 'demo-user-6', 'demo-user-8', 'demo-user-27', 'demo-user-19', 'demo-user-29'],
-  'demo-user-10': ['demo-user-2', 'demo-user-4', 'demo-user-14', 'demo-user-21', 'demo-user-27', 'demo-user-30', 'demo-user-25', 'demo-user-7', 'demo-user-18', 'demo-user-29'],
-  'demo-user-11': ['demo-user-5', 'demo-user-8', 'demo-user-15', 'demo-user-24', 'demo-user-26', 'demo-user-1', 'demo-user-13', 'demo-user-23', 'demo-user-22', 'demo-user-3'],
-  'demo-user-12': ['demo-user-3', 'demo-user-13', 'demo-user-17', 'demo-user-19', 'demo-user-20', 'demo-user-28', 'demo-user-16', 'demo-user-6', 'demo-user-7', 'demo-user-23'],
-  'demo-user-13': ['demo-user-3', 'demo-user-12', 'demo-user-5', 'demo-user-11', 'demo-user-22', 'demo-user-28', 'demo-user-24', 'demo-user-26', 'demo-user-19', 'demo-user-15'],
-  'demo-user-14': ['demo-user-4', 'demo-user-10', 'demo-user-27', 'demo-user-30', 'demo-user-7', 'demo-user-2', 'demo-user-21', 'demo-user-22', 'demo-user-18', 'demo-user-25'],
-  'demo-user-15': ['demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-24', 'demo-user-1', 'demo-user-13', 'demo-user-26', 'demo-user-29', 'demo-user-23', 'demo-user-16'],
-  'demo-user-16': ['demo-user-6', 'demo-user-17', 'demo-user-12', 'demo-user-8', 'demo-user-15', 'demo-user-7', 'demo-user-19', 'demo-user-28', 'demo-user-20', 'demo-user-25'],
-  'demo-user-17': ['demo-user-7', 'demo-user-3', 'demo-user-12', 'demo-user-16', 'demo-user-6', 'demo-user-19', 'demo-user-28', 'demo-user-20', 'demo-user-22', 'demo-user-30'],
-  'demo-user-18': ['demo-user-9', 'demo-user-20', 'demo-user-23', 'demo-user-4', 'demo-user-6', 'demo-user-10', 'demo-user-14', 'demo-user-27', 'demo-user-19', 'demo-user-21'],
-  'demo-user-19': ['demo-user-3', 'demo-user-7', 'demo-user-9', 'demo-user-12', 'demo-user-13', 'demo-user-16', 'demo-user-17', 'demo-user-18', 'demo-user-20', 'demo-user-28'],
-  'demo-user-20': ['demo-user-9', 'demo-user-12', 'demo-user-16', 'demo-user-17', 'demo-user-18', 'demo-user-19', 'demo-user-23', 'demo-user-6', 'demo-user-3', 'demo-user-28'],
-  'demo-user-21': ['demo-user-2', 'demo-user-10', 'demo-user-25', 'demo-user-27', 'demo-user-14', 'demo-user-4', 'demo-user-18', 'demo-user-30', 'demo-user-29', 'demo-user-7'],
-  'demo-user-22': ['demo-user-7', 'demo-user-13', 'demo-user-5', 'demo-user-11', 'demo-user-14', 'demo-user-17', 'demo-user-30', 'demo-user-24', 'demo-user-3', 'demo-user-26'],
-  'demo-user-23': ['demo-user-9', 'demo-user-18', 'demo-user-20', 'demo-user-28', 'demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-12', 'demo-user-15', 'demo-user-24'],
-  'demo-user-24': ['demo-user-5', 'demo-user-11', 'demo-user-15', 'demo-user-8', 'demo-user-13', 'demo-user-22', 'demo-user-23', 'demo-user-26', 'demo-user-28', 'demo-user-1'],
-  'demo-user-25': ['demo-user-6', 'demo-user-2', 'demo-user-10', 'demo-user-14', 'demo-user-16', 'demo-user-21', 'demo-user-27', 'demo-user-4', 'demo-user-29', 'demo-user-30'],
-  'demo-user-26': ['demo-user-5', 'demo-user-8', 'demo-user-11', 'demo-user-13', 'demo-user-15', 'demo-user-22', 'demo-user-24', 'demo-user-23', 'demo-user-28', 'demo-user-1'],
-  'demo-user-27': ['demo-user-4', 'demo-user-10', 'demo-user-14', 'demo-user-21', 'demo-user-25', 'demo-user-9', 'demo-user-18', 'demo-user-2', 'demo-user-30', 'demo-user-6'],
-  'demo-user-28': ['demo-user-3', 'demo-user-7', 'demo-user-12', 'demo-user-13', 'demo-user-16', 'demo-user-17', 'demo-user-19', 'demo-user-20', 'demo-user-23', 'demo-user-24'],
-  'demo-user-29': ['demo-user-2', 'demo-user-8', 'demo-user-9', 'demo-user-10', 'demo-user-15', 'demo-user-21', 'demo-user-25', 'demo-user-4', 'demo-user-1', 'demo-user-30'],
-  'demo-user-30': ['demo-user-7', 'demo-user-14', 'demo-user-17', 'demo-user-21', 'demo-user-22', 'demo-user-25', 'demo-user-27', 'demo-user-4', 'demo-user-10', 'demo-user-29'],
-};
 
 // BFS로 두 사용자 간의 최단 연결 경로 찾기
 export const findDemoConnectionPath = (fromUserId: string, toUserId: string): string[] => {
@@ -1027,82 +203,5 @@ export const findDemoConnectionPath = (fromUserId: string, toUserId: string): st
 
 // 특정 사용자 중심의 네트워크 그래프 동적 생성
 export const getDemoNetworkGraphForUser = (centerId: string): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
-  const centerUser = demoUsers.find(u => u.id === centerId);
-  if (!centerUser) return { nodes: [], edges: [] };
-
-  const nodes: NetworkNode[] = [];
-  const edges: NetworkEdge[] = [];
-  const addedNodeIds = new Set<string>();
-
-  // 중심 노드 추가 (degree: 0)
-  nodes.push({
-    id: centerUser.id,
-    name: centerUser.name,
-    profileImage: centerUser.profileImage,
-    company: centerUser.company,
-    position: centerUser.position,
-    keywords: centerUser.keywords,
-    degree: 0,
-    connectionCount: demoConnections[centerId]?.length || 0,
-  });
-  addedNodeIds.add(centerId);
-
-  // 1촌 연결 추가
-  const firstDegreeIds = demoConnections[centerId] || [];
-  for (const connId of firstDegreeIds) {
-    const connUser = demoUsers.find(u => u.id === connId);
-    if (connUser && !addedNodeIds.has(connId)) {
-      nodes.push({
-        id: connUser.id,
-        name: connUser.name,
-        profileImage: connUser.profileImage,
-        company: connUser.company,
-        position: connUser.position,
-        keywords: connUser.keywords,
-        degree: 1,
-        connectionCount: demoConnections[connId]?.length || 0,
-      });
-      addedNodeIds.add(connId);
-
-      edges.push({
-        source: centerId,
-        degree: 1,
-        target: connId,
-      });
-    }
-  }
-
-  // 2촌 연결 추가 (1촌의 연결)
-  for (const firstDegreeId of firstDegreeIds) {
-    const secondDegreeIds = demoConnections[firstDegreeId] || [];
-    for (const secondId of secondDegreeIds) {
-      if (secondId === centerId) continue; // 중심 노드 제외
-
-      const secondUser = demoUsers.find(u => u.id === secondId);
-      if (secondUser && !addedNodeIds.has(secondId)) {
-        nodes.push({
-          id: secondUser.id,
-          name: secondUser.name,
-          profileImage: secondUser.profileImage,
-          company: secondUser.company,
-          position: secondUser.position,
-          keywords: secondUser.keywords,
-          degree: 2,
-          connectionCount: demoConnections[secondId]?.length || 0,
-        });
-        addedNodeIds.add(secondId);
-      }
-
-      // 1촌과 2촌 사이의 엣지 추가
-      if (addedNodeIds.has(secondId)) {
-        edges.push({
-          source: firstDegreeId,
-          degree: 2,
-          target: secondId,
-        });
-      }
-    }
-  }
-
-  return { nodes, edges };
+  return getDemoNetworkGraph(centerId);
 };

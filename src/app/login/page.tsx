@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Sparkles, Play } from 'lucide-react';
 import { Input, Button } from '@/components/ui';
 import { loginWithEmail, getUser } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
+import { User } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,13 +29,13 @@ export default function LoginPage() {
 
       if (userData) {
         setUser(userData);
-        router.push('/network');
+        router.push('/card');
       } else {
         setError('사용자 정보를 찾을 수 없습니다');
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('이메일 또는 비밀번호가 올바르지 않습니다');
       } else if (err.code === 'auth/invalid-email') {
         setError('올바른 이메일 형식을 입력해주세요');
@@ -44,6 +45,27 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 데모 모드로 진입
+  const handleDemoMode = () => {
+    const demoUser: User = {
+      id: 'demo-user-001',
+      name: '김데모',
+      email: 'demo@nexus.app',
+      phone: '010-1234-5678',
+      company: 'NEXUS',
+      position: 'Product Manager',
+      bio: '네트워킹을 좋아하는 PM입니다',
+      keywords: ['스타트업', 'PM', '네트워킹', 'AI'],
+      inviteCode: 'DEMO2024',
+      invitesRemaining: 10,
+      coffeeStatus: 'available',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setUser(demoUser);
+    router.push('/card');
   };
 
   return (
@@ -135,8 +157,17 @@ export default function LoginPage() {
             <div className="flex-1 h-px bg-[#21262D]" />
           </div>
 
+          {/* Demo Mode Button */}
+          <button
+            onClick={handleDemoMode}
+            className="w-full py-3 rounded-xl bg-[#7C4DFF]/20 border border-[#7C4DFF]/40 text-[#7C4DFF] font-medium flex items-center justify-center gap-2 hover:bg-[#7C4DFF]/30 transition-colors"
+          >
+            <Play size={18} />
+            데모로 체험하기
+          </button>
+
           {/* Sign Up Link */}
-          <div className="text-center">
+          <div className="text-center mt-4">
             <p className="text-[#6E7681] text-sm">
               아직 계정이 없으신가요?
             </p>
@@ -145,7 +176,7 @@ export default function LoginPage() {
               className="mt-2 inline-flex items-center gap-2 text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors text-sm font-medium group"
             >
               <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
-              초대 코드로 가입하기
+              회원가입하기
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

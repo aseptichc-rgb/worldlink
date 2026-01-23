@@ -11,6 +11,7 @@ import CoffeeChatModal from '@/components/coffee-chat/CoffeeChatModal';
 import ConnectionRequestModal from '@/components/connection/ConnectionRequestModal';
 import RecommendationCard from '@/components/coffee-chat/RecommendationCard';
 import { Avatar, Button } from '@/components/ui';
+import BottomNav from '@/components/ui/BottomNav';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useMessageStore, Message } from '@/store/messageStore';
@@ -360,6 +361,9 @@ export default function NetworkPage() {
           </div>
         </div>
       )}
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }
