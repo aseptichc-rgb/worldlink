@@ -42,28 +42,55 @@ export default function MyCardPage() {
   // 프리미엄 여부 확인
   const isPremium = isPremiumUser(user);
 
-  // 명함이 없으면 자동 생성
+  // 명함이 없으면 자동 생성, 있으면 user 데이터와 동기화
   useEffect(() => {
-    if (user && !myCard) {
-      const newCard: BusinessCard = {
-        id: user.id,
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        company: user.company,
-        position: user.position,
-        bio: user.bio,
-        profileImage: user.profileImage,
-        keywords: user.keywords || [],
-        networkVisibility: 'connections_only',
-        qrCode: `nexus://card/${user.id}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setMyCard(newCard);
+    if (user) {
+      if (!myCard) {
+        const newCard: BusinessCard = {
+          id: user.id,
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          company: user.company,
+          position: user.position,
+          bio: user.bio,
+          profileImage: user.profileImage,
+          keywords: user.keywords || [],
+          networkVisibility: 'connections_only',
+          qrCode: `nexus://card/${user.id}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setMyCard(newCard);
+      } else {
+        // user 데이터가 변경되면 명함도 동기화
+        const needsUpdate =
+          myCard.name !== user.name ||
+          myCard.email !== user.email ||
+          myCard.phone !== user.phone ||
+          myCard.company !== user.company ||
+          myCard.position !== user.position ||
+          myCard.bio !== user.bio ||
+          myCard.profileImage !== user.profileImage ||
+          JSON.stringify(myCard.keywords) !== JSON.stringify(user.keywords || []);
+
+        if (needsUpdate) {
+          updateMyCard({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            company: user.company,
+            position: user.position,
+            bio: user.bio,
+            profileImage: user.profileImage,
+            keywords: user.keywords || [],
+            updatedAt: new Date(),
+          });
+        }
+      }
     }
-  }, [user, myCard, setMyCard]);
+  }, [user, myCard, setMyCard, updateMyCard]);
 
   // QR 코드 생성 - 공개 URL로 생성
   useEffect(() => {

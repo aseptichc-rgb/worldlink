@@ -13,7 +13,14 @@ import {
   Building2,
   Briefcase,
   Users,
-  Plus
+  Plus,
+  QrCode,
+  CreditCard,
+  Phone,
+  Mail,
+  User,
+  Loader2,
+  RotateCcw
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useAuthStore } from '@/store/authStore';
@@ -23,26 +30,59 @@ import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
 import { v4 as uuidv4 } from 'uuid';
 
+type ScanMode = 'select' | 'qr' | 'paper';
+
+interface PaperCardInfo {
+  name: string;
+  company: string;
+  position: string;
+  phone: string;
+  email: string;
+}
+
 export default function ScanPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { savedCards, addSavedCard } = useCardStore();
+
+  // 공통 상태
+  const [scanMode, setScanMode] = useState<ScanMode>('select');
+  const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // QR 스캔 상태
   const [isScanning, setIsScanning] = useState(false);
   const [scannedCard, setScannedCard] = useState<BusinessCard | null>(null);
   const [flashOn, setFlashOn] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+
+  // 종이 명함 스캔 상태
+  const [cardImage, setCardImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [paperCardInfo, setPaperCardInfo] = useState<PaperCardInfo>({
+    name: '',
+    company: '',
+    position: '',
+    phone: '',
+    email: '',
+  });
+  const [showInfoForm, setShowInfoForm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
         scannerRef.current.stop().catch(console.error);
       }
+      stopCamera();
     };
   }, []);
 
-  const startScanning = async () => {
+  // ==================== QR 스캔 관련 함수 ====================
+  const startQrScanning = async () => {
     setError(null);
     setIsScanning(true);
 
@@ -57,7 +97,7 @@ export default function ScanPage() {
           qrbox: { width: 250, height: 250 },
         },
         (decodedText) => {
-          handleScan(decodedText);
+          handleQrScan(decodedText);
           html5QrCode.stop().catch(console.error);
           setIsScanning(false);
         },
@@ -70,16 +110,15 @@ export default function ScanPage() {
     }
   };
 
-  const stopScanning = () => {
+  const stopQrScanning = () => {
     if (scannerRef.current) {
       scannerRef.current.stop().catch(console.error);
     }
     setIsScanning(false);
   };
 
-  const handleScan = (data: string) => {
+  const handleQrScan = (data: string) => {
     try {
-      // URL 형태의 QR 코드 처리 (새로운 형식)
       if (data.includes('/view/') && data.includes('data=')) {
         const url = new URL(data);
         const cardDataParam = url.searchParams.get('data');
@@ -106,7 +145,6 @@ export default function ScanPage() {
         }
       }
 
-      // 기존 JSON 형태의 QR 코드 처리 (레거시)
       const parsed = JSON.parse(data);
       if (parsed.type === 'nexus_card') {
         const card: BusinessCard = {
@@ -130,17 +168,15 @@ export default function ScanPage() {
     }
   };
 
-  const handleSaveCard = () => {
+  const handleSaveQrCard = () => {
     if (!scannedCard) return;
 
-    // 이미 저장된 명함인지 확인
     const alreadySaved = savedCards.some(c => c.cardId === scannedCard.id);
     if (alreadySaved) {
       setError('이미 저장된 명함입니다.');
       return;
     }
 
-    // 비로그인 사용자도 로컬에 저장 가능
     const savedCard: SavedCard = {
       id: uuidv4(),
       ownerId: user?.id || 'guest',
@@ -159,137 +195,292 @@ export default function ScanPage() {
     }, 1500);
   };
 
+  // ==================== 종이 명함 스캔 관련 함수 ====================
+  const startCamera = async () => {
+    setError(null);
+    setIsCapturing(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error('Camera error:', err);
+      setError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
+      setIsCapturing(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsCapturing(false);
+  };
+
+  const captureImage = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      setCardImage(imageData);
+      stopCamera();
+      setShowInfoForm(true);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageData = event.target?.result as string;
+      setCardImage(imageData);
+      setShowInfoForm(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSavePaperCard = () => {
+    if (!paperCardInfo.name.trim()) {
+      setError('이름을 입력해주세요.');
+      return;
+    }
+
+    const cardId = uuidv4();
+    const card: BusinessCard = {
+      id: cardId,
+      userId: cardId,
+      name: paperCardInfo.name.trim(),
+      company: paperCardInfo.company.trim() || undefined,
+      position: paperCardInfo.position.trim() || undefined,
+      phone: paperCardInfo.phone.trim() || undefined,
+      email: paperCardInfo.email.trim() || undefined,
+      keywords: [],
+      networkVisibility: 'private',
+      qrCode: '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const savedCard: SavedCard = {
+      id: uuidv4(),
+      ownerId: user?.id || 'guest',
+      cardId: card.id,
+      card: card,
+      cardImage: cardImage || undefined,
+      savedAt: new Date(),
+    };
+
+    addSavedCard(savedCard);
+    setSaveSuccess(true);
+
+    setTimeout(() => {
+      setSaveSuccess(false);
+      resetPaperCardState();
+      router.push('/cards');
+    }, 1500);
+  };
+
+  const resetPaperCardState = () => {
+    setCardImage(null);
+    setPaperCardInfo({ name: '', company: '', position: '', phone: '', email: '' });
+    setShowInfoForm(false);
+    stopCamera();
+  };
+
   const handleViewNetwork = () => {
     if (scannedCard) {
       router.push(`/network/${scannedCard.id}`);
     }
   };
 
+  const goBack = () => {
+    if (scanMode === 'qr') {
+      stopQrScanning();
+      setScannedCard(null);
+    } else if (scanMode === 'paper') {
+      resetPaperCardState();
+    }
+    setScanMode('select');
+    setError(null);
+  };
+
+  // ==================== 렌더링 ====================
   return (
     <div className="min-h-screen bg-[#0A0E1A] pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#0A0E1A]/80 backdrop-blur-xl border-b border-[#21262D]">
         <div className="flex items-center justify-between px-4 py-3">
-          <button onClick={() => router.back()} className="p-2 -ml-2">
+          <button onClick={scanMode === 'select' ? () => router.back() : goBack} className="p-2 -ml-2">
             <ArrowLeft size={24} className="text-white" />
           </button>
-          <h1 className="text-lg font-semibold text-white">명함 스캔</h1>
+          <h1 className="text-lg font-semibold text-white">
+            {scanMode === 'select' && '명함 스캔'}
+            {scanMode === 'qr' && 'QR 코드 스캔'}
+            {scanMode === 'paper' && '종이 명함 스캔'}
+          </h1>
           <div className="w-10" />
         </div>
       </div>
 
       <div className="p-4 space-y-6">
-        {/* 스캔 영역 */}
-        {!scannedCard && (
-          <div className="relative">
-            <div
-              id="qr-reader"
-              className={`w-full aspect-square rounded-2xl overflow-hidden bg-[#161B22] ${
-                isScanning ? '' : 'hidden'
-              }`}
-            />
-
-            {!isScanning && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full aspect-square rounded-2xl bg-[#161B22] border border-[#21262D] flex flex-col items-center justify-center"
-              >
-                <div className="w-24 h-24 rounded-2xl bg-[#21262D] flex items-center justify-center mb-6">
-                  <Camera size={40} className="text-[#484F58]" />
-                </div>
-                <p className="text-white font-medium mb-2">QR 코드를 스캔하세요</p>
-                <p className="text-sm text-[#8B949E] text-center px-8">
-                  상대방의 명함 QR 코드를 카메라로 스캔하면<br />
-                  명함이 자동으로 저장됩니다
-                </p>
-              </motion.div>
-            )}
-
-            {/* 스캔 프레임 오버레이 */}
-            {isScanning && (
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-64 h-64 relative">
-                    {/* 코너 */}
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#00E5FF]" />
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#00E5FF]" />
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#00E5FF]" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#00E5FF]" />
-                    {/* 스캔 라인 */}
-                    <motion.div
-                      initial={{ top: 0 }}
-                      animate={{ top: '100%' }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 에러 메시지 */}
-        {error && (
+        {/* 모드 선택 */}
+        {scanMode === 'select' && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-[#FF5252]/10 border border-[#FF5252]/30"
+            className="space-y-4"
           >
-            <p className="text-sm text-[#FF5252]">{error}</p>
+            <p className="text-center text-[#8B949E] mb-6">
+              어떤 방식으로 명함을 스캔하시겠습니까?
+            </p>
+
+            {/* QR 코드 스캔 */}
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setScanMode('qr')}
+              className="w-full p-6 rounded-2xl bg-gradient-to-br from-[#161B22] to-[#0D1117] border border-[#21262D] flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-[#00E5FF]/20 to-[#7C4DFF]/20 flex items-center justify-center">
+                <QrCode size={32} className="text-[#00E5FF]" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="text-lg font-semibold text-white mb-1">QR 코드 스캔</h3>
+                <p className="text-sm text-[#8B949E]">
+                  NEXUS 앱 사용자의 QR 명함을 스캔합니다
+                </p>
+              </div>
+            </motion.button>
+
+            {/* 종이 명함 스캔 */}
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setScanMode('paper')}
+              className="w-full p-6 rounded-2xl bg-gradient-to-br from-[#161B22] to-[#0D1117] border border-[#21262D] flex items-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-[#7C4DFF]/20 to-[#FF6B6B]/20 flex items-center justify-center">
+                <CreditCard size={32} className="text-[#7C4DFF]" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="text-lg font-semibold text-white mb-1">종이 명함 스캔</h3>
+                <p className="text-sm text-[#8B949E]">
+                  종이 명함을 촬영하여 정보와 이미지를 저장합니다
+                </p>
+              </div>
+            </motion.button>
           </motion.div>
         )}
 
-        {/* 스캔 버튼 */}
-        {!scannedCard && (
-          <div className="flex gap-3">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={isScanning ? stopScanning : startScanning}
-              className={`flex-1 py-4 rounded-xl font-medium flex items-center justify-center gap-2 ${
-                isScanning
-                  ? 'bg-[#FF5252] text-white'
-                  : 'bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black'
-              }`}
-            >
-              {isScanning ? (
-                <>
-                  <X size={20} />
-                  스캔 중지
-                </>
-              ) : (
-                <>
-                  <Camera size={20} />
-                  스캔 시작
-                </>
-              )}
-            </motion.button>
+        {/* QR 스캔 모드 */}
+        {scanMode === 'qr' && !scannedCard && (
+          <>
+            <div className="relative">
+              <div
+                id="qr-reader"
+                className={`w-full aspect-square rounded-2xl overflow-hidden bg-[#161B22] ${
+                  isScanning ? '' : 'hidden'
+                }`}
+              />
 
-            {isScanning && (
+              {!isScanning && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full aspect-square rounded-2xl bg-[#161B22] border border-[#21262D] flex flex-col items-center justify-center"
+                >
+                  <div className="w-24 h-24 rounded-2xl bg-[#21262D] flex items-center justify-center mb-6">
+                    <QrCode size={40} className="text-[#484F58]" />
+                  </div>
+                  <p className="text-white font-medium mb-2">QR 코드를 스캔하세요</p>
+                  <p className="text-sm text-[#8B949E] text-center px-8">
+                    상대방의 명함 QR 코드를 카메라로 스캔하면<br />
+                    명함이 자동으로 저장됩니다
+                  </p>
+                </motion.div>
+              )}
+
+              {isScanning && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-64 h-64 relative">
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#00E5FF]" />
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#00E5FF]" />
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#00E5FF]" />
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#00E5FF]" />
+                      <motion.div
+                        initial={{ top: 0 }}
+                        animate={{ top: '100%' }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setFlashOn(!flashOn)}
-                className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                  flashOn ? 'bg-[#FFD54F] text-black' : 'bg-[#161B22] text-white border border-[#21262D]'
+                onClick={isScanning ? stopQrScanning : startQrScanning}
+                className={`flex-1 py-4 rounded-xl font-medium flex items-center justify-center gap-2 ${
+                  isScanning
+                    ? 'bg-[#FF5252] text-white'
+                    : 'bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black'
                 }`}
               >
-                <Flashlight size={24} />
+                {isScanning ? (
+                  <>
+                    <X size={20} />
+                    스캔 중지
+                  </>
+                ) : (
+                  <>
+                    <Camera size={20} />
+                    스캔 시작
+                  </>
+                )}
               </motion.button>
-            )}
-          </div>
+
+              {isScanning && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setFlashOn(!flashOn)}
+                  className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                    flashOn ? 'bg-[#FFD54F] text-black' : 'bg-[#161B22] text-white border border-[#21262D]'
+                  }`}
+                >
+                  <Flashlight size={24} />
+                </motion.button>
+              )}
+            </div>
+          </>
         )}
 
-        {/* 스캔된 명함 미리보기 */}
-        <AnimatePresence>
-          {scannedCard && (
+        {/* QR 스캔 결과 */}
+        {scanMode === 'qr' && scannedCard && (
+          <AnimatePresence>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {/* 명함 카드 */}
               <div className="p-6 rounded-2xl bg-gradient-to-br from-[#161B22] to-[#0D1117] border border-[#21262D]">
                 <div className="flex items-start gap-4">
                   <Avatar
@@ -329,7 +520,6 @@ export default function ScanPage() {
                 )}
               </div>
 
-              {/* 성공 메시지 */}
               {saveSuccess && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -343,41 +533,259 @@ export default function ScanPage() {
                 </motion.div>
               )}
 
-              {/* 액션 버튼 */}
               {!saveSuccess && (
-                <div className="grid grid-cols-2 gap-3">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleSaveCard}
-                    className="py-4 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black font-medium flex items-center justify-center gap-2"
-                  >
-                    <Plus size={20} />
-                    명함 저장
-                  </motion.button>
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleSaveQrCard}
+                      className="py-4 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black font-medium flex items-center justify-center gap-2"
+                    >
+                      <Plus size={20} />
+                      명함 저장
+                    </motion.button>
 
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleViewNetwork}
-                    className="py-4 rounded-xl bg-[#161B22] border border-[#21262D] text-white font-medium flex items-center justify-center gap-2"
-                  >
-                    <Users size={20} />
-                    인맥 보기
-                  </motion.button>
-                </div>
-              )}
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleViewNetwork}
+                      className="py-4 rounded-xl bg-[#161B22] border border-[#21262D] text-white font-medium flex items-center justify-center gap-2"
+                    >
+                      <Users size={20} />
+                      인맥 보기
+                    </motion.button>
+                  </div>
 
-              {/* 다시 스캔 */}
-              {!saveSuccess && (
-                <button
-                  onClick={() => setScannedCard(null)}
-                  className="w-full py-3 text-[#8B949E] text-sm"
-                >
-                  다른 명함 스캔하기
-                </button>
+                  <button
+                    onClick={() => setScannedCard(null)}
+                    className="w-full py-3 text-[#8B949E] text-sm"
+                  >
+                    다른 명함 스캔하기
+                  </button>
+                </>
               )}
             </motion.div>
-          )}
-        </AnimatePresence>
+          </AnimatePresence>
+        )}
+
+        {/* 종이 명함 스캔 모드 */}
+        {scanMode === 'paper' && !showInfoForm && (
+          <>
+            <div className="relative">
+              {isCapturing ? (
+                <div className="relative w-full aspect-[3/2] rounded-2xl overflow-hidden bg-[#161B22]">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {/* 명함 가이드 프레임 */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div className="w-[90%] h-[85%] border-2 border-dashed border-[#7C4DFF]/50 rounded-xl">
+                      <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-[#7C4DFF]" />
+                      <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-[#7C4DFF]" />
+                      <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-[#7C4DFF]" />
+                      <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-[#7C4DFF]" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full aspect-[3/2] rounded-2xl bg-[#161B22] border border-[#21262D] flex flex-col items-center justify-center"
+                >
+                  <div className="w-24 h-24 rounded-2xl bg-[#21262D] flex items-center justify-center mb-6">
+                    <CreditCard size={40} className="text-[#484F58]" />
+                  </div>
+                  <p className="text-white font-medium mb-2">명함을 촬영하세요</p>
+                  <p className="text-sm text-[#8B949E] text-center px-8">
+                    종이 명함을 카메라로 촬영하면<br />
+                    이미지와 정보가 함께 저장됩니다
+                  </p>
+                </motion.div>
+              )}
+            </div>
+
+            <canvas ref={canvasRef} className="hidden" />
+
+            <div className="flex gap-3">
+              {isCapturing ? (
+                <>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={captureImage}
+                    className="flex-1 py-4 rounded-xl bg-gradient-to-r from-[#7C4DFF] to-[#FF6B6B] text-white font-medium flex items-center justify-center gap-2"
+                  >
+                    <Camera size={20} />
+                    촬영하기
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={stopCamera}
+                    className="w-14 h-14 rounded-xl bg-[#FF5252] text-white flex items-center justify-center"
+                  >
+                    <X size={24} />
+                  </motion.button>
+                </>
+              ) : (
+                <>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={startCamera}
+                    className="flex-1 py-4 rounded-xl bg-gradient-to-r from-[#7C4DFF] to-[#FF6B6B] text-white font-medium flex items-center justify-center gap-2"
+                  >
+                    <Camera size={20} />
+                    카메라로 촬영
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-14 h-14 rounded-xl bg-[#161B22] border border-[#21262D] text-white flex items-center justify-center"
+                  >
+                    <ImageIcon size={24} />
+                  </motion.button>
+                </>
+              )}
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </>
+        )}
+
+        {/* 종이 명함 정보 입력 폼 */}
+        {scanMode === 'paper' && showInfoForm && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            {/* 촬영된 이미지 미리보기 */}
+            {cardImage && (
+              <div className="relative">
+                <img
+                  src={cardImage}
+                  alt="촬영된 명함"
+                  className="w-full aspect-[3/2] object-cover rounded-2xl border border-[#21262D]"
+                />
+                <button
+                  onClick={() => {
+                    setCardImage(null);
+                    setShowInfoForm(false);
+                  }}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center"
+                >
+                  <RotateCcw size={16} className="text-white" />
+                </button>
+              </div>
+            )}
+
+            {/* 정보 입력 폼 */}
+            <div className="p-4 rounded-2xl bg-[#161B22] border border-[#21262D] space-y-4">
+              <h3 className="text-white font-medium mb-2">명함 정보 입력</h3>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 bg-[#0D1117] rounded-xl px-4 py-3">
+                  <User size={18} className="text-[#8B949E]" />
+                  <input
+                    type="text"
+                    placeholder="이름 *"
+                    value={paperCardInfo.name}
+                    onChange={(e) => setPaperCardInfo(prev => ({ ...prev, name: e.target.value }))}
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-[#0D1117] rounded-xl px-4 py-3">
+                  <Building2 size={18} className="text-[#8B949E]" />
+                  <input
+                    type="text"
+                    placeholder="회사"
+                    value={paperCardInfo.company}
+                    onChange={(e) => setPaperCardInfo(prev => ({ ...prev, company: e.target.value }))}
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-[#0D1117] rounded-xl px-4 py-3">
+                  <Briefcase size={18} className="text-[#8B949E]" />
+                  <input
+                    type="text"
+                    placeholder="직책"
+                    value={paperCardInfo.position}
+                    onChange={(e) => setPaperCardInfo(prev => ({ ...prev, position: e.target.value }))}
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-[#0D1117] rounded-xl px-4 py-3">
+                  <Phone size={18} className="text-[#8B949E]" />
+                  <input
+                    type="tel"
+                    placeholder="전화번호"
+                    value={paperCardInfo.phone}
+                    onChange={(e) => setPaperCardInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-[#0D1117] rounded-xl px-4 py-3">
+                  <Mail size={18} className="text-[#8B949E]" />
+                  <input
+                    type="email"
+                    placeholder="이메일"
+                    value={paperCardInfo.email}
+                    onChange={(e) => setPaperCardInfo(prev => ({ ...prev, email: e.target.value }))}
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 성공 메시지 */}
+            {saveSuccess && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-4 rounded-xl bg-[#00E676]/10 border border-[#00E676]/30 flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#00E676] flex items-center justify-center">
+                  <Check size={18} className="text-black" />
+                </div>
+                <p className="text-[#00E676] font-medium">명함이 저장되었습니다!</p>
+              </motion.div>
+            )}
+
+            {/* 저장 버튼 */}
+            {!saveSuccess && (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSavePaperCard}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#7C4DFF] to-[#FF6B6B] text-white font-medium flex items-center justify-center gap-2"
+              >
+                <Plus size={20} />
+                명함 저장
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+
+        {/* 에러 메시지 */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl bg-[#FF5252]/10 border border-[#FF5252]/30"
+          >
+            <p className="text-sm text-[#FF5252]">{error}</p>
+          </motion.div>
+        )}
       </div>
 
       <BottomNav />

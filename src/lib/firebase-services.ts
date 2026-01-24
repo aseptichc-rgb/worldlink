@@ -403,6 +403,62 @@ export const getPendingConnections = async (userId: string): Promise<Connection[
   })) as Connection[];
 };
 
+// 특정 사용자의 1촌 인맥 목록을 User 정보와 함께 반환
+export const getUserConnectionsWithDetails = async (userId: string): Promise<User[]> => {
+  const connections = await getDirectConnections(userId);
+
+  if (connections.length === 0) {
+    // Firebase에 연결이 없으면 데모 데이터 사용
+    const { demoConnections, demoUsers } = await import('./demo-data');
+    const demoConnectionIds = demoConnections[userId] || demoConnections['user-jaeyoung'] || [];
+
+    return demoUsers.filter(user => demoConnectionIds.includes(user.id));
+  }
+
+  // 연결된 사용자 ID 추출
+  const connectedUserIds = connections.map(conn =>
+    conn.fromUserId === userId ? conn.toUserId : conn.fromUserId
+  );
+
+  // 각 사용자 정보 가져오기
+  const users: User[] = [];
+  for (const connectedUserId of connectedUserIds) {
+    const user = await getUser(connectedUserId);
+    if (user) {
+      users.push(user);
+    }
+  }
+
+  return users;
+};
+
+// 현재 사용자가 대상 사용자와 1촌인지 확인
+export const isFirstDegreeConnection = async (currentUserId: string, targetUserId: string): Promise<boolean> => {
+  const connectionsRef = collection(db, 'connections');
+
+  // 양방향으로 확인 (currentUser -> target 또는 target -> currentUser)
+  const query1 = query(
+    connectionsRef,
+    where('fromUserId', '==', currentUserId),
+    where('toUserId', '==', targetUserId),
+    where('status', '==', 'accepted')
+  );
+
+  const query2 = query(
+    connectionsRef,
+    where('fromUserId', '==', targetUserId),
+    where('toUserId', '==', currentUserId),
+    where('status', '==', 'accepted')
+  );
+
+  const [snap1, snap2] = await Promise.all([
+    getDocs(query1),
+    getDocs(query2)
+  ]);
+
+  return !snap1.empty || !snap2.empty;
+};
+
 // ==================== NETWORK GRAPH SERVICES ====================
 
 import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs } from './demo-data';

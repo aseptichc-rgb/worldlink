@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Hash, User, Building, ArrowRight } from 'lucide-react';
+import { Search, X, Hash, User, Building, ArrowRight, StickyNote } from 'lucide-react';
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
+import { useMemoStore } from '@/store/memoStore';
 import { Avatar, Tag } from '@/components/ui';
 import { demoUsers, demoConnections, findDemoConnectionPath } from '@/lib/demo-data';
 import { NetworkNode } from '@/types';
@@ -22,6 +23,7 @@ interface PersonResult {
   keywords: string[];
   degree: number; // 연결 단계
   path: string[]; // 연결 경로
+  memoMatch?: string; // 메모 검색 일치 내용
 }
 
 export default function SearchBar() {
@@ -40,6 +42,7 @@ export default function SearchBar() {
   } = useNetworkStore();
 
   const { user: currentUser } = useAuthStore();
+  const { memos } = useMemoStore();
 
   // 현재 사용자 ID
   const currentUserId = useMemo(() => {
@@ -78,7 +81,12 @@ export default function SearchBar() {
             const positionMatch = user.position?.toLowerCase().includes(query) ?? false;
             const keywordMatch = user.keywords.some(k => k.toLowerCase().includes(query));
 
-            if (nameMatch || companyMatch || positionMatch || keywordMatch) {
+            // 메모 검색 (나만의 메모)
+            const userMemo = memos[userId];
+            const memoMatch = userMemo?.content.toLowerCase().includes(query);
+            const memoMatchContent = memoMatch ? userMemo.content : undefined;
+
+            if (nameMatch || companyMatch || positionMatch || keywordMatch || memoMatch) {
               results.push({
                 id: user.id,
                 name: user.name,
@@ -88,6 +96,7 @@ export default function SearchBar() {
                 keywords: user.keywords,
                 degree: degree,
                 path: path,
+                memoMatch: memoMatchContent,
               });
             }
           }
@@ -109,7 +118,7 @@ export default function SearchBar() {
       // 연결 단계 순으로 정렬
       return results.sort((a, b) => a.degree - b.degree).slice(0, 8);
     };
-  }, [currentUserId]);
+  }, [currentUserId, memos]);
 
   // 검색어 변경 시 결과 업데이트
   useEffect(() => {
@@ -224,7 +233,7 @@ export default function SearchBar() {
               }
             }
           }}
-          placeholder="이름, 회사, 키워드로 검색"
+          placeholder="이름, 회사, 키워드, 메모로 검색"
           className="
             flex-1 bg-transparent text-white
             py-3 pr-4
@@ -326,6 +335,12 @@ export default function SearchBar() {
                             <span>{getPathString(person.path)} 통해 연결</span>
                           </div>
                         )}
+                        {person.memoMatch && (
+                          <div className="flex items-center gap-1 text-[10px] text-[#7C4DFF] mt-0.5">
+                            <StickyNote size={10} />
+                            <span className="truncate">메모: {person.memoMatch.slice(0, 30)}{person.memoMatch.length > 30 ? '...' : ''}</span>
+                          </div>
+                        )}
                       </div>
                     </button>
                   ))}
@@ -373,7 +388,7 @@ export default function SearchBar() {
               <div className="p-4 text-center">
                 <p className="text-[#8B949E] text-sm">검색 결과가 없습니다</p>
                 <p className="text-[#484F58] text-xs mt-1">
-                  다른 이름이나 키워드로 검색해보세요
+                  이름, 회사, 키워드 또는 메모 내용으로 검색해보세요
                 </p>
               </div>
             )}

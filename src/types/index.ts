@@ -216,6 +216,7 @@ export interface SavedCard {
   ownerId: string; // 명함을 저장한 사용자
   cardId: string; // 저장된 명함의 ID
   card: BusinessCard; // 명함 정보
+  cardImage?: string; // 촬영한 명함 이미지 (base64 또는 URL)
   memo?: string; // 메모
   tags?: string[]; // 커스텀 태그
   savedAt: Date;

@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, BookUser, Scan, User, Network, X, UserPlus } from 'lucide-react';
+import { QrCode, Scan, User, Network, X, UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const navItems = [
   { path: '/card', icon: QrCode, label: '내 명함', requiresAuth: true },
   { path: '/scan', icon: Scan, label: '스캔', requiresAuth: false },
-  { path: '/contacts', icon: BookUser, label: '연락처', requiresAuth: false },
+  // { path: '/contacts', icon: BookUser, label: '연락처', requiresAuth: false }, // 임시 비활성화
   { path: '/network', icon: Network, label: '인맥', requiresAuth: true },
   { path: '/profile', icon: User, label: '프로필', requiresAuth: true },
 ];

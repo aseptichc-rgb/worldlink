@@ -16,8 +16,10 @@ import {
   User as UserIcon,
   Check,
 } from 'lucide-react';
-import { Avatar, Button, Input, Tag, Card } from '@/components/ui';
+import { Avatar, Input, Tag, Card } from '@/components/ui';
+import BottomNav from '@/components/ui/BottomNav';
 import { InviteManager } from '@/components/invite/InviteManager';
+import MyNetworkVisualization from '@/components/network/MyNetworkVisualization';
 import { useAuthStore } from '@/store/authStore';
 import {
   updateUser,
@@ -127,7 +129,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black pb-20">
+    <div className="min-h-screen bg-black pb-32">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-30 glass-light">
         <div className="flex items-center justify-between px-4 py-3">
@@ -137,7 +139,7 @@ export default function ProfilePage() {
           >
             <ArrowLeft size={22} className="text-[#8B949E]" />
           </button>
-          <h1 className="text-lg font-semibold text-white">내 프로필</h1>
+          <div className="w-8" />
           <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
             disabled={isSaving}
@@ -154,12 +156,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="pt-20 px-4">
+      <div className="pt-24 px-6">
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-10"
         >
           <div className="relative inline-block mb-4">
             <Avatar
@@ -214,7 +216,7 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* Bio */}
-        <Card className="p-4 mb-6">
+        <Card className="p-5 mb-8">
           <h3 className="text-sm font-medium text-[#8B949E] mb-3">한 줄 소개</h3>
           {isEditing ? (
             <textarea
@@ -238,9 +240,9 @@ export default function ProfilePage() {
         </Card>
 
         {/* Keywords */}
-        <Card className="p-4 mb-6 overflow-hidden">
+        <Card className="p-5 mb-8">
           <h3 className="text-sm font-medium text-[#8B949E] mb-3">관심 키워드</h3>
-          <div className="flex flex-wrap gap-2 overflow-hidden">
+          <div className="flex flex-wrap gap-2">
             {editedUser.keywords.map((keyword) => (
               <Tag
                 key={keyword}
@@ -268,8 +270,17 @@ export default function ProfilePage() {
           </div>
         </Card>
 
+        {/* My Network Visualization */}
+        <Card className="p-5 mb-8">
+          <MyNetworkVisualization
+            userId={user.id}
+            userName={user.name}
+            userImage={user.profileImage}
+          />
+        </Card>
+
         {/* Privacy Settings */}
-        <Card className="p-4 mb-6">
+        <Card className="p-5 mb-8">
           <button
             onClick={() => setShowPrivacySettings(true)}
             className="w-full flex items-center justify-between"
@@ -290,7 +301,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Invite Manager */}
-        <div className="mb-6">
+        <div className="mb-10">
           <InviteManager
             userId={user.id}
             invitesRemaining={user.invitesRemaining}
@@ -615,6 +626,8 @@ export default function ProfilePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <BottomNav />
     </div>
   );
 }

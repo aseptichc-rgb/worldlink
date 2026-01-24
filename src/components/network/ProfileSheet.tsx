@@ -26,7 +26,7 @@ import { useCoffeeChatStore } from '@/store/coffeeChatStore';
 import { useConnectionRequestStore } from '@/store/connectionRequestStore';
 import { useMemoStore } from '@/store/memoStore';
 import { useAuthStore } from '@/store/authStore';
-import { findConnectionPath, getUser } from '@/lib/firebase-services';
+import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
 import { User, NetworkNode } from '@/types';
@@ -42,6 +42,7 @@ export default function ProfileSheet() {
   const [isLoadingPath, setIsLoadingPath] = useState(false);
   const [theirConnections, setTheirConnections] = useState<User[]>([]);
   const [selectedUserData, setSelectedUserData] = useState<User | null>(null);
+  const [myConnectionIds, setMyConnectionIds] = useState<Set<string>>(new Set());
 
   // 메모 관련 상태
   const [isEditingMemo, setIsEditingMemo] = useState(false);
@@ -55,6 +56,32 @@ export default function ProfileSheet() {
     setIsEditingMemo(false);
     setMemoText(currentMemo?.content || '');
   }, [selectedNode?.id, currentMemo?.content]);
+
+  // 내 1촌 목록 불러오기 (공통 인맥 표시용)
+  useEffect(() => {
+    const loadMyConnections = async () => {
+      if (!currentUser) return;
+
+      try {
+        if (currentUser.id.startsWith('demo-user-') || currentUser.id === 'user-jaeyoung') {
+          // 데모 사용자의 경우
+          const myConnIds = demoConnections[currentUser.id] || demoConnections['user-jaeyoung'] || [];
+          setMyConnectionIds(new Set(myConnIds));
+        } else {
+          // 실제 사용자의 경우
+          const connections = await getDirectConnections(currentUser.id);
+          const connIds = connections.map(conn =>
+            conn.fromUserId === currentUser.id ? conn.toUserId : conn.fromUserId
+          );
+          setMyConnectionIds(new Set(connIds));
+        }
+      } catch (error) {
+        console.error('Error loading my connections:', error);
+      }
+    };
+
+    loadMyConnections();
+  }, [currentUser]);
 
   useEffect(() => {
     const loadConnectionPath = async () => {
@@ -75,11 +102,19 @@ export default function ProfileSheet() {
           const demoUserData = demoUsers.find(u => u.id === selectedNode.id);
           setSelectedUserData(demoUserData || null);
 
-          const theirConnectionIds = demoConnections[selectedNode.id] || [];
-          const theirConnectionUsers = theirConnectionIds
-            .map(id => demoUsers.find(u => u.id === id))
-            .filter((u): u is User => u !== undefined);
-          setTheirConnections(theirConnectionUsers);
+          // 1촌일 때만 인맥 보여주기
+          const isFirstDegree = pathIds.length === 2; // 나 -> 상대 = 2 노드
+          if (isFirstDegree) {
+            const theirConnectionIds = demoConnections[selectedNode.id] || [];
+            const theirConnectionUsers = theirConnectionIds
+              .map(id => demoUsers.find(u => u.id === id))
+              .filter((u): u is User => u !== undefined);
+            setTheirConnections(theirConnectionUsers);
+          } else {
+            // 1촌이 아니면 인맥 수만 보여주기 위해 빈 배열 설정
+            const theirConnectionIds = demoConnections[selectedNode.id] || [];
+            setTheirConnections(theirConnectionIds.map(id => ({ id } as User)));
+          }
         } else {
           const pathIds = await findConnectionPath(currentUser.id, selectedNode.id);
           const pathUsers: User[] = [];
@@ -90,10 +125,22 @@ export default function ProfileSheet() {
           }
 
           setConnectionPath(pathUsers);
-          setTheirConnections([]);
 
           const userData = await getUser(selectedNode.id);
           setSelectedUserData(userData);
+
+          // 1촌일 때만 상대방의 인맥 목록 가져오기
+          const isFirstDegree = pathIds.length === 2;
+          if (isFirstDegree && userData) {
+            const connections = await getUserConnectionsWithDetails(selectedNode.id);
+            setTheirConnections(connections);
+          } else if (userData) {
+            // 1촌이 아니면 인맥 수만 표시하기 위해 임시 객체 설정
+            const connections = await getUserConnectionsWithDetails(selectedNode.id);
+            setTheirConnections(connections.map(c => ({ id: c.id } as User)));
+          } else {
+            setTheirConnections([]);
+          }
         }
       } catch (error) {
         console.error('Error loading connection path:', error);
@@ -469,42 +516,99 @@ export default function ProfileSheet() {
                     </section>
                   )}
 
-                  {/* Their Network */}
+                  {/* Their Network - 1촌에게만 분야별로 표시 */}
                   {theirConnections.length > 0 && (
                     <section>
-                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
-                        <Users size={12} />
-                        {selectedNode.name}님의 인맥
-                        <span className="text-[#00E5FF]">({theirConnections.length})</span>
-                      </h3>
-                      {selectedNode.degree === 1 ? (
-                        <div className="info-card">
-                          <div className="grid grid-cols-5 gap-3">
-                            {theirConnections.slice(0, 10).map((user) => (
-                              <button
-                                key={user.id}
-                                onClick={() => handleConnectionClick(user)}
-                                className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
-                              >
-                                <div className="relative">
-                                  <Avatar
-                                    src={user.profileImage}
-                                    name={user.name}
-                                    size="sm"
-                                  />
-                                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#00E5FF]/50 transition-colors" />
+                      {(() => {
+                        const mutualCount = theirConnections.filter(u => myConnectionIds.has(u.id)).length;
+                        return (
+                          <>
+                            <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-2">
+                              <Users size={12} />
+                              {selectedNode.name}님의 인맥
+                              <span className="text-[#00E5FF]">({theirConnections.length})</span>
+                            </h3>
+                            {selectedNode.degree === 1 && mutualCount > 0 && (
+                              <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-[#FFB800]/10 border border-[#FFB800]/20">
+                                <div className="w-3 h-3 rounded-full bg-[#FFB800] flex items-center justify-center">
+                                  <Users size={7} className="text-[#0A0E1A]" />
                                 </div>
-                                <span className="text-[10px] text-[#8B949E] mt-1.5 max-w-[48px] truncate text-center">
-                                  {user.name.slice(0, 4)}
+                                <span className="text-[10px] text-[#FFB800]">
+                                  공통 인맥 {mutualCount}명
                                 </span>
-                              </button>
-                            ))}
-                          </div>
-                          {theirConnections.length > 10 && (
-                            <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#21262D]/50">
-                              +{theirConnections.length - 10}명 더
-                            </p>
-                          )}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                      {selectedNode.degree === 1 ? (
+                        <div className="space-y-4">
+                          {/* 분야별로 그룹화하여 표시 */}
+                          {(() => {
+                            // industry 기준으로 그룹화
+                            const groupedByIndustry = theirConnections.reduce((acc, user) => {
+                              const industry = user.industry || '기타';
+                              if (!acc[industry]) {
+                                acc[industry] = [];
+                              }
+                              acc[industry].push(user);
+                              return acc;
+                            }, {} as Record<string, User[]>);
+
+                            const sortedIndustries = Object.keys(groupedByIndustry).sort((a, b) => {
+                              if (a === '기타') return 1;
+                              if (b === '기타') return -1;
+                              return groupedByIndustry[b].length - groupedByIndustry[a].length;
+                            });
+
+                            return sortedIndustries.map((industry) => (
+                              <div key={industry} className="info-card">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="w-2 h-2 rounded-full bg-[#00E5FF]" />
+                                  <span className="text-xs font-medium text-[#8B949E]">
+                                    {industry}
+                                  </span>
+                                  <span className="text-[10px] text-[#484F58]">
+                                    ({groupedByIndustry[industry].length}명)
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-5 gap-3">
+                                  {groupedByIndustry[industry].slice(0, 10).map((user) => {
+                                    const isMutualConnection = myConnectionIds.has(user.id);
+                                    return (
+                                    <button
+                                      key={user.id}
+                                      onClick={() => handleConnectionClick(user)}
+                                      className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
+                                    >
+                                      <div className="relative">
+                                        <Avatar
+                                          src={user.profileImage}
+                                          name={user.name}
+                                          size="sm"
+                                        />
+                                        {isMutualConnection && (
+                                          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center" title="공통 인맥">
+                                            <Users size={8} className="text-[#0A0E1A]" />
+                                          </div>
+                                        )}
+                                        <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#00E5FF]/50 transition-colors" />
+                                      </div>
+                                      <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#FFB800] font-medium' : 'text-[#8B949E]'}`}>
+                                        {user.name?.slice(0, 4) || '?'}
+                                      </span>
+                                    </button>
+                                    );
+                                  })}
+                                </div>
+                                {groupedByIndustry[industry].length > 10 && (
+                                  <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#21262D]/50">
+                                    +{groupedByIndustry[industry].length - 10}명 더
+                                  </p>
+                                )}
+                              </div>
+                            ));
+                          })()}
                         </div>
                       ) : (
                         <div className="info-card relative overflow-hidden">

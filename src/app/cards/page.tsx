@@ -14,7 +14,8 @@ import {
   MoreVertical,
   X,
   StickyNote,
-  Network
+  Network,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
@@ -33,6 +34,7 @@ export default function CardsPage() {
   const [showMemoModal, setShowMemoModal] = useState(false);
   const [memoText, setMemoText] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState<string | null>(null);
 
   // 검색 필터링
   const filteredCards = useMemo(() => {
@@ -137,6 +139,23 @@ export default function CardsPage() {
                 transition={{ delay: index * 0.05 }}
                 className="relative p-4 rounded-xl bg-[#161B22] border border-[#21262D]"
               >
+                {/* 명함 이미지 썸네일 */}
+                {saved.cardImage && (
+                  <button
+                    onClick={() => setShowImageModal(saved.cardImage!)}
+                    className="w-full mb-3 relative group"
+                  >
+                    <img
+                      src={saved.cardImage}
+                      alt="명함 이미지"
+                      className="w-full h-24 object-cover rounded-lg border border-[#21262D]"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg flex items-center justify-center">
+                      <ImageIcon size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
+                )}
+
                 <div className="flex items-start gap-3">
                   <button onClick={() => handleViewNetwork(saved.cardId)}>
                     <Avatar
@@ -316,6 +335,39 @@ export default function CardsPage() {
               >
                 저장
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 명함 이미지 모달 */}
+      <AnimatePresence>
+        {showImageModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowImageModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-lg w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowImageModal(null)}
+                className="absolute -top-12 right-0 p-2 text-white"
+              >
+                <X size={24} />
+              </button>
+              <img
+                src={showImageModal}
+                alt="명함 이미지"
+                className="w-full rounded-xl border border-[#21262D]"
+              />
             </motion.div>
           </motion.div>
         )}

@@ -64,7 +64,7 @@ export default function Avatar({
             src={src}
             alt={name || 'Avatar'}
             fill
-            className="object-cover"
+            className="object-cover rounded-full"
           />
         ) : initials ? (
           <span className="text-[#8B949E] font-medium">
