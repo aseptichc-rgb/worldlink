@@ -143,7 +143,7 @@ export const useContactStore = create<ContactStore>()(
       },
     }),
     {
-      name: 'worldlink-contacts',
+      name: 'nodded-contacts',
     }
   )
 );

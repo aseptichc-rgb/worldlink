@@ -10,10 +10,10 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "NEXUS - 신뢰 기반 비즈니스 네트워크",
+  title: "Nodded - 신뢰 기반 비즈니스 네트워크",
   description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다. 초대 기반 폐쇄형 비즈니스 인맥 플랫폼",
   keywords: ["비즈니스 네트워크", "인맥 관리", "커피챗", "네트워킹", "스타트업"],
-  authors: [{ name: "NEXUS" }],
+  authors: [{ name: "Nodded" }],
   // 검색 엔진 인덱싱 차단 - 개인정보 보호
   robots: {
     index: false,
@@ -29,15 +29,15 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "NEXUS - 신뢰 기반 비즈니스 네트워크",
+    title: "Nodded - 신뢰 기반 비즈니스 네트워크",
     description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다",
     type: "website",
     locale: "ko_KR",
-    siteName: "NEXUS",
+    siteName: "Nodded",
   },
   twitter: {
     card: "summary_large_image",
-    title: "NEXUS - 신뢰 기반 비즈니스 네트워크",
+    title: "Nodded - 신뢰 기반 비즈니스 네트워크",
     description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다",
   },
   manifest: "/manifest.json",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "NEXUS",
+    title: "Nodded",
     startupImage: [
       {
         url: "/splash/splash-1170x2532.png",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
-    "apple-mobile-web-app-title": "NEXUS",
+    "apple-mobile-web-app-title": "Nodded",
   },
 };
 

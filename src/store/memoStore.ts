@@ -49,7 +49,7 @@ export const useMemoStore = create<MemoState>()(
       },
     }),
     {
-      name: 'worldlink-memos',
+      name: 'nodded-memos',
     }
   )
 );

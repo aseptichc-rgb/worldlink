@@ -37,7 +37,7 @@ export default function ContactList({
     if (!inviteModal) return;
 
     const inviteLink = `${window.location.origin}/onboarding?inviter=${encodeURIComponent('김재영')}`;
-    const message = `안녕하세요 ${inviteModal.name}님! 김재영입니다. 인맥 네트워크 서비스 WorldLink에 초대합니다. ${inviteLink}`;
+    const message = `안녕하세요 ${inviteModal.name}님! 김재영입니다. 인맥 네트워크 서비스 Nodded에 초대합니다. ${inviteLink}`;
 
     if (method === 'sms') {
       window.open(`sms:${inviteModal.phone}?body=${encodeURIComponent(message)}`);
@@ -45,7 +45,7 @@ export default function ContactList({
       // 카카오톡 공유 (실제로는 Kakao SDK 필요)
       if (navigator.share) {
         navigator.share({
-          title: 'WorldLink 초대',
+          title: 'Nodded 초대',
           text: message,
         });
       }
