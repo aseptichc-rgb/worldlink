@@ -49,7 +49,7 @@ export default function CategoryFilter({
         className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
           selectedCategory === 'all'
             ? 'bg-white text-black'
-            : 'bg-[#21262D] text-[#8B949E] hover:bg-[#30363D] hover:text-white'
+            : 'bg-[#1E3A5F] text-[#8BA4C4] hover:bg-[#30363D] hover:text-white'
         }`}
       >
         <span className="text-sm">전체</span>
@@ -74,7 +74,7 @@ export default function CategoryFilter({
             onClick={() => onSelectCategory(stat.category)}
             className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full transition-all`}
             style={{
-              backgroundColor: isSelected ? info.color : '#21262D',
+              backgroundColor: isSelected ? info.color : '#1E3A5F',
               color: isSelected ? 'white' : info.color,
             }}
           >

@@ -108,13 +108,13 @@ function OnboardingContent() {
   const currentStepIndex = steps.findIndex(s => s.key === step);
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0B162C] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Effects */}
       <div className="stars-bg" />
 
       {/* Gradient Orbs */}
-      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#00E5FF]/10 rounded-full blur-[100px]" />
-      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#7B68EE]/10 rounded-full blur-[100px]" />
+      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#86C9F2]/10 rounded-full blur-[100px]" />
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#2C529C]/10 rounded-full blur-[100px]" />
 
       {/* Logo Section */}
       <motion.div
@@ -125,13 +125,13 @@ function OnboardingContent() {
       >
         <div className="relative inline-block">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-[#00D9FF] via-[#00E5FF] to-[#7B68EE] bg-clip-text text-transparent">
-              NEXUS
+            <span className="bg-gradient-to-r from-[#86C9F2] via-[#86C9F2] to-[#2C529C] bg-clip-text text-transparent">
+              NODDED
             </span>
           </h1>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#00E5FF]/20 to-[#7B68EE]/20 blur-2xl -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#86C9F2]/20 to-[#2C529C]/20 blur-2xl -z-10" />
         </div>
-        <p className="text-[#6E7681] mt-3 text-sm md:text-base font-medium tracking-wide">
+        <p className="text-[#4A5E7A] mt-3 text-sm md:text-base font-medium tracking-wide">
           신뢰 기반 비즈니스 네트워크
         </p>
       </motion.div>
@@ -155,17 +155,17 @@ function OnboardingContent() {
                   flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
                   transition-all duration-300
                   ${isActive
-                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40'
+                    ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
                     : isCompleted
                       ? 'bg-[#00E676]/20 text-[#00E676]'
-                      : 'text-[#484F58]'}
+                      : 'text-[#4A5E7A]'}
                 `}
               >
                 <Icon size={14} />
                 <span className="hidden sm:inline">{s.label}</span>
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-8 h-px mx-2 ${isCompleted ? 'bg-[#00E676]' : 'bg-[#21262D]'}`} />
+                <div className={`w-8 h-px mx-2 ${isCompleted ? 'bg-[#00E676]' : 'bg-[#1E3A5F]'}`} />
               )}
             </div>
           );
@@ -183,13 +183,13 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[400px]"
           >
-            <div className="bg-[#0D1117]/80 backdrop-blur-2xl border border-[#21262D]/60 rounded-2xl p-8">
+            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-white tracking-tight">
                   계정 생성
                 </h2>
-                <p className="text-[#6E7681] text-sm mt-2">
-                  NEXUS에 오신 것을 환영합니다
+                <p className="text-[#4A5E7A] text-sm mt-2">
+                  NODDED에 오신 것을 환영합니다
                 </p>
               </div>
 
@@ -227,7 +227,7 @@ function OnboardingContent() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"
+                  className="w-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] hover:from-[#86C9F2] hover:to-[#8B7EFF]"
                   size="lg"
                   rightIcon={<ArrowRight size={18} />}
                 >
@@ -247,7 +247,7 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[480px]"
           >
-            <div className="bg-[#0D1117]/80 backdrop-blur-2xl border border-[#21262D]/60 rounded-2xl p-8">
+            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
               <ProfileSetup
                 onComplete={handleProfileComplete}
                 isLoading={isLoading}
@@ -275,12 +275,12 @@ function OnboardingContent() {
           transition={{ delay: 0.5 }}
           className="mt-8 text-center"
         >
-          <p className="text-[#6E7681] text-sm">
+          <p className="text-[#4A5E7A] text-sm">
             이미 계정이 있으신가요?
           </p>
           <button
             onClick={() => router.push('/login')}
-            className="mt-2 inline-flex items-center gap-2 text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors text-sm font-medium group"
+            className="mt-2 inline-flex items-center gap-2 text-[#86C9F2] hover:text-[#86C9F2]/80 transition-colors text-sm font-medium group"
           >
             로그인하기
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -293,10 +293,10 @@ function OnboardingContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[#0A0E1A] flex items-center justify-center">
+    <div className="min-h-screen bg-[#0B162C] flex items-center justify-center">
       <div className="text-center">
         <div className="spinner mx-auto mb-4" />
-        <p className="text-[#6E7681]">로딩 중...</p>
+        <p className="text-[#4A5E7A]">로딩 중...</p>
       </div>
     </div>
   );

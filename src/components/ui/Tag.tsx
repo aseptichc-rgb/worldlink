@@ -35,10 +35,10 @@ export default function Tag({
         transition-all duration-200 cursor-pointer max-w-full
         ${sizeStyles[size]}
         ${isActive
-          ? 'bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black border-transparent'
+          ? 'bg-gradient-to-r from-[#2C529C] to-[#86C9F2] text-white border-transparent'
           : isHighlighted
-            ? 'bg-[rgba(0,229,255,0.25)] text-[#00E5FF] border border-[#00E5FF]'
-            : 'bg-[#161B22] text-[#8B949E] border border-[#21262D] hover:bg-[#21262D] hover:text-white'
+            ? 'bg-[rgba(134,201,242,0.25)] text-[#86C9F2] border border-[#86C9F2]'
+            : 'bg-[#162A4A] text-[#8BA4C4] border border-[#1E3A5F] hover:bg-[#1E3A5F] hover:text-white'
         }
       `}
     >

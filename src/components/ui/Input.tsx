@@ -39,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <div className={`
               absolute left-4 top-1/2 -translate-y-1/2
               transition-colors duration-200
-              ${isFocused ? 'text-[#00E5FF]' : 'text-[#484F58]'}
+              ${isFocused ? 'text-[#86C9F2]' : 'text-[#4A5E7A]'}
             `}>
               {leftIcon}
             </div>
@@ -48,15 +48,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={`
-              w-full bg-[#0D1117]/80 border border-[#21262D]/60 text-white
+              w-full bg-[#101D33]/80 border border-[#1E3A5F]/60 text-white
               rounded-xl py-3.5 px-4 text-base font-medium
               transition-all duration-300 ease-out
-              focus:outline-none focus:border-[#00E5FF]/60 focus:shadow-[0_0_20px_rgba(0,229,255,0.15)]
-              placeholder:text-[#6E7681]
-              hover:border-[#21262D]
+              focus:outline-none focus:border-[#86C9F2]/60 focus:shadow-[0_0_20px_rgba(134,201,242,0.15)]
+              placeholder:text-[#4A5E7A]
+              hover:border-[#1E3A5F]
               ${leftIcon ? 'pl-12' : ''}
               ${rightIcon || isPassword ? 'pr-12' : ''}
-              ${error ? 'border-[#FF4081]/60 focus:border-[#FF4081]/60 focus:shadow-[0_0_20px_rgba(255,64,129,0.15)]' : ''}
+              ${error ? 'border-[#FF4081]/60 focus:border-[#FF4081] focus:shadow-[0_0_20px_rgba(255,64,129,0.15)]' : ''}
               ${className}
             `}
             onFocus={(e) => {
@@ -73,13 +73,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58] hover:text-white transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A5E7A] hover:text-white transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           )}
           {rightIcon && !isPassword && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58]">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A5E7A]">
               {rightIcon}
             </div>
           )}

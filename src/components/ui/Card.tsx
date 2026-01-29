@@ -17,11 +17,11 @@ export default function Card({
 }: CardProps) {
   return (
     <motion.div
-      whileHover={hoverable ? { y: -4, borderColor: '#00E5FF' } : undefined}
+      whileHover={hoverable ? { y: -4, borderColor: '#86C9F2' } : undefined}
       whileTap={onClick ? { scale: 0.98 } : undefined}
       onClick={onClick}
       className={`
-        bg-[#0D1117] border border-[#21262D] rounded-2xl
+        bg-[#101D33] border border-[#1E3A5F] rounded-2xl
         transition-shadow duration-300
         ${hoverable ? 'hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer' : ''}
         ${className}

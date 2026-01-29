@@ -71,7 +71,7 @@ export default function ContactList({
               {/* Category Header */}
               <div
                 className="sticky top-[140px] z-20 px-4 py-3 backdrop-blur-xl"
-                style={{ backgroundColor: 'rgba(13, 17, 23, 0.95)' }}
+                style={{ backgroundColor: 'rgba(16, 29, 51, 0.95)' }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export default function ContactList({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.02 }}
-                    className="w-full bg-[#161B22] border border-[#21262D] rounded-xl p-4 hover:border-[#30363D] hover:bg-[#1C2128] transition-all group"
+                    className="w-full bg-[#162A4A] border border-[#1E3A5F] rounded-xl p-4 hover:border-[#30363D] hover:bg-[#1C2128] transition-all group"
                   >
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
@@ -121,24 +121,24 @@ export default function ContactList({
                         className="flex-1 min-w-0 text-left"
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-white group-hover:text-[#00D9FF] transition-colors">
+                          <span className="font-semibold text-white group-hover:text-[#86C9F2] transition-colors">
                             {contact.name}
                           </span>
                           {contact.position && (
-                            <span className="text-xs text-[#8B949E] truncate">
+                            <span className="text-xs text-[#8BA4C4] truncate">
                               {contact.position.split('/')[0].trim()}
                             </span>
                           )}
                         </div>
 
                         {contact.company && (
-                          <div className="flex items-center gap-1.5 text-sm text-[#8B949E] mb-2">
+                          <div className="flex items-center gap-1.5 text-sm text-[#8BA4C4] mb-2">
                             <Building2 size={14} className="shrink-0" />
                             <span className="truncate">{contact.company}</span>
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 text-xs text-[#484F58]">
+                        <div className="flex items-center gap-3 text-xs text-[#4A5E7A]">
                           {contact.phone && (
                             <div className="flex items-center gap-1">
                               <Phone size={12} />
@@ -166,7 +166,7 @@ export default function ContactList({
                             <motion.button
                               whileTap={{ scale: 0.95 }}
                               onClick={(e) => handleInvite(e, contact)}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-[#00D9FF]/20 text-[#00D9FF] rounded-lg text-xs hover:bg-[#00D9FF]/30 transition-colors"
+                              className="flex items-center gap-1 px-3 py-1.5 bg-[#86C9F2]/20 text-[#86C9F2] rounded-lg text-xs hover:bg-[#86C9F2]/30 transition-colors"
                             >
                               <UserPlus size={14} />
                               <span>초대</span>
@@ -186,7 +186,7 @@ export default function ContactList({
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-4">🔍</div>
             <div className="text-lg font-semibold text-white mb-2">검색 결과가 없습니다</div>
-            <div className="text-sm text-[#8B949E]">다른 검색어를 시도해보세요</div>
+            <div className="text-sm text-[#8BA4C4]">다른 검색어를 시도해보세요</div>
           </div>
         )}
       </div>
@@ -207,25 +207,25 @@ export default function ContactList({
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#161B22] rounded-t-3xl border-t border-[#21262D] p-6"
+              className="w-full bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] p-6"
             >
               <button
                 onClick={() => setInviteModal(null)}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#8B949E]" />
+                <X size={20} className="text-[#8BA4C4]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#00D9FF]/20 to-[#7B68EE]/20 flex items-center justify-center">
-                  <Send size={28} className="text-[#00D9FF]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#86C9F2]/20 to-[#2C529C]/20 flex items-center justify-center">
+                  <Send size={28} className="text-[#86C9F2]" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {inviteModal.name}님 초대하기
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-sm text-[#8BA4C4]">
                   {inviteModal.company && `${inviteModal.company} · `}
                   {inviteModal.position?.split('/')[0].trim()}
                 </p>
@@ -235,7 +235,7 @@ export default function ContactList({
                 {inviteModal.phone && (
                   <button
                     onClick={() => confirmInvite('sms')}
-                    className="w-full py-4 bg-[#00D9FF] text-[#0A0E1A] font-semibold rounded-xl flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#86C9F2] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={20} />
                     문자로 초대하기
@@ -243,7 +243,7 @@ export default function ContactList({
                 )}
                 <button
                   onClick={() => confirmInvite('copy')}
-                  className="w-full py-4 bg-[#21262D] text-white font-medium rounded-xl flex items-center justify-center gap-2 border border-[#30363D]"
+                  className="w-full py-4 bg-[#1E3A5F] text-white font-medium rounded-xl flex items-center justify-center gap-2 border border-[#30363D]"
                 >
                   {copied ? (
                     <>

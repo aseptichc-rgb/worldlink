@@ -192,7 +192,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
           <div
             key={s}
             className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-              s <= step ? 'bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF]' : 'bg-[#21262D]'
+              s <= step ? 'bg-gradient-to-r from-[#86C9F2] to-[#2C529C]' : 'bg-[#1E3A5F]'
             }`}
           />
         ))}
@@ -209,7 +209,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
           >
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">프로필 설정</h2>
-              <p className="text-[#8B949E]">나를 소개하는 첫 번째 단계입니다</p>
+              <p className="text-[#8BA4C4]">나를 소개하는 첫 번째 단계입니다</p>
             </div>
 
             {/* Profile Image */}
@@ -223,11 +223,11 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                 />
                 <div className={`
                   w-24 h-24 rounded-full overflow-hidden
-                  border-2 border-dashed border-[#21262D]
+                  border-2 border-dashed border-[#1E3A5F]
                   flex items-center justify-center
-                  bg-[#0D1117]
+                  bg-[#101D33]
                   transition-all duration-300
-                  group-hover:border-[#00E5FF]
+                  group-hover:border-[#86C9F2]
                 `}>
                   {imagePreview ? (
                     <img
@@ -236,11 +236,11 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Camera className="text-[#484F58] group-hover:text-[#00E5FF] transition-colors" size={32} />
+                    <Camera className="text-[#4A5E7A] group-hover:text-[#86C9F2] transition-colors" size={32} />
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] flex items-center justify-center">
-                  <Plus size={16} className="text-black" />
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] flex items-center justify-center">
+                  <Plus size={16} className="text-white" />
                 </div>
               </label>
             </div>
@@ -279,7 +279,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
             />
 
             <div>
-              <label className="block text-sm font-medium text-[#8B949E] mb-2">
+              <label className="block text-sm font-medium text-[#8BA4C4] mb-2">
                 한 줄 소개 (선택)
               </label>
               <textarea
@@ -288,15 +288,15 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                 placeholder="나를 한 문장으로 표현해주세요"
                 maxLength={100}
                 className="
-                  w-full bg-[#0D1117] border border-[#21262D] text-white
+                  w-full bg-[#101D33] border border-[#1E3A5F] text-white
                   rounded-xl py-3.5 px-4 text-base
                   transition-all duration-300 resize-none
-                  focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]
-                  placeholder:text-[#484F58]
+                  focus:outline-none focus:border-[#86C9F2] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]
+                  placeholder:text-[#4A5E7A]
                 "
                 rows={3}
               />
-              <p className="text-xs text-[#484F58] mt-1 text-right">
+              <p className="text-xs text-[#4A5E7A] mt-1 text-right">
                 {profile.bio.length}/100
               </p>
             </div>
@@ -314,7 +314,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
               )}
               <Button
                 onClick={handleNext}
-                className={onBack ? "flex-[2] bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]" : "w-full bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"}
+                className={onBack ? "flex-[2] bg-gradient-to-r from-[#86C9F2] to-[#2C529C] hover:from-[#86C9F2] hover:to-[#8B7EFF]" : "w-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] hover:from-[#86C9F2] hover:to-[#8B7EFF]"}
                 size="lg"
               >
                 다음
@@ -333,13 +333,13 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
           >
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">관심 키워드</h2>
-              <p className="text-[#8B949E]">
+              <p className="text-[#8BA4C4]">
                 나를 표현하는 키워드를 선택해주세요 (1~5개)
               </p>
             </div>
 
             {/* Selected Keywords */}
-            <div className="min-h-[60px] p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+            <div className="min-h-[60px] p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
               {profile.keywords.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {profile.keywords.map((keyword) => (
@@ -352,7 +352,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   ))}
                 </div>
               ) : (
-                <p className="text-[#484F58] text-sm text-center">
+                <p className="text-[#4A5E7A] text-sm text-center">
                   아래에서 키워드를 선택하거나 직접 입력하세요
                 </p>
               )}
@@ -379,7 +379,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
               {keywordInput && (
                 <button
                   onClick={() => addKeyword(keywordInput)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 text-sm rounded-full bg-[#21262D] text-white hover:bg-[#30363D] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 text-sm rounded-full bg-[#1E3A5F] text-white hover:bg-[#30363D] transition-colors"
                 >
                   추가
                 </button>
@@ -388,7 +388,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
 
             {/* Suggested Keywords */}
             <div>
-              <p className="text-sm text-[#8B949E] mb-3">추천 키워드</p>
+              <p className="text-sm text-[#8BA4C4] mb-3">추천 키워드</p>
               <div className="flex flex-wrap gap-2">
                 {filteredSuggestions.map((keyword) => (
                   <Tag
@@ -411,7 +411,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
               </Button>
               <Button
                 onClick={handleNext}
-                className="flex-[2] bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"
+                className="flex-[2] bg-gradient-to-r from-[#86C9F2] to-[#2C529C] hover:from-[#86C9F2] hover:to-[#8B7EFF]"
                 size="lg"
                 disabled={profile.keywords.length === 0}
               >
@@ -430,17 +430,17 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
             className="space-y-6"
           >
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-[#00E5FF]/20 to-[#7C4DFF]/20 flex items-center justify-center">
-                <Shield size={32} className="text-[#00E5FF]" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-[#86C9F2]/20 to-[#2C529C]/20 flex items-center justify-center">
+                <Shield size={32} className="text-[#86C9F2]" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">개인정보 공개 설정</h2>
-              <p className="text-[#8B949E] text-sm">
+              <p className="text-[#8BA4C4] text-sm">
                 네트워크에서 내 정보가 어떻게 표시될지 선택하세요
               </p>
             </div>
 
             {/* 공개 동의 토글 */}
-            <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+            <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
               <div className="flex items-start gap-4">
                 <button
                   type="button"
@@ -454,8 +454,8 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   className={`
                     flex-shrink-0 w-12 h-7 rounded-full transition-all duration-300
                     ${profile.privacyConsent.allowProfileDiscovery
-                      ? 'bg-[#00E5FF]'
-                      : 'bg-[#21262D]'}
+                      ? 'bg-[#86C9F2]'
+                      : 'bg-[#1E3A5F]'}
                   `}
                 >
                   <div className={`
@@ -465,7 +465,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                 </button>
                 <div className="flex-1">
                   <h3 className="text-white font-medium mb-1">네트워크에 내 프로필 공개</h3>
-                  <p className="text-[#8B949E] text-sm leading-relaxed">
+                  <p className="text-[#8BA4C4] text-sm leading-relaxed">
                     다른 회원들이 나를 발견하고 연결을 요청할 수 있습니다.
                     비공개 시 초대받은 경우에만 연결됩니다.
                   </p>
@@ -483,10 +483,10 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   className="space-y-4 overflow-hidden"
                 >
                   {/* 공개 범위 안내 */}
-                  <div className="p-3 bg-[#00E5FF]/10 border border-[#00E5FF]/20 rounded-xl">
+                  <div className="p-3 bg-[#86C9F2]/10 border border-[#86C9F2]/20 rounded-xl">
                     <div className="flex items-start gap-2">
-                      <Info size={16} className="text-[#00E5FF] flex-shrink-0 mt-0.5" />
-                      <p className="text-[#00E5FF] text-xs leading-relaxed">
+                      <Info size={16} className="text-[#86C9F2] flex-shrink-0 mt-0.5" />
+                      <p className="text-[#86C9F2] text-xs leading-relaxed">
                         개인정보 보호를 위해 기본적으로 비식별화된 형태로 표시됩니다.
                         원하시면 더 많은 정보를 공개할 수 있습니다.
                       </p>
@@ -494,9 +494,9 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   </div>
 
                   {/* 이름 표시 설정 */}
-                  <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                  <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                     <div className="flex items-center gap-2 mb-3">
-                      <UserIcon size={16} className="text-[#7C4DFF]" />
+                      <UserIcon size={16} className="text-[#2C529C]" />
                       <h4 className="text-white font-medium text-sm">이름 표시</h4>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -520,8 +520,8 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                           className={`
                             p-3 rounded-lg border transition-all text-left
                             ${profile.privacyConsent.displaySettings.nameDisplay === option.value
-                              ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]'
-                              : 'bg-[#161B22] border-[#21262D] text-[#8B949E] hover:border-[#484F58]'}
+                              ? 'bg-[#86C9F2]/10 border-[#86C9F2] text-[#86C9F2]'
+                              : 'bg-[#162A4A] border-[#1E3A5F] text-[#8BA4C4] hover:border-[#4A5E7A]'}
                           `}
                         >
                           <span className="text-sm font-medium block">{option.label}</span>
@@ -532,9 +532,9 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   </div>
 
                   {/* 회사 표시 설정 */}
-                  <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                  <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                     <div className="flex items-center gap-2 mb-3">
-                      <Building2 size={16} className="text-[#7C4DFF]" />
+                      <Building2 size={16} className="text-[#2C529C]" />
                       <h4 className="text-white font-medium text-sm">회사 표시</h4>
                     </div>
                     <div className="space-y-2">
@@ -544,7 +544,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                           <select
                             value={profile.industry || ''}
                             onChange={(e) => setProfile({ ...profile, industry: e.target.value })}
-                            className="w-full bg-[#161B22] border border-[#21262D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#00E5FF]"
+                            className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#86C9F2]"
                           >
                             <option value="">업종 선택</option>
                             {industryOptions.map((industry) => (
@@ -554,7 +554,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                           <select
                             value={profile.companySize || ''}
                             onChange={(e) => setProfile({ ...profile, companySize: e.target.value as ProfileData['companySize'] })}
-                            className="w-full bg-[#161B22] border border-[#21262D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#00E5FF]"
+                            className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#86C9F2]"
                           >
                             <option value="">회사 규모 선택</option>
                             {companySizeOptions.map((size) => (
@@ -586,8 +586,8 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                             className={`
                               p-3 rounded-lg border transition-all text-left
                               ${profile.privacyConsent.displaySettings.companyDisplay === option.value
-                                ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]'
-                                : 'bg-[#161B22] border-[#21262D] text-[#8B949E] hover:border-[#484F58]'}
+                                ? 'bg-[#86C9F2]/10 border-[#86C9F2] text-[#86C9F2]'
+                                : 'bg-[#162A4A] border-[#1E3A5F] text-[#8BA4C4] hover:border-[#4A5E7A]'}
                             `}
                           >
                             <span className="text-sm font-medium block">{option.label}</span>
@@ -599,9 +599,9 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   </div>
 
                   {/* 직책 표시 설정 */}
-                  <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                  <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                     <div className="flex items-center gap-2 mb-3">
-                      <UserIcon size={16} className="text-[#7C4DFF]" />
+                      <UserIcon size={16} className="text-[#2C529C]" />
                       <h4 className="text-white font-medium text-sm">직책 표시</h4>
                     </div>
                     <div className="space-y-2">
@@ -609,7 +609,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                         <select
                           value={profile.positionLevel || ''}
                           onChange={(e) => setProfile({ ...profile, positionLevel: e.target.value as ProfileData['positionLevel'] })}
-                          className="w-full bg-[#161B22] border border-[#21262D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#00E5FF] mb-3"
+                          className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#86C9F2] mb-3"
                         >
                           <option value="">직급 수준 선택</option>
                           {positionLevelOptions.map((level) => (
@@ -639,8 +639,8 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                             className={`
                               p-3 rounded-lg border transition-all text-left
                               ${profile.privacyConsent.displaySettings.positionDisplay === option.value
-                                ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]'
-                                : 'bg-[#161B22] border-[#21262D] text-[#8B949E] hover:border-[#484F58]'}
+                                ? 'bg-[#86C9F2]/10 border-[#86C9F2] text-[#86C9F2]'
+                                : 'bg-[#162A4A] border-[#1E3A5F] text-[#8BA4C4] hover:border-[#4A5E7A]'}
                             `}
                           >
                             <span className="text-xs font-medium block">{option.label}</span>
@@ -652,13 +652,13 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                   </div>
 
                   {/* 미리보기 */}
-                  <div className="p-4 bg-[#161B22] border border-[#21262D] rounded-xl">
-                    <h4 className="text-[#8B949E] text-xs font-medium mb-3 flex items-center gap-2">
+                  <div className="p-4 bg-[#162A4A] border border-[#1E3A5F] rounded-xl">
+                    <h4 className="text-[#8BA4C4] text-xs font-medium mb-3 flex items-center gap-2">
                       <Eye size={14} />
                       다른 회원에게 표시되는 모습
                     </h4>
-                    <div className="flex items-center gap-3 p-3 bg-[#0D1117] rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] flex items-center justify-center text-white font-bold text-sm">
+                    <div className="flex items-center gap-3 p-3 bg-[#101D33] rounded-lg">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] flex items-center justify-center text-white font-bold text-sm">
                         {profile.name?.[0] || '?'}
                       </div>
                       <div>
@@ -667,7 +667,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                             ? `${profile.name?.[0] || '?'}*님`
                             : profile.name || '이름'}
                         </p>
-                        <p className="text-[#8B949E] text-xs">
+                        <p className="text-[#8BA4C4] text-xs">
                           {(() => {
                             const parts = [];
                             if (profile.privacyConsent.displaySettings.companyDisplay !== 'hidden') {
@@ -698,12 +698,12 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
 
             {/* 비공개 선택 시 안내 */}
             {!profile.privacyConsent.allowProfileDiscovery && (
-              <div className="p-4 bg-[#161B22] border border-[#21262D] rounded-xl">
+              <div className="p-4 bg-[#162A4A] border border-[#1E3A5F] rounded-xl">
                 <div className="flex items-start gap-3">
-                  <EyeOff size={20} className="text-[#8B949E] flex-shrink-0 mt-0.5" />
+                  <EyeOff size={20} className="text-[#8BA4C4] flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-white font-medium text-sm mb-1">비공개 모드</h4>
-                    <p className="text-[#8B949E] text-xs leading-relaxed">
+                    <p className="text-[#8BA4C4] text-xs leading-relaxed">
                       네트워크에서 검색되지 않으며, 다른 회원이 나를 발견할 수 없습니다.
                       초대 링크를 통해서만 연결할 수 있습니다.
                       나중에 설정에서 언제든지 변경할 수 있습니다.
@@ -724,7 +724,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
               </Button>
               <Button
                 onClick={handleNext}
-                className="flex-[2] bg-gradient-to-r from-[#00D9FF] to-[#7B68EE] hover:from-[#00E5FF] hover:to-[#8B7EFF]"
+                className="flex-[2] bg-gradient-to-r from-[#86C9F2] to-[#2C529C] hover:from-[#86C9F2] hover:to-[#8B7EFF]"
                 size="lg"
                 isLoading={isLoading}
               >

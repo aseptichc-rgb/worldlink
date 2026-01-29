@@ -59,7 +59,7 @@ export default function Home() {
             transition={{ duration: 3, repeat: Infinity }}
             className="text-6xl md:text-8xl font-bold gradient-text"
           >
-            NEXUS
+            NODDED
           </motion.h1>
         </motion.div>
 
@@ -67,7 +67,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="text-[#8B949E] text-lg md:text-xl mb-4"
+          className="text-[#8BA4C4] text-lg md:text-xl mb-4"
         >
           신뢰 기반 비즈니스 네트워크
         </motion.p>
@@ -76,7 +76,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-[#484F58] text-sm"
+          className="text-[#4A5E7A] text-sm"
         >
           단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다
         </motion.p>
@@ -88,7 +88,7 @@ export default function Home() {
           transition={{ delay: 1.5 }}
           className="mt-12"
         >
-          <div className="w-8 h-8 border-2 border-[#21262D] border-t-[#00E5FF] rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 border-2 border-[#1E3A5F] border-t-[#86C9F2] rounded-full animate-spin mx-auto" />
         </motion.div>
       </motion.div>
 
@@ -101,7 +101,7 @@ export default function Home() {
             y: [0, -30, 0],
           }}
           transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#00E5FF]/5 rounded-full blur-3xl"
+          className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#86C9F2]/5 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
@@ -109,7 +109,7 @@ export default function Home() {
             y: [0, 40, 0],
           }}
           transition={{ duration: 10, repeat: Infinity }}
-          className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-[#7C4DFF]/5 rounded-full blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-[#2C529C]/5 rounded-full blur-3xl"
         />
       </div>
     </div>

@@ -54,9 +54,9 @@ export default function Avatar({
       <div
         className={`
           ${sizes[size]} rounded-full overflow-hidden
-          border-2 ${hasGlow ? 'border-[#00E5FF]' : 'border-[#21262D]'}
-          ${hasGlow ? 'shadow-[0_0_20px_rgba(0,229,255,0.25)]' : ''}
-          bg-[#161B22] flex items-center justify-center
+          border-2 ${hasGlow ? 'border-[#86C9F2]' : 'border-[#1E3A5F]'}
+          ${hasGlow ? 'shadow-[0_0_20px_rgba(134,201,242,0.25)]' : ''}
+          bg-[#162A4A] flex items-center justify-center
         `}
       >
         {src ? (
@@ -67,11 +67,11 @@ export default function Avatar({
             className="object-cover rounded-full"
           />
         ) : initials ? (
-          <span className="text-[#8B949E] font-medium">
+          <span className="text-[#8BA4C4] font-medium">
             {initials}
           </span>
         ) : (
-          <User className="text-[#484F58]" size={size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'md' ? 20 : size === 'lg' ? 28 : 36} />
+          <User className="text-[#4A5E7A]" size={size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'md' ? 20 : size === 'lg' ? 28 : 36} />
         )}
       </div>
       {status && (
@@ -79,7 +79,7 @@ export default function Avatar({
           className={`
             absolute bottom-0 right-0 rounded-full
             ${statusSizes[size]} ${statusColors[status]}
-            border-2 border-[#0D1117]
+            border-2 border-[#101D33]
           `}
         />
       )}

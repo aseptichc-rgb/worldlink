@@ -135,22 +135,22 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-xl hover:bg-[#21262D] transition-colors"
+            className="p-2 rounded-xl hover:bg-[#1E3A5F] transition-colors"
           >
-            <ArrowLeft size={22} className="text-[#8B949E]" />
+            <ArrowLeft size={22} className="text-[#8BA4C4]" />
           </button>
           <div className="w-8" />
           <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
             disabled={isSaving}
-            className="p-2 rounded-xl hover:bg-[#21262D] transition-colors"
+            className="p-2 rounded-xl hover:bg-[#1E3A5F] transition-colors"
           >
             {isEditing ? (
-              <span className="text-[#00E5FF] text-sm font-medium">
+              <span className="text-[#86C9F2] text-sm font-medium">
                 {isSaving ? '저장 중...' : '완료'}
               </span>
             ) : (
-              <Edit2 size={20} className="text-[#8B949E]" />
+              <Edit2 size={20} className="text-[#8BA4C4]" />
             )}
           </button>
         </div>
@@ -171,8 +171,8 @@ export default function ProfilePage() {
               hasGlow
             />
             {isEditing && (
-              <label className="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] rounded-full flex items-center justify-center cursor-pointer">
-                <Camera size={16} className="text-black" />
+              <label className="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] rounded-full flex items-center justify-center cursor-pointer">
+                <Camera size={16} className="text-white" />
                 <input
                   type="file"
                   accept="image/*"
@@ -209,7 +209,7 @@ export default function ProfilePage() {
               />
             </div>
           ) : (
-            <p className="text-[#8B949E]">
+            <p className="text-[#8BA4C4]">
               {editedUser.company} · {editedUser.position}
             </p>
           )}
@@ -217,7 +217,7 @@ export default function ProfilePage() {
 
         {/* Bio */}
         <Card className="p-5 mb-8">
-          <h3 className="text-sm font-medium text-[#8B949E] mb-3">한 줄 소개</h3>
+          <h3 className="text-sm font-medium text-[#8BA4C4] mb-3">한 줄 소개</h3>
           {isEditing ? (
             <textarea
               value={editedUser.bio}
@@ -225,10 +225,10 @@ export default function ProfilePage() {
               placeholder="나를 한 문장으로 표현해주세요"
               maxLength={100}
               className="
-                w-full bg-[#161B22] border border-[#21262D] text-white
+                w-full bg-[#162A4A] border border-[#1E3A5F] text-white
                 rounded-xl py-3 px-4 text-sm resize-none
-                focus:outline-none focus:border-[#00E5FF]
-                placeholder:text-[#484F58]
+                focus:outline-none focus:border-[#86C9F2]
+                placeholder:text-[#4A5E7A]
               "
               rows={2}
             />
@@ -241,7 +241,7 @@ export default function ProfilePage() {
 
         {/* Keywords */}
         <Card className="p-5 mb-8">
-          <h3 className="text-sm font-medium text-[#8B949E] mb-3">관심 키워드</h3>
+          <h3 className="text-sm font-medium text-[#8BA4C4] mb-3">관심 키워드</h3>
           <div className="flex flex-wrap gap-2">
             {editedUser.keywords.map((keyword) => (
               <Tag
@@ -261,8 +261,8 @@ export default function ProfilePage() {
                   placeholder="+ 추가"
                   className="
                     bg-transparent text-white text-sm
-                    border-b border-[#21262D] py-1 px-2 w-20
-                    focus:outline-none focus:border-[#00E5FF]
+                    border-b border-[#1E3A5F] py-1 px-2 w-20
+                    focus:outline-none focus:border-[#86C9F2]
                   "
                 />
               </div>
@@ -286,17 +286,17 @@ export default function ProfilePage() {
             className="w-full flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#7C4DFF]/20 flex items-center justify-center">
-                <Shield size={20} className="text-[#7C4DFF]" />
+              <div className="w-10 h-10 rounded-full bg-[#2C529C]/20 flex items-center justify-center">
+                <Shield size={20} className="text-[#2C529C]" />
               </div>
               <div className="text-left">
                 <h3 className="text-white font-medium">개인정보 공개 설정</h3>
-                <p className="text-[#8B949E] text-sm">
+                <p className="text-[#8BA4C4] text-sm">
                   {user.privacySettings?.allowProfileDiscovery ? '네트워크에 공개 중' : '비공개 모드'}
                 </p>
               </div>
             </div>
-            <ChevronRight size={20} className="text-[#484F58]" />
+            <ChevronRight size={20} className="text-[#4A5E7A]" />
           </button>
         </Card>
 
@@ -343,15 +343,15 @@ export default function ProfilePage() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-h-[85vh] bg-[#161B22] rounded-t-3xl border-t border-[#21262D] overflow-hidden"
+              className="w-full max-h-[85vh] bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] overflow-hidden"
             >
-              <div className="sticky top-0 bg-[#161B22] border-b border-[#21262D] px-6 py-4 z-10">
-                <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-4" />
+              <div className="sticky top-0 bg-[#162A4A] border-b border-[#1E3A5F] px-6 py-4 z-10">
+                <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-4" />
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-white">개인정보 공개 설정</h3>
                   <button
                     onClick={() => setShowPrivacySettings(false)}
-                    className="text-sm text-[#00E5FF]"
+                    className="text-sm text-[#86C9F2]"
                   >
                     완료
                   </button>
@@ -360,7 +360,7 @@ export default function ProfilePage() {
 
               <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(85vh-80px)]">
                 {/* 공개 동의 토글 */}
-                <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                   <div className="flex items-start gap-4">
                     <button
                       type="button"
@@ -383,8 +383,8 @@ export default function ProfilePage() {
                       className={`
                         flex-shrink-0 w-12 h-7 rounded-full transition-all duration-300
                         ${user.privacySettings?.allowProfileDiscovery
-                          ? 'bg-[#00E5FF]'
-                          : 'bg-[#21262D]'}
+                          ? 'bg-[#86C9F2]'
+                          : 'bg-[#1E3A5F]'}
                       `}
                     >
                       <div className={`
@@ -394,7 +394,7 @@ export default function ProfilePage() {
                     </button>
                     <div className="flex-1">
                       <h4 className="text-white font-medium mb-1">네트워크에 프로필 공개</h4>
-                      <p className="text-[#8B949E] text-sm leading-relaxed">
+                      <p className="text-[#8BA4C4] text-sm leading-relaxed">
                         {user.privacySettings?.allowProfileDiscovery
                           ? '다른 회원들이 나를 발견하고 연결을 요청할 수 있습니다.'
                           : '비공개 모드입니다. 초대받은 경우에만 연결됩니다.'}
@@ -407,9 +407,9 @@ export default function ProfilePage() {
                 {user.privacySettings?.allowProfileDiscovery && (
                   <div className="space-y-4">
                     {/* 이름 표시 설정 */}
-                    <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                    <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                       <div className="flex items-center gap-2 mb-3">
-                        <UserIcon size={16} className="text-[#7C4DFF]" />
+                        <UserIcon size={16} className="text-[#2C529C]" />
                         <h4 className="text-white font-medium text-sm">이름 표시</h4>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -440,8 +440,8 @@ export default function ProfilePage() {
                               className={`
                                 p-3 rounded-lg border transition-all text-left
                                 ${isSelected
-                                  ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]'
-                                  : 'bg-[#161B22] border-[#21262D] text-[#8B949E] hover:border-[#484F58]'}
+                                  ? 'bg-[#86C9F2]/10 border-[#86C9F2] text-[#86C9F2]'
+                                  : 'bg-[#162A4A] border-[#1E3A5F] text-[#8BA4C4] hover:border-[#4A5E7A]'}
                               `}
                             >
                               <span className="text-sm font-medium block">{option.label}</span>
@@ -453,9 +453,9 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 회사 표시 설정 */}
-                    <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                    <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                       <div className="flex items-center gap-2 mb-3">
-                        <Building2 size={16} className="text-[#7C4DFF]" />
+                        <Building2 size={16} className="text-[#2C529C]" />
                         <h4 className="text-white font-medium text-sm">회사 표시</h4>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -488,8 +488,8 @@ export default function ProfilePage() {
                               className={`
                                 p-3 rounded-lg border transition-all text-left
                                 ${isSelected
-                                  ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]'
-                                  : 'bg-[#161B22] border-[#21262D] text-[#8B949E] hover:border-[#484F58]'}
+                                  ? 'bg-[#86C9F2]/10 border-[#86C9F2] text-[#86C9F2]'
+                                  : 'bg-[#162A4A] border-[#1E3A5F] text-[#8BA4C4] hover:border-[#4A5E7A]'}
                               `}
                             >
                               <span className="text-sm font-medium block">{option.label}</span>
@@ -501,9 +501,9 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 직책 표시 설정 */}
-                    <div className="p-4 bg-[#0D1117] border border-[#21262D] rounded-xl">
+                    <div className="p-4 bg-[#101D33] border border-[#1E3A5F] rounded-xl">
                       <div className="flex items-center gap-2 mb-3">
-                        <UserIcon size={16} className="text-[#7C4DFF]" />
+                        <UserIcon size={16} className="text-[#2C529C]" />
                         <h4 className="text-white font-medium text-sm">직책 표시</h4>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -535,8 +535,8 @@ export default function ProfilePage() {
                               className={`
                                 p-3 rounded-lg border transition-all text-left
                                 ${isSelected
-                                  ? 'bg-[#00E5FF]/10 border-[#00E5FF] text-[#00E5FF]'
-                                  : 'bg-[#161B22] border-[#21262D] text-[#8B949E] hover:border-[#484F58]'}
+                                  ? 'bg-[#86C9F2]/10 border-[#86C9F2] text-[#86C9F2]'
+                                  : 'bg-[#162A4A] border-[#1E3A5F] text-[#8BA4C4] hover:border-[#4A5E7A]'}
                               `}
                             >
                               <span className="text-xs font-medium block">{option.label}</span>
@@ -548,13 +548,13 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 미리보기 */}
-                    <div className="p-4 bg-[#161B22] border border-[#21262D] rounded-xl">
-                      <h4 className="text-[#8B949E] text-xs font-medium mb-3 flex items-center gap-2">
+                    <div className="p-4 bg-[#162A4A] border border-[#1E3A5F] rounded-xl">
+                      <h4 className="text-[#8BA4C4] text-xs font-medium mb-3 flex items-center gap-2">
                         <Eye size={14} />
                         다른 회원에게 표시되는 모습
                       </h4>
-                      <div className="flex items-center gap-3 p-3 bg-[#0D1117] rounded-lg">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] flex items-center justify-center text-white font-bold text-sm">
+                      <div className="flex items-center gap-3 p-3 bg-[#101D33] rounded-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] flex items-center justify-center text-white font-bold text-sm">
                           {user.name?.[0] || '?'}
                         </div>
                         <div>
@@ -563,7 +563,7 @@ export default function ProfilePage() {
                               ? `${user.name?.[0] || '?'}*님`
                               : user.name || '이름'}
                           </p>
-                          <p className="text-[#8B949E] text-xs">
+                          <p className="text-[#8BA4C4] text-xs">
                             {(() => {
                               const parts = [];
                               const ds = user.privacySettings?.displaySettings;
@@ -600,12 +600,12 @@ export default function ProfilePage() {
 
                 {/* 비공개 안내 */}
                 {!user.privacySettings?.allowProfileDiscovery && (
-                  <div className="p-4 bg-[#161B22] border border-[#21262D] rounded-xl">
+                  <div className="p-4 bg-[#162A4A] border border-[#1E3A5F] rounded-xl">
                     <div className="flex items-start gap-3">
-                      <EyeOff size={20} className="text-[#8B949E] flex-shrink-0 mt-0.5" />
+                      <EyeOff size={20} className="text-[#8BA4C4] flex-shrink-0 mt-0.5" />
                       <div>
                         <h4 className="text-white font-medium text-sm mb-1">비공개 모드</h4>
-                        <p className="text-[#8B949E] text-xs leading-relaxed">
+                        <p className="text-[#8BA4C4] text-xs leading-relaxed">
                           네트워크에서 검색되지 않으며, 다른 회원이 나를 발견할 수 없습니다.
                           초대 링크를 통해서만 연결할 수 있습니다.
                         </p>
@@ -616,9 +616,9 @@ export default function ProfilePage() {
 
                 {/* 개인정보 처리방침 링크 */}
                 <div className="text-center pt-4">
-                  <p className="text-[#484F58] text-xs">
+                  <p className="text-[#4A5E7A] text-xs">
                     설정 변경은 즉시 적용됩니다.{' '}
-                    <button className="text-[#00E5FF] underline">개인정보 처리방침</button>
+                    <button className="text-[#86C9F2] underline">개인정보 처리방침</button>
                   </p>
                 </div>
               </div>

@@ -154,22 +154,22 @@ export function InviteManager({
 
       // 실제 공유 실행
       if (selectedMethod === "email") {
-        const subject = encodeURIComponent(`${userName}님이 NEXUS에 초대했습니다`);
+        const subject = encodeURIComponent(`${userName}님이 NODDED에 초대했습니다`);
         const body = encodeURIComponent(
-          `안녕하세요!\n\n${userName}님이 NEXUS에 초대했습니다.\n\nNEXUS는 신뢰 기반 비즈니스 네트워킹 플랫폼입니다.\n아래 링크를 통해 가입해주세요:\n\n${inviteLink}\n\n초대 코드: ${invitation.inviteCode}`
+          `안녕하세요!\n\n${userName}님이 NODDED에 초대했습니다.\n\nNODDED는 신뢰 기반 비즈니스 네트워킹 플랫폼입니다.\n아래 링크를 통해 가입해주세요:\n\n${inviteLink}\n\n초대 코드: ${invitation.inviteCode}`
         );
         window.open(`mailto:${email}?subject=${subject}&body=${body}`);
       } else if (selectedMethod === "kakao") {
         // 카카오톡 공유
         await copyToClipboard(
-          `${userName}님이 NEXUS에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n${inviteLink}`
+          `${userName}님이 NODDED에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n${inviteLink}`
         );
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
         window.open("kakaotalk://");
       } else if (selectedMethod === "sms") {
         const smsBody = encodeURIComponent(
-          `${userName}님이 NEXUS에 초대했습니다!\n가입 링크: ${inviteLink}`
+          `${userName}님이 NODDED에 초대했습니다!\n가입 링크: ${inviteLink}`
         );
         window.location.href = `sms:${phone}?body=${smsBody}`;
       } else if (selectedMethod === "link") {
@@ -249,11 +249,11 @@ export function InviteManager({
     <>
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-[#8B949E] flex items-center gap-2">
+          <h3 className="text-sm font-medium text-[#8BA4C4] flex items-center gap-2">
             <Users size={16} />
             친구 초대하기
           </h3>
-          <span className="text-xs px-2 py-1 rounded-full text-[#00E5FF] bg-[#00E5FF]/10">
+          <span className="text-xs px-2 py-1 rounded-full text-[#86C9F2] bg-[#86C9F2]/10">
             무제한 초대 가능
           </span>
         </div>
@@ -314,15 +314,15 @@ export function InviteManager({
         {/* 발송한 초대 목록 */}
         {invitations.length > 0 && (
           <div className="border-t border-[#30363D] pt-4">
-            <h4 className="text-xs text-[#484F58] mb-3">보낸 초대</h4>
+            <h4 className="text-xs text-[#4A5E7A] mb-3">보낸 초대</h4>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex items-center justify-between p-2 bg-[#161B22] rounded-lg"
+                  className="flex items-center justify-between p-2 bg-[#162A4A] rounded-lg"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-[#21262D] rounded-lg text-[#8B949E]">
+                    <div className="p-1.5 bg-[#1E3A5F] rounded-lg text-[#8BA4C4]">
                       {getMethodIcon(invitation.method)}
                     </div>
                     <div>
@@ -331,14 +331,14 @@ export function InviteManager({
                           invitation.recipientPhone ||
                           "링크 공유"}
                       </p>
-                      <p className="text-[10px] text-[#484F58]">
+                      <p className="text-[10px] text-[#4A5E7A]">
                         {invitation.sentAt.toLocaleDateString("ko-KR")}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs">
                     {getStatusIcon(invitation.status)}
-                    <span className="text-[#8B949E]">
+                    <span className="text-[#8BA4C4]">
                       {getStatusText(invitation.status)}
                     </span>
                   </div>
@@ -364,7 +364,7 @@ export function InviteManager({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#161B22] rounded-2xl p-6 max-w-sm w-full"
+              className="bg-[#162A4A] rounded-2xl p-6 max-w-sm w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -384,19 +384,19 @@ export function InviteManager({
                   )}
                   {selectedMethod === "email" && (
                     <>
-                      <Mail size={20} className="text-[#00E5FF]" />
+                      <Mail size={20} className="text-[#86C9F2]" />
                       이메일로 초대
                     </>
                   )}
                   {selectedMethod === "sms" && (
                     <>
-                      <MessageCircle size={20} className="text-[#00E5FF]" />
+                      <MessageCircle size={20} className="text-[#86C9F2]" />
                       문자로 초대
                     </>
                   )}
                   {selectedMethod === "link" && (
                     <>
-                      <Copy size={20} className="text-[#00E5FF]" />
+                      <Copy size={20} className="text-[#86C9F2]" />
                       초대 링크 생성
                     </>
                   )}
@@ -411,7 +411,7 @@ export function InviteManager({
                     setGeneratedLink("");
                     setSelectedContactName("");
                   }}
-                  className="p-1 text-[#8B949E] hover:text-white"
+                  className="p-1 text-[#8BA4C4] hover:text-white"
                 >
                   <X size={20} />
                 </button>
@@ -450,7 +450,7 @@ export function InviteManager({
 
               {selectedMethod === "kakao" && (
                 <div className="space-y-4">
-                  <p className="text-sm text-[#8B949E]">
+                  <p className="text-sm text-[#8BA4C4]">
                     초대 링크가 클립보드에 복사되고 카카오톡이 열립니다.
                     친구에게 링크를 붙여넣어 공유해주세요.
                   </p>
@@ -487,8 +487,8 @@ export function InviteManager({
 
                   {/* 선택된 연락처 이름 표시 */}
                   {selectedContactName && (
-                    <div className="p-3 bg-[#21262D] rounded-lg mb-2">
-                      <p className="text-xs text-[#484F58] mb-1">선택된 연락처</p>
+                    <div className="p-3 bg-[#1E3A5F] rounded-lg mb-2">
+                      <p className="text-xs text-[#4A5E7A] mb-1">선택된 연락처</p>
                       <p className="text-sm text-white font-medium">{selectedContactName}</p>
                     </div>
                   )}
@@ -506,7 +506,7 @@ export function InviteManager({
                   />
 
                   {!contactPickerSupported && (
-                    <p className="text-xs text-[#484F58]">
+                    <p className="text-xs text-[#4A5E7A]">
                       💡 Android Chrome에서 주소록 연동을 사용할 수 있습니다
                     </p>
                   )}
@@ -532,8 +532,8 @@ export function InviteManager({
                 <div className="space-y-4">
                   {generatedLink ? (
                     <>
-                      <div className="p-3 bg-[#21262D] rounded-lg">
-                        <p className="text-xs text-[#484F58] mb-1">생성된 초대 링크</p>
+                      <div className="p-3 bg-[#1E3A5F] rounded-lg">
+                        <p className="text-xs text-[#4A5E7A] mb-1">생성된 초대 링크</p>
                         <p className="text-sm text-white break-all">{generatedLink}</p>
                       </div>
                       <Button
@@ -565,7 +565,7 @@ export function InviteManager({
                     </>
                   ) : (
                     <>
-                      <p className="text-sm text-[#8B949E]">
+                      <p className="text-sm text-[#8BA4C4]">
                         새로운 초대 링크를 생성합니다. 생성된 링크를 친구에게
                         공유해주세요.
                       </p>
@@ -586,7 +586,7 @@ export function InviteManager({
                 </div>
               )}
 
-              <p className="text-xs text-[#484F58] text-center mt-4">
+              <p className="text-xs text-[#4A5E7A] text-center mt-4">
                 초대 횟수 무제한
               </p>
             </motion.div>

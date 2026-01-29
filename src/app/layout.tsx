@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
-const notoSansKR = Noto_Sans_KR({
-  variable: "--font-noto-sans-kr",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -75,7 +75,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#000000",
+  themeColor: "#0B162C",
 };
 
 export default function RootLayout({
@@ -86,7 +86,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${notoSansKR.variable} antialiased bg-black text-white`}
+        className={`${inter.variable} antialiased bg-[#0B162C] text-white`}
       >
         {children}
         <InstallPrompt />

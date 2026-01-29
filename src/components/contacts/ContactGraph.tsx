@@ -314,7 +314,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       const labelWidth = ctx.measureText(labelText).width + 16;
       const labelY = cluster.centerY - cluster.radius - 16;
 
-      ctx.fillStyle = 'rgba(13, 17, 23, 0.9)';
+      ctx.fillStyle = 'rgba(16, 29, 51, 0.9)';
       ctx.beginPath();
       ctx.roundRect(cluster.centerX - labelWidth / 2, labelY - 10, labelWidth, 20, 10);
       ctx.fill();
@@ -584,7 +584,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
   const connectionCount = companyConnectionsRef.current.length;
 
   return (
-    <div ref={containerRef} className="w-full h-full relative bg-[#0D1117]">
+    <div ref={containerRef} className="w-full h-full relative bg-[#101D33]">
       <canvas
         ref={canvasRef}
         width={dimensions.width}
@@ -609,7 +609,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
             className="absolute pointer-events-none z-50"
             style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
           >
-            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#21262D] rounded-xl px-4 py-3 shadow-2xl min-w-[220px]">
+            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#1E3A5F] rounded-xl px-4 py-3 shadow-2xl min-w-[220px]">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold text-white">{tooltip.node.name}</span>
                 {tooltip.node.isHub && (
@@ -619,13 +619,13 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                 )}
               </div>
               {tooltip.node.company && (
-                <div className="text-xs text-[#8B949E] mb-0.5 flex items-center gap-1">
+                <div className="text-xs text-[#8BA4C4] mb-0.5 flex items-center gap-1">
                   <Building2 size={12} />
                   {tooltip.node.company}
                 </div>
               )}
               {tooltip.node.position && (
-                <div className="text-xs text-[#6E7681] line-clamp-2">{tooltip.node.position}</div>
+                <div className="text-xs text-[#4A5E7A] line-clamp-2">{tooltip.node.position}</div>
               )}
 
               {/* Connected people from same company */}
@@ -635,7 +635,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                 );
                 if (sameCompanyConnections.length > 0) {
                   return (
-                    <div className="mt-2 pt-2 border-t border-[#21262D]">
+                    <div className="mt-2 pt-2 border-t border-[#1E3A5F]">
                       <div className="text-[10px] text-[#FFD700] mb-1 flex items-center gap-1">
                         <Link2 size={10} />
                         다른 분야 동료
@@ -644,17 +644,17 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                         {sameCompanyConnections.slice(0, 3).map((conn, i) => {
                           const other = conn.from.id === tooltip.node.id ? conn.to : conn.from;
                           return (
-                            <div key={i} className="text-xs text-[#8B949E] flex items-center gap-1">
+                            <div key={i} className="text-xs text-[#8BA4C4] flex items-center gap-1">
                               <span style={{ color: CATEGORY_INFO[other.category].color }}>●</span>
                               {other.name}
-                              <span className="text-[10px] text-[#484F58]">
+                              <span className="text-[10px] text-[#4A5E7A]">
                                 ({CATEGORY_INFO[other.category].name})
                               </span>
                             </div>
                           );
                         })}
                         {sameCompanyConnections.length > 3 && (
-                          <div className="text-[10px] text-[#484F58]">
+                          <div className="text-[10px] text-[#4A5E7A]">
                             +{sameCompanyConnections.length - 3}명 더
                           </div>
                         )}
@@ -665,7 +665,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                 return null;
               })()}
 
-              <div className="mt-2 pt-2 border-t border-[#21262D]">
+              <div className="mt-2 pt-2 border-t border-[#1E3A5F]">
                 <span
                   className="text-[10px] px-2 py-0.5 rounded-full"
                   style={{
@@ -685,19 +685,19 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-10">
         <button
           onClick={() => setTransform(prev => ({ ...prev, scale: Math.min(2.5, prev.scale * 1.3) }))}
-          className="w-10 h-10 rounded-xl bg-[#161B22]/90 backdrop-blur-sm border border-[#21262D] flex items-center justify-center text-[#8B949E] hover:text-[#00D9FF] hover:border-[#00D9FF]/50 transition-all"
+          className="w-10 h-10 rounded-xl bg-[#162A4A]/90 backdrop-blur-sm border border-[#1E3A5F] flex items-center justify-center text-[#8BA4C4] hover:text-[#86C9F2] hover:border-[#86C9F2]/50 transition-all"
         >
           <Plus size={20} />
         </button>
         <button
           onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(0.2, prev.scale * 0.7) }))}
-          className="w-10 h-10 rounded-xl bg-[#161B22]/90 backdrop-blur-sm border border-[#21262D] flex items-center justify-center text-[#8B949E] hover:text-[#00D9FF] hover:border-[#00D9FF]/50 transition-all"
+          className="w-10 h-10 rounded-xl bg-[#162A4A]/90 backdrop-blur-sm border border-[#1E3A5F] flex items-center justify-center text-[#8BA4C4] hover:text-[#86C9F2] hover:border-[#86C9F2]/50 transition-all"
         >
           <Minus size={20} />
         </button>
         <button
           onClick={() => setTransform({ x: 0, y: 0, scale: 0.65 })}
-          className="w-10 h-10 rounded-xl bg-[#161B22]/90 backdrop-blur-sm border border-[#21262D] flex items-center justify-center text-[#8B949E] hover:text-[#00D9FF] hover:border-[#00D9FF]/50 transition-all"
+          className="w-10 h-10 rounded-xl bg-[#162A4A]/90 backdrop-blur-sm border border-[#1E3A5F] flex items-center justify-center text-[#8BA4C4] hover:text-[#86C9F2] hover:border-[#86C9F2]/50 transition-all"
         >
           <RotateCcw size={18} />
         </button>
@@ -710,7 +710,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
             showCompanyLinks
               ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
-              : 'bg-[#161B22]/90 text-[#8B949E] border border-[#21262D]'
+              : 'bg-[#162A4A]/90 text-[#8BA4C4] border border-[#1E3A5F]'
           }`}
         >
           <Link2 size={14} />
@@ -721,7 +721,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
             showHubs
               ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
-              : 'bg-[#161B22]/90 text-[#8B949E] border border-[#21262D]'
+              : 'bg-[#162A4A]/90 text-[#8BA4C4] border border-[#1E3A5F]'
           }`}
         >
           <Star size={14} />
@@ -730,17 +730,17 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       </div>
 
       {/* Instructions */}
-      <div className="absolute top-4 left-4 text-xs text-[#484F58] bg-[#161B22]/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-[#21262D]">
-        <div className="text-[#8B949E] font-medium mb-1">인사이트</div>
+      <div className="absolute top-4 left-4 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-[#1E3A5F]">
+        <div className="text-[#8BA4C4] font-medium mb-1">인사이트</div>
         <div>• 금색 테두리 = 여러 분야 연결 허브</div>
         <div>• 금색 선 = 같은 회사, 다른 분야</div>
-        <div className="mt-1 pt-1 border-t border-[#21262D] text-[#484F58]">
+        <div className="mt-1 pt-1 border-t border-[#1E3A5F] text-[#4A5E7A]">
           드래그: 이동 | 스크롤: 확대/축소
         </div>
       </div>
 
       {/* Zoom Level */}
-      <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#161B22]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#21262D]">
+      <div className="absolute bottom-6 left-6 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#1E3A5F]">
         {Math.round(transform.scale * 100)}%
       </div>
     </div>

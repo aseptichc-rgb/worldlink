@@ -113,21 +113,21 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
             whileFocus={{ scale: 1.1 }}
             className={`
               w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold
-              bg-[#0D1117] border-2 rounded-xl
+              bg-[#101D33] border-2 rounded-xl
               text-white uppercase
               transition-all duration-300
               focus:outline-none
               ${error
                 ? 'border-[#FF4081] focus:border-[#FF4081] focus:shadow-[0_0_0_3px_rgba(255,64,129,0.25)]'
                 : digit
-                  ? 'border-[#00E5FF] focus:border-[#00E5FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
-                  : 'border-[#21262D] focus:border-[#00E5FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
+                  ? 'border-[#86C9F2] focus:border-[#86C9F2] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
+                  : 'border-[#1E3A5F] focus:border-[#86C9F2] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
               }
             `}
           />
         ))}
 
-        <span className="text-[#484F58] text-2xl font-bold mx-1">-</span>
+        <span className="text-[#4A5E7A] text-2xl font-bold mx-1">-</span>
 
         {code.slice(3).map((digit, idx) => {
           const index = idx + 3;
@@ -145,15 +145,15 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
               whileFocus={{ scale: 1.1 }}
               className={`
                 w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold
-                bg-[#0D1117] border-2 rounded-xl
+                bg-[#101D33] border-2 rounded-xl
                 text-white uppercase
                 transition-all duration-300
                 focus:outline-none
                 ${error
                   ? 'border-[#FF4081] focus:border-[#FF4081] focus:shadow-[0_0_0_3px_rgba(255,64,129,0.25)]'
                   : digit
-                    ? 'border-[#00E5FF] focus:border-[#00E5FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
-                    : 'border-[#21262D] focus:border-[#00E5FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
+                    ? 'border-[#86C9F2] focus:border-[#86C9F2] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
+                    : 'border-[#1E3A5F] focus:border-[#86C9F2] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
                 }
               `}
             />
@@ -167,9 +167,9 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="mt-6 flex items-center gap-2 text-[#8B949E]"
+            className="mt-6 flex items-center gap-2 text-[#8BA4C4]"
           >
-            <div className="w-5 h-5 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[#86C9F2] border-t-transparent rounded-full animate-spin" />
             <span>코드 검증 중...</span>
           </motion.div>
         )}
@@ -188,9 +188,9 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
         )}
       </AnimatePresence>
 
-      <p className="mt-8 text-[#6E7681] text-sm text-center leading-relaxed">
-        NEXUS는 초대를 통해서만 가입할 수 있습니다.<br />
-        <span className="text-[#484F58]">신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.</span>
+      <p className="mt-8 text-[#4A5E7A] text-sm text-center leading-relaxed">
+        NODDED는 초대를 통해서만 가입할 수 있습니다.<br />
+        <span className="text-[#4A5E7A]">신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.</span>
       </p>
     </motion.div>
   );

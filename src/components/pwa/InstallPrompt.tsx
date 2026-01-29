@@ -111,7 +111,7 @@ export function InstallPrompt() {
                   {/* 텍스트 */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-semibold text-base">
-                      NEXUS 앱 설치하기
+                      NODDED 앱 설치하기
                     </h3>
                     <p className="text-gray-400 text-sm mt-0.5">
                       홈 화면에 추가하면 더 빠르게 접속할 수 있어요
@@ -130,7 +130,7 @@ export function InstallPrompt() {
                 {/* 설치 버튼 */}
                 <button
                   onClick={handleInstallClick}
-                  className="w-full mt-3 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full mt-3 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
                   {isIOS ? "설치 방법 보기" : "지금 설치하기"}
@@ -173,7 +173,7 @@ export function InstallPrompt() {
                 <div className="space-y-4">
                   {/* Step 1 */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       1
                     </div>
                     <div className="flex-1">
@@ -189,7 +189,7 @@ export function InstallPrompt() {
 
                   {/* Step 2 */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       2
                     </div>
                     <div className="flex-1">
@@ -207,7 +207,7 @@ export function InstallPrompt() {
 
                   {/* Step 3 */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       3
                     </div>
                     <div className="flex-1">
@@ -215,7 +215,7 @@ export function InstallPrompt() {
                         &quot;추가&quot; 버튼 탭하기
                       </p>
                       <p className="text-gray-400 text-sm mt-1">
-                        홈 화면에서 바로 NEXUS를 실행할 수 있어요
+                        홈 화면에서 바로 NODDED를 실행할 수 있어요
                       </p>
                     </div>
                   </div>

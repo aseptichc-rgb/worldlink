@@ -24,24 +24,24 @@ interface GraphEdge {
 // 색상 상수 - 계층별 차별화
 const COLORS = {
   // 노드 색상
-  nodeCore: '#00D9FF',           // 중앙 노드 - 밝은 청색
+  nodeCore: '#86C9F2',           // 중앙 노드 - 밝은 청색
   nodePrimary: '#4A90E2',        // 1차 연결 - 청색
-  nodeSecondary: '#7B68EE',      // 2차 연결 - 보라색
+  nodeSecondary: '#2C529C',      // 2차 연결 - 보라색
   nodeTertiary: '#9B8ED9',       // 3차 연결 - 연보라
 
   // 엣지 색상
   edgePrimary: '#4A90E2',        // 1차 연결선
-  edgeSecondary: '#7B68EE',      // 2차 연결선
+  edgeSecondary: '#2C529C',      // 2차 연결선
   edgeTertiary: '#9B8ED9',       // 3차 연결선
   edgeHighlighted: '#FFB800',    // 강조된 연결선
 
   // 상호작용 색상
-  hover: '#00FFFF',
+  hover: '#86C9F2',
   selected: '#FFD700',
   focused: '#FFB800',
 
   // 배경 색상
-  nodeBg: '#161B22',
+  nodeBg: '#162A4A',
   nodeBgHover: '#2D3748',
 
   // 텍스트 색상
@@ -707,15 +707,15 @@ export default function NetworkGraph() {
             className="absolute pointer-events-none z-50"
             style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
           >
-            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#21262D] rounded-xl px-4 py-3 shadow-2xl">
+            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#1E3A5F] rounded-xl px-4 py-3 shadow-2xl">
               <div className="text-sm font-semibold text-white mb-1">{tooltip.node.name}</div>
-              <div className="text-xs text-[#8B949E]">{tooltip.node.company}</div>
-              <div className="text-xs text-[#8B949E]">{tooltip.node.position}</div>
+              <div className="text-xs text-[#8BA4C4]">{tooltip.node.company}</div>
+              <div className="text-xs text-[#8BA4C4]">{tooltip.node.position}</div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800]">
                   {tooltip.node.degree}단계
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00E5FF]/20 text-[#00E5FF]">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#86C9F2]/20 text-[#86C9F2]">
                   {tooltip.node.connectionCount}명 연결
                 </span>
               </div>
@@ -731,33 +731,33 @@ export default function NetworkGraph() {
           className="zoom-btn group"
           title="확대"
         >
-          <Plus size={20} className="group-hover:text-[#00E5FF] transition-colors" />
+          <Plus size={20} className="group-hover:text-[#86C9F2] transition-colors" />
         </button>
         <button
           onClick={handleZoomOut}
           className="zoom-btn group"
           title="축소"
         >
-          <Minus size={20} className="group-hover:text-[#00E5FF] transition-colors" />
+          <Minus size={20} className="group-hover:text-[#86C9F2] transition-colors" />
         </button>
         <button
           onClick={handleFitToScreen}
           className="zoom-btn group"
           title="전체 보기"
         >
-          <Maximize2 size={18} className="group-hover:text-[#00E5FF] transition-colors" />
+          <Maximize2 size={18} className="group-hover:text-[#86C9F2] transition-colors" />
         </button>
         <button
           onClick={handleReset}
           className="zoom-btn group"
           title="초기화"
         >
-          <RotateCcw size={18} className="group-hover:text-[#00E5FF] transition-colors" />
+          <RotateCcw size={18} className="group-hover:text-[#86C9F2] transition-colors" />
         </button>
       </div>
 
       {/* Zoom Level Indicator */}
-      <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#161B22]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#21262D]">
+      <div className="absolute bottom-6 left-6 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#1E3A5F]">
         {Math.round(transform.scale * 100)}%
       </div>
     </div>

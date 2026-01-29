@@ -62,7 +62,7 @@ export default function BottomSheet({
             }}
             className={`
               fixed bottom-0 left-0 right-0 z-50
-              bg-[#0D1117] border-t border-[#21262D]
+              bg-[#101D33] border-t border-[#1E3A5F]
               rounded-t-3xl overflow-hidden
               ${heights[height]}
             `}
@@ -71,7 +71,7 @@ export default function BottomSheet({
               onPointerDown={(e) => dragControls.start(e)}
               className="flex justify-center py-3 cursor-grab active:cursor-grabbing"
             >
-              <div className="w-10 h-1 rounded-full bg-[#21262D]" />
+              <div className="w-10 h-1 rounded-full bg-[#1E3A5F]" />
             </div>
             <div className="overflow-y-auto h-full pb-8 no-scrollbar">
               {children}

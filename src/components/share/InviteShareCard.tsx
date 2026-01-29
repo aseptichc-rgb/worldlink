@@ -33,7 +33,7 @@ export function InviteShareCard({
   const inviteLink = `${baseUrl}/onboarding?code=${inviteCode}`;
 
   // 공유 메시지
-  const shareMessage = `${userName}님이 NEXUS에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n`;
+  const shareMessage = `${userName}님이 NODDED에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n`;
 
   // 클립보드에 링크 복사
   const copyLink = async () => {
@@ -51,7 +51,7 @@ export function InviteShareCard({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "NEXUS 초대",
+          title: "NODDED 초대",
           text: shareMessage,
           url: inviteLink,
         });
@@ -85,42 +85,42 @@ export function InviteShareCard({
     <>
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-[#8B949E] flex items-center gap-2">
+          <h3 className="text-sm font-medium text-[#8BA4C4] flex items-center gap-2">
             <Users size={16} />
             친구 초대하기
           </h3>
-          <span className="text-xs text-[#00E5FF] bg-[#00E5FF]/10 px-2 py-1 rounded-full">
+          <span className="text-xs text-[#86C9F2] bg-[#86C9F2]/10 px-2 py-1 rounded-full">
             {invitesRemaining}명 초대 가능
           </span>
         </div>
 
         {/* 초대 코드 표시 */}
-        <div className="bg-[#161B22] rounded-xl p-4 mb-4">
-          <p className="text-xs text-[#484F58] mb-1">내 초대 코드</p>
+        <div className="bg-[#162A4A] rounded-xl p-4 mb-4">
+          <p className="text-xs text-[#4A5E7A] mb-1">내 초대 코드</p>
           <div className="flex items-center justify-between">
-            <p className="font-mono text-2xl font-bold bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] bg-clip-text text-transparent">
+            <p className="font-mono text-2xl font-bold bg-gradient-to-r from-[#86C9F2] to-[#2C529C] bg-clip-text text-transparent">
               {inviteCode}
             </p>
             <button
               onClick={copyLink}
-              className="p-2 rounded-lg bg-[#21262D] hover:bg-[#30363D] transition-colors"
+              className="p-2 rounded-lg bg-[#1E3A5F] hover:bg-[#30363D] transition-colors"
             >
               {copied ? (
                 <Check size={18} className="text-green-400" />
               ) : (
-                <Copy size={18} className="text-[#8B949E]" />
+                <Copy size={18} className="text-[#8BA4C4]" />
               )}
             </button>
           </div>
         </div>
 
         {/* 초대 링크 */}
-        <div className="bg-[#161B22] rounded-xl p-3 mb-4 flex items-center gap-2">
-          <Link size={14} className="text-[#484F58] flex-shrink-0" />
-          <p className="text-xs text-[#8B949E] truncate flex-1">{inviteLink}</p>
+        <div className="bg-[#162A4A] rounded-xl p-3 mb-4 flex items-center gap-2">
+          <Link size={14} className="text-[#4A5E7A] flex-shrink-0" />
+          <p className="text-xs text-[#8BA4C4] truncate flex-1">{inviteLink}</p>
           <button
             onClick={copyLink}
-            className="text-xs text-[#00E5FF] hover:underline flex-shrink-0"
+            className="text-xs text-[#86C9F2] hover:underline flex-shrink-0"
           >
             {copied ? "복사됨!" : "복사"}
           </button>
@@ -148,7 +148,7 @@ export function InviteShareCard({
         </div>
 
         {/* 안내 문구 */}
-        <p className="text-xs text-[#484F58] text-center mt-4">
+        <p className="text-xs text-[#4A5E7A] text-center mt-4">
           링크를 받은 친구는 바로 가입할 수 있어요
         </p>
       </Card>
@@ -167,14 +167,14 @@ export function InviteShareCard({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#161B22] rounded-2xl p-6 max-w-sm w-full"
+              className="bg-[#162A4A] rounded-2xl p-6 max-w-sm w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">QR 코드</h3>
                 <button
                   onClick={() => setShowQR(false)}
-                  className="p-1 text-[#8B949E] hover:text-white"
+                  className="p-1 text-[#8BA4C4] hover:text-white"
                 >
                   <X size={20} />
                 </button>
@@ -190,10 +190,10 @@ export function InviteShareCard({
                 </div>
               </div>
 
-              <p className="text-sm text-[#8B949E] text-center">
+              <p className="text-sm text-[#8BA4C4] text-center">
                 친구가 이 QR코드를 스캔하면
                 <br />
-                바로 NEXUS에 가입할 수 있어요
+                바로 NODDED에 가입할 수 있어요
               </p>
             </motion.div>
           </motion.div>

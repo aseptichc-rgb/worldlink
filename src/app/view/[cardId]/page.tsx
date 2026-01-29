@@ -193,24 +193,24 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0E1A] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-[#00E5FF] border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-[#0B162C] flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-[#86C9F2] border-t-transparent rounded-full" />
       </div>
     );
   }
 
   if (!card) {
     return (
-      <div className="min-h-screen bg-[#0A0E1A] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-[#0B162C] flex flex-col items-center justify-center p-6">
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#161B22] flex items-center justify-center">
-            <UserPlus size={32} className="text-[#484F58]" />
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#162A4A] flex items-center justify-center">
+            <UserPlus size={32} className="text-[#4A5E7A]" />
           </div>
           <h1 className="text-xl font-semibold text-white mb-2">명함을 찾을 수 없습니다</h1>
-          <p className="text-[#8B949E] mb-6">QR 코드가 유효하지 않거나 만료되었습니다</p>
+          <p className="text-[#8BA4C4] mb-6">QR 코드가 유효하지 않거나 만료되었습니다</p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-[#00E5FF] text-[#0A0E1A] font-semibold rounded-xl"
+            className="px-6 py-3 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl"
           >
             홈으로 이동
           </button>
@@ -220,18 +220,18 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A]">
+    <div className="min-h-screen bg-[#0B162C]">
       {/* 헤더 */}
-      <div className="sticky top-0 z-30 bg-[#0A0E1A]/80 backdrop-blur-xl border-b border-[#21262D]">
+      <div className="sticky top-0 z-30 bg-[#0B162C]/80 backdrop-blur-xl border-b border-[#1E3A5F]">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00E5FF] to-[#7C4DFF] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#86C9F2] to-[#2C529C] flex items-center justify-center">
               <span className="text-xs font-bold text-white">N</span>
             </div>
-            <span className="text-lg font-bold text-white">NEXUS</span>
+            <span className="text-lg font-bold text-white">NODDED</span>
           </div>
           <button onClick={handleShare} className="p-2">
-            <Share2 size={20} className="text-[#8B949E]" />
+            <Share2 size={20} className="text-[#8BA4C4]" />
           </button>
         </div>
       </div>
@@ -241,11 +241,11 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#161B22] to-[#0D1117] border border-[#21262D]"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#162A4A] to-[#101D33] border border-[#1E3A5F]"
         >
           {/* 배경 장식 */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#00E5FF]/10 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#7C4DFF]/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#86C9F2]/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#2C529C]/10 to-transparent rounded-full blur-3xl" />
 
           <div className="relative p-6">
             {/* 프로필 섹션 */}
@@ -259,13 +259,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl font-bold text-white mb-1">{card.name}</h2>
                 {card.position && (
-                  <div className="flex items-center gap-2 text-[#8B949E] mb-1">
+                  <div className="flex items-center gap-2 text-[#8BA4C4] mb-1">
                     <Briefcase size={14} />
                     <span className="text-sm">{card.position}</span>
                   </div>
                 )}
                 {card.company && (
-                  <div className="flex items-center gap-2 text-[#8B949E]">
+                  <div className="flex items-center gap-2 text-[#8BA4C4]">
                     <Building2 size={14} />
                     <span className="text-sm">{card.company}</span>
                   </div>
@@ -275,16 +275,16 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
 
             {/* 연락처 정보 */}
             {(card.email || card.phone) && (
-              <div className="space-y-2 mb-6 p-4 rounded-xl bg-[#0D1117]/50">
+              <div className="space-y-2 mb-6 p-4 rounded-xl bg-[#101D33]/50">
                 {card.email && (
                   <div className="flex items-center gap-3">
-                    <Mail size={16} className="text-[#00E5FF]" />
+                    <Mail size={16} className="text-[#86C9F2]" />
                     <span className="text-sm text-white">{card.email}</span>
                   </div>
                 )}
                 {card.phone && (
                   <div className="flex items-center gap-3">
-                    <Phone size={16} className="text-[#00E5FF]" />
+                    <Phone size={16} className="text-[#86C9F2]" />
                     <span className="text-sm text-white">{card.phone}</span>
                   </div>
                 )}
@@ -293,7 +293,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
 
             {/* 소개 */}
             {card.bio && (
-              <p className="text-sm text-[#8B949E] mb-6 leading-relaxed">
+              <p className="text-sm text-[#8BA4C4] mb-6 leading-relaxed">
                 {card.bio}
               </p>
             )}
@@ -304,7 +304,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 {card.keywords.slice(0, 6).map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 text-xs font-medium rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/20"
+                    className="px-3 py-1 text-xs font-medium rounded-full bg-[#86C9F2]/10 text-[#86C9F2] border border-[#86C9F2]/20"
                   >
                     {keyword}
                   </span>
@@ -319,22 +319,22 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-gradient-to-r from-[#7C4DFF]/20 to-[#00E5FF]/20 border border-[#7C4DFF]/30"
+            className="p-4 rounded-xl bg-gradient-to-r from-[#2C529C]/20 to-[#86C9F2]/20 border border-[#2C529C]/30"
           >
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-[#7C4DFF]/20">
-                <Smartphone size={20} className="text-[#7C4DFF]" />
+              <div className="p-2 rounded-lg bg-[#2C529C]/20">
+                <Smartphone size={20} className="text-[#2C529C]" />
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-semibold text-white mb-1">
                   앱으로 저장하기
                 </h3>
-                <p className="text-xs text-[#8B949E] mb-3">
+                <p className="text-xs text-[#8BA4C4] mb-3">
                   홈 화면에 추가하면 언제든 명함을 확인할 수 있어요
                 </p>
                 <button
                   onClick={handleInstallPwa}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#7C4DFF] text-white text-sm font-medium rounded-lg"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#2C529C] text-white text-sm font-medium rounded-lg"
                 >
                   <Download size={16} />
                   홈 화면에 추가
@@ -357,7 +357,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               </div>
               <div>
                 <p className="text-sm font-medium text-[#00E676]">명함이 저장되었습니다!</p>
-                <p className="text-xs text-[#8B949E]">내 명함첩에서 확인할 수 있어요</p>
+                <p className="text-xs text-[#8BA4C4]">내 명함첩에서 확인할 수 있어요</p>
               </div>
             </div>
           </motion.div>
@@ -365,13 +365,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#0A0E1A] via-[#0A0E1A] to-transparent pt-8">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#0B162C] via-[#0B162C] to-transparent pt-8">
         <div className="flex gap-3 max-w-lg mx-auto">
           {!saved ? (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleSaveCard}
-              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#00E5FF] text-[#0A0E1A] font-semibold rounded-xl"
+              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl"
             >
               <Plus size={20} />
               명함 저장하기
@@ -380,14 +380,14 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleSendMessage}
-              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#00E5FF] text-[#0A0E1A] font-semibold rounded-xl"
+              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl"
             >
               <MessageCircle size={20} />
               메시지 보내기
             </motion.button>
           )}
         </div>
-        <p className="text-center text-xs text-[#8B949E] mt-3">
+        <p className="text-center text-xs text-[#8BA4C4] mt-3">
           {!isAuthenticated && '메시지를 보내려면 가입이 필요해요'}
         </p>
       </div>
@@ -408,25 +408,25 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#161B22] rounded-t-3xl border-t border-[#21262D] p-6"
+              className="w-full bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] p-6"
             >
               <button
                 onClick={() => setShowAuthModal(false)}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#8B949E]" />
+                <X size={20} className="text-[#8BA4C4]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#00E5FF]/20 to-[#7C4DFF]/20 flex items-center justify-center">
-                  <MessageCircle size={28} className="text-[#00E5FF]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#86C9F2]/20 to-[#2C529C]/20 flex items-center justify-center">
+                  <MessageCircle size={28} className="text-[#86C9F2]" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {authAction === 'message' ? '메시지를 보내시겠어요?' : '명함을 저장하시겠어요?'}
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-sm text-[#8BA4C4]">
                   {authAction === 'message'
                     ? '메시지를 보내려면 간단한 가입이 필요해요'
                     : '내 명함을 만들고 네트워크를 확장해보세요'}
@@ -436,13 +436,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               <div className="space-y-3">
                 <button
                   onClick={handleAuthRedirect}
-                  className="w-full py-4 bg-[#00E5FF] text-[#0A0E1A] font-semibold rounded-xl"
+                  className="w-full py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl"
                 >
                   30초만에 가입하기
                 </button>
                 <button
                   onClick={() => router.push('/login')}
-                  className="w-full py-4 bg-[#161B22] text-white font-medium rounded-xl border border-[#21262D]"
+                  className="w-full py-4 bg-[#162A4A] text-white font-medium rounded-xl border border-[#1E3A5F]"
                 >
                   이미 계정이 있어요
                 </button>
@@ -468,25 +468,25 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#161B22] rounded-t-3xl border-t border-[#21262D] p-6"
+              className="w-full bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] p-6"
             >
               <button
                 onClick={() => setShowPwaPrompt(false)}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#8B949E]" />
+                <X size={20} className="text-[#8BA4C4]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#00E5FF]/20 to-[#7C4DFF]/20 flex items-center justify-center">
-                  <Smartphone size={28} className="text-[#00E5FF]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#86C9F2]/20 to-[#2C529C]/20 flex items-center justify-center">
+                  <Smartphone size={28} className="text-[#86C9F2]" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   홈 화면에 추가하시겠어요?
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-sm text-[#8BA4C4]">
                   앱처럼 사용하고 언제든 {card.name}님의 명함을 확인하세요
                 </p>
               </div>
@@ -494,14 +494,14 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               <div className="space-y-3">
                 <button
                   onClick={handleInstallPwa}
-                  className="w-full py-4 bg-[#00E5FF] text-[#0A0E1A] font-semibold rounded-xl flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl flex items-center justify-center gap-2"
                 >
                   <Download size={20} />
                   홈 화면에 추가
                 </button>
                 <button
                   onClick={() => setShowPwaPrompt(false)}
-                  className="w-full py-4 text-[#8B949E] font-medium"
+                  className="w-full py-4 text-[#8BA4C4] font-medium"
                 >
                   나중에 하기
                 </button>

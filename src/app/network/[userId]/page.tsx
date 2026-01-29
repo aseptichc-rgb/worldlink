@@ -125,23 +125,23 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
   if (!targetUser) {
     return (
-      <div className="min-h-screen bg-[#0A0E1A] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B162C] flex items-center justify-center">
         <div className="spinner" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] pb-24">
+    <div className="min-h-screen bg-[#0B162C] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0A0E1A]/80 backdrop-blur-xl border-b border-[#21262D]">
+      <div className="sticky top-0 z-30 bg-[#0B162C]/80 backdrop-blur-xl border-b border-[#1E3A5F]">
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={() => router.back()} className="p-2 -ml-2">
             <ArrowLeft size={24} className="text-white" />
           </button>
           <h1 className="text-lg font-semibold text-white">{targetUser.name}의 인맥</h1>
           <button className="p-2 -mr-2">
-            <Share2 size={24} className="text-[#8B949E]" />
+            <Share2 size={24} className="text-[#8BA4C4]" />
           </button>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-gradient-to-br from-[#161B22] to-[#0D1117] border border-[#21262D]"
+          className="p-6 rounded-2xl bg-gradient-to-br from-[#162A4A] to-[#101D33] border border-[#1E3A5F]"
         >
           <div className="flex items-center gap-4">
             <Avatar
@@ -163,13 +163,13 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
             <div className="flex-1">
               <h2 className="text-xl font-bold text-white">{targetUser.name}</h2>
               {targetUser.position && (
-                <div className="flex items-center gap-2 text-[#8B949E] mt-1">
+                <div className="flex items-center gap-2 text-[#8BA4C4] mt-1">
                   <Briefcase size={14} />
                   <span className="text-sm">{targetUser.position}</span>
                 </div>
               )}
               {targetUser.company && (
-                <div className="flex items-center gap-2 text-[#8B949E]">
+                <div className="flex items-center gap-2 text-[#8BA4C4]">
                   <Building2 size={14} />
                   <span className="text-sm">{targetUser.company}</span>
                 </div>
@@ -179,11 +179,11 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
           {/* 키워드 */}
           {targetUser.keywords && targetUser.keywords.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#21262D]">
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#1E3A5F]">
               {targetUser.keywords.map((keyword, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1 text-xs rounded-full bg-[#00E5FF]/10 text-[#00E5FF]"
+                  className="px-3 py-1 text-xs rounded-full bg-[#86C9F2]/10 text-[#86C9F2]"
                 >
                   {keyword}
                 </span>
@@ -192,21 +192,21 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
           )}
 
           {/* 인맥 수 */}
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#21262D]">
-            <Users size={18} className="text-[#7C4DFF]" />
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#1E3A5F]">
+            <Users size={18} className="text-[#2C529C]" />
             <span className="text-white font-medium">{connections.length}명</span>
-            <span className="text-[#8B949E]">의 인맥</span>
+            <span className="text-[#8BA4C4]">의 인맥</span>
           </div>
         </motion.div>
 
         {/* 인맥 목록 */}
         {isLocked ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 rounded-full bg-[#161B22] flex items-center justify-center mb-4">
-              <Lock size={32} className="text-[#484F58]" />
+            <div className="w-20 h-20 rounded-full bg-[#162A4A] flex items-center justify-center mb-4">
+              <Lock size={32} className="text-[#4A5E7A]" />
             </div>
             <p className="text-white font-medium mb-2">비공개 인맥</p>
-            <p className="text-sm text-[#8B949E] text-center">
+            <p className="text-sm text-[#8BA4C4] text-center">
               {targetUser.name}님이 인맥을 비공개로 설정했습니다
             </p>
           </div>
@@ -214,7 +214,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
           <>
             <div className="flex items-center justify-between">
               <h3 className="text-white font-semibold">인맥 목록</h3>
-              <span className="text-sm text-[#8B949E]">{connections.length}명</span>
+              <span className="text-sm text-[#8BA4C4]">{connections.length}명</span>
             </div>
 
             <div className="space-y-3">
@@ -224,7 +224,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 rounded-xl bg-[#161B22] border border-[#21262D]"
+                  className="p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar
@@ -234,7 +234,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-white">{connection.name}</h4>
-                      <p className="text-sm text-[#8B949E]">
+                      <p className="text-sm text-[#8BA4C4]">
                         {connection.position} @ {connection.company}
                       </p>
                       {connection.keywords && connection.keywords.length > 0 && (
@@ -242,7 +242,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                           {connection.keywords.slice(0, 2).map((keyword, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 text-xs rounded-full bg-[#7C4DFF]/10 text-[#7C4DFF]"
+                              className="px-2 py-0.5 text-xs rounded-full bg-[#2C529C]/10 text-[#2C529C]"
                             >
                               {keyword}
                             </span>
@@ -252,7 +252,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                     </div>
                     <button
                       onClick={() => handleRequestIntro(connection)}
-                      className="p-2 rounded-lg bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors"
+                      className="p-2 rounded-lg bg-[#86C9F2]/10 text-[#86C9F2] hover:bg-[#86C9F2]/20 transition-colors"
                     >
                       <UserPlus size={20} />
                     </button>
@@ -280,9 +280,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-h-[85vh] overflow-y-auto bg-[#161B22] rounded-t-3xl border-t border-[#21262D] p-6"
+              className="w-full max-h-[85vh] overflow-y-auto bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] p-6"
             >
-              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
 
               {introSent ? (
                 <motion.div
@@ -294,7 +294,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                     <MessageCircle size={32} className="text-[#00E676]" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">소개 요청 완료!</h3>
-                  <p className="text-[#8B949E]">
+                  <p className="text-[#8BA4C4]">
                     {targetUser.name}님에게 소개 요청을 보냈습니다
                   </p>
                 </motion.div>
@@ -303,31 +303,31 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   <h3 className="text-lg font-semibold text-white mb-4">소개 요청하기</h3>
 
                   {/* 소개 경로 */}
-                  <div className="flex items-center justify-center gap-3 mb-6 p-4 rounded-xl bg-[#0D1117]">
+                  <div className="flex items-center justify-center gap-3 mb-6 p-4 rounded-xl bg-[#101D33]">
                     <div className="text-center">
                       <Avatar src={user?.profileImage} name={user?.name || '나'} size="sm" />
-                      <p className="text-xs text-[#8B949E] mt-1">나</p>
+                      <p className="text-xs text-[#8BA4C4] mt-1">나</p>
                     </div>
-                    <div className="flex-1 h-0.5 bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF]" />
+                    <div className="flex-1 h-0.5 bg-gradient-to-r from-[#86C9F2] to-[#2C529C]" />
                     <div className="text-center">
                       <Avatar src={targetUser.profileImage} name={targetUser.name} size="sm" />
-                      <p className="text-xs text-[#8B949E] mt-1">{targetUser.name}</p>
+                      <p className="text-xs text-[#8BA4C4] mt-1">{targetUser.name}</p>
                     </div>
-                    <div className="flex-1 h-0.5 bg-gradient-to-r from-[#7C4DFF] to-[#00E5FF]" />
+                    <div className="flex-1 h-0.5 bg-gradient-to-r from-[#2C529C] to-[#86C9F2]" />
                     <div className="text-center">
                       <Avatar src={selectedConnection.profileImage} name={selectedConnection.name} size="sm" />
-                      <p className="text-xs text-[#8B949E] mt-1">{selectedConnection.name}</p>
+                      <p className="text-xs text-[#8BA4C4] mt-1">{selectedConnection.name}</p>
                     </div>
                   </div>
 
                   {/* 소개받고 싶은 사람 정보 */}
-                  <div className="p-4 rounded-xl bg-[#0D1117] border border-[#21262D] mb-4">
-                    <p className="text-sm text-[#8B949E] mb-2">소개받고 싶은 분</p>
+                  <div className="p-4 rounded-xl bg-[#101D33] border border-[#1E3A5F] mb-4">
+                    <p className="text-sm text-[#8BA4C4] mb-2">소개받고 싶은 분</p>
                     <div className="flex items-center gap-3">
                       <Avatar src={selectedConnection.profileImage} name={selectedConnection.name} size="md" />
                       <div>
                         <p className="font-medium text-white">{selectedConnection.name}</p>
-                        <p className="text-sm text-[#8B949E]">
+                        <p className="text-sm text-[#8BA4C4]">
                           {selectedConnection.position} @ {selectedConnection.company}
                         </p>
                       </div>
@@ -336,7 +336,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
                   {/* 목적 선택 */}
                   <div className="mb-4">
-                    <p className="text-sm text-[#8B949E] mb-2">소개 목적</p>
+                    <p className="text-sm text-[#8BA4C4] mb-2">소개 목적</p>
                     <div className="flex flex-wrap gap-2">
                       {purposes.map((purpose) => (
                         <button
@@ -344,8 +344,8 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                           onClick={() => setIntroPurpose(purpose.value)}
                           className={`px-3 py-2 rounded-lg text-sm transition-all ${
                             introPurpose === purpose.value
-                              ? 'bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]'
-                              : 'bg-[#21262D] text-[#8B949E] border border-transparent'
+                              ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]'
+                              : 'bg-[#1E3A5F] text-[#8BA4C4] border border-transparent'
                           }`}
                         >
                           {purpose.label}
@@ -356,19 +356,19 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
                   {/* 메시지 */}
                   <div className="mb-6">
-                    <p className="text-sm text-[#8B949E] mb-2">소개 요청 메시지</p>
+                    <p className="text-sm text-[#8BA4C4] mb-2">소개 요청 메시지</p>
                     <textarea
                       value={introMessage}
                       onChange={(e) => setIntroMessage(e.target.value)}
                       placeholder={`${targetUser.name}님에게 ${selectedConnection.name}님을 왜 소개받고 싶은지 설명해주세요...`}
-                      className="w-full h-32 p-4 rounded-xl bg-[#0D1117] border border-[#21262D] text-white placeholder:text-[#484F58] resize-none focus:outline-none focus:border-[#00E5FF]"
+                      className="w-full h-32 p-4 rounded-xl bg-[#101D33] border border-[#1E3A5F] text-white placeholder:text-[#4A5E7A] resize-none focus:outline-none focus:border-[#86C9F2]"
                     />
                   </div>
 
                   <button
                     onClick={handleSendIntroRequest}
                     disabled={!introMessage.trim()}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#7C4DFF] text-black font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     소개 요청 보내기
                   </button>

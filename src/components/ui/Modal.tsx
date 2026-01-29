@@ -54,16 +54,16 @@ export default function Modal({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={`
               relative w-full ${sizes[size]}
-              bg-[#0D1117] border border-[#21262D] rounded-2xl
+              bg-[#101D33] border border-[#1E3A5F] rounded-2xl
               shadow-2xl overflow-hidden
             `}
           >
             {title && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-[#21262D]">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[#1E3A5F]">
                 <h2 className="text-lg font-semibold text-white">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="p-1 text-[#8B949E] hover:text-white transition-colors rounded-lg hover:bg-[#21262D]"
+                  className="p-1 text-[#8BA4C4] hover:text-white transition-colors rounded-lg hover:bg-[#1E3A5F]"
                 >
                   <X size={20} />
                 </button>
@@ -73,7 +73,7 @@ export default function Modal({
               {!title && (
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-1 text-[#8B949E] hover:text-white transition-colors rounded-lg hover:bg-[#21262D]"
+                  className="absolute top-4 right-4 p-1 text-[#8BA4C4] hover:text-white transition-colors rounded-lg hover:bg-[#1E3A5F]"
                 >
                   <X size={20} />
                 </button>
