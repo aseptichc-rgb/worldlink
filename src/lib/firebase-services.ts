@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
   setDoc,
   updateDoc,
@@ -73,7 +74,12 @@ export const createUser = async (userData: Omit<User, 'createdAt' | 'updatedAt'>
 
 export const getUser = async (userId: string): Promise<User | null> => {
   const userRef = doc(db, 'users', userId);
-  const userSnap = await getDoc(userRef);
+  let userSnap;
+  try {
+    userSnap = await getDocFromServer(userRef);
+  } catch {
+    userSnap = await getDoc(userRef);
+  }
 
   if (!userSnap.exists()) return null;
 
