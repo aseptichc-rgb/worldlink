@@ -23,6 +23,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
+import Tesseract from 'tesseract.js';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
 import { BusinessCard, SavedCard } from '@/types';
@@ -67,6 +68,7 @@ export default function ScanPage() {
     email: '',
   });
   const [showInfoForm, setShowInfoForm] = useState(false);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -195,6 +197,101 @@ export default function ScanPage() {
     }, 1500);
   };
 
+  // ==================== OCR 텍스트 추출 ====================
+  const parseBusinessCardText = (text: string): PaperCardInfo => {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    const info: PaperCardInfo = { name: '', company: '', position: '', phone: '', email: '' };
+
+    // 이메일 추출
+    const emailMatch = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+    if (emailMatch) info.email = emailMatch[0];
+
+    // 전화번호 추출 (한국 형식 우선)
+    const phoneMatch = text.match(/(?:(?:\+?82[-.\s]?|0)(?:10|11|16|17|18|19|2|3[1-3]|4[1-4]|5[1-5]|6[1-4])[-.\s]?\d{3,4}[-.\s]?\d{4})/);
+    if (phoneMatch) {
+      info.phone = phoneMatch[0];
+    } else {
+      const generalPhone = text.match(/(\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4})/);
+      if (generalPhone) info.phone = generalPhone[0];
+    }
+
+    // 이메일/전화/URL이 아닌 텍스트 라인만 필터
+    const textLines = lines.filter(line => {
+      if (/[a-zA-Z0-9._%+\-]+@/.test(line)) return false;
+      if (/\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4}/.test(line)) return false;
+      if (/https?:\/\/|www\./i.test(line)) return false;
+      if (/[Ff]ax|팩스/.test(line)) return false;
+      return true;
+    });
+
+    // 이름 추출: 한글 2~4자 패턴 (첫 번째 매칭)
+    for (const line of textLines) {
+      const nameMatch = line.match(/^[가-힣]{2,4}$/);
+      if (nameMatch) {
+        info.name = nameMatch[0];
+        break;
+      }
+    }
+    // 이름을 못 찾으면 영문 이름 시도
+    if (!info.name) {
+      for (const line of textLines) {
+        const engName = line.match(/^[A-Z][a-z]+\s+[A-Z][a-z]+$/);
+        if (engName) {
+          info.name = engName[0];
+          break;
+        }
+      }
+    }
+
+    // 직책 키워드 매칭
+    const positionKeywords = ['대표', '이사', '부장', '차장', '과장', '대리', '사원', '매니저', '팀장', '실장', '본부장', '센터장', 'CEO', 'CTO', 'CFO', 'COO', 'VP', 'Director', 'Manager', 'Engineer', 'Developer', 'Designer'];
+    for (const line of textLines) {
+      if (line === info.name) continue;
+      if (positionKeywords.some(kw => line.includes(kw))) {
+        info.position = line;
+        break;
+      }
+    }
+
+    // 회사명: 이름/직책이 아닌 첫 번째 텍스트 라인, 또는 (주)/(株) 등 포함
+    const companyKeywords = ['(주)', '주식회사', '㈜', 'Inc', 'Corp', 'Ltd', 'LLC', 'Co.', '그룹', '컴퍼니'];
+    for (const line of textLines) {
+      if (line === info.name || line === info.position) continue;
+      if (companyKeywords.some(kw => line.includes(kw))) {
+        info.company = line;
+        break;
+      }
+    }
+    // 회사명 못 찾으면 이름/직책 외 첫 번째 줄
+    if (!info.company) {
+      for (const line of textLines) {
+        if (line !== info.name && line !== info.position && line.length >= 2) {
+          info.company = line;
+          break;
+        }
+      }
+    }
+
+    return info;
+  };
+
+  const runOcr = async (imageData: string) => {
+    setIsOcrProcessing(true);
+    try {
+      const result = await Tesseract.recognize(imageData, 'kor+eng', {
+        logger: () => {},
+      });
+      const parsed = parseBusinessCardText(result.data.text);
+      setPaperCardInfo(parsed);
+    } catch (err) {
+      console.error('OCR error:', err);
+    } finally {
+      setIsOcrProcessing(false);
+      setShowInfoForm(true);
+    }
+  };
+
   // ==================== 종이 명함 스캔 관련 함수 ====================
   const startCamera = async () => {
     setError(null);
@@ -238,7 +335,7 @@ export default function ScanPage() {
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
       setCardImage(imageData);
       stopCamera();
-      setShowInfoForm(true);
+      runOcr(imageData);
     }
   };
 
@@ -250,7 +347,7 @@ export default function ScanPage() {
     reader.onload = (event) => {
       const imageData = event.target?.result as string;
       setCardImage(imageData);
-      setShowInfoForm(true);
+      runOcr(imageData);
     };
     reader.readAsDataURL(file);
   };
@@ -659,8 +756,28 @@ export default function ScanPage() {
           </>
         )}
 
+        {/* OCR 처리 중 */}
+        {scanMode === 'paper' && isOcrProcessing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-16 space-y-4"
+          >
+            {cardImage && (
+              <img
+                src={cardImage}
+                alt="촬영된 명함"
+                className="w-full aspect-[3/2] object-cover rounded-2xl border border-[#1E3A5F] mb-4 opacity-60"
+              />
+            )}
+            <Loader2 size={40} className="text-[#86C9F2] animate-spin" />
+            <p className="text-[#86C9F2] font-medium">명함 정보를 인식하고 있습니다...</p>
+            <p className="text-sm text-[#8BA4C4]">잠시만 기다려주세요</p>
+          </motion.div>
+        )}
+
         {/* 종이 명함 정보 입력 폼 */}
-        {scanMode === 'paper' && showInfoForm && (
+        {scanMode === 'paper' && showInfoForm && !isOcrProcessing && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
