@@ -77,7 +77,8 @@ export function getSubscriptionPlan(user: User | null): SubscriptionPlan {
  * 프리미엄 사용자인지 확인
  */
 export function isPremiumUser(user: User | null): boolean {
-  return getSubscriptionPlan(user) === 'premium';
+  // 현재 모든 기능 무료 개방 (추후 프리미엄 범위 재설정 예정)
+  return true;
 }
 
 /**

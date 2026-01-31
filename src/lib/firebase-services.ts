@@ -19,6 +19,7 @@ import {
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithCustomToken,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
@@ -44,6 +45,10 @@ export const logoutUser = async () => {
 
 export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
   return onAuthStateChanged(auth, callback);
+};
+
+export const loginWithCustomToken = async (customToken: string) => {
+  return signInWithCustomToken(auth, customToken);
 };
 
 // ==================== USER SERVICES ====================

@@ -17,9 +17,6 @@ import {
   Globe,
   Lock,
   UserCheck,
-  Crown,
-  Sparkles,
-  X
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useAuthStore } from '@/store/authStore';
@@ -27,7 +24,6 @@ import { useCardStore } from '@/store/cardStore';
 import { BusinessCard } from '@/types';
 import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
-import { isPremiumUser, PREMIUM_PRICE, PREMIUM_FEATURES, FREE_FEATURES } from '@/lib/subscription-utils';
 
 export default function MyCardPage() {
   const router = useRouter();
@@ -36,11 +32,7 @@ export default function MyCardPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // 프리미엄 여부 확인
-  const isPremium = isPremiumUser(user);
 
   // 명함이 없으면 자동 생성, 있으면 user 데이터와 동기화
   useEffect(() => {
@@ -257,45 +249,21 @@ export default function MyCardPage() {
 
             {/* QR 코드 섹션 */}
             <div className="flex flex-col items-center py-6 border-t border-[#1E3A5F]">
-              {isPremium ? (
-                // 프리미엄 사용자: QR 코드 표시
-                qrDataUrl ? (
-                  <motion.img
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    src={qrDataUrl}
-                    alt="My QR Code"
-                    className="w-48 h-48 rounded-xl"
-                  />
-                ) : (
-                  <div className="w-48 h-48 rounded-xl bg-[#162A4A] flex items-center justify-center">
-                    <QrCode size={48} className="text-[#4A5E7A]" />
-                  </div>
-                )
+              {qrDataUrl ? (
+                <motion.img
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  src={qrDataUrl}
+                  alt="My QR Code"
+                  className="w-48 h-48 rounded-xl"
+                />
               ) : (
-                // 무료 사용자: 잠금 상태
-                <button
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="relative w-48 h-48 rounded-xl bg-[#162A4A] flex flex-col items-center justify-center group overflow-hidden"
-                >
-                  {/* 블러된 QR 코드 배경 */}
-                  <div className="absolute inset-0 opacity-30 blur-sm">
-                    <QrCode size={120} className="text-[#4A5E7A] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                  </div>
-                  {/* 잠금 오버레이 */}
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Crown size={28} className="text-white" />
-                    </div>
-                    <span className="text-white font-medium text-sm">프리미엄 기능</span>
-                    <span className="text-[#8BA4C4] text-xs mt-1">탭하여 업그레이드</span>
-                  </div>
-                </button>
+                <div className="w-48 h-48 rounded-xl bg-[#162A4A] flex items-center justify-center">
+                  <QrCode size={48} className="text-[#4A5E7A]" />
+                </div>
               )}
               <p className="mt-4 text-sm text-[#8BA4C4]">
-                {isPremium
-                  ? 'QR 코드를 스캔하면 명함을 저장할 수 있어요'
-                  : '프리미엄으로 업그레이드하여 QR 명함을 만들어보세요'}
+                QR 코드를 스캔하면 명함을 저장할 수 있어요
               </p>
             </div>
           </div>
@@ -305,22 +273,17 @@ export default function MyCardPage() {
         <div className="grid grid-cols-3 gap-3">
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={isPremium ? handleShare : () => setShowUpgradeModal(true)}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F] relative ${!isPremium ? 'opacity-60' : ''}`}
+            onClick={handleShare}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
           >
             <Share2 size={24} className="text-[#86C9F2]" />
             <span className="text-sm text-white">공유하기</span>
-            {!isPremium && (
-              <div className="absolute top-2 right-2">
-                <Crown size={14} className="text-[#FFD700]" />
-              </div>
-            )}
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={isPremium ? handleCopyLink : () => setShowUpgradeModal(true)}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F] relative ${!isPremium ? 'opacity-60' : ''}`}
+            onClick={handleCopyLink}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
           >
             {copied ? (
               <Check size={24} className="text-[#00E676]" />
@@ -328,48 +291,17 @@ export default function MyCardPage() {
               <Copy size={24} className="text-[#86C9F2]" />
             )}
             <span className="text-sm text-white">{copied ? '복사됨!' : '링크 복사'}</span>
-            {!isPremium && (
-              <div className="absolute top-2 right-2">
-                <Crown size={14} className="text-[#FFD700]" />
-              </div>
-            )}
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={isPremium ? handleDownloadQR : () => setShowUpgradeModal(true)}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F] relative ${!isPremium ? 'opacity-60' : ''}`}
+            onClick={handleDownloadQR}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
           >
             <Download size={24} className="text-[#86C9F2]" />
             <span className="text-sm text-white">QR 저장</span>
-            {!isPremium && (
-              <div className="absolute top-2 right-2">
-                <Crown size={14} className="text-[#FFD700]" />
-              </div>
-            )}
           </motion.button>
         </div>
-
-        {/* 무료 사용자용 프리미엄 안내 배너 */}
-        {!isPremium && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => setShowUpgradeModal(true)}
-            className="w-full p-4 rounded-xl bg-gradient-to-r from-[#FFD700]/20 to-[#FFA500]/20 border border-[#FFD700]/30 flex items-center gap-4"
-          >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] flex items-center justify-center flex-shrink-0">
-              <Sparkles size={24} className="text-white" />
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="text-white font-semibold">프리미엄으로 업그레이드</h3>
-              <p className="text-[#8BA4C4] text-sm">QR 명함 생성 및 공유 기능을 이용하세요</p>
-            </div>
-            <span className="text-[#FFD700] font-bold text-sm">
-              ₩{PREMIUM_PRICE.monthly.toLocaleString()}/월
-            </span>
-          </motion.button>
-        )}
 
         {/* 인맥 공개 설정 미리보기 */}
         <div className="p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]">
@@ -460,113 +392,6 @@ export default function MyCardPage() {
                     </button>
                   );
                 })}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 프리미엄 업그레이드 모달 */}
-      <AnimatePresence>
-        {showUpgradeModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end"
-            onClick={() => setShowUpgradeModal(false)}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-h-[90vh] bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] overflow-hidden"
-            >
-              {/* 헤더 */}
-              <div className="relative px-6 pt-6 pb-4">
-                <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-4" />
-                <button
-                  onClick={() => setShowUpgradeModal(false)}
-                  className="absolute top-6 right-4 p-2 rounded-full hover:bg-[#1E3A5F] transition-colors"
-                >
-                  <X size={20} className="text-[#8BA4C4]" />
-                </button>
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] flex items-center justify-center">
-                    <Crown size={32} className="text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">NODDED 프리미엄</h2>
-                  <p className="text-[#8BA4C4] text-sm">나만의 QR 명함으로 네트워킹을 시작하세요</p>
-                </div>
-              </div>
-
-              {/* 가격 옵션 */}
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="p-4 rounded-xl border-2 border-[#86C9F2] bg-[#86C9F2]/10 text-left">
-                    <div className="text-xs text-[#86C9F2] font-medium mb-1">월간 구독</div>
-                    <div className="text-2xl font-bold text-white">₩{PREMIUM_PRICE.monthly.toLocaleString()}</div>
-                    <div className="text-xs text-[#8BA4C4]">매월 결제</div>
-                  </button>
-                  <button className="p-4 rounded-xl border border-[#1E3A5F] bg-[#101D33] text-left relative">
-                    <div className="absolute -top-2 right-2 px-2 py-0.5 bg-[#00E676] text-black text-[10px] font-bold rounded-full">
-                      33% 할인
-                    </div>
-                    <div className="text-xs text-[#8BA4C4] font-medium mb-1">연간 구독</div>
-                    <div className="text-2xl font-bold text-white">₩{PREMIUM_PRICE.yearly.toLocaleString()}</div>
-                    <div className="text-xs text-[#8BA4C4]">연 1회 결제</div>
-                  </button>
-                </div>
-              </div>
-
-              {/* 프리미엄 기능 목록 */}
-              <div className="px-6 py-4 overflow-y-auto max-h-[40vh]">
-                <h3 className="text-sm font-semibold text-[#FFD700] mb-3 flex items-center gap-2">
-                  <Crown size={14} />
-                  프리미엄 기능
-                </h3>
-                <div className="space-y-3">
-                  {PREMIUM_FEATURES.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#FFD700]/20 flex items-center justify-center flex-shrink-0">
-                        <Check size={16} className="text-[#FFD700]" />
-                      </div>
-                      <div>
-                        <h4 className="text-white font-medium text-sm">{feature.title}</h4>
-                        <p className="text-[#8BA4C4] text-xs">{feature.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className="text-sm font-semibold text-[#8BA4C4] mt-6 mb-3">무료 기능 (모든 사용자)</h3>
-                <div className="space-y-2">
-                  {FREE_FEATURES.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <Check size={14} className="text-[#00E676]" />
-                      <span className="text-[#8BA4C4] text-sm">{feature.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CTA 버튼 */}
-              <div className="px-6 py-6 border-t border-[#1E3A5F] bg-[#101D33]">
-                <button
-                  onClick={() => {
-                    // TODO: 실제 결제 연동
-                    alert('결제 기능은 준비 중입니다.');
-                  }}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-white font-bold text-lg flex items-center justify-center gap-2"
-                >
-                  <Crown size={20} />
-                  프리미엄 시작하기
-                </button>
-                <p className="text-center text-[#4A5E7A] text-xs mt-3">
-                  언제든지 해지 가능 · 7일 무료 체험
-                </p>
               </div>
             </motion.div>
           </motion.div>

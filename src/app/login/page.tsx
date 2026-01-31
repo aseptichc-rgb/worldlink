@@ -1,22 +1,161 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Play } from 'lucide-react';
 import { Input, Button } from '@/components/ui';
-import { loginWithEmail, getUser } from '@/lib/firebase-services';
+import { loginWithEmail, loginWithCustomToken, getUser, createUser, generateInviteCode } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
 import { User } from '@/types';
 
+const KAKAO_CLIENT_ID = process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID;
+const NAVER_CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
+
+function getRedirectUri() {
+  return typeof window !== 'undefined' ? `${window.location.origin}/login` : '';
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B162C]" />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setUser } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'kakao' | 'naver' | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // OAuth callback 처리
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+
+    if (!code) return;
+
+    // state가 있으면 네이버, 없으면 카카오
+    if (state) {
+      handleNaverCallback(code, state);
+    } else {
+      handleKakaoCallback(code);
+    }
+  }, [searchParams]);
+
+  const handleKakaoCallback = async (code: string) => {
+    setSocialLoading('kakao');
+    setError(null);
+    try {
+      const res = await fetch('/api/auth/kakao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirectUri: getRedirectUri() }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || '카카오 로그인 실패');
+      }
+
+      const data = await res.json();
+      await handleSocialLoginSuccess(data);
+    } catch (err: any) {
+      console.error('Kakao callback error:', err);
+      setError(err.message || '카카오 로그인 중 오류가 발생했습니다');
+    } finally {
+      setSocialLoading(null);
+      // URL에서 code 파라미터 제거
+      window.history.replaceState({}, '', '/login');
+    }
+  };
+
+  const handleNaverCallback = async (code: string, state: string) => {
+    setSocialLoading('naver');
+    setError(null);
+    try {
+      const res = await fetch('/api/auth/naver', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirectUri: getRedirectUri(), state }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || '네이버 로그인 실패');
+      }
+
+      const data = await res.json();
+      await handleSocialLoginSuccess(data);
+    } catch (err: any) {
+      console.error('Naver callback error:', err);
+      setError(err.message || '네이버 로그인 중 오류가 발생했습니다');
+    } finally {
+      setSocialLoading(null);
+      window.history.replaceState({}, '', '/login');
+    }
+  };
+
+  const handleSocialLoginSuccess = async (data: {
+    customToken: string;
+    user: { name: string; email: string; profileImage: string };
+    isNewUser: boolean;
+    uid: string;
+  }) => {
+    // Firebase Custom Token으로 로그인
+    await loginWithCustomToken(data.customToken);
+
+    // Firestore에서 사용자 정보 조회
+    const existingUser = await getUser(data.uid);
+
+    if (existingUser) {
+      // 기존 사용자 - 바로 메인으로
+      setUser(existingUser);
+      router.push('/card');
+    } else {
+      // 신규 사용자 - Firestore에 기본 정보 생성 후 온보딩으로
+      const newUser = await createUser({
+        id: data.uid,
+        name: data.user.name,
+        email: data.user.email,
+        profileImage: data.user.profileImage,
+        keywords: [],
+        inviteCode: generateInviteCode(),
+        invitesRemaining: 10,
+        coffeeStatus: 'available',
+      });
+      setUser(newUser);
+      router.push('/onboarding?social=true');
+    }
+  };
+
+  const handleKakaoLogin = () => {
+    if (!KAKAO_CLIENT_ID) {
+      setError('카카오 로그인 설정이 되어있지 않습니다');
+      return;
+    }
+    const redirectUri = getRedirectUri();
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+    window.location.href = kakaoAuthUrl;
+  };
+
+  const handleNaverLogin = () => {
+    if (!NAVER_CLIENT_ID) {
+      setError('네이버 로그인 설정이 되어있지 않습니다');
+      return;
+    }
+    const redirectUri = getRedirectUri();
+    const state = Math.random().toString(36).substring(2, 15);
+    const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
+    window.location.href = naverAuthUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +207,8 @@ export default function LoginPage() {
     router.push('/card');
   };
 
+  const isSocialLoading = socialLoading !== null;
+
   return (
     <div className="min-h-screen bg-[#0B162C] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Effects */}
@@ -114,6 +255,48 @@ export default function LoginPage() {
             <p className="text-[#4A5E7A] text-sm mt-2">
               네트워크로 돌아가기
             </p>
+          </div>
+
+          {/* Social Login Buttons */}
+          <div className="space-y-3 mb-6">
+            {/* 카카오 로그인 */}
+            <button
+              onClick={handleKakaoLogin}
+              disabled={isSocialLoading || isLoading}
+              className="w-full py-3 rounded-xl bg-[#FEE500] text-[#191919] font-semibold flex items-center justify-center gap-2 hover:bg-[#FEE500]/90 transition-colors disabled:opacity-50"
+            >
+              {socialLoading === 'kakao' ? (
+                <div className="w-5 h-5 border-2 border-[#191919]/30 border-t-[#191919] rounded-full animate-spin" />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 3C5.58172 3 2 5.79086 2 9.20988C2 11.3175 3.38093 13.1671 5.49419 14.2392L4.58065 17.5929C4.52006 17.8131 4.76688 17.9893 4.95938 17.8615L8.84062 15.2613C9.22014 15.3096 9.60711 15.3348 10 15.3348C14.4183 15.3348 18 12.5439 18 9.12494C18 5.79086 14.4183 3 10 3Z" fill="#191919"/>
+                </svg>
+              )}
+              카카오로 시작하기
+            </button>
+
+            {/* 네이버 로그인 */}
+            <button
+              onClick={handleNaverLogin}
+              disabled={isSocialLoading || isLoading}
+              className="w-full py-3 rounded-xl bg-[#03C75A] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#03C75A]/90 transition-colors disabled:opacity-50"
+            >
+              {socialLoading === 'naver' ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M13.5615 10.5077L6.11077 3H3V17H6.43846V9.49231L13.8892 17H17V3H13.5615V10.5077Z" fill="white"/>
+                </svg>
+              )}
+              네이버로 시작하기
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 h-px bg-[#1E3A5F]" />
+            <span className="text-[#4A5E7A] text-xs">또는 이메일로 로그인</span>
+            <div className="flex-1 h-px bg-[#1E3A5F]" />
           </div>
 
           {/* Form */}

@@ -197,65 +197,199 @@ export default function ScanPage() {
     }, 1500);
   };
 
+  // ==================== 이미지 전처리 ====================
+  const preprocessImage = (imageData: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        // 해상도 2배 업스케일 (OCR 정확도 향상)
+        const scale = Math.max(2, 2000 / Math.max(img.width, img.height));
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        const ctx = canvas.getContext('2d')!;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // 그레이스케일 변환
+        const imageDataObj = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageDataObj.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          data[i] = gray;
+          data[i + 1] = gray;
+          data[i + 2] = gray;
+        }
+
+        // 대비 강화 (contrast stretch)
+        let min = 255, max = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i] < min) min = data[i];
+          if (data[i] > max) max = data[i];
+        }
+        const range = max - min || 1;
+        for (let i = 0; i < data.length; i += 4) {
+          const val = Math.round(((data[i] - min) / range) * 255);
+          data[i] = val;
+          data[i + 1] = val;
+          data[i + 2] = val;
+        }
+
+        // 이진화 (Otsu threshold 근사)
+        // 히스토그램 계산
+        const histogram = new Array(256).fill(0);
+        for (let i = 0; i < data.length; i += 4) {
+          histogram[data[i]]++;
+        }
+        const totalPixels = data.length / 4;
+        let sum = 0;
+        for (let i = 0; i < 256; i++) sum += i * histogram[i];
+
+        let sumB = 0, wB = 0, maxVariance = 0, threshold = 128;
+        for (let t = 0; t < 256; t++) {
+          wB += histogram[t];
+          if (wB === 0) continue;
+          const wF = totalPixels - wB;
+          if (wF === 0) break;
+          sumB += t * histogram[t];
+          const mB = sumB / wB;
+          const mF = (sum - sumB) / wF;
+          const variance = wB * wF * (mB - mF) * (mB - mF);
+          if (variance > maxVariance) {
+            maxVariance = variance;
+            threshold = t;
+          }
+        }
+
+        for (let i = 0; i < data.length; i += 4) {
+          const val = data[i] > threshold ? 255 : 0;
+          data[i] = val;
+          data[i + 1] = val;
+          data[i + 2] = val;
+        }
+
+        ctx.putImageData(imageDataObj, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src = imageData;
+    });
+  };
+
   // ==================== OCR 텍스트 추출 ====================
   const parseBusinessCardText = (text: string): PaperCardInfo => {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    // OCR 노이즈 정리: 의미 없는 특수문자 정리, 여러 공백을 하나로
+    const cleanedText = text
+      .replace(/[|}{[\]<>]/g, '')
+      .replace(/\s{2,}/g, ' ');
+    const lines = cleanedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
     const info: PaperCardInfo = { name: '', company: '', position: '', phone: '', email: '' };
 
-    // 이메일 추출
-    const emailMatch = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-    if (emailMatch) info.email = emailMatch[0];
-
-    // 전화번호 추출 (한국 형식 우선)
-    const phoneMatch = text.match(/(?:(?:\+?82[-.\s]?|0)(?:10|11|16|17|18|19|2|3[1-3]|4[1-4]|5[1-5]|6[1-4])[-.\s]?\d{3,4}[-.\s]?\d{4})/);
-    if (phoneMatch) {
-      info.phone = phoneMatch[0];
-    } else {
-      const generalPhone = text.match(/(\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4})/);
-      if (generalPhone) info.phone = generalPhone[0];
+    // 이메일 추출 (여러 패턴 시도)
+    const emailMatch = cleanedText.match(/[a-zA-Z0-9._%+\-]+\s*@\s*[a-zA-Z0-9.\-]+\.\s*[a-zA-Z]{2,}/);
+    if (emailMatch) {
+      info.email = emailMatch[0].replace(/\s/g, ''); // OCR이 공백을 넣는 경우 제거
     }
 
-    // 이메일/전화/URL이 아닌 텍스트 라인만 필터
+    // 전화번호 추출 (한국 형식 다양한 패턴)
+    const phonePatterns = [
+      /(?:T(?:el)?\.?\s*|M\.?\s*|H\.?\s*|HP\.?\s*|핸드폰\s*|휴대폰\s*|전화\s*|연락처\s*)?(?:\+?82[-.\s]?|0)(?:10|11|16|17|18|19)[-.\s]?\d{3,4}[-.\s]?\d{4}/i,
+      /(?:T(?:el)?\.?\s*|전화\s*)?(?:\+?82[-.\s]?|0)(?:2|3[1-3]|4[1-4]|5[1-5]|6[1-4])[-.\s]?\d{3,4}[-.\s]?\d{4}/i,
+      /(\d{2,4}[-.\s]\d{3,4}[-.\s]\d{4})/,
+    ];
+    for (const pattern of phonePatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        // "Tel. " 같은 접두사 제거하고 번호만 추출
+        const numOnly = match[0].replace(/^[A-Za-z가-힣.\s:]+/, '').trim();
+        info.phone = numOnly || match[0];
+        break;
+      }
+    }
+
+    // 이메일/전화/URL/주소/팩스가 아닌 텍스트 라인만 필터
     const textLines = lines.filter(line => {
       if (/[a-zA-Z0-9._%+\-]+@/.test(line)) return false;
       if (/\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4}/.test(line)) return false;
       if (/https?:\/\/|www\./i.test(line)) return false;
-      if (/[Ff]ax|팩스/.test(line)) return false;
+      if (/[Ff]ax|팩스|FAX/i.test(line)) return false;
+      if (/[시구군동로길번지층호]/.test(line) && /\d/.test(line)) return false; // 주소
+      if (/^[0-9\-.\s()+]+$/.test(line)) return false; // 숫자만 있는 줄
       return true;
     });
 
-    // 이름 추출: 한글 2~4자 패턴 (첫 번째 매칭)
+    // 이름 추출: 한글 2~4자 (줄 전체 또는 줄 안에서 추출)
     for (const line of textLines) {
-      const nameMatch = line.match(/^[가-힣]{2,4}$/);
-      if (nameMatch) {
-        info.name = nameMatch[0];
+      // 줄 전체가 한글 이름
+      const exactMatch = line.match(/^[가-힣]{2,4}$/);
+      if (exactMatch) {
+        info.name = exactMatch[0];
         break;
       }
     }
-    // 이름을 못 찾으면 영문 이름 시도
+    // 줄 안에 한글 이름이 포함된 경우 (예: "홍길동 대리")
     if (!info.name) {
       for (const line of textLines) {
-        const engName = line.match(/^[A-Z][a-z]+\s+[A-Z][a-z]+$/);
+        const inlineMatch = line.match(/([가-힣]{2,4})\s+(?:대표|이사|부장|차장|과장|대리|사원|매니저|팀장|실장|본부장|센터장|수석|선임|책임|주임|파트장|지점장|부서장|총괄|전무|상무)/);
+        if (inlineMatch) {
+          info.name = inlineMatch[1];
+          break;
+        }
+      }
+    }
+    // 영문 이름 (다양한 형식)
+    if (!info.name) {
+      for (const line of textLines) {
+        const engName = line.match(/^[A-Z][a-z]+(?:\s+[A-Z]\.?)?\s+[A-Z][a-z]+$/);
         if (engName) {
           info.name = engName[0];
           break;
         }
       }
     }
+    // 마지막 시도: 한글 2~4자가 포함된 짧은 라인
+    if (!info.name) {
+      for (const line of textLines) {
+        if (line.length <= 10) {
+          const nameInLine = line.match(/[가-힣]{2,4}/);
+          if (nameInLine && !/대표|이사|부장|주식|회사|그룹/.test(line)) {
+            info.name = nameInLine[0];
+            break;
+          }
+        }
+      }
+    }
 
-    // 직책 키워드 매칭
-    const positionKeywords = ['대표', '이사', '부장', '차장', '과장', '대리', '사원', '매니저', '팀장', '실장', '본부장', '센터장', 'CEO', 'CTO', 'CFO', 'COO', 'VP', 'Director', 'Manager', 'Engineer', 'Developer', 'Designer'];
+    // 직책 키워드 매칭 (확장)
+    const positionKeywords = [
+      '대표이사', '대표', '이사', '전무', '상무', '부사장', '사장',
+      '부장', '차장', '과장', '대리', '사원', '주임', '계장',
+      '매니저', '팀장', '실장', '본부장', '센터장', '지점장', '부서장',
+      '수석', '선임', '책임', '파트장', '총괄', '리더', '파트너',
+      'CEO', 'CTO', 'CFO', 'COO', 'CIO', 'CMO', 'CPO',
+      'VP', 'SVP', 'EVP', 'Director', 'Manager', 'Lead',
+      'Engineer', 'Developer', 'Designer', 'Analyst', 'Consultant',
+      'Associate', 'Principal', 'Senior', 'Junior', 'Staff',
+      'Head', 'Chief', 'Officer', 'President',
+    ];
     for (const line of textLines) {
       if (line === info.name) continue;
-      if (positionKeywords.some(kw => line.includes(kw))) {
-        info.position = line;
+      if (positionKeywords.some(kw => line.toLowerCase().includes(kw.toLowerCase()))) {
+        // 이름이 같은 줄에 있으면 이름 부분 제거
+        info.position = line.replace(info.name, '').trim();
         break;
       }
     }
 
-    // 회사명: 이름/직책이 아닌 첫 번째 텍스트 라인, 또는 (주)/(株) 등 포함
-    const companyKeywords = ['(주)', '주식회사', '㈜', 'Inc', 'Corp', 'Ltd', 'LLC', 'Co.', '그룹', '컴퍼니'];
+    // 회사명: 회사 키워드 포함 여부 확인
+    const companyKeywords = [
+      '(주)', '주식회사', '㈜', '(株)', '유한회사',
+      'Inc', 'Corp', 'Ltd', 'LLC', 'Co.', 'Co,',
+      '그룹', '컴퍼니', 'Company', 'Group', 'Labs', 'Studio',
+      '재단', '법인', '연구소', '협회', '학회',
+    ];
     for (const line of textLines) {
       if (line === info.name || line === info.position) continue;
       if (companyKeywords.some(kw => line.includes(kw))) {
@@ -263,10 +397,11 @@ export default function ScanPage() {
         break;
       }
     }
-    // 회사명 못 찾으면 이름/직책 외 첫 번째 줄
+    // 회사명 못 찾으면: 이름/직책 아닌 첫 번째 줄 (영문 대문자 시작 또는 한글 2자 이상)
     if (!info.company) {
       for (const line of textLines) {
-        if (line !== info.name && line !== info.position && line.length >= 2) {
+        if (line === info.name || line === info.position) continue;
+        if (line.length >= 2 && line.length <= 30) {
           info.company = line;
           break;
         }
@@ -279,11 +414,34 @@ export default function ScanPage() {
   const runOcr = async (imageData: string) => {
     setIsOcrProcessing(true);
     try {
-      const result = await Tesseract.recognize(imageData, 'kor+eng', {
+      // 이미지 전처리 (그레이스케일 + 대비 강화 + 이진화 + 업스케일)
+      const processedImage = await preprocessImage(imageData);
+
+      const result = await Tesseract.recognize(processedImage, 'kor+eng', {
         logger: () => {},
       });
+
+      // 전처리된 이미지로 결과가 부실하면 원본으로 재시도
       const parsed = parseBusinessCardText(result.data.text);
-      setPaperCardInfo(parsed);
+      const fieldCount = [parsed.name, parsed.company, parsed.phone, parsed.email]
+        .filter(v => v.length > 0).length;
+
+      if (fieldCount < 2) {
+        const fallbackResult = await Tesseract.recognize(imageData, 'kor+eng', {
+          logger: () => {},
+        });
+        const fallbackParsed = parseBusinessCardText(fallbackResult.data.text);
+        const fallbackCount = [fallbackParsed.name, fallbackParsed.company, fallbackParsed.phone, fallbackParsed.email]
+          .filter(v => v.length > 0).length;
+
+        if (fallbackCount > fieldCount) {
+          setPaperCardInfo(fallbackParsed);
+        } else {
+          setPaperCardInfo(parsed);
+        }
+      } else {
+        setPaperCardInfo(parsed);
+      }
     } catch (err) {
       console.error('OCR error:', err);
     } finally {
@@ -332,7 +490,7 @@ export default function ScanPage() {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      const imageData = canvas.toDataURL('image/png');
       setCardImage(imageData);
       stopCamera();
       runOcr(imageData);
