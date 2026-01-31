@@ -63,9 +63,9 @@ export default function ProfileSheet() {
       if (!currentUser) return;
 
       try {
-        if (currentUser.id.startsWith('demo-user-') || currentUser.id === 'user-jaeyoung') {
+        if (currentUser.id.startsWith('demo-user-') || currentUser.id.startsWith('member_')) {
           // 데모 사용자의 경우
-          const myConnIds = demoConnections[currentUser.id] || demoConnections['user-jaeyoung'] || [];
+          const myConnIds = demoConnections[currentUser.id] || demoConnections['member_8'] || [];
           setMyConnectionIds(new Set(myConnIds));
         } else {
           // 실제 사용자의 경우

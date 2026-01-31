@@ -444,7 +444,7 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
   if (connections.length === 0) {
     // Firebase에 연결이 없으면 데모 데이터 사용
     const { demoConnections, demoUsers } = await import('./demo-data');
-    const demoConnectionIds = demoConnections[userId] || demoConnections['user-jaeyoung'] || [];
+    const demoConnectionIds = demoConnections[userId] || demoConnections['member_8'] || [];
 
     return demoUsers.filter(user => demoConnectionIds.includes(user.id));
   }
