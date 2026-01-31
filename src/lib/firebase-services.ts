@@ -337,6 +337,29 @@ export const createConnection = async (fromUserId: string, toUserId: string, met
   return connection;
 };
 
+// 초대 링크를 통한 자동 인맥 연결 (바로 accepted 상태)
+export const createAutoConnection = async (fromUserId: string, toUserId: string): Promise<Connection> => {
+  const connectionRef = doc(collection(db, 'connections'));
+
+  const connection: Connection = {
+    id: connectionRef.id,
+    fromUserId,
+    toUserId,
+    status: 'accepted',
+    method: 'invite',
+    createdAt: new Date(),
+    acceptedAt: new Date(),
+  };
+
+  await setDoc(connectionRef, {
+    ...connection,
+    createdAt: serverTimestamp(),
+    acceptedAt: serverTimestamp(),
+  });
+
+  return connection;
+};
+
 export const acceptConnection = async (connectionId: string): Promise<void> => {
   const connectionRef = doc(db, 'connections', connectionId);
   await updateDoc(connectionRef, {
@@ -752,6 +775,57 @@ export const getRecommendations = async (userId: string, count: number = 3): Pro
   return recommendations
     .sort((a, b) => b.score - a.score)
     .slice(0, count);
+};
+
+// ==================== PUBLIC CARD SERVICES ====================
+
+export const savePublicCard = async (card: {
+  id: string;
+  name: string;
+  company?: string;
+  position?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  profileImage?: string;
+  keywords: string[];
+}): Promise<void> => {
+  const cardRef = doc(db, 'publicCards', card.id);
+  const cleanedData = Object.fromEntries(
+    Object.entries(card).filter(([_, value]) => value !== undefined)
+  );
+  await setDoc(cardRef, {
+    ...cleanedData,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+};
+
+export const getPublicCard = async (cardId: string): Promise<{
+  id: string;
+  name: string;
+  company?: string;
+  position?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  profileImage?: string;
+  keywords: string[];
+} | null> => {
+  const cardRef = doc(db, 'publicCards', cardId);
+  const cardSnap = await getDoc(cardRef);
+  if (!cardSnap.exists()) return null;
+  const data = cardSnap.data();
+  return {
+    id: cardSnap.id,
+    name: data.name,
+    company: data.company,
+    position: data.position,
+    email: data.email,
+    phone: data.phone,
+    bio: data.bio,
+    profileImage: data.profileImage,
+    keywords: data.keywords || [],
+  };
 };
 
 // ==================== STORAGE SERVICES ====================

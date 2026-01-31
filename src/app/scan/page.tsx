@@ -134,10 +134,12 @@ export default function ScanPage() {
   // ==================== QR 처리 ====================
   const handleQrScan = (data: string) => {
     try {
-      if (data.includes('/view/') && data.includes('data=')) {
+      if (data.includes('/view/')) {
+        // 새 형식: /view/{cardId} (data 파라미터 없음) → view 페이지로 이동
         const url = new URL(data);
         const cardDataParam = url.searchParams.get('data');
         if (cardDataParam) {
+          // 하위 호환: 이전 형식 (data 파라미터 포함)
           const parsed = JSON.parse(decodeURIComponent(cardDataParam));
           const card: BusinessCard = {
             id: parsed.id, userId: parsed.id,
@@ -152,6 +154,9 @@ export default function ScanPage() {
           setViewState('qr-result');
           return;
         }
+        // 새 형식: Firebase에서 fetch하도록 view 페이지로 리다이렉트
+        window.location.href = data;
+        return;
       }
 
       const parsed = JSON.parse(data);
@@ -398,7 +403,7 @@ export default function ScanPage() {
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0);
-    const imageData = canvas.toDataURL('image/png');
+    const imageData = canvas.toDataURL('image/jpeg', 0.95);
     setCardImage(imageData);
 
     // QR 스캐너 중지 후 OCR 실행
@@ -451,7 +456,10 @@ export default function ScanPage() {
     setScannedCard(null);
     setError(null);
     setViewState('camera');
-    startUnifiedCamera();
+    // 카메라를 중지하지 않고 QR 스캐너만 재시작하여 권한 재요청 방지
+    if (!scannerRef.current) {
+      startUnifiedCamera();
+    }
   };
 
   const goBack = () => {
@@ -460,8 +468,7 @@ export default function ScanPage() {
       stopCamera();
       router.back();
     } else {
-      stopQrScanning();
-      stopCamera();
+      // 다른 뷰에서 카메라로 돌아갈 때 카메라 중지 없이 재시작
       resetAndRestart();
     }
   };

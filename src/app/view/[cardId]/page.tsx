@@ -20,60 +20,7 @@ import Avatar from '@/components/ui/Avatar';
 import { BusinessCard } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
-
-// 명함 데이터를 가져오는 함수 (실제로는 Firebase에서 가져옴)
-async function fetchCardData(cardId: string): Promise<BusinessCard | null> {
-  // TODO: Firebase에서 실제 데이터 가져오기
-  // 임시로 localStorage에서 가져오기 (데모용)
-  if (typeof window !== 'undefined') {
-    const cardStore = localStorage.getItem('nexus-cards');
-    if (cardStore) {
-      try {
-        const parsed = JSON.parse(cardStore);
-        if (parsed.state?.myCard?.id === cardId) {
-          return parsed.state.myCard;
-        }
-        // 저장된 카드에서 찾기
-        const savedCard = parsed.state?.savedCards?.find(
-          (sc: { card: BusinessCard }) => sc.card.id === cardId
-        );
-        if (savedCard) {
-          return savedCard.card;
-        }
-      } catch (e) {
-        console.error('Failed to parse card data', e);
-      }
-    }
-
-    // 쿼리 파라미터에서 데이터 확인 (QR 스캔 시)
-    const urlParams = new URLSearchParams(window.location.search);
-    const cardData = urlParams.get('data');
-    if (cardData) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(cardData));
-        return {
-          id: parsed.id,
-          userId: parsed.id,
-          name: parsed.name,
-          company: parsed.company,
-          position: parsed.position,
-          email: parsed.email,
-          phone: parsed.phone,
-          bio: parsed.bio,
-          profileImage: parsed.profileImage,
-          keywords: parsed.keywords || [],
-          networkVisibility: 'connections_only',
-          qrCode: '',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-      } catch (e) {
-        console.error('Failed to parse QR data', e);
-      }
-    }
-  }
-  return null;
-}
+import { getPublicCard } from '@/lib/firebase-services';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -94,34 +41,112 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isIos, setIsIos] = useState(false);
 
   // PWA 설치 프롬프트 캡처
   useEffect(() => {
     // 이미 설치되었는지 확인
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true) {
       setIsInstalled(true);
     }
 
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // 자동으로 PWA 설치 프롬프트 표시
+    // iOS 감지
+    const ua = window.navigator.userAgent;
+    const isIosDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIos(isIosDevice);
+
+    if (!isIosDevice) {
+      const handleBeforeInstall = (e: Event) => {
+        e.preventDefault();
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
+        setTimeout(() => setShowPwaPrompt(true), 2000);
+      };
+
+      window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      };
+    } else {
+      // iOS: 자동으로 안내 표시
       setTimeout(() => setShowPwaPrompt(true), 2000);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-    };
+    }
   }, []);
 
-  // 명함 데이터 로드
+  // 명함 데이터 로드 (Firebase에서 가져오기)
   useEffect(() => {
     const loadCard = async () => {
       setLoading(true);
-      const cardData = await fetchCardData(cardId);
-      setCard(cardData);
+      try {
+        // 1. Firebase에서 공개 명함 조회
+        const publicCard = await getPublicCard(cardId);
+        if (publicCard) {
+          setCard({
+            id: publicCard.id,
+            userId: publicCard.id,
+            name: publicCard.name,
+            company: publicCard.company,
+            position: publicCard.position,
+            email: publicCard.email,
+            phone: publicCard.phone,
+            bio: publicCard.bio,
+            profileImage: publicCard.profileImage,
+            keywords: publicCard.keywords || [],
+            networkVisibility: 'connections_only',
+            qrCode: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          setLoading(false);
+          return;
+        }
+
+        // 2. 하위 호환: URL data 파라미터 (이전 QR 코드 지원)
+        const urlParams = new URLSearchParams(window.location.search);
+        const cardData = urlParams.get('data');
+        if (cardData) {
+          const parsed = JSON.parse(decodeURIComponent(cardData));
+          setCard({
+            id: parsed.id,
+            userId: parsed.id,
+            name: parsed.name,
+            company: parsed.company,
+            position: parsed.position,
+            email: parsed.email,
+            phone: parsed.phone,
+            bio: parsed.bio,
+            profileImage: parsed.profileImage,
+            keywords: parsed.keywords || [],
+            networkVisibility: 'connections_only',
+            qrCode: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          setLoading(false);
+          return;
+        }
+
+        // 3. localStorage 폴백
+        const cardStore = localStorage.getItem('nexus-cards');
+        if (cardStore) {
+          const parsed = JSON.parse(cardStore);
+          if (parsed.state?.myCard?.id === cardId) {
+            setCard(parsed.state.myCard);
+            setLoading(false);
+            return;
+          }
+          const savedCard = parsed.state?.savedCards?.find(
+            (sc: { card: BusinessCard }) => sc.card.id === cardId
+          );
+          if (savedCard) {
+            setCard(savedCard.card);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load card data', e);
+      }
       setLoading(false);
     };
     loadCard();
@@ -329,16 +354,31 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 <h3 className="text-sm font-semibold text-white mb-1">
                   앱으로 저장하기
                 </h3>
-                <p className="text-xs text-[#8BA4C4] mb-3">
-                  홈 화면에 추가하면 언제든 명함을 확인할 수 있어요
-                </p>
-                <button
-                  onClick={handleInstallPwa}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#2C529C] text-white text-sm font-medium rounded-lg"
-                >
-                  <Download size={16} />
-                  홈 화면에 추가
-                </button>
+                {isIos ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-[#8BA4C4]">
+                      Safari에서 아래 단계를 따라주세요:
+                    </p>
+                    <div className="space-y-1.5 text-xs text-[#8BA4C4]">
+                      <p>1. 하단 <span className="text-white font-medium">공유 버튼</span> (□↑) 탭</p>
+                      <p>2. <span className="text-white font-medium">&quot;홈 화면에 추가&quot;</span> 선택</p>
+                      <p>3. <span className="text-white font-medium">&quot;추가&quot;</span> 탭</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-[#8BA4C4] mb-3">
+                      홈 화면에 추가하면 언제든 명함을 확인할 수 있어요
+                    </p>
+                    <button
+                      onClick={handleInstallPwa}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#2C529C] text-white text-sm font-medium rounded-lg"
+                    >
+                      <Download size={16} />
+                      홈 화면에 추가
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
@@ -492,13 +532,21 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               </div>
 
               <div className="space-y-3">
-                <button
-                  onClick={handleInstallPwa}
-                  className="w-full py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl flex items-center justify-center gap-2"
-                >
-                  <Download size={20} />
-                  홈 화면에 추가
-                </button>
+                {isIos ? (
+                  <div className="p-4 rounded-xl bg-[#101D33] space-y-3 text-sm text-[#8BA4C4]">
+                    <p>1. Safari 하단의 <span className="text-white font-medium">공유 버튼</span> (□↑)을 탭하세요</p>
+                    <p>2. 메뉴에서 <span className="text-white font-medium">&quot;홈 화면에 추가&quot;</span>를 선택하세요</p>
+                    <p>3. 우측 상단 <span className="text-white font-medium">&quot;추가&quot;</span>를 탭하세요</p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleInstallPwa}
+                    className="w-full py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl flex items-center justify-center gap-2"
+                  >
+                    <Download size={20} />
+                    홈 화면에 추가
+                  </button>
+                )}
                 <button
                   onClick={() => setShowPwaPrompt(false)}
                   className="w-full py-4 text-[#8BA4C4] font-medium"

@@ -22,6 +22,7 @@ import QRCode from 'qrcode';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
 import { BusinessCard } from '@/types';
+import { savePublicCard } from '@/lib/firebase-services';
 import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
 
@@ -84,11 +85,11 @@ export default function MyCardPage() {
     }
   }, [user, myCard, setMyCard, updateMyCard]);
 
-  // QR 코드 생성 - 공개 URL로 생성
+  // Firebase에 공개 명함 데이터 저장 + QR 코드 생성
   useEffect(() => {
     if (myCard && typeof window !== 'undefined') {
-      // QR 코드에 공개 명함 보기 URL과 데이터 포함
-      const cardData = {
+      // Firebase에 공개 명함 저장
+      savePublicCard({
         id: myCard.id,
         name: myCard.name,
         company: myCard.company,
@@ -98,9 +99,10 @@ export default function MyCardPage() {
         bio: myCard.bio,
         profileImage: myCard.profileImage,
         keywords: myCard.keywords,
-      };
-      const encodedData = encodeURIComponent(JSON.stringify(cardData));
-      const qrUrl = `${window.location.origin}/view/${myCard.id}?data=${encodedData}`;
+      }).catch(console.error);
+
+      // QR 코드에는 간결한 URL만 포함 (데이터는 Firebase에서 fetch)
+      const qrUrl = `${window.location.origin}/view/${myCard.id}`;
 
       QRCode.toDataURL(qrUrl, {
         width: 200,
@@ -115,19 +117,7 @@ export default function MyCardPage() {
 
   const getShareUrl = () => {
     if (!myCard) return '';
-    const cardData = {
-      id: myCard.id,
-      name: myCard.name,
-      company: myCard.company,
-      position: myCard.position,
-      email: myCard.email,
-      phone: myCard.phone,
-      bio: myCard.bio,
-      profileImage: myCard.profileImage,
-      keywords: myCard.keywords,
-    };
-    const encodedData = encodeURIComponent(JSON.stringify(cardData));
-    return `${window.location.origin}/view/${myCard.id}?data=${encodedData}`;
+    return `${window.location.origin}/view/${myCard.id}`;
   };
 
   const handleCopyLink = async () => {
