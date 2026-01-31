@@ -19,7 +19,6 @@ import {
 import { Avatar, Input, Tag, Card } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { InviteManager } from '@/components/invite/InviteManager';
-import MyNetworkVisualization from '@/components/network/MyNetworkVisualization';
 import { useAuthStore } from '@/store/authStore';
 import {
   updateUser,
@@ -268,15 +267,6 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-        </Card>
-
-        {/* My Network Visualization */}
-        <Card className="p-5 mb-8">
-          <MyNetworkVisualization
-            userId={user.id}
-            userName={user.name}
-            userImage={user.profileImage}
-          />
         </Card>
 
         {/* Privacy Settings */}

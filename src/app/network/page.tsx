@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
@@ -16,12 +16,12 @@ import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { demoUsers } from '@/lib/demo-data';
-import { getNetworkGraph, getRecommendations, onAuthChange, getUser } from '@/lib/firebase-services';
+import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
 
 export default function NetworkPage() {
   const router = useRouter();
-  const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading } = useAuthStore();
+  const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading, logout } = useAuthStore();
   const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
 
@@ -327,6 +327,22 @@ export default function NetworkPage() {
               >
                 <MessageCircle size={20} />
                 <span>메세지</span>
+              </button>
+              <button
+                onClick={async () => {
+                  setShowMenu(false);
+                  try {
+                    await logoutUser();
+                    logout();
+                    router.push('/onboarding');
+                  } catch (error) {
+                    console.error('Error logging out:', error);
+                  }
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#FF4081] hover:bg-[#FF4081]/10 transition-colors"
+              >
+                <LogOut size={20} />
+                <span>로그아웃</span>
               </button>
             </nav>
 

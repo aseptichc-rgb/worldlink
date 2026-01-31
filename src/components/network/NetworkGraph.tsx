@@ -90,6 +90,7 @@ export default function NetworkGraph() {
   const [draggedNode, setDraggedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphNode } | null>(null);
+  const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
   const lastPosRef = useRef({ x: 0, y: 0 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -173,6 +174,45 @@ export default function NetworkGraph() {
       target: edge.target,
     }));
   }, [nodes, edges, dimensions]);
+
+  // 확장 상태에 따라 보이는 노드 ID를 계산
+  const getVisibleNodeIds = useCallback((): Set<string> => {
+    const visible = new Set<string>();
+
+    // degree 0 (나 자신)은 항상 보임
+    for (const node of nodesRef.current) {
+      if (node.degree === 0) visible.add(node.id);
+    }
+
+    // degree 1 (직접 인맥)은 항상 보임
+    for (const node of nodesRef.current) {
+      if (node.degree === 1) visible.add(node.id);
+    }
+
+    // degree 2 노드는 연결된 degree 1 노드가 확장된 경우에만 보임
+    for (const edge of edgesRef.current) {
+      const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+      const sourceNode = nodesRef.current.find(n => n.id === sourceId);
+      const targetNode = nodesRef.current.find(n => n.id === targetId);
+
+      if (sourceNode?.degree === 1 && targetNode?.degree === 2 && expandedNodeIds.has(sourceId)) {
+        visible.add(targetId);
+      }
+      if (targetNode?.degree === 1 && sourceNode?.degree === 2 && expandedNodeIds.has(targetId)) {
+        visible.add(sourceId);
+      }
+    }
+
+    return visible;
+  }, [expandedNodeIds]);
+
+  // 보이는 엣지인지 판단
+  const isEdgeVisible = useCallback((edge: GraphEdge, visibleIds: Set<string>): boolean => {
+    const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+    const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+    return visibleIds.has(sourceId) && visibleIds.has(targetId);
+  }, []);
 
   // 포커스된 노드와 연결된 노드 ID들을 계산
   const getConnectedNodeIds = useCallback((nodeId: string | null): Set<string> => {
@@ -331,8 +371,12 @@ export default function NetworkGraph() {
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const nodes = nodesRef.current;
-    const edges = edgesRef.current;
+    const allNodes = nodesRef.current;
+    const allEdges = edgesRef.current;
+
+    const visibleIds = getVisibleNodeIds();
+    const nodes = allNodes.filter(n => visibleIds.has(n.id));
+    const edges = allEdges.filter(e => isEdgeVisible(e, visibleIds));
 
     const connectedNodeIds = getConnectedNodeIds(focusedNodeId);
     const hasFocusedNode = focusedNodeId !== null;
@@ -453,7 +497,7 @@ export default function NetworkGraph() {
     }
 
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, drawNode]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode]);
 
   // Smooth animation to target transform
   useEffect(() => {
@@ -503,7 +547,9 @@ export default function NetworkGraph() {
     const adjustedX = (x - transform.x) / transform.scale;
     const adjustedY = (y - transform.y) / transform.scale;
 
+    const visibleIds = getVisibleNodeIds();
     for (const node of nodesRef.current) {
+      if (!visibleIds.has(node.id)) continue;
       const dx = (node.x || 0) - adjustedX;
       const dy = (node.y || 0) - adjustedY;
       const radius = node.degree === 0 ? NODE_SIZES.core :
@@ -633,6 +679,18 @@ export default function NetworkGraph() {
       focusOnNode(node);
       if (node.degree !== 0) {
         setSelectedNode(node);
+      }
+      // degree 1 노드 클릭 시 2차 인맥 확장/축소 토글
+      if (node.degree === 1) {
+        setExpandedNodeIds(prev => {
+          const next = new Set(prev);
+          if (next.has(node.id)) {
+            next.delete(node.id);
+          } else {
+            next.add(node.id);
+          }
+          return next;
+        });
       }
     } else {
       setFocusedNodeId(null);
