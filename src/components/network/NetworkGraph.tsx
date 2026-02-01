@@ -79,6 +79,33 @@ const FONT_SIZES = {
   tertiary: 11,
 };
 
+// 프로필 이미지 캐시
+const imageCache = new Map<string, HTMLImageElement>();
+const imageLoadingSet = new Set<string>();
+
+function getProfileImage(src: string): HTMLImageElement | null {
+  if (imageCache.has(src)) return imageCache.get(src)!;
+  if (imageLoadingSet.has(src)) return null;
+
+  imageLoadingSet.add(src);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    imageCache.set(src, img);
+    imageLoadingSet.delete(src);
+  };
+  img.onerror = () => {
+    imageLoadingSet.delete(src);
+  };
+  img.src = src;
+  return null;
+}
+
+// 시맨틱 줌 레벨 상수
+const ZOOM_CLUSTER_THRESHOLD = 0.7;   // 이하: 클러스터 뷰
+const ZOOM_DETAIL_THRESHOLD = 1.4;    // 이상: 상세 뷰 (프로필 이미지 + 회사/직책)
+const PROFILE_IMAGE_ZOOM_THRESHOLD = ZOOM_DETAIL_THRESHOLD;
+
 export default function NetworkGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -431,8 +458,48 @@ export default function NetworkGraph() {
     }
     ctx.stroke();
 
+    // 4. Profile Image (줌 레벨이 충분히 높을 때만 표시)
+    if (node.profileImage && transform.scale >= PROFILE_IMAGE_ZOOM_THRESHOLD && !isDimmed) {
+      const img = getProfileImage(node.profileImage);
+      if (img) {
+        // 줌 레벨에 따른 이미지 투명도 (부드러운 페이드인)
+        const fadeStart = PROFILE_IMAGE_ZOOM_THRESHOLD;
+        const fadeEnd = PROFILE_IMAGE_ZOOM_THRESHOLD + 0.3;
+        const imageAlpha = Math.min(1, (transform.scale - fadeStart) / (fadeEnd - fadeStart));
+
+        ctx.save();
+        ctx.globalAlpha = imageAlpha;
+
+        // 원형 클리핑
+        ctx.beginPath();
+        ctx.arc(x, y, radius - 2, 0, Math.PI * 2);
+        ctx.clip();
+
+        // 이미지를 원 안에 맞춰 그리기
+        ctx.drawImage(img, x - radius + 2, y - radius + 2, (radius - 2) * 2, (radius - 2) * 2);
+
+        ctx.restore();
+
+        // 이미지 위에 테두리 다시 그리기
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : 2.5;
+        if (isFocused && node.degree !== 0) {
+          ctx.strokeStyle = COLORS.selected;
+        } else if (isConnected && node.degree !== 0) {
+          ctx.strokeStyle = COLORS.focused;
+        } else if (node.degree === 0) {
+          ctx.strokeStyle = COLORS.nodeCore;
+        } else {
+          const category = node.category || '기타';
+          ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+        }
+        ctx.stroke();
+      }
+    }
+
     // Labels are drawn separately in a second pass (see drawNodeLabel)
-  }, [getNodeSize]);
+  }, [getNodeSize, transform.scale]);
 
   // 노드 라벨 그리기 (별도 패스로 모든 노드 위에 렌더링)
   const drawNodeLabel = useCallback((
@@ -492,7 +559,41 @@ export default function NetworkGraph() {
 
     ctx.fillStyle = isDimmed ? COLORS.textDimmed : COLORS.textPrimary;
     ctx.fillText(name, labelX, labelY);
-  }, [getNodeSize, dimensions.width, dimensions.height]);
+
+    // 상세 뷰: 회사명 + 직책 표시
+    if (transform.scale >= ZOOM_DETAIL_THRESHOLD && !isDimmed && node.degree !== 0) {
+      const detailFadeStart = ZOOM_DETAIL_THRESHOLD;
+      const detailFadeEnd = ZOOM_DETAIL_THRESHOLD + 0.3;
+      const detailAlpha = Math.min(1, (transform.scale - detailFadeStart) / (detailFadeEnd - detailFadeStart));
+
+      const companyText = node.company || '';
+      const positionText = node.position || '';
+      if (companyText || positionText) {
+        ctx.save();
+        ctx.globalAlpha = detailAlpha;
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 이름 라벨 아래에 회사/직책 표시
+        const detailY = labelY + 16;
+        const detailText = companyText && positionText
+          ? `${companyText} · ${positionText}`
+          : companyText || positionText;
+        const truncDetail = detailText.length > 14 ? detailText.slice(0, 14) + '...' : detailText;
+
+        const detailWidth = ctx.measureText(truncDetail).width;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.beginPath();
+        ctx.roundRect(labelX - detailWidth / 2 - 5, detailY - 8, detailWidth + 10, 16, 3);
+        ctx.fill();
+
+        ctx.fillStyle = COLORS.textSecondary;
+        ctx.fillText(truncDetail, labelX, detailY);
+        ctx.restore();
+      }
+    }
+  }, [getNodeSize, dimensions.width, dimensions.height, transform.scale]);
 
   // Render
   const render = useCallback(() => {
@@ -515,21 +616,100 @@ export default function NetworkGraph() {
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.scale, transform.scale);
 
-    // ===== Draw Category Sectors =====
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
     const categoryAngles = categoryAnglesRef.current;
+    const isClusterView = transform.scale < ZOOM_CLUSTER_THRESHOLD;
+    const isDetailView = transform.scale >= ZOOM_DETAIL_THRESHOLD;
 
-    // Draw category sector backgrounds (more visible)
+    // ===================================================================
+    // ===== CLUSTER VIEW (줌 아웃 시: 카테고리별 하나의 큰 원) =====
+    // ===================================================================
+    if (isClusterView) {
+      // 중앙 노드 그리기
+      const centerNode = nodes.find(n => n.degree === 0);
+      if (centerNode) {
+        drawNode(ctx, centerNode, {
+          isHovered: hoveredNode?.id === centerNode.id,
+          isFocused: false,
+          isConnected: false,
+          isDimmed: false,
+          isHighlighted: false,
+        });
+        drawNodeLabel(ctx, centerNode, { isDimmed: false, isFocused: false });
+      }
+
+      // 카테고리별 클러스터 원 그리기
+      categoryAngles.forEach((info, category) => {
+        const { start, end, nodes: categoryNodes } = info;
+        const midAngle = (start + end) / 2;
+        const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+        const r = parseInt(categoryColor.slice(1, 3), 16);
+        const g = parseInt(categoryColor.slice(3, 5), 16);
+        const b = parseInt(categoryColor.slice(5, 7), 16);
+
+        // 클러스터 중심 좌표 (카테고리 노드들의 평균 위치)
+        let cx = 0, cy = 0;
+        const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+        if (catGraphNodes.length > 0) {
+          catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
+          cx /= catGraphNodes.length;
+          cy /= catGraphNodes.length;
+        } else {
+          cx = centerX + Math.cos(midAngle) * 280;
+          cy = centerY + Math.sin(midAngle) * 280;
+        }
+
+        const clusterRadius = Math.min(80, 40 + categoryNodes.length * 3);
+
+        // 클러스터 글로우
+        const glowGrad = ctx.createRadialGradient(cx, cy, clusterRadius, cx, cy, clusterRadius * 2.5);
+        glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.35)`);
+        glowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(cx, cy, clusterRadius * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.fill();
+
+        // 클러스터 원
+        ctx.beginPath();
+        ctx.arc(cx, cy, clusterRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.25)`;
+        ctx.fill();
+        ctx.strokeStyle = categoryColor;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 카테고리명 + 인원수
+        const labelText = category;
+        const countText = `${categoryNodes.length}명`;
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(labelText, cx, cy - 8);
+
+        ctx.font = '13px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.9)`;
+        ctx.fillText(countText, cx, cy + 12);
+      });
+
+      ctx.restore();
+      return;
+    }
+
+    // ===================================================================
+    // ===== NODE VIEW & DETAIL VIEW (scale >= 0.7) =====
+    // ===================================================================
+
+    // Draw category sector backgrounds (섹터 구분선 제거, 배경색만)
     categoryAngles.forEach((info, category) => {
       const { start, end } = info;
-      const midAngle = (start + end) / 2;
       const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
       const r = parseInt(categoryColor.slice(1, 3), 16);
       const g = parseInt(categoryColor.slice(3, 5), 16);
       const b = parseInt(categoryColor.slice(5, 7), 16);
 
-      // Calculate outer radius based on number of rings needed
       const minNodeSpacing = 70;
       const baseRadius = 280;
       const ringGap = 65;
@@ -540,76 +720,48 @@ export default function NetworkGraph() {
       const numRings = Math.ceil(nodes.length / nodesPerRing);
       const outerRadius = baseRadius + (numRings - 1) * ringGap + 50;
 
-      // Draw filled sector background
+      // Filled sector background only (no border stroke)
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.arc(centerX, centerY, outerRadius, start, end);
       ctx.lineTo(centerX, centerY);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.12)`;
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.08)`;
       ctx.fill();
-
-      // Draw sector border lines
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
     });
 
-    // Draw dividing lines between sectors
+    // Draw category labels (바깥쪽으로 이동)
     categoryAngles.forEach((info, category) => {
-      const { start, end, nodes } = info;
-      const minNodeSpacing = 70;
-      const baseRadius = 280;
-      const ringGap = 65;
-      const sectorPadding = 0.05;
-      const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
-      const arcLength = sectorAngle * baseRadius;
-      const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
-      const numRings = Math.ceil(nodes.length / nodesPerRing);
-      const outerRadius = baseRadius + (numRings - 1) * ringGap + 50;
-
-      // Draw radial line at sector start
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(
-        centerX + Math.cos(start) * (outerRadius + 20),
-        centerY + Math.sin(start) * (outerRadius + 20)
-      );
-      ctx.strokeStyle = `rgba(255, 255, 255, 0.2)`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    });
-
-    // Draw category labels
-    categoryAngles.forEach((info, category) => {
-      const { start, end, nodes } = info;
+      const { start, end, nodes: catNodes } = info;
       const midAngle = (start + end) / 2;
-      const labelRadius = 230; // Positioned near the first ring
       const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+
+      // 카테고리 노드들의 최대 반경 기반으로 라벨 위치 계산
+      const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+      let maxDist = 280;
+      catGraphNodes.forEach(n => {
+        const dist = Math.sqrt(((n.x || 0) - centerX) ** 2 + ((n.y || 0) - centerY) ** 2);
+        if (dist > maxDist) maxDist = dist;
+      });
+      const labelRadius = maxDist + 55; // 노드 바깥쪽
 
       const labelX = centerX + Math.cos(midAngle) * labelRadius;
       const labelY = centerY + Math.sin(midAngle) * labelRadius;
 
-      // Category label with count
-      const labelText = `${category} (${nodes.length})`;
-      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+      const labelText = `${category} (${catNodes.length})`;
+      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Label background
       const textWidth = ctx.measureText(labelText).width;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
       ctx.beginPath();
-      ctx.roundRect(labelX - textWidth / 2 - 10, labelY - 12, textWidth + 20, 24, 8);
+      ctx.roundRect(labelX - textWidth / 2 - 8, labelY - 11, textWidth + 16, 22, 6);
       ctx.fill();
 
-      // Label border with category color
       ctx.strokeStyle = categoryColor;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Label text
       ctx.fillStyle = categoryColor;
       ctx.fillText(labelText, labelX, labelY);
     });
@@ -851,7 +1003,12 @@ export default function NetworkGraph() {
       setHoveredNode(node);
 
       if (canvasRef.current) {
-        canvasRef.current.style.cursor = node ? 'pointer' : 'grab';
+        if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
+          const cluster = getClusterAtPosition(x, y);
+          canvasRef.current.style.cursor = cluster ? 'pointer' : 'grab';
+        } else {
+          canvasRef.current.style.cursor = node ? 'pointer' : 'grab';
+        }
       }
 
       // Tooltip logic with delay
@@ -905,12 +1062,60 @@ export default function NetworkGraph() {
     setFocusedNodeId(node.id);
   };
 
+  // 클러스터 뷰에서 클릭한 카테고리 감지
+  const getClusterAtPosition = (x: number, y: number): string | null => {
+    const adjustedX = (x - transform.x) / transform.scale;
+    const adjustedY = (y - transform.y) / transform.scale;
+    const categoryAngles = categoryAnglesRef.current;
+
+    for (const [category, info] of categoryAngles) {
+      const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+      if (catGraphNodes.length === 0) continue;
+
+      let cx = 0, cy = 0;
+      catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
+      cx /= catGraphNodes.length;
+      cy /= catGraphNodes.length;
+
+      const clusterRadius = Math.min(80, 40 + info.nodes.length * 3);
+      const dx = adjustedX - cx;
+      const dy = adjustedY - cy;
+      if (dx * dx + dy * dy < clusterRadius * clusterRadius) {
+        return category;
+      }
+    }
+    return null;
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
 
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    // 클러스터 뷰에서는 카테고리 클릭 → 줌인
+    if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
+      const category = getClusterAtPosition(x, y);
+      if (category) {
+        const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+        if (catGraphNodes.length > 0) {
+          let cx = 0, cy = 0;
+          catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
+          cx /= catGraphNodes.length;
+          cy /= catGraphNodes.length;
+
+          const targetScale = 1.0;
+          setTargetTransform({
+            x: dimensions.width / 2 - cx * targetScale,
+            y: dimensions.height / 2 - cy * targetScale,
+            scale: targetScale,
+          });
+        }
+      }
+      return;
+    }
+
     const node = getNodeAtPosition(x, y);
 
     if (node) {
@@ -1053,8 +1258,12 @@ export default function NetworkGraph() {
       </div>
 
       {/* Zoom Level Indicator */}
-      <div className="absolute bottom-6 left-6 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#1E3A5F]">
-        {Math.round(transform.scale * 100)}%
+      <div className="absolute bottom-6 left-6 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#1E3A5F] flex items-center gap-2">
+        <span>{Math.round(transform.scale * 100)}%</span>
+        <span className="text-[#86C9F2]">
+          {transform.scale < ZOOM_CLUSTER_THRESHOLD ? '클러스터' :
+           transform.scale >= ZOOM_DETAIL_THRESHOLD ? '상세' : '노드'}
+        </span>
       </div>
 
       {/* Category Legend */}
