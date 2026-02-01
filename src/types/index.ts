@@ -143,6 +143,7 @@ export interface NetworkNode {
   keywords: string[];
   degree: number; // 1 = direct connection, 2 = friend of friend
   connectionCount: number;
+  category?: string; // 분야/카테고리 (예: 의료기기, 솔루션, 투자 등)
 }
 
 export interface NetworkEdge {
