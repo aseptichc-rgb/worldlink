@@ -63,11 +63,11 @@ const CATEGORY_COLORS: { [key: string]: string } = {
   '특허': '#16A085',        // 진한 청록
 };
 
-// 노드 크기 상수 - 계층별 차별화
+// 노드 크기 상수 - 프로필 이미지가 잘 보이도록 확대
 const NODE_SIZES = {
-  core: 36,        // 중앙 노드 (크게)
-  primary: 26,     // 1차 연결 (기존보다 20% 확대)
-  secondary: 18,   // 2차 연결 (기존보다 10% 축소)
+  core: 40,        // 중앙 노드
+  primary: 32,     // 1차 연결 (얼굴이 잘 보이도록)
+  secondary: 20,   // 2차 연결
   tertiary: 14,    // 3차 연결 (최소)
 };
 
@@ -103,8 +103,8 @@ function getProfileImage(src: string): HTMLImageElement | null {
 
 // 시맨틱 줌 레벨 상수
 const ZOOM_CLUSTER_THRESHOLD = 0.7;   // 이하: 클러스터 뷰
-const ZOOM_DETAIL_THRESHOLD = 1.4;    // 이상: 상세 뷰 (프로필 이미지 + 회사/직책)
-const PROFILE_IMAGE_ZOOM_THRESHOLD = ZOOM_DETAIL_THRESHOLD;
+const ZOOM_DETAIL_THRESHOLD = 1.4;    // 이상: 상세 뷰 (회사/직책 추가)
+const PROFILE_IMAGE_ZOOM_THRESHOLD = 0.8; // 프로필 이미지는 기본 줌부터 표시
 
 export default function NetworkGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -231,7 +231,7 @@ export default function NetworkGraph() {
 
           // Calculate how many nodes fit per ring based on arc length
           // Minimum spacing between nodes (in pixels) to avoid overlap
-          const minNodeSpacing = 70;
+          const minNodeSpacing = 85;
           const baseRadius = 280;
           const ringGap = 65; // distance between rings
           const sectorPadding = 0.05;
@@ -390,8 +390,8 @@ export default function NetworkGraph() {
     const x = node.x || 0;
     const y = node.y || 0;
 
-    // 1. Outer Glow Effect (카테고리별 색상)
-    if ((node.degree === 0 || isHighlighted || isHovered || isFocused || isConnected) && !isDimmed) {
+    // 1. Outer Glow Effect (호버/포커스/중앙 노드만)
+    if ((node.degree === 0 || isHovered || isFocused || isConnected) && !isDimmed) {
       const glowRadius = radius * (isHovered || isFocused ? 3 : 2.5);
       const gradient = ctx.createRadialGradient(x, y, radius, x, y, glowRadius);
 
@@ -501,13 +501,35 @@ export default function NetworkGraph() {
     // Labels are drawn separately in a second pass (see drawNodeLabel)
   }, [getNodeSize, transform.scale]);
 
+  // 라벨 영역이 다른 노드 원과 겹치는지 검사
+  const labelOverlapsNode = useCallback((
+    labelCenterX: number, labelCenterY: number, labelHalfW: number, labelHalfH: number,
+    node: GraphNode, allNodes: GraphNode[]
+  ): boolean => {
+    for (const other of allNodes) {
+      if (other.id === node.id) continue;
+      const ox = other.x || 0;
+      const oy = other.y || 0;
+      const or = other.degree === 0 ? NODE_SIZES.core :
+                 other.degree === 1 ? NODE_SIZES.primary : NODE_SIZES.secondary;
+
+      // 사각형(라벨)과 원(노드) 충돌 검사
+      const closestX = Math.max(labelCenterX - labelHalfW, Math.min(ox, labelCenterX + labelHalfW));
+      const closestY = Math.max(labelCenterY - labelHalfH, Math.min(oy, labelCenterY + labelHalfH));
+      const dx = ox - closestX;
+      const dy = oy - closestY;
+      if (dx * dx + dy * dy < or * or) return true;
+    }
+    return false;
+  }, []);
+
   // 노드 라벨 그리기 (별도 패스로 모든 노드 위에 렌더링)
   const drawNodeLabel = useCallback((
     ctx: CanvasRenderingContext2D,
     node: GraphNode,
-    options: { isDimmed: boolean; isFocused: boolean }
+    options: { isDimmed: boolean; isFocused: boolean; allNodes: GraphNode[] }
   ) => {
-    const { isDimmed, isFocused } = options;
+    const { isDimmed, isFocused, allNodes } = options;
     const radius = getNodeSize(node, false, isFocused);
     const x = node.x || 0;
     const y = node.y || 0;
@@ -519,41 +541,27 @@ export default function NetworkGraph() {
 
     const name = node.name.length > 6 ? node.name.slice(0, 6) + '...' : node.name;
 
-    let labelX = x;
-    let labelY = y;
+    // 항상 노드 바로 아래 중앙 정렬
+    const labelX = x;
+    const labelY = y + radius + 14;
+    const textWidth = ctx.measureText(name).width;
+    const labelHalfW = textWidth / 2 + 5;
+    const labelHalfH = 9;
 
-    if (node.degree !== 0) {
-      const cx = dimensions.width / 2;
-      const cy = dimensions.height / 2;
-      const angle = Math.atan2(y - cy, x - cx);
-      const labelDistance = radius + 20;
-
-      labelX = x + Math.cos(angle) * labelDistance;
-      labelY = y + Math.sin(angle) * labelDistance;
-
-      if (Math.abs(angle) < Math.PI / 4) {
-        ctx.textAlign = 'left';
-      } else if (Math.abs(angle) > (3 * Math.PI) / 4) {
-        ctx.textAlign = 'right';
-      } else {
-        ctx.textAlign = 'center';
-      }
-    } else {
-      ctx.textAlign = 'center';
-      labelY = y + radius + 20;
-    }
-
+    ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    if (!isDimmed) {
-      const textWidth = ctx.measureText(name).width;
-      const bgX = ctx.textAlign === 'left' ? labelX :
-                  ctx.textAlign === 'right' ? labelX - textWidth :
-                  labelX - textWidth / 2;
+    // 라벨이 다른 노드의 얼굴을 가리면 표시하지 않음 (중앙 노드/호버/포커스 제외)
+    if (node.degree !== 0 && !isFocused) {
+      if (labelOverlapsNode(labelX, labelY, labelHalfW, labelHalfH, node, allNodes)) {
+        return;
+      }
+    }
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    if (!isDimmed) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.beginPath();
-      ctx.roundRect(bgX - 6, labelY - 9, textWidth + 12, 18, 4);
+      ctx.roundRect(labelX - labelHalfW, labelY - labelHalfH, labelHalfW * 2, labelHalfH * 2, 4);
       ctx.fill();
     }
 
@@ -575,25 +583,30 @@ export default function NetworkGraph() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // 이름 라벨 아래에 회사/직책 표시
-        const detailY = labelY + 16;
+        const detailY = labelY + 15;
         const detailText = companyText && positionText
           ? `${companyText} · ${positionText}`
           : companyText || positionText;
         const truncDetail = detailText.length > 14 ? detailText.slice(0, 14) + '...' : detailText;
 
         const detailWidth = ctx.measureText(truncDetail).width;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.beginPath();
-        ctx.roundRect(labelX - detailWidth / 2 - 5, detailY - 8, detailWidth + 10, 16, 3);
-        ctx.fill();
+        const detailHalfW = detailWidth / 2 + 5;
+        const detailHalfH = 8;
 
-        ctx.fillStyle = COLORS.textSecondary;
-        ctx.fillText(truncDetail, labelX, detailY);
+        // 상세 라벨도 충돌 검사
+        if (!labelOverlapsNode(labelX, detailY, detailHalfW, detailHalfH, node, allNodes)) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+          ctx.beginPath();
+          ctx.roundRect(labelX - detailHalfW, detailY - detailHalfH, detailHalfW * 2, detailHalfH * 2, 3);
+          ctx.fill();
+
+          ctx.fillStyle = COLORS.textSecondary;
+          ctx.fillText(truncDetail, labelX, detailY);
+        }
         ctx.restore();
       }
     }
-  }, [getNodeSize, dimensions.width, dimensions.height, transform.scale]);
+  }, [getNodeSize, transform.scale, labelOverlapsNode]);
 
   // Render
   const render = useCallback(() => {
@@ -636,7 +649,7 @@ export default function NetworkGraph() {
           isDimmed: false,
           isHighlighted: false,
         });
-        drawNodeLabel(ctx, centerNode, { isDimmed: false, isFocused: false });
+        drawNodeLabel(ctx, centerNode, { isDimmed: false, isFocused: false, allNodes: nodes });
       }
 
       // 카테고리별 클러스터 원 그리기
@@ -702,34 +715,9 @@ export default function NetworkGraph() {
     // ===== NODE VIEW & DETAIL VIEW (scale >= 0.7) =====
     // ===================================================================
 
-    // Draw category sector backgrounds (섹터 구분선 제거, 배경색만)
-    categoryAngles.forEach((info, category) => {
-      const { start, end } = info;
-      const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
-      const r = parseInt(categoryColor.slice(1, 3), 16);
-      const g = parseInt(categoryColor.slice(3, 5), 16);
-      const b = parseInt(categoryColor.slice(5, 7), 16);
+    // (섹터 배경 쐐기 제거 — 노드 테두리 색상만으로 카테고리 구분)
 
-      const minNodeSpacing = 70;
-      const baseRadius = 280;
-      const ringGap = 65;
-      const sectorPadding = 0.05;
-      const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
-      const arcLength = sectorAngle * baseRadius;
-      const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
-      const numRings = Math.ceil(nodes.length / nodesPerRing);
-      const outerRadius = baseRadius + (numRings - 1) * ringGap + 50;
-
-      // Filled sector background only (no border stroke)
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, outerRadius, start, end);
-      ctx.lineTo(centerX, centerY);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.08)`;
-      ctx.fill();
-    });
-
-    // Draw category labels (바깥쪽으로 이동)
+    // Draw category labels (바깥쪽)
     categoryAngles.forEach((info, category) => {
       const { start, end, nodes: catNodes } = info;
       const midAngle = (start + end) / 2;
@@ -742,7 +730,7 @@ export default function NetworkGraph() {
         const dist = Math.sqrt(((n.x || 0) - centerX) ** 2 + ((n.y || 0) - centerY) ** 2);
         if (dist > maxDist) maxDist = dist;
       });
-      const labelRadius = maxDist + 55; // 노드 바깥쪽
+      const labelRadius = maxDist + 65; // 노드 바깥쪽
 
       const labelX = centerX + Math.cos(midAngle) * labelRadius;
       const labelY = centerY + Math.sin(midAngle) * labelRadius;
@@ -789,16 +777,16 @@ export default function NetworkGraph() {
 
       if (edge.degree === 1) {
         ctx.strokeStyle = dimmedByFocus
-          ? 'rgba(74, 144, 226, 0.1)'
-          : isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.5)';
-        ctx.lineWidth = isHighlighted ? 2.5 : 1.5;
+          ? 'rgba(74, 144, 226, 0.05)'
+          : isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.15)';
+        ctx.lineWidth = isHighlighted ? 2 : 1;
         ctx.setLineDash([]);
       } else {
         ctx.strokeStyle = dimmedByFocus
-          ? 'rgba(123, 104, 238, 0.08)'
-          : isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.35)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([6, 6]);
+          ? 'rgba(123, 104, 238, 0.03)'
+          : isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.1)';
+        ctx.lineWidth = 0.5;
+        ctx.setLineDash([4, 8]);
       }
       ctx.stroke();
       ctx.setLineDash([]);
@@ -883,7 +871,7 @@ export default function NetworkGraph() {
       const isDimmed = !!(highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
       const isFocused = focusedNodeId === node.id;
 
-      drawNodeLabel(ctx, node, { isDimmed, isFocused });
+      drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes });
     }
 
     ctx.restore();
