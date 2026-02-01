@@ -193,7 +193,7 @@ export default function NetworkGraph() {
         x = centerX;
         y = centerY;
       } else if (node.degree === 1) {
-        // Position within category sector
+        // Position within category sector - multi-ring layout for large categories
         const category = node.category || '기타';
         const categoryInfo = categoryAngles.get(category);
 
@@ -202,15 +202,29 @@ export default function NetworkGraph() {
           const nodeIndex = categoryNodes.findIndex(n => n.id === node.id);
           const nodesInCategory = categoryNodes.length;
 
-          // Distribute nodes within the sector with minimal padding for tighter grouping
-          const sectorPadding = 0.05; // 5% padding on each side for tighter clusters
-          const usableAngleSpan = (end - start) * (1 - 2 * sectorPadding);
-          const angle = nodesInCategory === 1
-            ? (start + end) / 2  // Center single nodes
-            : start + (end - start) * sectorPadding +
-              (nodeIndex / (nodesInCategory - 1)) * usableAngleSpan;
+          // Calculate how many nodes fit per ring based on arc length
+          // Minimum spacing between nodes (in pixels) to avoid overlap
+          const minNodeSpacing = 70;
+          const baseRadius = 280;
+          const ringGap = 65; // distance between rings
+          const sectorPadding = 0.05;
+          const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
 
-          const radius = 280;
+          // Calculate max nodes per ring at the base radius
+          const arcLength = sectorAngle * baseRadius;
+          const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
+
+          // Determine which ring this node belongs to
+          const ringIndex = Math.floor(nodeIndex / nodesPerRing);
+          const indexInRing = nodeIndex % nodesPerRing;
+          const nodesInThisRing = Math.min(nodesPerRing, nodesInCategory - ringIndex * nodesPerRing);
+
+          const radius = baseRadius + ringIndex * ringGap;
+          const angle = nodesInThisRing === 1
+            ? (start + end) / 2
+            : start + (end - start) * sectorPadding +
+              (indexInRing / (nodesInThisRing - 1)) * sectorAngle;
+
           x = centerX + Math.cos(angle) * radius;
           y = centerY + Math.sin(angle) * radius;
         }
@@ -511,35 +525,54 @@ export default function NetworkGraph() {
       const g = parseInt(categoryColor.slice(3, 5), 16);
       const b = parseInt(categoryColor.slice(5, 7), 16);
 
-      // Draw filled sector background (from center to outer ring)
+      // Calculate outer radius based on number of rings needed
+      const minNodeSpacing = 70;
+      const baseRadius = 280;
+      const ringGap = 65;
+      const sectorPadding = 0.05;
+      const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
+      const arcLength = sectorAngle * baseRadius;
+      const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
+      const numRings = Math.ceil(nodes.length / nodesPerRing);
+      const outerRadius = baseRadius + (numRings - 1) * ringGap + 50;
+
+      // Draw filled sector background
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, 350, start, end);
+      ctx.arc(centerX, centerY, outerRadius, start, end);
       ctx.lineTo(centerX, centerY);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.18)`;
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.12)`;
       ctx.fill();
 
-      // Draw sector border lines (stronger)
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.6)`;
-      ctx.lineWidth = 3;
+      // Draw sector border lines
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
+      ctx.lineWidth = 2;
       ctx.stroke();
     });
 
     // Draw dividing lines between sectors
     categoryAngles.forEach((info, category) => {
-      const { start } = info;
-      const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+      const { start, end, nodes } = info;
+      const minNodeSpacing = 70;
+      const baseRadius = 280;
+      const ringGap = 65;
+      const sectorPadding = 0.05;
+      const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
+      const arcLength = sectorAngle * baseRadius;
+      const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
+      const numRings = Math.ceil(nodes.length / nodesPerRing);
+      const outerRadius = baseRadius + (numRings - 1) * ringGap + 50;
 
-      // Draw radial line at sector start (thicker and more visible)
+      // Draw radial line at sector start
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(
-        centerX + Math.cos(start) * 370,
-        centerY + Math.sin(start) * 370
+        centerX + Math.cos(start) * (outerRadius + 20),
+        centerY + Math.sin(start) * (outerRadius + 20)
       );
-      ctx.strokeStyle = `rgba(255, 255, 255, 0.3)`;
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([8, 4]);
+      ctx.strokeStyle = `rgba(255, 255, 255, 0.2)`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
     });
@@ -548,7 +581,7 @@ export default function NetworkGraph() {
     categoryAngles.forEach((info, category) => {
       const { start, end, nodes } = info;
       const midAngle = (start + end) / 2;
-      const labelRadius = 220; // Positioned near the first ring
+      const labelRadius = 230; // Positioned near the first ring
       const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
 
       const labelX = centerX + Math.cos(midAngle) * labelRadius;
