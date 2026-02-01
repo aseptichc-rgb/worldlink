@@ -431,61 +431,65 @@ export default function NetworkGraph() {
     }
     ctx.stroke();
 
-    // 4. Name Label with radial positioning for better readability
+    // Labels are drawn separately in a second pass (see drawNodeLabel)
+  }, [getNodeSize]);
+
+  // 노드 라벨 그리기 (별도 패스로 모든 노드 위에 렌더링)
+  const drawNodeLabel = useCallback((
+    ctx: CanvasRenderingContext2D,
+    node: GraphNode,
+    options: { isDimmed: boolean; isFocused: boolean }
+  ) => {
+    const { isDimmed, isFocused } = options;
+    const radius = getNodeSize(node, false, isFocused);
+    const x = node.x || 0;
+    const y = node.y || 0;
+
     const fontSize = node.degree === 0 ? FONT_SIZES.core :
-                     node.degree === 1 ? FONT_SIZES.primary :
-                     11; // degree 2는 11px로 축소
+                     node.degree === 1 ? FONT_SIZES.primary : 11;
 
     ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
 
     const name = node.name.length > 6 ? node.name.slice(0, 6) + '...' : node.name;
 
-    // 방사형 레이블 배치: 중앙에서 노드로 향하는 방향으로 레이블 위치 결정
     let labelX = x;
     let labelY = y;
 
     if (node.degree !== 0) {
-      const centerX = dimensions.width / 2;
-      const centerY = dimensions.height / 2;
-      const angle = Math.atan2(y - centerY, x - centerX);
-      const labelDistance = radius + 18;
+      const cx = dimensions.width / 2;
+      const cy = dimensions.height / 2;
+      const angle = Math.atan2(y - cy, x - cx);
+      const labelDistance = radius + 20;
 
       labelX = x + Math.cos(angle) * labelDistance;
       labelY = y + Math.sin(angle) * labelDistance;
 
-      // 레이블 정렬 조정 (각도에 따라)
       if (Math.abs(angle) < Math.PI / 4) {
-        // 오른쪽
         ctx.textAlign = 'left';
       } else if (Math.abs(angle) > (3 * Math.PI) / 4) {
-        // 왼쪽
         ctx.textAlign = 'right';
       } else {
-        // 위/아래
         ctx.textAlign = 'center';
       }
     } else {
-      // 중앙 노드는 아래에
       ctx.textAlign = 'center';
-      labelY = y + radius + 18;
+      labelY = y + radius + 20;
     }
 
     ctx.textBaseline = 'middle';
 
-    // Label background
     if (!isDimmed) {
       const textWidth = ctx.measureText(name).width;
       const bgX = ctx.textAlign === 'left' ? labelX :
                   ctx.textAlign === 'right' ? labelX - textWidth :
                   labelX - textWidth / 2;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
       ctx.beginPath();
-      ctx.roundRect(bgX - 6, labelY - 8, textWidth + 12, 16, 4);
+      ctx.roundRect(bgX - 6, labelY - 9, textWidth + 12, 18, 4);
       ctx.fill();
     }
 
-    // Label text
     ctx.fillStyle = isDimmed ? COLORS.textDimmed : COLORS.textPrimary;
     ctx.fillText(name, labelX, labelY);
   }, [getNodeSize, dimensions.width, dimensions.height]);
@@ -720,8 +724,18 @@ export default function NetworkGraph() {
       }
     }
 
+    // ===== Draw Labels (separate pass - always on top of all nodes) =====
+    for (const node of nodes) {
+      const isConnectedToFocused = connectedNodeIds.has(node.id);
+      const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
+      const isDimmed = !!(highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
+      const isFocused = focusedNodeId === node.id;
+
+      drawNodeLabel(ctx, node, { isDimmed, isFocused });
+    }
+
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, dimensions.width, dimensions.height]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, dimensions.width, dimensions.height]);
 
   // Smooth animation to target transform
   useEffect(() => {

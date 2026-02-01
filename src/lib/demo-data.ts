@@ -153,25 +153,7 @@ export const getDemoNetworkGraph = (userId: string): { nodes: NetworkNode[]; edg
     degree: 1,
   }));
 
-  // 같은 카테고리 내 1촌들끼리만 연결 (카테고리 클러스터 강조)
-  const addedEdges = new Set<string>();
-  for (const connId of userConnections) {
-    const connCategory = getMemberCategory(connId);
-    for (const secondConnId of userConnections) {
-      if (secondConnId === connId) continue;
-      if (getMemberCategory(secondConnId) !== connCategory) continue;
-
-      const edgeKey = [connId, secondConnId].sort().join('-');
-      if (addedEdges.has(edgeKey)) continue;
-      addedEdges.add(edgeKey);
-
-      edges.push({
-        source: connId,
-        target: secondConnId,
-        degree: 2,
-      });
-    }
-  }
+  // 인맥 간 연결선은 생략 (중심-노드 연결만 표시)
 
   return { nodes, edges };
 };
