@@ -22,8 +22,7 @@
       "Bash(git commit:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(npm audit:*)",
-      "Bash(npm run build:*)"
+      "Bash(dir:*)"
     ]
   }
 }
