@@ -166,7 +166,7 @@ export default function NetworkGraph() {
 
     // Calculate angle sectors for each category with gaps
     const totalNodes = degree1Nodes.length;
-    const gapAngle = 0.08; // Gap between sectors (in radians)
+    const gapAngle = 0.15; // Larger gap between sectors for clearer separation
     const totalGaps = sortedCategories.length * gapAngle;
     const usableAngle = Math.PI * 2 - totalGaps;
     let currentAngle = -Math.PI / 2; // Start at top
@@ -516,12 +516,12 @@ export default function NetworkGraph() {
       ctx.moveTo(centerX, centerY);
       ctx.arc(centerX, centerY, 350, start, end);
       ctx.lineTo(centerX, centerY);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.12)`;
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.18)`;
       ctx.fill();
 
-      // Draw sector border lines
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
-      ctx.lineWidth = 2;
+      // Draw sector border lines (stronger)
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.6)`;
+      ctx.lineWidth = 3;
       ctx.stroke();
     });
 
@@ -530,16 +530,16 @@ export default function NetworkGraph() {
       const { start } = info;
       const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
 
-      // Draw radial line at sector start
+      // Draw radial line at sector start (thicker and more visible)
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(
         centerX + Math.cos(start) * 370,
         centerY + Math.sin(start) * 370
       );
-      ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = `rgba(255, 255, 255, 0.3)`;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
     });
