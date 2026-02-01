@@ -81,8 +81,14 @@ export default function NetworkPage() {
 
       setNetworkLoading(true);
       try {
-        const { nodes, edges } = await getNetworkGraph(user.id);
-        setNodes(nodes);
+        const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id);
+        // 프로필 페이지에서 변경한 사진을 네트워크 그래프에 반영
+        const syncedNodes = fetchedNodes.map(node =>
+          node.id === user.id && user.profileImage
+            ? { ...node, profileImage: user.profileImage }
+            : node
+        );
+        setNodes(syncedNodes);
         setEdges(edges);
 
         // Load recommendations

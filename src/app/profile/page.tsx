@@ -20,6 +20,7 @@ import { Avatar, Input, Tag, Card } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { InviteManager } from '@/components/invite/InviteManager';
 import { useAuthStore } from '@/store/authStore';
+import { useNetworkStore } from '@/store/networkStore';
 import {
   updateUser,
   uploadProfileImage,
@@ -32,6 +33,7 @@ import {
 export default function ProfilePage() {
   const router = useRouter();
   const { user, setUser, logout, setLoading } = useAuthStore();
+  const { updateNodeProfileImage } = useNetworkStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
@@ -78,6 +80,7 @@ export default function ProfilePage() {
 
       setUser({ ...user, profileImage: imageUrl });
       setEditedUser(prev => prev ? { ...prev, profileImage: imageUrl } : prev);
+      updateNodeProfileImage(user.id, imageUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
     }

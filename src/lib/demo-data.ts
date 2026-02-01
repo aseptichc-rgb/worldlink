@@ -153,7 +153,16 @@ export const getDemoNetworkGraph = (userId: string): { nodes: NetworkNode[]; edg
     degree: 1,
   }));
 
-  // 인맥 간 연결선은 생략 (중심-노드 연결만 표시)
+  // 인맥 간 상호 연결 (모든 멤버가 서로 인맥)
+  for (let i = 0; i < userConnections.length; i++) {
+    for (let j = i + 1; j < userConnections.length; j++) {
+      edges.push({
+        source: userConnections[i],
+        target: userConnections[j],
+        degree: 2, // peer 연결은 degree 2로 표시
+      });
+    }
+  }
 
   return { nodes, edges };
 };

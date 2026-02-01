@@ -16,6 +16,7 @@ interface NetworkState {
   setHighlightedKeyword: (keyword: string | null) => void;
   setSearchFilters: (filters: SearchFilters) => void;
   setLoading: (loading: boolean) => void;
+  updateNodeProfileImage: (nodeId: string, profileImage: string) => void;
   resetNetwork: () => void;
 }
 
@@ -34,6 +35,14 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   setHighlightedKeyword: (highlightedKeyword) => set({ highlightedKeyword }),
   setSearchFilters: (searchFilters) => set({ searchFilters }),
   setLoading: (isLoading) => set({ isLoading }),
+  updateNodeProfileImage: (nodeId, profileImage) => set((state) => ({
+    nodes: state.nodes.map(node =>
+      node.id === nodeId ? { ...node, profileImage } : node
+    ),
+    selectedNode: state.selectedNode?.id === nodeId
+      ? { ...state.selectedNode, profileImage }
+      : state.selectedNode,
+  })),
   resetNetwork: () => set({
     nodes: [],
     edges: [],

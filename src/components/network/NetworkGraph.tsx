@@ -39,6 +39,7 @@ const COLORS = {
   hover: '#86C9F2',
   selected: '#FFD700',
   focused: '#FFB800',
+  mutual: '#00E5FF',           // 공통 인맥 표시
 
   // 배경 색상
   nodeBg: '#162A4A',
@@ -314,27 +315,49 @@ export default function NetworkGraph() {
   }, [expandedNodeIds]);
 
   // 보이는 엣지인지 판단
+  // peer 엣지(degree1↔degree1)는 포커스된 노드가 있을 때만 해당 노드와 연결된 것만 표시
   const isEdgeVisible = useCallback((edge: GraphEdge, visibleIds: Set<string>): boolean => {
     const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
     const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
-    return visibleIds.has(sourceId) && visibleIds.has(targetId);
-  }, []);
+    if (!visibleIds.has(sourceId) || !visibleIds.has(targetId)) return false;
+
+    // peer 엣지 판별: 양쪽 다 degree 1인 엣지
+    const sourceNode = nodesRef.current.find(n => n.id === sourceId);
+    const targetNode = nodesRef.current.find(n => n.id === targetId);
+    const isPeerEdge = sourceNode?.degree === 1 && targetNode?.degree === 1;
+
+    if (isPeerEdge) {
+      // 포커스된 노드가 있고, 그 노드가 이 엣지의 한쪽일 때만 표시
+      return focusedNodeId !== null && (sourceId === focusedNodeId || targetId === focusedNodeId);
+    }
+
+    return true;
+  }, [focusedNodeId]);
 
   // 포커스된 노드와 연결된 노드 ID들을 계산
+  // peer 엣지(degree1↔degree1)는 제외하여 실질적 인맥 관계만 하이라이트
   const getConnectedNodeIds = useCallback((nodeId: string | null): Set<string> => {
     if (!nodeId) return new Set();
 
     const connectedIds = new Set<string>();
     connectedIds.add(nodeId);
 
+    const focusedNode = nodesRef.current.find(n => n.id === nodeId);
+
     for (const edge of edgesRef.current) {
       const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
       const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
 
-      if (sourceId === nodeId) {
-        connectedIds.add(targetId);
-      } else if (targetId === nodeId) {
-        connectedIds.add(sourceId);
+      if (sourceId !== nodeId && targetId !== nodeId) continue;
+
+      const otherId = sourceId === nodeId ? targetId : sourceId;
+      const otherNode = nodesRef.current.find(n => n.id === otherId);
+
+      // peer 엣지(degree1↔degree1) 제외 — 중앙 노드(degree 0)와의 연결,
+      // 또는 degree가 다른 노드와의 연결만 포함
+      const isPeerEdge = focusedNode?.degree === 1 && otherNode?.degree === 1;
+      if (!isPeerEdge) {
+        connectedIds.add(otherId);
       }
     }
 
@@ -383,9 +406,10 @@ export default function NetworkGraph() {
       isConnected: boolean;
       isDimmed: boolean;
       isHighlighted: boolean;
+      isMutual?: boolean;
     }
   ) => {
-    const { isHovered, isFocused, isConnected, isDimmed, isHighlighted } = options;
+    const { isHovered, isFocused, isConnected, isDimmed, isHighlighted, isMutual } = options;
     const radius = getNodeSize(node, isHovered, isFocused);
     const x = node.x || 0;
     const y = node.y || 0;
@@ -395,10 +419,12 @@ export default function NetworkGraph() {
       const glowRadius = radius * (isHovered || isFocused ? 3 : 2.5);
       const gradient = ctx.createRadialGradient(x, y, radius, x, y, glowRadius);
 
-      if (isFocused && node.degree !== 0) {
+      if (isMutual) {
+        gradient.addColorStop(0, 'rgba(0, 229, 255, 0.7)');
+      } else if (isFocused && node.degree !== 0) {
         gradient.addColorStop(0, 'rgba(255, 184, 0, 0.6)');
       } else if (isConnected && !isFocused) {
-        gradient.addColorStop(0, 'rgba(255, 184, 0, 0.4)');
+        gradient.addColorStop(0, 'rgba(255, 184, 0, 0.55)');
       } else if (node.degree === 0) {
         gradient.addColorStop(0, 'rgba(0, 217, 255, 0.5)');
       } else if (isHighlighted) {
@@ -433,16 +459,24 @@ export default function NetworkGraph() {
     } else if (isFocused) {
       ctx.fillStyle = COLORS.focused;
     } else if (isConnected) {
-      ctx.fillStyle = COLORS.nodeBgHover;
+      // 연결된 노드: 카테고리 색상으로 밝게 채우기
+      const category = node.category || '기타';
+      const catColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+      const cr = parseInt(catColor.slice(1, 3), 16);
+      const cg = parseInt(catColor.slice(3, 5), 16);
+      const cb = parseInt(catColor.slice(5, 7), 16);
+      ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.35)`;
     } else {
-      ctx.fillStyle = isDimmed ? 'rgba(22, 27, 34, 0.3)' : COLORS.nodeBg;
+      ctx.fillStyle = isDimmed ? 'rgba(22, 27, 34, 0.15)' : COLORS.nodeBg;
     }
     ctx.fill();
 
     // 3. Border (카테고리별 색상)
-    ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : 2;
+    ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : isMutual ? 3 : 2;
     if (isDimmed) {
-      ctx.strokeStyle = 'rgba(33, 38, 45, 0.3)';
+      ctx.strokeStyle = 'rgba(33, 38, 45, 0.15)';
+    } else if (isMutual) {
+      ctx.strokeStyle = COLORS.mutual;
     } else if (isFocused && node.degree !== 0) {
       ctx.strokeStyle = COLORS.selected;
     } else if (isConnected && node.degree !== 0) {
@@ -457,6 +491,17 @@ export default function NetworkGraph() {
       ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
     }
     ctx.stroke();
+
+    // 3.5. Mutual connection outer ring (공통 인맥 이중 링)
+    if (isMutual && !isDimmed) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = COLORS.mutual;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     // 4. Profile Image (줌 레벨이 충분히 높을 때만 표시)
     if (node.profileImage && transform.scale >= PROFILE_IMAGE_ZOOM_THRESHOLD && !isDimmed) {
@@ -483,8 +528,10 @@ export default function NetworkGraph() {
         // 이미지 위에 테두리 다시 그리기
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : 2.5;
-        if (isFocused && node.degree !== 0) {
+        ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : isMutual ? 3 : 2.5;
+        if (isMutual) {
+          ctx.strokeStyle = COLORS.mutual;
+        } else if (isFocused && node.degree !== 0) {
           ctx.strokeStyle = COLORS.selected;
         } else if (isConnected && node.degree !== 0) {
           ctx.strokeStyle = COLORS.focused;
@@ -527,9 +574,9 @@ export default function NetworkGraph() {
   const drawNodeLabel = useCallback((
     ctx: CanvasRenderingContext2D,
     node: GraphNode,
-    options: { isDimmed: boolean; isFocused: boolean; allNodes: GraphNode[] }
+    options: { isDimmed: boolean; isFocused: boolean; allNodes: GraphNode[]; isMutual?: boolean }
   ) => {
-    const { isDimmed, isFocused, allNodes } = options;
+    const { isDimmed, isFocused, allNodes, isMutual } = options;
     const radius = getNodeSize(node, false, isFocused);
     const x = node.x || 0;
     const y = node.y || 0;
@@ -560,6 +607,30 @@ export default function NetworkGraph() {
 
     ctx.fillStyle = isDimmed ? COLORS.textDimmed : COLORS.textPrimary;
     ctx.fillText(name, labelX, labelY);
+
+    // 공통 인맥 배지
+    if (isMutual && !isDimmed) {
+      const badgeText = '공통';
+      ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+      const badgeWidth = ctx.measureText(badgeText).width + 8;
+      const badgeX = x + radius + 2;
+      const badgeY = y - radius - 2;
+
+      ctx.fillStyle = COLORS.mutual;
+      ctx.beginPath();
+      ctx.roundRect(badgeX - badgeWidth / 2, badgeY - 7, badgeWidth, 14, 7);
+      ctx.fill();
+
+      ctx.fillStyle = '#000000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(badgeText, badgeX, badgeY);
+
+      // 원래 폰트 복원
+      const fontSize = node.degree === 0 ? FONT_SIZES.core :
+                       node.degree === 1 ? FONT_SIZES.primary : 11;
+      ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
+    }
 
     // 상세 뷰: 회사명 + 직책 표시
     if (transform.scale >= ZOOM_DETAIL_THRESHOLD && !isDimmed && node.degree !== 0) {
@@ -613,6 +684,27 @@ export default function NetworkGraph() {
 
     const connectedNodeIds = getConnectedNodeIds(focusedNodeId);
     const hasFocusedNode = focusedNodeId !== null;
+
+    // 공통 인맥: 나(degree 0)와 포커스된 노드 양쪽에 연결된 노드
+    const mutualNodeIds = new Set<string>();
+    if (hasFocusedNode) {
+      const cNode = allNodes.find(n => n.degree === 0);
+      if (cNode && focusedNodeId !== cNode.id) {
+        const myConnIds = new Set<string>();
+        const focusedConnIds = new Set<string>();
+        for (const edge of allEdges) {
+          const sid = typeof edge.source === 'string' ? edge.source : edge.source.id;
+          const tid = typeof edge.target === 'string' ? edge.target : edge.target.id;
+          if (sid === cNode.id) myConnIds.add(tid);
+          else if (tid === cNode.id) myConnIds.add(sid);
+          if (sid === focusedNodeId && tid !== cNode.id) focusedConnIds.add(tid);
+          else if (tid === focusedNodeId && sid !== cNode.id) focusedConnIds.add(sid);
+        }
+        for (const id of focusedConnIds) {
+          if (myConnIds.has(id) && id !== focusedNodeId) mutualNodeIds.add(id);
+        }
+      }
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -794,12 +886,16 @@ export default function NetworkGraph() {
 
       if (!isConnectedToFocused) continue;
 
+      // 상대 노드가 공통 인맥인지 판별
+      const otherNodeId = sourceId === focusedNodeId ? targetId : sourceId;
+      const isMutualEdge = mutualNodeIds.has(otherNodeId);
+
       // Main edge
       ctx.beginPath();
       ctx.moveTo(source.x || 0, source.y || 0);
       ctx.lineTo(target.x || 0, target.y || 0);
-      ctx.strokeStyle = COLORS.edgeHighlighted;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = isMutualEdge ? COLORS.mutual : COLORS.edgeHighlighted;
+      ctx.lineWidth = isMutualEdge ? 2.5 : 3;
       ctx.setLineDash([]);
       ctx.stroke();
 
@@ -850,6 +946,7 @@ export default function NetworkGraph() {
           isConnected: true,
           isDimmed: false,
           isHighlighted: false,
+          isMutual: mutualNodeIds.has(node.id),
         });
       }
     }
@@ -861,7 +958,7 @@ export default function NetworkGraph() {
       const isDimmed = !!(highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
       const isFocused = focusedNodeId === node.id;
 
-      drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes });
+      drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes, isMutual: mutualNodeIds.has(node.id) });
     }
 
     ctx.restore();
