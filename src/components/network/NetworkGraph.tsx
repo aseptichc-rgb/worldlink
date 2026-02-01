@@ -315,50 +315,34 @@ export default function NetworkGraph() {
   }, [expandedNodeIds]);
 
   // 보이는 엣지인지 판단
-  // peer 엣지(degree1↔degree1)는 포커스된 노드가 있을 때만 해당 노드와 연결된 것만 표시
+  // peer 엣지(degree1↔degree1)는 선으로 표시하지 않음 (노드 하이라이트로만 표현)
   const isEdgeVisible = useCallback((edge: GraphEdge, visibleIds: Set<string>): boolean => {
     const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
     const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
     if (!visibleIds.has(sourceId) || !visibleIds.has(targetId)) return false;
 
-    // peer 엣지 판별: 양쪽 다 degree 1인 엣지
+    // peer 엣지는 선으로 그리지 않음
     const sourceNode = nodesRef.current.find(n => n.id === sourceId);
     const targetNode = nodesRef.current.find(n => n.id === targetId);
-    const isPeerEdge = sourceNode?.degree === 1 && targetNode?.degree === 1;
-
-    if (isPeerEdge) {
-      // 포커스된 노드가 있고, 그 노드가 이 엣지의 한쪽일 때만 표시
-      return focusedNodeId !== null && (sourceId === focusedNodeId || targetId === focusedNodeId);
-    }
+    if (sourceNode?.degree === 1 && targetNode?.degree === 1) return false;
 
     return true;
-  }, [focusedNodeId]);
+  }, []);
 
   // 포커스된 노드와 연결된 노드 ID들을 계산
-  // peer 엣지(degree1↔degree1)는 제외하여 실질적 인맥 관계만 하이라이트
+  // peer 엣지 포함 — 선은 안 그리지만 노드 하이라이트에 사용
   const getConnectedNodeIds = useCallback((nodeId: string | null): Set<string> => {
     if (!nodeId) return new Set();
 
     const connectedIds = new Set<string>();
     connectedIds.add(nodeId);
 
-    const focusedNode = nodesRef.current.find(n => n.id === nodeId);
-
     for (const edge of edgesRef.current) {
       const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
       const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
 
-      if (sourceId !== nodeId && targetId !== nodeId) continue;
-
-      const otherId = sourceId === nodeId ? targetId : sourceId;
-      const otherNode = nodesRef.current.find(n => n.id === otherId);
-
-      // peer 엣지(degree1↔degree1) 제외 — 중앙 노드(degree 0)와의 연결,
-      // 또는 degree가 다른 노드와의 연결만 포함
-      const isPeerEdge = focusedNode?.degree === 1 && otherNode?.degree === 1;
-      if (!isPeerEdge) {
-        connectedIds.add(otherId);
-      }
+      if (sourceId === nodeId) connectedIds.add(targetId);
+      else if (targetId === nodeId) connectedIds.add(sourceId);
     }
 
     return connectedIds;
@@ -504,13 +488,15 @@ export default function NetworkGraph() {
     }
 
     // 4. Profile Image (줌 레벨이 충분히 높을 때만 표시)
-    if (node.profileImage && transform.scale >= PROFILE_IMAGE_ZOOM_THRESHOLD && !isDimmed) {
+    if (node.profileImage && transform.scale >= PROFILE_IMAGE_ZOOM_THRESHOLD) {
       const img = getProfileImage(node.profileImage);
       if (img) {
         // 줌 레벨에 따른 이미지 투명도 (부드러운 페이드인)
         const fadeStart = PROFILE_IMAGE_ZOOM_THRESHOLD;
         const fadeEnd = PROFILE_IMAGE_ZOOM_THRESHOLD + 0.3;
-        const imageAlpha = Math.min(1, (transform.scale - fadeStart) / (fadeEnd - fadeStart));
+        const zoomAlpha = Math.min(1, (transform.scale - fadeStart) / (fadeEnd - fadeStart));
+        // dimmed 노드는 낮은 투명도로 표시
+        const imageAlpha = isDimmed ? zoomAlpha * 0.2 : zoomAlpha;
 
         ctx.save();
         ctx.globalAlpha = imageAlpha;
@@ -837,79 +823,32 @@ export default function NetworkGraph() {
     });
 
     // ===== Draw Edges =====
-    // 1. Non-connected edges first (drawn behind)
-    for (const edge of edges) {
-      const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
-      const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
-      if (!source || !target) continue;
+    // 포커스된 노드가 있으면 엣지를 모두 숨기고, 노드 하이라이트로만 표현
+    if (!hasFocusedNode) {
+      for (const edge of edges) {
+        const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
+        const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
+        if (!source || !target) continue;
 
-      const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
-      const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
-      const isConnectedToFocused = hasFocusedNode && (sourceId === focusedNodeId || targetId === focusedNodeId);
+        const isHighlighted = highlightedKeyword &&
+          (source.keywords.includes(highlightedKeyword) || target.keywords.includes(highlightedKeyword));
 
-      if (isConnectedToFocused) continue;
+        ctx.beginPath();
+        ctx.moveTo(source.x || 0, source.y || 0);
+        ctx.lineTo(target.x || 0, target.y || 0);
 
-      const isHighlighted = highlightedKeyword &&
-        (source.keywords.includes(highlightedKeyword) || target.keywords.includes(highlightedKeyword));
-      const dimmedByFocus = hasFocusedNode && !isConnectedToFocused;
-
-      ctx.beginPath();
-      ctx.moveTo(source.x || 0, source.y || 0);
-      ctx.lineTo(target.x || 0, target.y || 0);
-
-      if (edge.degree === 1) {
-        ctx.strokeStyle = dimmedByFocus
-          ? 'rgba(74, 144, 226, 0.05)'
-          : isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.15)';
-        ctx.lineWidth = isHighlighted ? 2 : 1;
+        if (edge.degree === 1) {
+          ctx.strokeStyle = isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.15)';
+          ctx.lineWidth = isHighlighted ? 2 : 1;
+          ctx.setLineDash([]);
+        } else {
+          ctx.strokeStyle = isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.1)';
+          ctx.lineWidth = 0.5;
+          ctx.setLineDash([4, 8]);
+        }
+        ctx.stroke();
         ctx.setLineDash([]);
-      } else {
-        ctx.strokeStyle = dimmedByFocus
-          ? 'rgba(123, 104, 238, 0.03)'
-          : isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.1)';
-        ctx.lineWidth = 0.5;
-        ctx.setLineDash([4, 8]);
       }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // 2. Connected edges (drawn on top with animation)
-    for (const edge of edges) {
-      const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
-      const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
-      if (!source || !target) continue;
-
-      const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
-      const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
-      const isConnectedToFocused = hasFocusedNode && (sourceId === focusedNodeId || targetId === focusedNodeId);
-
-      if (!isConnectedToFocused) continue;
-
-      // 상대 노드가 공통 인맥인지 판별
-      const otherNodeId = sourceId === focusedNodeId ? targetId : sourceId;
-      const isMutualEdge = mutualNodeIds.has(otherNodeId);
-
-      // Main edge
-      ctx.beginPath();
-      ctx.moveTo(source.x || 0, source.y || 0);
-      ctx.lineTo(target.x || 0, target.y || 0);
-      ctx.strokeStyle = isMutualEdge ? COLORS.mutual : COLORS.edgeHighlighted;
-      ctx.lineWidth = isMutualEdge ? 2.5 : 3;
-      ctx.setLineDash([]);
-      ctx.stroke();
-
-      // Animated flow effect
-      ctx.beginPath();
-      ctx.moveTo(source.x || 0, source.y || 0);
-      ctx.lineTo(target.x || 0, target.y || 0);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 16]);
-      ctx.lineDashOffset = -edgeAnimationRef.current;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.lineDashOffset = 0;
     }
 
     // ===== Draw Nodes =====
