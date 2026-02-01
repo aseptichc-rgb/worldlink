@@ -21,7 +21,8 @@
       "Bash(npx vercel:*)",
       "Bash(git commit:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npm audit:*)"
     ]
   }
 }
