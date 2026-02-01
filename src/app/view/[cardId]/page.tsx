@@ -20,7 +20,7 @@ import Avatar from '@/components/ui/Avatar';
 import { BusinessCard } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
-import { getPublicCard } from '@/lib/firebase-services';
+import { getPublicCard, getUser, savePublicCard } from '@/lib/firebase-services';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -101,7 +101,43 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
           return;
         }
 
-        // 2. 하위 호환: URL data 파라미터 (이전 QR 코드 지원)
+        // 2. 폴백: users 컬렉션에서 조회 (기존 사용자 지원)
+        const userData = await getUser(cardId);
+        if (userData) {
+          // 찾은 데이터로 공개 명함 자동 생성
+          await savePublicCard({
+            id: userData.id,
+            name: userData.name,
+            company: userData.company,
+            position: userData.position,
+            email: userData.email,
+            phone: userData.phone,
+            bio: userData.bio,
+            profileImage: userData.profileImage,
+            keywords: userData.keywords,
+          });
+
+          setCard({
+            id: userData.id,
+            userId: userData.id,
+            name: userData.name,
+            company: userData.company,
+            position: userData.position,
+            email: userData.email,
+            phone: userData.phone,
+            bio: userData.bio,
+            profileImage: userData.profileImage,
+            keywords: userData.keywords || [],
+            networkVisibility: 'connections_only',
+            qrCode: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          setLoading(false);
+          return;
+        }
+
+        // 3. 하위 호환: URL data 파라미터 (이전 QR 코드 지원)
         const urlParams = new URLSearchParams(window.location.search);
         const cardData = urlParams.get('data');
         if (cardData) {
@@ -126,7 +162,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
           return;
         }
 
-        // 3. localStorage 폴백
+        // 4. localStorage 폴백
         const cardStore = localStorage.getItem('nexus-cards');
         if (cardStore) {
           const parsed = JSON.parse(cardStore);

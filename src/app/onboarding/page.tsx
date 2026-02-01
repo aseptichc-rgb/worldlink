@@ -10,6 +10,7 @@ import {
   createUser,
   generateInviteCode,
   uploadProfileImage,
+  savePublicCard,
 } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
 import { Mail, Lock, ArrowRight, User } from 'lucide-react';
@@ -82,6 +83,19 @@ function OnboardingContent() {
           consentedAt: new Date(),
           updatedAt: new Date(),
         },
+      });
+
+      // Firebase에 공개 명함 자동 저장 (QR 코드 스캔 시 즉시 조회 가능하도록)
+      await savePublicCard({
+        id: newUser.id,
+        name: newUser.name,
+        company: newUser.company,
+        position: newUser.position,
+        email: newUser.email,
+        phone: newUser.phone,
+        bio: newUser.bio,
+        profileImage: newUser.profileImage,
+        keywords: newUser.keywords,
       });
 
       setUser(newUser);

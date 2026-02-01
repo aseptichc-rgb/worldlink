@@ -50,6 +50,19 @@ const COLORS = {
   textDimmed: 'rgba(139, 148, 158, 0.3)',
 };
 
+// 카테고리별 색상 매핑
+const CATEGORY_COLORS: { [key: string]: string } = {
+  '의료기기': '#4A90E2',    // 파랑
+  '솔루션': '#9B59B6',      // 보라
+  '투자': '#E74C3C',        // 빨강
+  '바이오': '#2ECC71',      // 초록
+  '제약': '#F39C12',        // 주황
+  '법률': '#1ABC9C',        // 청록
+  '의료기관': '#3498DB',    // 하늘
+  '비즈니스': '#E67E22',    // 진한 주황
+  '특허': '#16A085',        // 진한 청록
+};
+
 // 노드 크기 상수 - 계층별 차별화
 const NODE_SIZES = {
   core: 36,        // 중앙 노드 (크게)
@@ -73,6 +86,7 @@ export default function NetworkGraph() {
   const nodesRef = useRef<GraphNode[]>([]);
   const edgesRef = useRef<GraphEdge[]>([]);
   const edgeAnimationRef = useRef<number>(0);
+  const categoryAnglesRef = useRef<Map<string, { start: number; end: number; nodes: NetworkNode[] }>>(new Map());
 
   const {
     nodes,
@@ -124,7 +138,7 @@ export default function NetworkGraph() {
     };
   }, []);
 
-  // Initialize nodes with fixed positions
+  // Initialize nodes with fixed positions (category-based clustering)
   useEffect(() => {
     if (nodes.length === 0 || dimensions.width === 0) return;
 
@@ -136,6 +150,41 @@ export default function NetworkGraph() {
     const degree1Nodes = nodes.filter(n => n.degree === 1);
     const degree2Nodes = nodes.filter(n => n.degree === 2);
 
+    // Group degree 1 nodes by category
+    const categoriesMap = new Map<string, NetworkNode[]>();
+    degree1Nodes.forEach(node => {
+      const category = node.category || '기타';
+      if (!categoriesMap.has(category)) {
+        categoriesMap.set(category, []);
+      }
+      categoriesMap.get(category)!.push(node);
+    });
+
+    // Sort categories by size (largest first) for better visual balance
+    const sortedCategories = Array.from(categoriesMap.entries())
+      .sort((a, b) => b[1].length - a[1].length);
+
+    // Calculate angle sectors for each category with gaps
+    const totalNodes = degree1Nodes.length;
+    const gapAngle = 0.08; // Gap between sectors (in radians)
+    const totalGaps = sortedCategories.length * gapAngle;
+    const usableAngle = Math.PI * 2 - totalGaps;
+    let currentAngle = -Math.PI / 2; // Start at top
+
+    const categoryAngles = new Map<string, { start: number; end: number; nodes: NetworkNode[] }>();
+    sortedCategories.forEach(([category, categoryNodes]) => {
+      const angleSpan = (categoryNodes.length / totalNodes) * usableAngle;
+      categoryAngles.set(category, {
+        start: currentAngle,
+        end: currentAngle + angleSpan,
+        nodes: categoryNodes,
+      });
+      currentAngle += angleSpan + gapAngle; // Add gap after each sector
+    });
+
+    // Store for rendering category labels
+    categoryAnglesRef.current = categoryAngles;
+
     nodesRef.current = nodes.map((node) => {
       let x = centerX;
       let y = centerY;
@@ -144,15 +193,31 @@ export default function NetworkGraph() {
         x = centerX;
         y = centerY;
       } else if (node.degree === 1) {
-        const index = degree1Nodes.findIndex(n => n.id === node.id);
-        const angle = (index / degree1Nodes.length) * Math.PI * 2 - Math.PI / 2;
-        const radius = 180; // 약간 넓게
-        x = centerX + Math.cos(angle) * radius;
-        y = centerY + Math.sin(angle) * radius;
+        // Position within category sector
+        const category = node.category || '기타';
+        const categoryInfo = categoryAngles.get(category);
+
+        if (categoryInfo) {
+          const { start, end, nodes: categoryNodes } = categoryInfo;
+          const nodeIndex = categoryNodes.findIndex(n => n.id === node.id);
+          const nodesInCategory = categoryNodes.length;
+
+          // Distribute nodes within the sector with minimal padding for tighter grouping
+          const sectorPadding = 0.05; // 5% padding on each side for tighter clusters
+          const usableAngleSpan = (end - start) * (1 - 2 * sectorPadding);
+          const angle = nodesInCategory === 1
+            ? (start + end) / 2  // Center single nodes
+            : start + (end - start) * sectorPadding +
+              (nodeIndex / (nodesInCategory - 1)) * usableAngleSpan;
+
+          const radius = 280;
+          x = centerX + Math.cos(angle) * radius;
+          y = centerY + Math.sin(angle) * radius;
+        }
       } else if (node.degree === 2) {
         const index = degree2Nodes.findIndex(n => n.id === node.id);
         const angle = (index / degree2Nodes.length) * Math.PI * 2 - Math.PI / 2;
-        const radius = 360; // 더 넓게
+        const radius = 550;
         x = centerX + Math.cos(angle) * radius;
         y = centerY + Math.sin(angle) * radius;
       }
@@ -247,15 +312,24 @@ export default function NetworkGraph() {
     return size;
   }, []);
 
-  // 노드 색상 계산
+  // 노드 색상 계산 (카테고리 기반)
   const getNodeColor = useCallback((node: GraphNode, isDimmed: boolean): string => {
-    if (isDimmed) {
-      return node.degree === 0 ? 'rgba(0, 217, 255, 0.3)' :
-             node.degree === 1 ? 'rgba(74, 144, 226, 0.3)' :
-             'rgba(123, 104, 238, 0.3)';
+    if (node.degree === 0) {
+      return isDimmed ? 'rgba(0, 217, 255, 0.3)' : COLORS.nodeCore;
     }
-    return node.degree === 0 ? COLORS.nodeCore :
-           node.degree === 1 ? COLORS.nodePrimary : COLORS.nodeSecondary;
+
+    const category = node.category || '기타';
+    const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+
+    if (isDimmed) {
+      // Convert hex to rgba with opacity
+      const r = parseInt(categoryColor.slice(1, 3), 16);
+      const g = parseInt(categoryColor.slice(3, 5), 16);
+      const b = parseInt(categoryColor.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.3)`;
+    }
+
+    return categoryColor;
   }, []);
 
   // 노드 그리기 헬퍼 함수
@@ -275,7 +349,7 @@ export default function NetworkGraph() {
     const x = node.x || 0;
     const y = node.y || 0;
 
-    // 1. Outer Glow Effect
+    // 1. Outer Glow Effect (카테고리별 색상)
     if ((node.degree === 0 || isHighlighted || isHovered || isFocused || isConnected) && !isDimmed) {
       const glowRadius = radius * (isHovered || isFocused ? 3 : 2.5);
       const gradient = ctx.createRadialGradient(x, y, radius, x, y, glowRadius);
@@ -288,10 +362,14 @@ export default function NetworkGraph() {
         gradient.addColorStop(0, 'rgba(0, 217, 255, 0.5)');
       } else if (isHighlighted) {
         gradient.addColorStop(0, 'rgba(0, 229, 255, 0.5)');
-      } else if (node.degree === 1) {
-        gradient.addColorStop(0, 'rgba(74, 144, 226, 0.4)');
       } else {
-        gradient.addColorStop(0, 'rgba(123, 104, 238, 0.3)');
+        // Use category color for glow
+        const category = node.category || '기타';
+        const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+        const r = parseInt(categoryColor.slice(1, 3), 16);
+        const g = parseInt(categoryColor.slice(3, 5), 16);
+        const b = parseInt(categoryColor.slice(5, 7), 16);
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);
       }
       gradient.addColorStop(1, 'transparent');
 
@@ -320,7 +398,7 @@ export default function NetworkGraph() {
     }
     ctx.fill();
 
-    // 3. Border
+    // 3. Border (카테고리별 색상)
     ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : 2;
     if (isDimmed) {
       ctx.strokeStyle = 'rgba(33, 38, 45, 0.3)';
@@ -332,38 +410,71 @@ export default function NetworkGraph() {
       ctx.strokeStyle = COLORS.hover;
     } else if (node.degree === 0) {
       ctx.strokeStyle = COLORS.nodeCore;
-    } else if (node.degree === 1) {
-      ctx.strokeStyle = COLORS.nodePrimary;
     } else {
-      ctx.strokeStyle = COLORS.nodeSecondary;
+      // Use category color for border
+      const category = node.category || '기타';
+      ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
     }
     ctx.stroke();
 
-    // 4. Name Label with background
+    // 4. Name Label with radial positioning for better readability
     const fontSize = node.degree === 0 ? FONT_SIZES.core :
                      node.degree === 1 ? FONT_SIZES.primary :
-                     FONT_SIZES.secondary;
+                     11; // degree 2는 11px로 축소
 
     ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
 
     const name = node.name.length > 6 ? node.name.slice(0, 6) + '...' : node.name;
-    const labelY = y + radius + 18;
+
+    // 방사형 레이블 배치: 중앙에서 노드로 향하는 방향으로 레이블 위치 결정
+    let labelX = x;
+    let labelY = y;
+
+    if (node.degree !== 0) {
+      const centerX = dimensions.width / 2;
+      const centerY = dimensions.height / 2;
+      const angle = Math.atan2(y - centerY, x - centerX);
+      const labelDistance = radius + 18;
+
+      labelX = x + Math.cos(angle) * labelDistance;
+      labelY = y + Math.sin(angle) * labelDistance;
+
+      // 레이블 정렬 조정 (각도에 따라)
+      if (Math.abs(angle) < Math.PI / 4) {
+        // 오른쪽
+        ctx.textAlign = 'left';
+      } else if (Math.abs(angle) > (3 * Math.PI) / 4) {
+        // 왼쪽
+        ctx.textAlign = 'right';
+      } else {
+        // 위/아래
+        ctx.textAlign = 'center';
+      }
+    } else {
+      // 중앙 노드는 아래에
+      ctx.textAlign = 'center';
+      labelY = y + radius + 18;
+    }
+
+    ctx.textBaseline = 'middle';
 
     // Label background
     if (!isDimmed) {
       const textWidth = ctx.measureText(name).width;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      const bgX = ctx.textAlign === 'left' ? labelX :
+                  ctx.textAlign === 'right' ? labelX - textWidth :
+                  labelX - textWidth / 2;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
       ctx.beginPath();
-      ctx.roundRect(x - textWidth / 2 - 6, labelY - 8, textWidth + 12, 16, 4);
+      ctx.roundRect(bgX - 6, labelY - 8, textWidth + 12, 16, 4);
       ctx.fill();
     }
 
     // Label text
     ctx.fillStyle = isDimmed ? COLORS.textDimmed : COLORS.textPrimary;
-    ctx.fillText(name, x, labelY);
-  }, [getNodeSize]);
+    ctx.fillText(name, labelX, labelY);
+  }, [getNodeSize, dimensions.width, dimensions.height]);
 
   // Render
   const render = useCallback(() => {
@@ -385,6 +496,86 @@ export default function NetworkGraph() {
     ctx.save();
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.scale, transform.scale);
+
+    // ===== Draw Category Sectors =====
+    const centerX = dimensions.width / 2;
+    const centerY = dimensions.height / 2;
+    const categoryAngles = categoryAnglesRef.current;
+
+    // Draw category sector backgrounds (more visible)
+    categoryAngles.forEach((info, category) => {
+      const { start, end } = info;
+      const midAngle = (start + end) / 2;
+      const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+      const r = parseInt(categoryColor.slice(1, 3), 16);
+      const g = parseInt(categoryColor.slice(3, 5), 16);
+      const b = parseInt(categoryColor.slice(5, 7), 16);
+
+      // Draw filled sector background (from center to outer ring)
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, 350, start, end);
+      ctx.lineTo(centerX, centerY);
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.12)`;
+      ctx.fill();
+
+      // Draw sector border lines
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    // Draw dividing lines between sectors
+    categoryAngles.forEach((info, category) => {
+      const { start } = info;
+      const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+
+      // Draw radial line at sector start
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(
+        centerX + Math.cos(start) * 370,
+        centerY + Math.sin(start) * 370
+      );
+      ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Draw category labels
+    categoryAngles.forEach((info, category) => {
+      const { start, end, nodes } = info;
+      const midAngle = (start + end) / 2;
+      const labelRadius = 220; // Positioned near the first ring
+      const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+
+      const labelX = centerX + Math.cos(midAngle) * labelRadius;
+      const labelY = centerY + Math.sin(midAngle) * labelRadius;
+
+      // Category label with count
+      const labelText = `${category} (${nodes.length})`;
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Label background
+      const textWidth = ctx.measureText(labelText).width;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.beginPath();
+      ctx.roundRect(labelX - textWidth / 2 - 10, labelY - 12, textWidth + 20, 24, 8);
+      ctx.fill();
+
+      // Label border with category color
+      ctx.strokeStyle = categoryColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label text
+      ctx.fillStyle = categoryColor;
+      ctx.fillText(labelText, labelX, labelY);
+    });
 
     // ===== Draw Edges =====
     // 1. Non-connected edges first (drawn behind)
@@ -497,7 +688,7 @@ export default function NetworkGraph() {
     }
 
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, dimensions.width, dimensions.height]);
 
   // Smooth animation to target transform
   useEffect(() => {
@@ -817,6 +1008,22 @@ export default function NetworkGraph() {
       {/* Zoom Level Indicator */}
       <div className="absolute bottom-6 left-6 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#1E3A5F]">
         {Math.round(transform.scale * 100)}%
+      </div>
+
+      {/* Category Legend */}
+      <div className="absolute top-6 right-6 bg-[#151922]/90 backdrop-blur-xl border border-[#1E3A5F] rounded-xl px-4 py-3 shadow-2xl max-w-xs">
+        <div className="text-xs font-semibold text-white mb-2">분야별 인맥</div>
+        <div className="grid grid-cols-2 gap-2">
+          {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+            <div key={category} className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: color }}
+              />
+              <span className="text-[11px] text-[#8BA4C4]">{category}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

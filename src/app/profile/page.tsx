@@ -26,6 +26,7 @@ import {
   logoutUser,
   onAuthChange,
   getUser,
+  savePublicCard,
 } from '@/lib/firebase-services';
 
 export default function ProfilePage() {
@@ -61,6 +62,20 @@ export default function ProfilePage() {
     try {
       const imageUrl = await uploadProfileImage(user.id, file);
       await updateUser(user.id, { profileImage: imageUrl });
+
+      // 공개 명함도 자동 업데이트 (프로필 이미지 변경 즉시 반영)
+      await savePublicCard({
+        id: user.id,
+        name: user.name,
+        company: user.company,
+        position: user.position,
+        email: user.email,
+        phone: user.phone,
+        bio: user.bio,
+        profileImage: imageUrl,
+        keywords: user.keywords,
+      });
+
       setUser({ ...user, profileImage: imageUrl });
       setEditedUser(prev => prev ? { ...prev, profileImage: imageUrl } : prev);
     } catch (error) {
@@ -80,6 +95,20 @@ export default function ProfilePage() {
         bio: editedUser.bio,
         keywords: editedUser.keywords,
         });
+
+      // 공개 명함도 자동 업데이트 (QR 코드 스캔 시 최신 정보 표시)
+      await savePublicCard({
+        id: editedUser.id,
+        name: editedUser.name,
+        company: editedUser.company,
+        position: editedUser.position,
+        email: editedUser.email,
+        phone: editedUser.phone,
+        bio: editedUser.bio,
+        profileImage: editedUser.profileImage,
+        keywords: editedUser.keywords,
+      });
+
       setUser(editedUser);
       setIsEditing(false);
     } catch (error) {
