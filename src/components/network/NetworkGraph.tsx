@@ -231,9 +231,9 @@ export default function NetworkGraph() {
 
           // Calculate how many nodes fit per ring based on arc length
           // Minimum spacing between nodes (in pixels) to avoid overlap
-          const minNodeSpacing = 85;
-          const baseRadius = 280;
-          const ringGap = 65; // distance between rings
+          const minNodeSpacing = 110;
+          const baseRadius = 300;
+          const ringGap = 95; // distance between rings
           const sectorPadding = 0.05;
           const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
 
@@ -551,13 +551,6 @@ export default function NetworkGraph() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // 라벨이 다른 노드의 얼굴을 가리면 표시하지 않음 (중앙 노드/호버/포커스 제외)
-    if (node.degree !== 0 && !isFocused) {
-      if (labelOverlapsNode(labelX, labelY, labelHalfW, labelHalfH, node, allNodes)) {
-        return;
-      }
-    }
-
     if (!isDimmed) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.beginPath();
@@ -593,16 +586,13 @@ export default function NetworkGraph() {
         const detailHalfW = detailWidth / 2 + 5;
         const detailHalfH = 8;
 
-        // 상세 라벨도 충돌 검사
-        if (!labelOverlapsNode(labelX, detailY, detailHalfW, detailHalfH, node, allNodes)) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-          ctx.beginPath();
-          ctx.roundRect(labelX - detailHalfW, detailY - detailHalfH, detailHalfW * 2, detailHalfH * 2, 3);
-          ctx.fill();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.beginPath();
+        ctx.roundRect(labelX - detailHalfW, detailY - detailHalfH, detailHalfW * 2, detailHalfH * 2, 3);
+        ctx.fill();
 
-          ctx.fillStyle = COLORS.textSecondary;
-          ctx.fillText(truncDetail, labelX, detailY);
-        }
+        ctx.fillStyle = COLORS.textSecondary;
+        ctx.fillText(truncDetail, labelX, detailY);
         ctx.restore();
       }
     }
@@ -1107,10 +1097,21 @@ export default function NetworkGraph() {
     const node = getNodeAtPosition(x, y);
 
     if (node) {
-      focusOnNode(node);
-      if (node.degree !== 0) {
-        setSelectedNode(node);
+      // 같은 노드를 다시 클릭하면 포커스 해제
+      if (focusedNodeId === node.id) {
+        setFocusedNodeId(null);
+        setSelectedNode(null);
+        setExpandedNodeIds(prev => {
+          const next = new Set(prev);
+          next.delete(node.id);
+          return next;
+        });
+        return;
       }
+
+      focusOnNode(node);
+      setSelectedNode(node);
+
       // degree 1 노드 클릭 시 2차 인맥 확장/축소 토글
       if (node.degree === 1) {
         setExpandedNodeIds(prev => {
@@ -1125,6 +1126,7 @@ export default function NetworkGraph() {
       }
     } else {
       setFocusedNodeId(null);
+      setSelectedNode(null);
     }
   };
 
