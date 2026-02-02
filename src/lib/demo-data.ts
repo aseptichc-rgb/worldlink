@@ -56,6 +56,10 @@ const memberData = [
   { id: 'member_50', name: '황은경', company: '창헬스케어', position: '부사장', phone: '010-7503-1215', email: 'ekhwang@changhc.com', bio: '맞춤형 건강 검진 및 질병 예방을 위한 헬스케어 대행사입니다.', keywords: ['건강검진', '예방의학', '헬스케어', '대행'], specialRole: '고문', category: '비즈니스' },
 ];
 
+// 이름으로 카테고리 조회 (Firebase 데이터에 category가 없을 때 fallback용)
+const nameToCategoryMap = new Map(memberData.map(m => [m.name, m.category]));
+export const getCategoryByName = (name: string): string | undefined => nameToCategoryMap.get(name);
+
 // User 객체로 변환
 export const demoUsers: User[] = memberData.map(m => ({
   id: m.id,
@@ -110,7 +114,7 @@ for (const id of allMemberIds) {
 
 // 김재영 (member_8) 중심 네트워크 그래프
 export const getDemoNetworkGraph = (userId: string): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
-  const currentUser = demoUsers.find(u => u.id === userId) || demoUsers.find(u => u.id === 'member_8')!;
+  const currentUser = demoUsers.find(u => u.id === userId) || demoUsers.find(u => u.name === userId) || demoUsers.find(u => u.id === 'member_8')!;
   const userConnections = demoConnections[currentUser.id] || [];
 
   const getMemberCategory = (id: string) => memberData.find(m => m.id === id)?.category || '기타';

@@ -497,6 +497,23 @@ export const isFirstDegreeConnection = async (currentUserId: string, targetUserI
 
 import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs } from './demo-data';
 
+// 이름 → 카테고리 매핑 (Firestore에 category가 없는 기존 데이터 호환용)
+const NAME_CATEGORY_MAP: Record<string, string> = {
+  '강대원': '의료기기', '고상원': '솔루션', '권인호': '투자', '김국배': '의료기기',
+  '김선욱': '법률', '김성포': '바이오', '김소은': '제약', '김재영': '솔루션',
+  '김재형': '의료기기', '김학준': '의료기관', '김홍주': '제약', '나해란': '의료기관',
+  '박재은': '솔루션', '변희병': '제약', '선경훈': '의료기관', '송재준': '의료기관',
+  '송진규': '바이오', '신현주': '비즈니스', '양성용': '솔루션', '양정희': '의료기관',
+  '오가나': '의료기관', '윤동욱': '법률', '윤여혜': '제약', '윤정로': '의료기관',
+  '이민우': '의료기관', '이석구': '비즈니스', '이성현': '의료기관', '이승아': '의료기기',
+  '이승표': '의료기관', '이영환': '솔루션', '이예하': '솔루션', '이종근': '특허',
+  '이태규': '투자', '임환': '비즈니스', '장강호': '투자', '장우석': '의료기관',
+  '정경진': '바이오', '정성관': '의료기관', '조경희': '의료기관', '주이신': '의료기관',
+  '주형로': '의료기관', '최승현': '바이오', '최종일': '의료기관', '최준': '의료기관',
+  '태범식': '의료기관', '한예성': '솔루션', '한성희': '의료기관', '허기나': '의료기기',
+  '홍석원': '의료기관', '황은경': '비즈니스',
+};
+
 export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
   // 먼저 Firebase에서 실제 연결 데이터 확인
   const directConnections = await getDirectConnections(userId);
@@ -524,6 +541,7 @@ export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkN
     keywords: currentUser.keywords,
     degree: 0,
     connectionCount: 0,
+    category: currentUser.category || NAME_CATEGORY_MAP[currentUser.name],
   });
   userMap.set(currentUser.id, currentUser);
 
@@ -546,6 +564,7 @@ export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkN
         keywords: connectedUser.keywords,
         degree: 1,
         connectionCount: 0,
+        category: connectedUser.category || NAME_CATEGORY_MAP[connectedUser.name],
       });
 
       edges.push({
@@ -589,6 +608,7 @@ export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkN
           keywords: secondDegreeUser.keywords,
           degree: 2,
           connectionCount: 0,
+          category: secondDegreeUser.category || NAME_CATEGORY_MAP[secondDegreeUser.name],
         });
 
         edges.push({
@@ -600,11 +620,15 @@ export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkN
     }
   }
 
-  // Update connection counts
+  // Update connection counts and ensure category
   nodes.forEach(node => {
     node.connectionCount = edges.filter(
       edge => edge.source === node.id || edge.target === node.id
     ).length;
+    // category fallback: Firestore에 category가 없으면 이름으로 매핑
+    if (!node.category) {
+      node.category = NAME_CATEGORY_MAP[node.name];
+    }
   });
 
   return { nodes, edges };

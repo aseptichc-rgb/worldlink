@@ -279,6 +279,12 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
     ctx.scale(transform.scale, transform.scale);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
+    // Responsive font size: compensate for zoom so text stays readable
+    const adaptiveFontSize = (baseSize: number) => {
+      const compensated = baseSize / Math.max(transform.scale, 0.3);
+      return Math.min(Math.max(compensated, baseSize), baseSize * 3);
+    };
+
     // Draw cluster backgrounds
     for (const cluster of clustersRef.current) {
       const info = CATEGORY_INFO[cluster.category];
@@ -306,17 +312,19 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       ctx.setLineDash([]);
 
       // Label
-      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif';
+      ctx.font = `bold ${adaptiveFontSize(14)}px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       const labelText = `${info.icon} ${info.name}`;
-      const labelWidth = ctx.measureText(labelText).width + 16;
+      const clusterFontSize = adaptiveFontSize(14);
+      const labelWidth = ctx.measureText(labelText).width + 20;
+      const labelHeight = clusterFontSize + 10;
       const labelY = cluster.centerY - cluster.radius - 16;
 
       ctx.fillStyle = 'rgba(16, 29, 51, 0.9)';
       ctx.beginPath();
-      ctx.roundRect(cluster.centerX - labelWidth / 2, labelY - 10, labelWidth, 20, 10);
+      ctx.roundRect(cluster.centerX - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight, labelHeight / 2);
       ctx.fill();
       ctx.strokeStyle = info.borderColor;
       ctx.stroke();
@@ -325,14 +333,16 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       ctx.fillText(labelText, cluster.centerX, labelY);
 
       // Count
-      ctx.font = '10px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif';
+      ctx.font = `${adaptiveFontSize(12)}px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif`;
       const countText = `${cluster.nodes.length}명`;
-      const countWidth = ctx.measureText(countText).width + 14;
+      const countFontSize = adaptiveFontSize(12);
+      const countWidth = ctx.measureText(countText).width + 16;
+      const countHeight = countFontSize + 8;
       const countY = cluster.centerY + cluster.radius + 14;
 
       ctx.fillStyle = info.bgColor;
       ctx.beginPath();
-      ctx.roundRect(cluster.centerX - countWidth / 2, countY - 9, countWidth, 18, 9);
+      ctx.roundRect(cluster.centerX - countWidth / 2, countY - countHeight / 2, countWidth, countHeight, countHeight / 2);
       ctx.fill();
       ctx.fillStyle = info.color;
       ctx.fillText(countText, cluster.centerX, countY);
@@ -467,15 +477,17 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
 
       // Name label
       if (isHovered || isConnectedToHovered) {
-        ctx.font = `bold ${isHovered ? 12 : 10}px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif`;
+        ctx.font = `bold ${adaptiveFontSize(isHovered ? 14 : 12)}px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif`;
         ctx.textAlign = 'center';
         const labelY = node.y + radius + 14;
 
         const displayName = node.name;
+        const nameFontSize = adaptiveFontSize(isHovered ? 14 : 12);
         const textWidth = ctx.measureText(displayName).width;
+        const namePillHeight = nameFontSize + 8;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
         ctx.beginPath();
-        ctx.roundRect(node.x - textWidth / 2 - 6, labelY - 9, textWidth + 12, 18, 5);
+        ctx.roundRect(node.x - textWidth / 2 - 8, labelY - namePillHeight / 2, textWidth + 16, namePillHeight, 5);
         ctx.fill();
 
         ctx.fillStyle = isConnectedToHovered && !isHovered ? '#FFD700' : '#FFFFFF';

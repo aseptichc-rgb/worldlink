@@ -53,6 +53,7 @@ export interface User {
   positionLevel?: 'entry' | 'staff' | 'manager' | 'executive';
   bio?: string;
   keywords: string[];
+  category?: string; // 분야/카테고리 (예: 의료기기, 솔루션, 투자 등)
   inviteCode: string;
   invitesRemaining: number;
   invitedBy?: string;

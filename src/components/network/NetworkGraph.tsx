@@ -90,7 +90,6 @@ function getProfileImage(src: string): HTMLImageElement | null {
 
   imageLoadingSet.add(src);
   const img = new Image();
-  img.crossOrigin = 'anonymous';
   img.onload = () => {
     imageCache.set(src, img);
     imageLoadingSet.delete(src);
