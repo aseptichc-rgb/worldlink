@@ -1,21 +1,28 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileSetup, { ProfileData } from '@/components/onboarding/ProfileSetup';
 import { Input, Button } from '@/components/ui';
+import Avatar from '@/components/ui/Avatar';
 import {
   registerWithEmail,
   createUser,
   generateInviteCode,
   uploadProfileImage,
   savePublicCard,
+  getInvitationByCode,
+  acceptInvitation,
+  createAutoConnection,
+  createConnection,
+  getUser,
 } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
-import { Mail, Lock, ArrowRight, User } from 'lucide-react';
+import { User as UserType, Invitation } from '@/types';
+import { Mail, Lock, ArrowRight, User, Users, Check, X, Shield, Eye, EyeOff } from 'lucide-react';
 
-type OnboardingStep = 'auth' | 'profile';
+type OnboardingStep = 'auth' | 'profile' | 'connection';
 
 function OnboardingContent() {
   const router = useRouter();
@@ -28,6 +35,44 @@ function OnboardingContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 일촌 수락 관련 상태
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviterInfo, setInviterInfo] = useState<UserType | null>(null);
+  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [newUserId, setNewUserId] = useState<string | null>(null);
+  const [connectionLoading, setConnectionLoading] = useState(false);
+
+  // 정보 공개 설정
+  const [privacyChoices, setPrivacyChoices] = useState({
+    nameDisplay: 'full' as 'full' | 'partial',
+    companyDisplay: 'full' as 'full' | 'industry' | 'size' | 'hidden',
+    positionDisplay: 'full' as 'full' | 'level' | 'hidden',
+  });
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      setInviteCode(code);
+      // 초대자 정보 미리 로드
+      loadInviterInfo(code);
+    }
+  }, [searchParams]);
+
+  const loadInviterInfo = async (code: string) => {
+    try {
+      const inv = await getInvitationByCode(code);
+      if (inv) {
+        setInvitation(inv);
+        const sender = await getUser(inv.senderId);
+        if (sender) {
+          setInviterInfo(sender);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load inviter info:', err);
+    }
+  };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +121,7 @@ function OnboardingContent() {
         profileImage: profileImageUrl,
         inviteCode: userInviteCode,
         invitesRemaining: 10,
+        invitedBy: invitation?.senderId,
         coffeeStatus: 'available',
         privacySettings: {
           allowProfileDiscovery: profile.privacyConsent.allowProfileDiscovery,
@@ -85,7 +131,7 @@ function OnboardingContent() {
         },
       });
 
-      // Firebase에 공개 명함 자동 저장 (QR 코드 스캔 시 즉시 조회 가능하도록)
+      // Firebase에 공개 명함 자동 저장
       await savePublicCard({
         id: newUser.id,
         name: newUser.name,
@@ -99,7 +145,14 @@ function OnboardingContent() {
       });
 
       setUser(newUser);
-      router.push('/card');
+      setNewUserId(firebaseUser.uid);
+
+      // 초대 코드가 있고 초대자 정보가 있으면 일촌 수락 단계로
+      if (inviteCode && inviterInfo) {
+        setStep('connection');
+      } else {
+        router.push('/card');
+      }
     } catch (err: any) {
       console.error('Registration error:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -113,10 +166,45 @@ function OnboardingContent() {
     }
   };
 
+  const handleAcceptConnection = async () => {
+    if (!newUserId || !inviterInfo || !inviteCode) return;
+    setConnectionLoading(true);
+
+    try {
+      // 일촌 연결 생성 (바로 accepted)
+      await createAutoConnection(inviterInfo.id, newUserId);
+      // 초대 수락 처리
+      await acceptInvitation(inviteCode, newUserId);
+      router.push('/card');
+    } catch (err) {
+      console.error('Failed to accept connection:', err);
+      router.push('/card');
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
+  const handleRejectConnection = async () => {
+    if (!newUserId || !inviteCode) return;
+    setConnectionLoading(true);
+
+    try {
+      // 초대는 수락 처리하되 (가입은 완료됨) 일촌 연결은 생성하지 않음
+      await acceptInvitation(inviteCode, newUserId);
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setConnectionLoading(false);
+      router.push('/card');
+    }
+  };
+
   // Step indicator
+  const hasInviteCode = !!inviteCode;
   const steps = [
     { key: 'auth', label: '계정 생성', icon: Mail },
     { key: 'profile', label: '프로필 설정', icon: User },
+    ...(hasInviteCode ? [{ key: 'connection', label: '일촌 수락', icon: Users }] : []),
   ];
 
   const currentStepIndex = steps.findIndex(s => s.key === step);
@@ -198,6 +286,22 @@ function OnboardingContent() {
             className="w-full max-w-[400px]"
           >
             <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
+              {/* 초대자 정보 표시 */}
+              {inviterInfo && (
+                <div className="mb-6 p-4 rounded-xl bg-[#86C9F2]/5 border border-[#86C9F2]/20">
+                  <div className="flex items-center gap-3">
+                    <Avatar src={inviterInfo.profileImage} name={inviterInfo.name} size="sm" />
+                    <div>
+                      <p className="text-xs text-[#86C9F2]">초대한 사람</p>
+                      <p className="text-sm text-white font-medium">{inviterInfo.name}</p>
+                      {inviterInfo.company && (
+                        <p className="text-xs text-[#8BA4C4]">{inviterInfo.company} {inviterInfo.position}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-white tracking-tight">
                   계정 생성
@@ -276,6 +380,166 @@ function OnboardingContent() {
                   {error}
                 </motion.p>
               )}
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'connection' && inviterInfo && (
+          <motion.div
+            key="connection"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-[440px]"
+          >
+            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  일촌 요청
+                </h2>
+                <p className="text-[#4A5E7A] text-sm mt-2">
+                  아래 사람과 일촌을 맺으시겠습니까?
+                </p>
+              </div>
+
+              {/* 초대자 프로필 */}
+              <div className="flex flex-col items-center mb-6 p-6 rounded-xl bg-[#162A4A] border border-[#1E3A5F]">
+                <Avatar src={inviterInfo.profileImage} name={inviterInfo.name} size="lg" hasGlow />
+                <h3 className="text-lg font-bold text-white mt-3">{inviterInfo.name}</h3>
+                {inviterInfo.position && (
+                  <p className="text-sm text-[#8BA4C4] mt-1">{inviterInfo.position}</p>
+                )}
+                {inviterInfo.company && (
+                  <p className="text-sm text-[#8BA4C4]">{inviterInfo.company}</p>
+                )}
+                {inviterInfo.keywords && inviterInfo.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
+                    {inviterInfo.keywords.slice(0, 5).map((kw, i) => (
+                      <span key={i} className="px-2 py-0.5 text-xs rounded-full bg-[#86C9F2]/10 text-[#86C9F2]">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 내 정보 공개 설정 */}
+              <div className="mb-6 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]">
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield size={16} className="text-[#86C9F2]" />
+                  <h4 className="text-sm font-medium text-white">내 정보 공개 범위</h4>
+                </div>
+
+                <div className="space-y-3">
+                  {/* 이름 공개 */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#8BA4C4]">이름</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPrivacyChoices(p => ({ ...p, nameDisplay: 'full' }))}
+                        className={`px-3 py-1 text-xs rounded-full transition-all ${
+                          privacyChoices.nameDisplay === 'full'
+                            ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
+                            : 'bg-[#1E3A5F] text-[#4A5E7A]'
+                        }`}
+                      >
+                        전체 공개
+                      </button>
+                      <button
+                        onClick={() => setPrivacyChoices(p => ({ ...p, nameDisplay: 'partial' }))}
+                        className={`px-3 py-1 text-xs rounded-full transition-all ${
+                          privacyChoices.nameDisplay === 'partial'
+                            ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
+                            : 'bg-[#1E3A5F] text-[#4A5E7A]'
+                        }`}
+                      >
+                        성만 표시
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 회사 공개 */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#8BA4C4]">회사</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPrivacyChoices(p => ({ ...p, companyDisplay: 'full' }))}
+                        className={`px-3 py-1 text-xs rounded-full transition-all ${
+                          privacyChoices.companyDisplay === 'full'
+                            ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
+                            : 'bg-[#1E3A5F] text-[#4A5E7A]'
+                        }`}
+                      >
+                        공개
+                      </button>
+                      <button
+                        onClick={() => setPrivacyChoices(p => ({ ...p, companyDisplay: 'hidden' }))}
+                        className={`px-3 py-1 text-xs rounded-full transition-all ${
+                          privacyChoices.companyDisplay === 'hidden'
+                            ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
+                            : 'bg-[#1E3A5F] text-[#4A5E7A]'
+                        }`}
+                      >
+                        비공개
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 직책 공개 */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#8BA4C4]">직책</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPrivacyChoices(p => ({ ...p, positionDisplay: 'full' }))}
+                        className={`px-3 py-1 text-xs rounded-full transition-all ${
+                          privacyChoices.positionDisplay === 'full'
+                            ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
+                            : 'bg-[#1E3A5F] text-[#4A5E7A]'
+                        }`}
+                      >
+                        공개
+                      </button>
+                      <button
+                        onClick={() => setPrivacyChoices(p => ({ ...p, positionDisplay: 'hidden' }))}
+                        className={`px-3 py-1 text-xs rounded-full transition-all ${
+                          privacyChoices.positionDisplay === 'hidden'
+                            ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
+                            : 'bg-[#1E3A5F] text-[#4A5E7A]'
+                        }`}
+                      >
+                        비공개
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 수락/거절 버튼 */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRejectConnection}
+                  disabled={connectionLoading}
+                  className="flex-1 py-3.5 rounded-xl bg-[#1E3A5F] text-[#8BA4C4] font-medium flex items-center justify-center gap-2 hover:bg-[#253D5E] transition-colors"
+                >
+                  <X size={18} />
+                  거절
+                </button>
+                <button
+                  onClick={handleAcceptConnection}
+                  disabled={connectionLoading}
+                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium flex items-center justify-center gap-2"
+                >
+                  {connectionLoading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      일촌 수락
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

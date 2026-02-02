@@ -74,10 +74,10 @@ const NODE_SIZES = {
 
 // 폰트 크기 상수
 const FONT_SIZES = {
-  core: 16,
-  primary: 14,
-  secondary: 12,
-  tertiary: 11,
+  core: 20,
+  primary: 17,
+  secondary: 14,
+  tertiary: 13,
 };
 
 // 프로필 이미지 캐시
@@ -764,15 +764,15 @@ export default function NetworkGraph() {
         // 카테고리명 + 인원수
         const labelText = category;
         const countText = `${categoryNodes.length}명`;
-        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+        ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(labelText, cx, cy - 8);
 
-        ctx.font = '13px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
         ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.9)`;
-        ctx.fillText(countText, cx, cy + 12);
+        ctx.fillText(countText, cx, cy + 16);
       });
 
       ctx.restore();

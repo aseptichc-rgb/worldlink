@@ -99,6 +99,7 @@ export interface Invitation {
   sentAt: Date;
   acceptedAt?: Date;
   acceptedBy?: string;
+  connectionId?: string;
 }
 
 // Keyword Types

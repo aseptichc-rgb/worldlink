@@ -9,6 +9,7 @@ import ContactList from '@/components/contacts/ContactList';
 import ContactDetail from '@/components/contacts/ContactDetail';
 import CategoryFilter from '@/components/contacts/CategoryFilter';
 import { Search, LayoutGrid, Network, Users, ChevronLeft, Loader2, UserPlus, Check, Filter } from 'lucide-react';
+import KakaoInvitePrompt from '@/components/invite/KakaoInvitePrompt';
 
 type ViewMode = 'graph' | 'list';
 type FilterMode = 'all' | 'invited' | 'pending';
@@ -34,6 +35,8 @@ export default function ContactsPage() {
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showKakaoPrompt, setShowKakaoPrompt] = useState(false);
+  const [inviteTarget, setInviteTarget] = useState<{ name: string; phone?: string; email?: string } | null>(null);
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -71,6 +74,15 @@ export default function ContactsPage() {
 
   const handleInvite = (contactId: string) => {
     inviteContact(contactId);
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact) {
+      setInviteTarget({
+        name: contact.name,
+        phone: contact.phone || undefined,
+        email: contact.email || undefined,
+      });
+      setShowKakaoPrompt(true);
+    }
   };
 
   // 필터 적용된 연락처
@@ -272,6 +284,22 @@ export default function ContactsPage() {
           )}
         </AnimatePresence>
       </main>
+
+      {showKakaoPrompt && inviteTarget && (
+        <KakaoInvitePrompt
+          recipientName={inviteTarget.name}
+          recipientPhone={inviteTarget.phone}
+          recipientEmail={inviteTarget.email}
+          onClose={() => {
+            setShowKakaoPrompt(false);
+            setInviteTarget(null);
+          }}
+          onSent={() => {
+            setShowKakaoPrompt(false);
+            setInviteTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 }

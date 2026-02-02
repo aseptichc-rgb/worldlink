@@ -25,6 +25,7 @@ import {
   generateInviteLink,
   getUser,
 } from "@/lib/firebase-services";
+import { loadKakaoSDK, sendKakaoInvite } from "@/lib/kakao-sdk";
 
 interface InviteManagerProps {
   userId: string;
@@ -160,13 +161,22 @@ export function InviteManager({
         );
         window.open(`mailto:${email}?subject=${subject}&body=${body}`);
       } else if (selectedMethod === "kakao") {
-        // 카카오톡 공유
-        await copyToClipboard(
-          `${userName}님이 NODDED에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n${inviteLink}`
-        );
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        window.open("kakaotalk://");
+        // 카카오톡 공유 SDK
+        try {
+          await loadKakaoSDK();
+          sendKakaoInvite({
+            senderName: userName,
+            inviteLink,
+          });
+        } catch {
+          // SDK 로드 실패 시 클립보드 폴백
+          await copyToClipboard(
+            `${userName}님이 NODDED에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n${inviteLink}`
+          );
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          window.open("kakaotalk://");
+        }
       } else if (selectedMethod === "sms") {
         const smsBody = encodeURIComponent(
           `${userName}님이 NODDED에 초대했습니다!\n가입 링크: ${inviteLink}`
@@ -451,8 +461,7 @@ export function InviteManager({
               {selectedMethod === "kakao" && (
                 <div className="space-y-4">
                   <p className="text-sm text-[#8BA4C4]">
-                    초대 링크가 클립보드에 복사되고 카카오톡이 열립니다.
-                    친구에게 링크를 붙여넣어 공유해주세요.
+                    카카오톡 공유 창이 열리며 초대 메시지가 전송됩니다.
                   </p>
                   <Button
                     className="w-full flex items-center justify-center gap-2"

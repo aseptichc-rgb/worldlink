@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Hash, User, Building, ArrowRight, StickyNote } from 'lucide-react';
+import { Search, X, Hash, User, Building, ArrowRight, StickyNote, Sparkles, Loader2 } from 'lucide-react';
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMemoStore } from '@/store/memoStore';
@@ -13,6 +13,16 @@ import { NetworkNode } from '@/types';
 const popularKeywords = [
   '스타트업', 'AI', '투자', '마케팅', '개발', 'SaaS', 'B2B', '디자인'
 ];
+
+interface AiResult {
+  memberId: string;
+  reason: string;
+}
+
+interface AiSearchResponse {
+  summary: string;
+  results: AiResult[];
+}
 
 interface PersonResult {
   id: string;
@@ -31,7 +41,10 @@ export default function SearchBar() {
   const [isFocused, setIsFocused] = useState(false);
   const [keywordSuggestions, setKeywordSuggestions] = useState<string[]>([]);
   const [personResults, setPersonResults] = useState<PersonResult[]>([]);
+  const [aiResponse, setAiResponse] = useState<AiSearchResponse | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const aiAbortRef = useRef<AbortController | null>(null);
 
   const {
     nodes,
@@ -146,6 +159,33 @@ export default function SearchBar() {
     }
   }, [query, nodes, searchConnectedPeople]);
 
+  const triggerAiSearch = useCallback(async (searchQuery: string) => {
+    if (aiAbortRef.current) aiAbortRef.current.abort();
+    const controller = new AbortController();
+    aiAbortRef.current = controller;
+
+    setAiLoading(true);
+    setAiResponse(null);
+
+    try {
+      const res = await fetch('/api/ai-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: searchQuery }),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error('AI search failed');
+      const data: AiSearchResponse = await res.json();
+      setAiResponse(data);
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        console.error('AI search error:', err);
+      }
+    } finally {
+      setAiLoading(false);
+    }
+  }, []);
+
   const handleKeywordSearch = (keyword: string) => {
     setHighlightedKeyword(keyword);
     setQuery('');
@@ -185,6 +225,9 @@ export default function SearchBar() {
     setQuery('');
     setHighlightedKeyword(null);
     setPersonResults([]);
+    setAiResponse(null);
+    setAiLoading(false);
+    if (aiAbortRef.current) aiAbortRef.current.abort();
     inputRef.current?.focus();
   };
 
@@ -227,16 +270,16 @@ export default function SearchBar() {
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && query) {
+              // AI 검색 트리거 (자연어 질문)
+              triggerAiSearch(query);
               if (personResults.length > 0) {
-                handlePersonSelect(personResults[0]);
+                // 기존 검색 결과가 있으면 선택하지 않고 AI 결과를 기다림
               } else if (keywordSuggestions.length > 0) {
                 handleKeywordSearch(keywordSuggestions[0]);
-              } else {
-                handleKeywordSearch(query);
               }
             }
           }}
-          placeholder="이름, 회사, 키워드, 메모로 검색"
+          placeholder="AI에게 인맥 추천을 요청해보세요"
           className="
             flex-1 bg-transparent text-white
             py-3 pr-4
@@ -280,7 +323,7 @@ export default function SearchBar() {
 
       {/* Search Results Dropdown */}
       <AnimatePresence>
-        {isFocused && (
+        {(isFocused || aiLoading || aiResponse) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -292,6 +335,76 @@ export default function SearchBar() {
               max-h-[400px] overflow-y-auto no-scrollbar
             "
           >
+            {/* AI Search Results */}
+            {(aiLoading || aiResponse) && (
+              <div className="p-3 border-b border-[#1E3A5F]">
+                <p className="text-xs text-[#A78BFA] mb-2 px-1 flex items-center gap-1">
+                  <Sparkles size={12} />
+                  AI 추천
+                </p>
+                {aiLoading ? (
+                  <div className="flex items-center gap-2 p-3 text-[#8BA4C4] text-sm">
+                    <Loader2 size={16} className="animate-spin text-[#A78BFA]" />
+                    인맥을 분석하고 있습니다...
+                  </div>
+                ) : aiResponse && (
+                  <div>
+                    <p className="text-xs text-[#C4B5FD] mb-2 px-1 bg-[#A78BFA]/10 rounded-lg py-2">
+                      {aiResponse.summary}
+                    </p>
+                    <div className="space-y-1">
+                      {aiResponse.results.map((aiResult) => {
+                        const member = demoUsers.find(u => u.id === aiResult.memberId);
+                        if (!member) return null;
+                        const personResult: PersonResult = {
+                          id: member.id,
+                          name: member.name,
+                          company: member.company ?? '',
+                          position: member.position ?? '',
+                          profileImage: member.profileImage,
+                          keywords: member.keywords,
+                          degree: 1,
+                          path: [currentUserId, member.id],
+                        };
+                        return (
+                          <button
+                            key={aiResult.memberId}
+                            onClick={() => handlePersonSelect(personResult)}
+                            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[#162A4A] transition-colors text-left"
+                          >
+                            <Avatar
+                              src={member.profileImage}
+                              name={member.name}
+                              size="sm"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white font-medium truncate">
+                                  {member.name}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#A78BFA]/20 text-[#A78BFA]">
+                                  AI 추천
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-[#8BA4C4]">
+                                <Building size={10} />
+                                <span className="truncate">{member.company}</span>
+                                <span className="mx-1">·</span>
+                                <span className="truncate">{member.position}</span>
+                              </div>
+                              <div className="text-[10px] text-[#C4B5FD] mt-0.5 truncate">
+                                {aiResult.reason}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Person Results */}
             {personResults.length > 0 && (
               <div className="p-3 border-b border-[#1E3A5F]">

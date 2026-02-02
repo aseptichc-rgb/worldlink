@@ -22,11 +22,13 @@ import {
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import Tesseract from 'tesseract.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
 import { BusinessCard, SavedCard } from '@/types';
 import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
+import KakaoInvitePrompt from '@/components/invite/KakaoInvitePrompt';
 import { v4 as uuidv4 } from 'uuid';
 
 interface PaperCardInfo {
@@ -60,6 +62,8 @@ export default function ScanPage() {
     name: '', company: '', position: '', phone: '', email: '',
   });
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [showKakaoPrompt, setShowKakaoPrompt] = useState(false);
+  const [savedCardForInvite, setSavedCardForInvite] = useState<{ name: string; phone?: string; email?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -188,10 +192,15 @@ export default function ScanPage() {
       cardId: scannedCard.id, card: scannedCard, savedAt: new Date(),
     });
     setSaveSuccess(true);
+    setSavedCardForInvite({
+      name: scannedCard.name,
+      phone: scannedCard.phone,
+      email: scannedCard.email,
+    });
     setTimeout(() => {
       setSaveSuccess(false);
       setScannedCard(null);
-      router.push('/cards');
+      setShowKakaoPrompt(true);
     }, 1500);
   };
 
@@ -260,105 +269,49 @@ export default function ScanPage() {
     });
   };
 
-  // ==================== OCR ====================
-  const parseBusinessCardText = (text: string): PaperCardInfo => {
-    const cleanedText = text.replace(/[|}{[\]<>]/g, '').replace(/\s{2,}/g, ' ');
-    const lines = cleanedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  // ==================== OCR + Gemini (서버 API) ====================
+  const parseWithGemini = async (ocrText: string): Promise<PaperCardInfo> => {
+    try {
+      const res = await fetch('/api/parse-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ocrText }),
+      });
+
+      if (!res.ok) {
+        console.warn('API route failed, falling back to basic parsing');
+        return fallbackParse(ocrText);
+      }
+
+      const parsed = await res.json();
+      return {
+        name: parsed.name || '',
+        company: parsed.company || '',
+        position: parsed.position || '',
+        phone: parsed.phone || '',
+        email: parsed.email || '',
+      };
+    } catch (err) {
+      console.error('Parse card API error:', err);
+      return fallbackParse(ocrText);
+    }
+  };
+
+  // Gemini 실패 시 기본 파싱 (간단한 regex 폴백)
+  const fallbackParse = (text: string): PaperCardInfo => {
     const info: PaperCardInfo = { name: '', company: '', position: '', phone: '', email: '' };
+    const cleaned = text.replace(/[|}{[\]<>]/g, '').replace(/\s{2,}/g, ' ');
 
-    // 이메일
-    const emailMatch = cleanedText.match(/[a-zA-Z0-9._%+\-]+\s*@\s*[a-zA-Z0-9.\-]+\.\s*[a-zA-Z]{2,}/);
-    if (emailMatch) info.email = emailMatch[0].replace(/\s/g, '');
+    const emailMatch = cleaned.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+    if (emailMatch) info.email = emailMatch[0];
 
-    // 전화번호
-    const phonePatterns = [
-      /(?:T(?:el)?\.?\s*|M\.?\s*|H\.?\s*|HP\.?\s*|핸드폰\s*|휴대폰\s*|전화\s*|연락처\s*)?(?:\+?82[-.\s]?|0)(?:10|11|16|17|18|19)[-.\s]?\d{3,4}[-.\s]?\d{4}/i,
-      /(?:T(?:el)?\.?\s*|전화\s*)?(?:\+?82[-.\s]?|0)(?:2|3[1-3]|4[1-4]|5[1-5]|6[1-4])[-.\s]?\d{3,4}[-.\s]?\d{4}/i,
-      /(\d{2,4}[-.\s]\d{3,4}[-.\s]\d{4})/,
-    ];
-    for (const pattern of phonePatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        const numOnly = match[0].replace(/^[A-Za-z가-힣.\s:]+/, '').trim();
-        info.phone = numOnly || match[0];
-        break;
-      }
-    }
+    const phoneMatch = cleaned.match(/(?:\+?82[-.\s]?|0)(?:10|11|16|17|18|19)[-.\s]?\d{3,4}[-.\s]?\d{4}/);
+    if (phoneMatch) info.phone = phoneMatch[0].replace(/^[A-Za-z가-힣.\s:]+/, '').trim();
 
-    const textLines = lines.filter(line => {
-      if (/[a-zA-Z0-9._%+\-]+@/.test(line)) return false;
-      if (/\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4}/.test(line)) return false;
-      if (/https?:\/\/|www\./i.test(line)) return false;
-      if (/[Ff]ax|팩스|FAX/i.test(line)) return false;
-      if (/[시구군동로길번지층호]/.test(line) && /\d/.test(line)) return false;
-      if (/^[0-9\-.\s()+]+$/.test(line)) return false;
-      return true;
-    });
-
-    // 이름
-    for (const line of textLines) {
-      const exactMatch = line.match(/^[가-힣]{2,4}$/);
-      if (exactMatch) { info.name = exactMatch[0]; break; }
-    }
-    if (!info.name) {
-      for (const line of textLines) {
-        const inlineMatch = line.match(/([가-힣]{2,4})\s+(?:대표|이사|부장|차장|과장|대리|사원|매니저|팀장|실장|본부장|센터장|수석|선임|책임|주임|파트장|지점장|부서장|총괄|전무|상무)/);
-        if (inlineMatch) { info.name = inlineMatch[1]; break; }
-      }
-    }
-    if (!info.name) {
-      for (const line of textLines) {
-        const engName = line.match(/^[A-Z][a-z]+(?:\s+[A-Z]\.?)?\s+[A-Z][a-z]+$/);
-        if (engName) { info.name = engName[0]; break; }
-      }
-    }
-    if (!info.name) {
-      for (const line of textLines) {
-        if (line.length <= 10) {
-          const nameInLine = line.match(/[가-힣]{2,4}/);
-          if (nameInLine && !/대표|이사|부장|주식|회사|그룹/.test(line)) {
-            info.name = nameInLine[0]; break;
-          }
-        }
-      }
-    }
-
-    // 직책
-    const positionKeywords = [
-      '대표이사', '대표', '이사', '전무', '상무', '부사장', '사장',
-      '부장', '차장', '과장', '대리', '사원', '주임', '계장',
-      '매니저', '팀장', '실장', '본부장', '센터장', '지점장', '부서장',
-      '수석', '선임', '책임', '파트장', '총괄', '리더', '파트너',
-      'CEO', 'CTO', 'CFO', 'COO', 'CIO', 'CMO', 'CPO',
-      'VP', 'SVP', 'EVP', 'Director', 'Manager', 'Lead',
-      'Engineer', 'Developer', 'Designer', 'Analyst', 'Consultant',
-      'Associate', 'Principal', 'Senior', 'Junior', 'Staff',
-      'Head', 'Chief', 'Officer', 'President',
-    ];
-    for (const line of textLines) {
-      if (line === info.name) continue;
-      if (positionKeywords.some(kw => line.toLowerCase().includes(kw.toLowerCase()))) {
-        info.position = line.replace(info.name, '').trim();
-        break;
-      }
-    }
-
-    // 회사
-    const companyKeywords = [
-      '(주)', '주식회사', '㈜', '(株)', '유한회사',
-      'Inc', 'Corp', 'Ltd', 'LLC', 'Co.', 'Co,',
-      '그룹', '컴퍼니', 'Company', 'Group', 'Labs', 'Studio',
-      '재단', '법인', '연구소', '협회', '학회',
-    ];
-    for (const line of textLines) {
-      if (line === info.name || line === info.position) continue;
-      if (companyKeywords.some(kw => line.includes(kw))) { info.company = line; break; }
-    }
-    if (!info.company) {
-      for (const line of textLines) {
-        if (line === info.name || line === info.position) continue;
-        if (line.length >= 2 && line.length <= 30) { info.company = line; break; }
-      }
+    const lines = cleaned.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    for (const line of lines) {
+      const nameMatch = line.match(/^[가-힣]{2,4}$/);
+      if (nameMatch) { info.name = nameMatch[0]; break; }
     }
 
     return info;
@@ -368,19 +321,22 @@ export default function ScanPage() {
     setIsOcrProcessing(true);
     setViewState('ocr-processing');
     try {
+      // Step 1: Tesseract OCR로 텍스트 추출
       const processedImage = await preprocessImage(imageData);
       const result = await Tesseract.recognize(processedImage, 'kor+eng', { logger: () => {} });
-      const parsed = parseBusinessCardText(result.data.text);
-      const fieldCount = [parsed.name, parsed.company, parsed.phone, parsed.email].filter(v => v.length > 0).length;
+      let ocrText = result.data.text;
 
-      if (fieldCount < 2) {
+      // 전처리 이미지 결과가 부실하면 원본으로 재시도
+      if (ocrText.trim().length < 10) {
         const fallbackResult = await Tesseract.recognize(imageData, 'kor+eng', { logger: () => {} });
-        const fallbackParsed = parseBusinessCardText(fallbackResult.data.text);
-        const fallbackCount = [fallbackParsed.name, fallbackParsed.company, fallbackParsed.phone, fallbackParsed.email].filter(v => v.length > 0).length;
-        setPaperCardInfo(fallbackCount > fieldCount ? fallbackParsed : parsed);
-      } else {
-        setPaperCardInfo(parsed);
+        if (fallbackResult.data.text.trim().length > ocrText.trim().length) {
+          ocrText = fallbackResult.data.text;
+        }
       }
+
+      // Step 2: Gemini API로 텍스트 분류
+      const parsed = await parseWithGemini(ocrText);
+      setPaperCardInfo(parsed);
     } catch (err) {
       console.error('OCR error:', err);
     } finally {
@@ -444,9 +400,14 @@ export default function ScanPage() {
       cardId: card.id, card, cardImage: cardImage || undefined, savedAt: new Date(),
     });
     setSaveSuccess(true);
+    setSavedCardForInvite({
+      name: card.name,
+      phone: card.phone,
+      email: card.email,
+    });
     setTimeout(() => {
       setSaveSuccess(false);
-      router.push('/cards');
+      setShowKakaoPrompt(true);
     }, 1500);
   };
 
@@ -778,6 +739,22 @@ export default function ScanPage() {
           </motion.div>
         )}
       </div>
+
+      {showKakaoPrompt && savedCardForInvite && (
+        <KakaoInvitePrompt
+          recipientName={savedCardForInvite.name}
+          recipientPhone={savedCardForInvite.phone}
+          recipientEmail={savedCardForInvite.email}
+          onClose={() => {
+            setShowKakaoPrompt(false);
+            setSavedCardForInvite(null);
+            router.push('/cards');
+          }}
+          onSent={() => {
+            router.push('/cards');
+          }}
+        />
+      )}
 
       <BottomNav />
     </div>
