@@ -6,7 +6,7 @@ import { UserPlus, Send, Building, Briefcase, ArrowRight } from 'lucide-react';
 import { Modal, Button, Avatar } from '@/components/ui';
 import { useConnectionRequestStore } from '@/store/connectionRequestStore';
 import { useAuthStore } from '@/store/authStore';
-import { demoUsers, demoConnections, findDemoConnectionPath } from '@/lib/demo-data';
+import { demoUsers, demoConnections, findDemoConnectionPath, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { User } from '@/types';
 
 export default function ConnectionRequestModal() {
@@ -28,7 +28,9 @@ export default function ConnectionRequestModal() {
 
     // 연결 경로 찾기
     if (user && currentUser) {
-      const fromUserId = currentUser.id.startsWith('demo-user-') ? currentUser.id : 'demo-user-1';
+      const demoId = getDemoCompatibleId(currentUser);
+      ensureUserInDemoNetwork(currentUser.id);
+      const fromUserId = demoId !== currentUser.id ? demoId : currentUser.id;
       const pathIds = findDemoConnectionPath(fromUserId, targetUserId);
       const pathUsers: User[] = pathIds.map(id => {
         const demoUser = demoUsers.find(u => u.id === id);

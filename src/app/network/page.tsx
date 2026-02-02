@@ -15,7 +15,7 @@ import BottomNav from '@/components/ui/BottomNav';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useMessageStore, Message } from '@/store/messageStore';
-import { demoUsers } from '@/lib/demo-data';
+import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
 
@@ -81,7 +81,13 @@ export default function NetworkPage() {
 
       setNetworkLoading(true);
       try {
-        const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id);
+        const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, {
+          name: user.name,
+          profileImage: user.profileImage,
+          company: user.company,
+          position: user.position,
+          keywords: user.keywords,
+        });
         // 프로필 페이지에서 변경한 사진을 네트워크 그래프에 반영
         const syncedNodes = fetchedNodes.map(node =>
           node.id === user.id && user.profileImage
@@ -107,14 +113,16 @@ export default function NetworkPage() {
   // Load demo messages
   useEffect(() => {
     if (user && messages.length === 0) {
-      const currentUserId = user.id.startsWith('demo-user-') ? user.id : 'demo-user-1';
+      const demoId = getDemoCompatibleId(user);
+      ensureUserInDemoNetwork(user.id);
+      const currentUserId = demoId !== user.id ? demoId : user.id;
       const demoMessages = generateDemoMessages(currentUserId);
       setMessages(demoMessages);
     }
   }, [user, messages.length, setMessages]);
 
   // 읽지 않은 메세지 수
-  const currentUserId = user?.id.startsWith('demo-user-') ? user.id : 'demo-user-1';
+  const currentUserId = user ? (getDemoCompatibleId(user) !== user.id ? getDemoCompatibleId(user) : user.id) : 'member_1';
   const unreadCount = messages.filter(m => m.toUserId === currentUserId && !m.isRead).length;
 
   if (authLoading) {

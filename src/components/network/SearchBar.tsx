@@ -7,7 +7,7 @@ import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMemoStore } from '@/store/memoStore';
 import { Avatar, Tag } from '@/components/ui';
-import { demoUsers, demoConnections, findDemoConnectionPath } from '@/lib/demo-data';
+import { demoUsers, demoConnections, findDemoConnectionPath, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { NetworkNode } from '@/types';
 
 const popularKeywords = [
@@ -46,8 +46,11 @@ export default function SearchBar() {
 
   // 현재 사용자 ID
   const currentUserId = useMemo(() => {
-    if (!currentUser) return 'demo-user-1';
-    return currentUser.id.startsWith('demo-user-') ? currentUser.id : 'demo-user-1';
+    if (!currentUser) return 'member_1';
+    const demoId = getDemoCompatibleId(currentUser);
+    if (demoId !== currentUser.id) return demoId;
+    ensureUserInDemoNetwork(currentUser.id);
+    return currentUser.id;
   }, [currentUser]);
 
   // BFS로 연결 가능한 모든 사용자 검색

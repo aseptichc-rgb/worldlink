@@ -112,10 +112,75 @@ for (const id of allMemberIds) {
   demoConnections[id] = allMemberIds.filter(otherId => otherId !== id);
 }
 
-// 김재영 (member_8) 중심 네트워크 그래프
-export const getDemoNetworkGraph = (userId: string): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
-  const currentUser = demoUsers.find(u => u.id === userId) || demoUsers.find(u => u.name === userId) || demoUsers.find(u => u.id === 'member_8')!;
-  const userConnections = demoConnections[currentUser.id] || [];
+// 실제 사용자를 데모 멤버에 매핑 (이름, 이메일, 전화번호로 매칭)
+// 매칭되지 않으면 null 반환
+export const findMatchingMember = (user: { id?: string; name?: string; email?: string; phone?: string }): typeof memberData[0] | null => {
+  if (user.id && memberData.find(m => m.id === user.id)) {
+    return memberData.find(m => m.id === user.id)!;
+  }
+  if (user.name) {
+    const found = memberData.find(m => m.name === user.name);
+    if (found) return found;
+  }
+  if (user.email) {
+    const found = memberData.find(m => m.email === user.email);
+    if (found) return found;
+  }
+  if (user.phone) {
+    const found = memberData.find(m => m.phone === user.phone);
+    if (found) return found;
+  }
+  return null;
+};
+
+// 사용자의 데모 호환 ID를 반환 (매칭되는 멤버가 있으면 해당 member_X ID, 없으면 원래 ID)
+export const getDemoCompatibleId = (user: { id: string; name?: string; email?: string; phone?: string }): string => {
+  const match = findMatchingMember(user);
+  return match ? match.id : user.id;
+};
+
+// 실제 사용자를 데모 네트워크에 동적으로 추가 (아직 없는 경우)
+export const ensureUserInDemoNetwork = (userId: string): void => {
+  if (!demoConnections[userId]) {
+    // 모든 멤버와 연결
+    demoConnections[userId] = [...allMemberIds];
+    // 기존 멤버들에도 이 사용자 추가
+    for (const id of allMemberIds) {
+      if (!demoConnections[id].includes(userId)) {
+        demoConnections[id].push(userId);
+      }
+    }
+  }
+};
+
+// 네트워크 그래프
+export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
+  let currentUser = demoUsers.find(u => u.id === userId) || demoUsers.find(u => u.name === userId);
+
+  // 실제 사용자를 데모 네트워크에 추가
+  if (!currentUser) {
+    ensureUserInDemoNetwork(userId);
+    // userData가 있으면 해당 정보로 임시 User 생성
+    if (userData) {
+      currentUser = {
+        id: userId,
+        name: userData.name || '나',
+        email: '',
+        profileImage: userData.profileImage,
+        company: userData.company,
+        position: userData.position,
+        keywords: userData.keywords || [],
+        inviteCode: '',
+        invitesRemaining: 0,
+        coffeeStatus: 'available' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    } else {
+      currentUser = demoUsers[0]!;
+    }
+  }
+  const userConnections = demoConnections[currentUser.id] || demoConnections[userId] || [];
 
   const getMemberCategory = (id: string) => memberData.find(m => m.id === id)?.category || '기타';
 

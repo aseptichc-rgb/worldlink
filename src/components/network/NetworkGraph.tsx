@@ -566,8 +566,11 @@ export default function NetworkGraph() {
     const x = node.x || 0;
     const y = node.y || 0;
 
-    const fontSize = node.degree === 0 ? FONT_SIZES.core :
+    const baseFontSize = node.degree === 0 ? FONT_SIZES.core :
                      node.degree === 1 ? FONT_SIZES.primary : 11;
+    // 줌 아웃 시 폰트가 너무 작아지지 않도록 보정 (scale < 1일 때 폰트를 키움)
+    const fontScale = transform.scale < 1 ? Math.max(1, 1 / Math.sqrt(transform.scale)) : 1;
+    const fontSize = baseFontSize * fontScale;
 
     ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
 
@@ -575,10 +578,10 @@ export default function NetworkGraph() {
 
     // 항상 노드 바로 아래 중앙 정렬
     const labelX = x;
-    const labelY = y + radius + 14;
+    const labelY = y + radius + 14 * fontScale;
     const textWidth = ctx.measureText(name).width;
-    const labelHalfW = textWidth / 2 + 5;
-    const labelHalfH = 9;
+    const labelHalfW = textWidth / 2 + 5 * fontScale;
+    const labelHalfH = 9 * fontScale;
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -612,8 +615,6 @@ export default function NetworkGraph() {
       ctx.fillText(badgeText, badgeX, badgeY);
 
       // 원래 폰트 복원
-      const fontSize = node.degree === 0 ? FONT_SIZES.core :
-                       node.degree === 1 ? FONT_SIZES.primary : 11;
       ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
     }
 
@@ -803,14 +804,15 @@ export default function NetworkGraph() {
       const labelY = centerY + Math.sin(midAngle) * labelRadius;
 
       const labelText = `${category} (${catNodes.length})`;
-      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+      const catFontScale = transform.scale < 1 ? Math.max(1, 1 / Math.sqrt(transform.scale)) : 1;
+      ctx.font = `bold ${13 * catFontScale}px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       const textWidth = ctx.measureText(labelText).width;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
       ctx.beginPath();
-      ctx.roundRect(labelX - textWidth / 2 - 8, labelY - 11, textWidth + 16, 22, 6);
+      ctx.roundRect(labelX - textWidth / 2 - 8 * catFontScale, labelY - 11 * catFontScale, textWidth + 16 * catFontScale, 22 * catFontScale, 6);
       ctx.fill();
 
       ctx.strokeStyle = categoryColor;
@@ -858,7 +860,7 @@ export default function NetworkGraph() {
 
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
-      const isDimmed = !!(highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
+      const isDimmed = !!(highlightedKeyword && !isHighlighted);
 
       drawNode(ctx, node, {
         isHovered,
@@ -893,7 +895,7 @@ export default function NetworkGraph() {
     for (const node of nodes) {
       const isConnectedToFocused = connectedNodeIds.has(node.id);
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
-      const isDimmed = !!(highlightedKeyword && !isHighlighted) || (hasFocusedNode && !isConnectedToFocused);
+      const isDimmed = !!(highlightedKeyword && !isHighlighted);
       const isFocused = focusedNodeId === node.id;
 
       drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes, isMutual: mutualNodeIds.has(node.id) });

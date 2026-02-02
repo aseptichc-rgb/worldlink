@@ -443,8 +443,10 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
 
   if (connections.length === 0) {
     // Firebase에 연결이 없으면 데모 데이터 사용
-    const { demoConnections, demoUsers } = await import('./demo-data');
-    const demoConnectionIds = demoConnections[userId] || demoConnections['member_8'] || [];
+    const { demoConnections, demoUsers, getDemoCompatibleId: getCompId, ensureUserInDemoNetwork: ensureUser } = await import('./demo-data');
+    const demoId = getCompId({ id: userId });
+    ensureUser(userId);
+    const demoConnectionIds = demoConnections[demoId] || demoConnections[userId] || [];
 
     return demoUsers.filter(user => demoConnectionIds.includes(user.id));
   }
@@ -495,7 +497,7 @@ export const isFirstDegreeConnection = async (currentUserId: string, targetUserI
 
 // ==================== NETWORK GRAPH SERVICES ====================
 
-import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs } from './demo-data';
+import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs, getDemoCompatibleId, ensureUserInDemoNetwork } from './demo-data';
 
 // 이름 → 카테고리 매핑 (Firestore에 category가 없는 기존 데이터 호환용)
 const NAME_CATEGORY_MAP: Record<string, string> = {
@@ -514,13 +516,18 @@ const NAME_CATEGORY_MAP: Record<string, string> = {
   '홍석원': '의료기관', '황은경': '비즈니스',
 };
 
-export const getNetworkGraph = async (userId: string): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
+export const getNetworkGraph = async (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
   // 먼저 Firebase에서 실제 연결 데이터 확인
   const directConnections = await getDirectConnections(userId);
 
   // 실제 연결이 없으면 데모 데이터 사용
   if (directConnections.length === 0) {
-    return getDemoNetworkGraph(userId);
+    // 실제 사용자를 데모 멤버에 매핑 시도
+    const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
+    if (demoId !== userId) {
+      return getDemoNetworkGraph(demoId, userData);
+    }
+    return getDemoNetworkGraph(userId, userData);
   }
 
   const nodes: NetworkNode[] = [];

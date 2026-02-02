@@ -7,7 +7,7 @@ import { ArrowLeft, MessageCircle, Send, Inbox, Check, CheckCheck } from 'lucide
 import { Avatar } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore';
 import { useMessageStore, Message } from '@/store/messageStore';
-import { demoUsers } from '@/lib/demo-data';
+import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { onAuthChange, getUser } from '@/lib/firebase-services';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -89,7 +89,9 @@ export default function MessagesPage() {
   // Load demo messages
   useEffect(() => {
     if (user && messages.length === 0) {
-      const currentUserId = user.id.startsWith('demo-user-') ? user.id : 'demo-user-1';
+      const demoId = getDemoCompatibleId(user);
+      ensureUserInDemoNetwork(user.id);
+      const currentUserId = demoId !== user.id ? demoId : user.id;
       const demoMessages = generateDemoMessages(currentUserId);
       setMessages(demoMessages);
     }
@@ -110,7 +112,7 @@ export default function MessagesPage() {
     return null;
   }
 
-  const currentUserId = user.id.startsWith('demo-user-') ? user.id : 'demo-user-1';
+  const currentUserId = getDemoCompatibleId(user) !== user.id ? getDemoCompatibleId(user) : user.id;
 
   const receivedMessages = messages.filter(m => m.toUserId === currentUserId);
   const sentMessages = messages.filter(m => m.fromUserId === currentUserId);

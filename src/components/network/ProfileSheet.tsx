@@ -27,7 +27,7 @@ import { useConnectionRequestStore } from '@/store/connectionRequestStore';
 import { useMemoStore } from '@/store/memoStore';
 import { useAuthStore } from '@/store/authStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
-import { findDemoConnectionPath, demoUsers, demoConnections } from '@/lib/demo-data';
+import { findDemoConnectionPath, demoUsers, demoConnections, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
 import { User, NetworkNode } from '@/types';
 
@@ -63,9 +63,11 @@ export default function ProfileSheet() {
       if (!currentUser) return;
 
       try {
-        if (currentUser.id.startsWith('demo-user-') || currentUser.id.startsWith('member_')) {
+        if (currentUser.id.startsWith('member_') || !currentUser.id.includes('@')) {
           // 데모 사용자의 경우
-          const myConnIds = demoConnections[currentUser.id] || demoConnections['member_8'] || [];
+          const demoId = getDemoCompatibleId(currentUser);
+          ensureUserInDemoNetwork(currentUser.id);
+          const myConnIds = demoConnections[demoId] || demoConnections[currentUser.id] || [];
           setMyConnectionIds(new Set(myConnIds));
         } else {
           // 실제 사용자의 경우
@@ -89,9 +91,11 @@ export default function ProfileSheet() {
 
       setIsLoadingPath(true);
       try {
-        if (selectedNode.id.startsWith('demo-user-')) {
-          const fromUserId = currentUser.id.startsWith('demo-user-') ? currentUser.id : 'demo-user-1';
-          const pathIds = findDemoConnectionPath(fromUserId, selectedNode.id);
+        const fromDemoId = getDemoCompatibleId(currentUser);
+        const isDemoNode = selectedNode.id.startsWith('member_') || demoConnections[selectedNode.id];
+        if (isDemoNode) {
+          ensureUserInDemoNetwork(currentUser.id);
+          const pathIds = findDemoConnectionPath(fromDemoId !== currentUser.id ? fromDemoId : currentUser.id, selectedNode.id);
           const pathUsers: User[] = pathIds.map(id => {
             const demoUser = demoUsers.find(u => u.id === id);
             if (demoUser) return demoUser;
@@ -186,8 +190,9 @@ export default function ProfileSheet() {
 
   // 인맥 클릭 시 해당 인물로 이동
   const handleConnectionClick = (user: User) => {
-    const currentUserId = currentUser?.id.startsWith('demo-user-') ? currentUser.id : 'demo-user-1';
-    if (user.id === currentUserId) return;
+    if (!currentUser) return;
+    const currentDemoId = getDemoCompatibleId(currentUser);
+    if (user.id === currentUser.id || user.id === currentDemoId) return;
 
     const existingNode = nodes.find(n => n.id === user.id);
 
@@ -195,7 +200,8 @@ export default function ProfileSheet() {
       setSelectedNode(existingNode);
       setFocusedNodeId(user.id);
     } else {
-      const pathIds = findDemoConnectionPath(currentUserId, user.id);
+      ensureUserInDemoNetwork(currentUser.id);
+      const pathIds = findDemoConnectionPath(currentDemoId !== currentUser.id ? currentDemoId : currentUser.id, user.id);
       const degree = pathIds.length > 0 ? pathIds.length - 1 : 2;
 
       const newNode: NetworkNode = {
