@@ -68,7 +68,7 @@ const CATEGORY_COLORS: { [key: string]: string } = {
 const NODE_SIZES = {
   core: 40,        // 중앙 노드
   primary: 32,     // 1차 연결 (얼굴이 잘 보이도록)
-  secondary: 20,   // 2차 연결
+  secondary: 32,   // 2차 연결 (1차와 동일 크기)
   tertiary: 14,    // 3차 연결 (최소)
 };
 
@@ -280,6 +280,46 @@ export default function NetworkGraph() {
       target: edge.target,
     }));
   }, [nodes, edges, dimensions]);
+
+  // expandedNodeIds가 변경되면 degree 2 노드 위치를 연결된 1차 노드 주변으로 재배치
+  useEffect(() => {
+    if (expandedNodeIds.size === 0) return;
+
+    const expandedId = Array.from(expandedNodeIds)[0]; // 현재 확장된 1차 노드
+    const expandedNode = nodesRef.current.find(n => n.id === expandedId);
+    if (!expandedNode || expandedNode.degree !== 1) return;
+
+    // 이 1차 노드에 연결된 degree 2 노드들 찾기
+    const connectedDegree2Nodes: GraphNode[] = [];
+    for (const edge of edgesRef.current) {
+      const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+
+      if (sourceId === expandedId) {
+        const targetNode = nodesRef.current.find(n => n.id === targetId);
+        if (targetNode?.degree === 2) connectedDegree2Nodes.push(targetNode);
+      } else if (targetId === expandedId) {
+        const sourceNode = nodesRef.current.find(n => n.id === sourceId);
+        if (sourceNode?.degree === 2) connectedDegree2Nodes.push(sourceNode);
+      }
+    }
+
+    if (connectedDegree2Nodes.length === 0) return;
+
+    // 1차 노드 주변에 원형으로 배치 (겹치지 않도록)
+    const baseX = expandedNode.x || 0;
+    const baseY = expandedNode.y || 0;
+    const radius = 120; // 1차 노드에서 2차 노드까지의 거리
+    const nodeCount = connectedDegree2Nodes.length;
+
+    connectedDegree2Nodes.forEach((node, index) => {
+      const angle = (index / nodeCount) * Math.PI * 2 - Math.PI / 2;
+      node.x = baseX + Math.cos(angle) * radius;
+      node.y = baseY + Math.sin(angle) * radius;
+      node.fx = node.x;
+      node.fy = node.y;
+    });
+  }, [expandedNodeIds]);
 
   // 확장 상태에 따라 보이는 노드 ID를 계산
   const getVisibleNodeIds = useCallback((): Set<string> => {
