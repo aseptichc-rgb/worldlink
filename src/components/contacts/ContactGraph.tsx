@@ -27,6 +27,20 @@ interface CompanyConnection {
   company: string;
 }
 
+interface NetworkConnection {
+  from: GraphNode;
+  to: GraphNode;
+  ownerName: string; // 인맥 주인 이름 (예: "고상원")
+}
+
+// 메모 필드에서 인맥 관계 파싱 (예: "[가상] 고상원 인맥, 김재영 인맥")
+function parseNetworkRelations(memo: string): string[] {
+  if (!memo) return [];
+  const matches = memo.match(/(\S+)\s*인맥/g);
+  if (!matches) return [];
+  return matches.map(m => m.replace(/\s*인맥$/, '').trim());
+}
+
 interface CategoryCluster {
   category: ContactCategory;
   centerX: number;
@@ -90,6 +104,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
   const nodesRef = useRef<GraphNode[]>([]);
   const clustersRef = useRef<CategoryCluster[]>([]);
   const companyConnectionsRef = useRef<CompanyConnection[]>([]);
+  const networkConnectionsRef = useRef<NetworkConnection[]>([]);
   const edgeAnimationRef = useRef<number>(0);
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -260,9 +275,36 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       }
     }
 
+    // Create network connections (from memo field: "XXX 인맥")
+    const networkConnections: NetworkConnection[] = [];
+    const nameToNodeMap = new Map<string, GraphNode>();
+    for (const node of allNodes) {
+      nameToNodeMap.set(node.name, node);
+    }
+
+    for (const contact of contacts) {
+      const networkOwners = parseNetworkRelations(contact.memo);
+      const contactNode = nodeMap.get(contact.id);
+
+      for (const ownerName of networkOwners) {
+        const ownerNode = nameToNodeMap.get(ownerName);
+        if (ownerNode && contactNode && ownerNode.id !== contactNode.id) {
+          // 중복 연결 방지
+          const exists = networkConnections.some(
+            c => (c.from.id === ownerNode.id && c.to.id === contactNode.id) ||
+                 (c.from.id === contactNode.id && c.to.id === ownerNode.id)
+          );
+          if (!exists) {
+            networkConnections.push({ from: ownerNode, to: contactNode, ownerName });
+          }
+        }
+      }
+    }
+
     clustersRef.current = clusters;
     nodesRef.current = allNodes;
     companyConnectionsRef.current = connections;
+    networkConnectionsRef.current = networkConnections;
 
     setTransform({ x: 0, y: 0, scale: 0.65 });
   }, [contacts, dimensions]);
@@ -400,14 +442,69 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       }
     }
 
+    // Draw network connections (from memo field)
+    for (const conn of networkConnectionsRef.current) {
+      const isHighlighted = hoveredNode &&
+        (hoveredNode.id === conn.from.id || hoveredNode.id === conn.to.id);
+
+      if (isHighlighted || !hoveredNode) {
+        // Curved line (opposite direction from company links)
+        const midX = (conn.from.x + conn.to.x) / 2;
+        const midY = (conn.from.y + conn.to.y) / 2;
+        const dx = conn.to.x - conn.from.x;
+        const dy = conn.to.y - conn.from.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const curveOffset = dist * 0.2;
+        const perpX = dy / dist * curveOffset;
+        const perpY = -dx / dist * curveOffset;
+        const ctrlX = midX + perpX;
+        const ctrlY = midY + perpY;
+
+        ctx.beginPath();
+        ctx.moveTo(conn.from.x, conn.from.y);
+        ctx.quadraticCurveTo(ctrlX, ctrlY, conn.to.x, conn.to.y);
+
+        if (isHighlighted) {
+          ctx.strokeStyle = '#00BFFF'; // 하늘색
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([]);
+        } else {
+          ctx.strokeStyle = 'rgba(0, 191, 255, 0.25)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 6]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Animated flow for highlighted
+        if (isHighlighted) {
+          ctx.beginPath();
+          ctx.moveTo(conn.from.x, conn.from.y);
+          ctx.quadraticCurveTo(ctrlX, ctrlY, conn.to.x, conn.to.y);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([3, 12]);
+          ctx.lineDashOffset = -edgeAnimationRef.current;
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.lineDashOffset = 0;
+        }
+      }
+    }
+
     // Draw nodes
     for (const node of nodesRef.current) {
       const info = CATEGORY_INFO[node.category];
       const isHovered = hoveredNode?.id === node.id;
-      const isConnectedToHovered = hoveredNode && companyConnectionsRef.current.some(
+      const isConnectedToHoveredByCompany = hoveredNode && companyConnectionsRef.current.some(
         c => (c.from.id === hoveredNode.id && c.to.id === node.id) ||
              (c.to.id === hoveredNode.id && c.from.id === node.id)
       );
+      const isConnectedToHoveredByNetwork = hoveredNode && networkConnectionsRef.current.some(
+        c => (c.from.id === hoveredNode.id && c.to.id === node.id) ||
+             (c.to.id === hoveredNode.id && c.from.id === node.id)
+      );
+      const isConnectedToHovered = isConnectedToHoveredByCompany || isConnectedToHoveredByNetwork;
       const isDimmed = hoveredNode && !isHovered && !isConnectedToHovered;
 
       let radius = node.radius;

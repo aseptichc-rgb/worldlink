@@ -1149,21 +1149,21 @@ export default function NetworkGraph() {
       focusOnNode(node);
       setSelectedNode(node);
 
-      // degree 1 노드 클릭 시 2차 인맥 확장/축소 토글
+      // degree 1 노드 클릭 시 2차 인맥 표시 (이전 노드의 인맥은 숨김)
       if (node.degree === 1) {
-        setExpandedNodeIds(prev => {
-          const next = new Set(prev);
-          if (next.has(node.id)) {
-            next.delete(node.id);
-          } else {
-            next.add(node.id);
-          }
-          return next;
-        });
+        // 이전 확장을 모두 제거하고 현재 노드만 확장
+        setExpandedNodeIds(new Set([node.id]));
+      } else if (node.degree === 2) {
+        // 2촌 클릭 시 확장 상태 유지
+      } else {
+        // 중앙 노드(나) 클릭 시 모든 확장 해제
+        setExpandedNodeIds(new Set());
       }
     } else {
       setFocusedNodeId(null);
       setSelectedNode(null);
+      // 빈 공간 클릭 시 모든 확장 해제
+      setExpandedNodeIds(new Set());
     }
   };
 
