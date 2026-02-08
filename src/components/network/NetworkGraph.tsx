@@ -281,11 +281,78 @@ export default function NetworkGraph() {
     }));
   }, [nodes, edges, dimensions]);
 
-  // expandedNodeIds가 변경되면 degree 2 노드 위치를 연결된 1차 노드 주변으로 재배치 (분야별 동심원)
+  // 충돌 해소 함수: 모든 노드가 서로 겹치지 않도록 위치 조정
+  const resolveCollisions = useCallback((
+    nodesToPlace: GraphNode[],
+    allVisibleNodes: GraphNode[],
+    minDistance: number,
+    iterations: number = 50
+  ) => {
+    for (let iter = 0; iter < iterations; iter++) {
+      let hasCollision = false;
+
+      // 배치할 노드들 간의 충돌 해소
+      for (let i = 0; i < nodesToPlace.length; i++) {
+        for (let j = i + 1; j < nodesToPlace.length; j++) {
+          const nodeA = nodesToPlace[i];
+          const nodeB = nodesToPlace[j];
+
+          const dx = (nodeB.x || 0) - (nodeA.x || 0);
+          const dy = (nodeB.y || 0) - (nodeA.y || 0);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < minDistance && dist > 0) {
+            hasCollision = true;
+            const overlap = (minDistance - dist) / 2;
+            const angle = Math.atan2(dy, dx);
+
+            // 서로 밀어냄
+            nodeA.x = (nodeA.x || 0) - Math.cos(angle) * overlap;
+            nodeA.y = (nodeA.y || 0) - Math.sin(angle) * overlap;
+            nodeB.x = (nodeB.x || 0) + Math.cos(angle) * overlap;
+            nodeB.y = (nodeB.y || 0) + Math.sin(angle) * overlap;
+          }
+        }
+      }
+
+      // 기존 노드들(degree 0, 1)과의 충돌 해소
+      for (const newNode of nodesToPlace) {
+        for (const existingNode of allVisibleNodes) {
+          if (newNode.id === existingNode.id) continue;
+          if (existingNode.degree === 2) continue; // degree 2끼리는 위에서 처리
+
+          const dx = (newNode.x || 0) - (existingNode.x || 0);
+          const dy = (newNode.y || 0) - (existingNode.y || 0);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < minDistance && dist > 0) {
+            hasCollision = true;
+            const overlap = minDistance - dist;
+            const angle = Math.atan2(dy, dx);
+
+            // 새 노드만 밀어냄 (기존 노드는 고정)
+            newNode.x = (newNode.x || 0) + Math.cos(angle) * overlap;
+            newNode.y = (newNode.y || 0) + Math.sin(angle) * overlap;
+          }
+        }
+      }
+
+      // 충돌이 없으면 조기 종료
+      if (!hasCollision) break;
+    }
+
+    // 최종 위치 고정
+    nodesToPlace.forEach(node => {
+      node.fx = node.x;
+      node.fy = node.y;
+    });
+  }, []);
+
+  // expandedNodeIds가 변경되면 degree 2 노드 위치를 연결된 1차 노드 주변으로 재배치
   useEffect(() => {
     if (expandedNodeIds.size === 0) return;
 
-    const expandedId = Array.from(expandedNodeIds)[0]; // 현재 확장된 1차 노드
+    const expandedId = Array.from(expandedNodeIds)[0];
     const expandedNode = nodesRef.current.find(n => n.id === expandedId);
     if (!expandedNode || expandedNode.degree !== 1) return;
 
@@ -308,40 +375,22 @@ export default function NetworkGraph() {
 
     const baseX = expandedNode.x || 0;
     const baseY = expandedNode.y || 0;
-    const baseRadius = 180; // 첫 번째 링 반경 (더 넓게)
-    const ringGap = 100; // 링 사이 거리 (더 넓게)
-    const minNodeSpacing = 120; // 노드 간 최소 간격 (더 넓게)
-
-    // 단순하게 모든 노드를 하나의 링에 균등 배치 (카테고리별 색상으로 구분)
+    const baseRadius = 150;
     const nodeCount = connectedDegree2Nodes.length;
 
-    if (nodeCount <= 8) {
-      // 노드가 적으면 단일 링에 균등 배치
-      connectedDegree2Nodes.forEach((node, index) => {
-        const angle = (index / nodeCount) * Math.PI * 2 - Math.PI / 2;
-        node.x = baseX + Math.cos(angle) * baseRadius;
-        node.y = baseY + Math.sin(angle) * baseRadius;
-        node.fx = node.x;
-        node.fy = node.y;
-      });
-    } else {
-      // 노드가 많으면 여러 링에 배치
-      const nodesPerRing = 8; // 링당 최대 노드 수
-      connectedDegree2Nodes.forEach((node, index) => {
-        const ringIndex = Math.floor(index / nodesPerRing);
-        const indexInRing = index % nodesPerRing;
-        const nodesInThisRing = Math.min(nodesPerRing, nodeCount - ringIndex * nodesPerRing);
+    // 초기 배치: 원형으로 균등 배치
+    connectedDegree2Nodes.forEach((node, index) => {
+      const angle = (index / nodeCount) * Math.PI * 2 - Math.PI / 2;
+      node.x = baseX + Math.cos(angle) * baseRadius;
+      node.y = baseY + Math.sin(angle) * baseRadius;
+    });
 
-        const radius = baseRadius + ringIndex * ringGap;
-        const angle = (indexInRing / nodesInThisRing) * Math.PI * 2 - Math.PI / 2;
+    // 충돌 해소 (노드 크기 + 라벨 여유 공간 고려)
+    const minDistance = NODE_SIZES.secondary * 2 + 60; // 노드 직경 + 라벨/여백
+    const visibleNodes = nodesRef.current.filter(n => n.degree === 0 || n.degree === 1);
 
-        node.x = baseX + Math.cos(angle) * radius;
-        node.y = baseY + Math.sin(angle) * radius;
-        node.fx = node.x;
-        node.fy = node.y;
-      });
-    }
-  }, [expandedNodeIds]);
+    resolveCollisions(connectedDegree2Nodes, visibleNodes, minDistance, 100);
+  }, [expandedNodeIds, resolveCollisions]);
 
   // 확장 상태에 따라 보이는 노드 ID를 계산
   const getVisibleNodeIds = useCallback((): Set<string> => {
