@@ -281,7 +281,7 @@ export default function NetworkGraph() {
     }));
   }, [nodes, edges, dimensions]);
 
-  // expandedNodeIds가 변경되면 degree 2 노드 위치를 연결된 1차 노드 주변으로 재배치
+  // expandedNodeIds가 변경되면 degree 2 노드 위치를 연결된 1차 노드 주변으로 재배치 (분야별 동심원)
   useEffect(() => {
     if (expandedNodeIds.size === 0) return;
 
@@ -306,18 +306,61 @@ export default function NetworkGraph() {
 
     if (connectedDegree2Nodes.length === 0) return;
 
-    // 1차 노드 주변에 원형으로 배치 (겹치지 않도록)
+    // 카테고리별로 그룹화
+    const categoriesMap = new Map<string, GraphNode[]>();
+    connectedDegree2Nodes.forEach(node => {
+      const category = node.category || '기타';
+      if (!categoriesMap.has(category)) {
+        categoriesMap.set(category, []);
+      }
+      categoriesMap.get(category)!.push(node);
+    });
+
+    // 카테고리별 크기 순으로 정렬
+    const sortedCategories = Array.from(categoriesMap.entries())
+      .sort((a, b) => b[1].length - a[1].length);
+
+    // 각 카테고리에 각도 섹터 할당
+    const totalNodes = connectedDegree2Nodes.length;
+    const gapAngle = 0.12; // 카테고리 간 간격
+    const totalGaps = sortedCategories.length * gapAngle;
+    const usableAngle = Math.PI * 2 - totalGaps;
+    let currentAngle = -Math.PI / 2; // 12시 방향부터 시작
+
     const baseX = expandedNode.x || 0;
     const baseY = expandedNode.y || 0;
-    const radius = 120; // 1차 노드에서 2차 노드까지의 거리
-    const nodeCount = connectedDegree2Nodes.length;
+    const baseRadius = 100; // 첫 번째 링 반경
+    const ringGap = 70; // 링 사이 거리
+    const minNodeSpacing = 80; // 노드 간 최소 간격
 
-    connectedDegree2Nodes.forEach((node, index) => {
-      const angle = (index / nodeCount) * Math.PI * 2 - Math.PI / 2;
-      node.x = baseX + Math.cos(angle) * radius;
-      node.y = baseY + Math.sin(angle) * radius;
-      node.fx = node.x;
-      node.fy = node.y;
+    sortedCategories.forEach(([category, categoryNodes]) => {
+      const angleSpan = (categoryNodes.length / totalNodes) * usableAngle;
+      const sectorPadding = 0.05;
+      const sectorAngle = angleSpan * (1 - 2 * sectorPadding);
+
+      // 링별 최대 노드 수 계산
+      const arcLength = sectorAngle * baseRadius;
+      const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
+
+      categoryNodes.forEach((node, index) => {
+        // 링 인덱스와 링 내 위치 계산
+        const ringIndex = Math.floor(index / nodesPerRing);
+        const indexInRing = index % nodesPerRing;
+        const nodesInThisRing = Math.min(nodesPerRing, categoryNodes.length - ringIndex * nodesPerRing);
+
+        const radius = baseRadius + ringIndex * ringGap;
+        const angle = nodesInThisRing === 1
+          ? currentAngle + angleSpan / 2
+          : currentAngle + angleSpan * sectorPadding +
+            (indexInRing / Math.max(1, nodesInThisRing - 1)) * sectorAngle;
+
+        node.x = baseX + Math.cos(angle) * radius;
+        node.y = baseY + Math.sin(angle) * radius;
+        node.fx = node.x;
+        node.fy = node.y;
+      });
+
+      currentAngle += angleSpan + gapAngle;
     });
   }, [expandedNodeIds]);
 
