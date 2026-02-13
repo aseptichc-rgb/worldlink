@@ -373,10 +373,24 @@ export default function SearchBar() {
             {/* AI Search Results */}
             {(aiLoading || aiResponse) && (
               <div className="p-3 border-b border-[#1E3A5F]">
-                <p className="text-xs text-[#A78BFA] mb-2 px-1 flex items-center gap-1">
+                <div className="flex items-center justify-between mb-2 px-1">
+                <p className="text-xs text-[#A78BFA] flex items-center gap-1">
                   <Sparkles size={12} />
                   AI 추천
                 </p>
+                {!aiLoading && aiResponse && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAiResponse(null);
+                    }}
+                    className="text-[#4A5E7A] hover:text-[#A78BFA] transition-colors duration-200 p-0.5 rounded hover:bg-[#A78BFA]/10"
+                    title="AI 추천 닫기"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
                 {aiLoading ? (
                   <div className="flex items-center gap-2 p-3 text-[#8BA4C4] text-sm">
                     <Loader2 size={16} className="animate-spin text-[#A78BFA]" />
