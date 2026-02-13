@@ -407,12 +407,12 @@ export default function ProfileSheet() {
                     )}
                   </section>
 
-                  {/* Keywords */}
+                  {/* Keywords & Tags */}
                   {selectedNode.keywords.length > 0 && (
                     <section>
                       <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider mb-3">
                         <Hash size={12} />
-                        관심 분야
+                        {selectedNode.name}님은
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedNode.keywords.map((keyword) => {
@@ -420,7 +420,7 @@ export default function ProfileSheet() {
                           return (
                             <Tag
                               key={keyword}
-                              label={keyword}
+                              label={`#${keyword.replace(/^#/, '')}`}
                               isHighlighted={isMatching}
                               size="sm"
                             />

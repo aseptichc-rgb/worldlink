@@ -272,8 +272,11 @@ export default function ProfilePage() {
 
         {/* Keywords */}
         <Card className="p-5 mb-8">
-          <h3 className="text-sm font-medium text-[#8BA4C4] mb-3">관심 키워드</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-[#8BA4C4]">관심 키워드</h3>
+            <span className="text-xs text-[#4A5E7A]">{editedUser.keywords.length}/5</span>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-3">
             {editedUser.keywords.map((keyword) => (
               <Tag
                 key={keyword}
@@ -282,23 +285,40 @@ export default function ProfilePage() {
                 onRemove={isEditing ? () => removeKeyword(keyword) : undefined}
               />
             ))}
-            {isEditing && editedUser.keywords.length < 5 && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newKeyword}
-                  onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
-                  placeholder="+ 추가"
-                  className="
-                    bg-transparent text-white text-sm
-                    border-b border-[#1E3A5F] py-1 px-2 w-20
-                    focus:outline-none focus:border-[#86C9F2]
-                  "
-                />
-              </div>
+            {editedUser.keywords.length === 0 && !isEditing && (
+              <p className="text-[#4A5E7A] text-sm">아직 등록된 키워드가 없습니다</p>
             )}
           </div>
+          {isEditing && editedUser.keywords.length < 5 && (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newKeyword}
+                onChange={(e) => setNewKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
+                placeholder="키워드 입력 (예: AI, 스타트업)"
+                maxLength={20}
+                className="
+                  flex-1 bg-[#101D33] text-white text-sm
+                  border border-[#1E3A5F] rounded-lg py-2.5 px-3
+                  focus:outline-none focus:border-[#86C9F2]
+                  placeholder:text-[#4A5E7A]
+                "
+              />
+              <button
+                onClick={addKeyword}
+                disabled={!newKeyword.trim()}
+                className="
+                  px-4 py-2.5 rounded-lg text-sm font-medium
+                  bg-gradient-to-r from-[#86C9F2] to-[#2C529C]
+                  text-white disabled:opacity-50 disabled:cursor-not-allowed
+                  hover:opacity-90 transition-opacity
+                "
+              >
+                추가
+              </button>
+            </div>
+          )}
         </Card>
 
         {/* Privacy Settings */}
