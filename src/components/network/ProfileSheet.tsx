@@ -312,8 +312,17 @@ export default function ProfileSheet() {
                   {/* Stats Badges */}
                   <div className="flex items-center gap-3 mt-5">
                     <div className="stat-badge flex-1">
-                      <span className="stat-badge-value text-[#FFB800]">{connectionDegree}</span>
-                      <span className="stat-badge-label">단계 거리</span>
+                      {connectionDegree >= 99 ? (
+                        <>
+                          <span className="stat-badge-value text-[#10B981] text-sm">전체</span>
+                          <span className="stat-badge-label">공개 프로필</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="stat-badge-value text-[#FFB800]">{connectionDegree}</span>
+                          <span className="stat-badge-label">단계 거리</span>
+                        </>
+                      )}
                     </div>
                     <div className="stat-badge flex-1">
                       <span className="stat-badge-value text-[#86C9F2]">{selectedNode.connectionCount}</span>
@@ -361,9 +370,21 @@ export default function ProfileSheet() {
                   <section>
                     <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider mb-3">
                       <Link2 size={12} />
-                      연결 경로
+                      {connectionDegree >= 99 ? '프로필 공개 상태' : '연결 경로'}
                     </h3>
-                    {isLoadingPath ? (
+                    {connectionDegree >= 99 ? (
+                      <div className="info-card border border-[#10B981]/30 bg-[#10B981]/5">
+                        <div className="flex items-center gap-3 py-2">
+                          <div className="w-10 h-10 rounded-full bg-[#10B981]/20 flex items-center justify-center">
+                            <Users size={20} className="text-[#10B981]" />
+                          </div>
+                          <div>
+                            <p className="text-[#10B981] text-sm font-medium">전체 공개 프로필</p>
+                            <p className="text-[#4A5E7A] text-xs mt-0.5">인맥 신청을 통해 연결해보세요</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : isLoadingPath ? (
                       <div className="info-card flex items-center justify-center py-6">
                         <div className="spinner w-6 h-6" />
                       </div>

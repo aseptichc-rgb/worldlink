@@ -66,7 +66,7 @@ export default function SearchBar() {
     return currentUser.id;
   }, [currentUser]);
 
-  // BFS로 연결 가능한 모든 사용자 검색
+  // BFS로 연결된 사용자 + 전체 공개 사용자 검색
   const searchConnectedPeople = useMemo(() => {
     return (searchQuery: string): PersonResult[] => {
       if (!searchQuery || searchQuery.length < 1) return [];
@@ -131,8 +131,41 @@ export default function SearchBar() {
         }
       }
 
-      // 연결 단계 순으로 정렬
-      return results.sort((a, b) => a.degree - b.degree).slice(0, 8);
+      // 전체 공개 설정한 사용자 중 키워드 매칭되는 사람 추가 검색
+      // (아직 결과에 없고, allowProfileDiscovery가 true인 경우)
+      for (const user of demoUsers) {
+        if (visited.has(user.id) || user.id === currentUserId) continue;
+
+        // 전체 공개 설정 확인
+        if (!user.privacySettings?.allowProfileDiscovery) continue;
+
+        // 키워드 매칭 검색 (이름, 회사, 직책, 키워드)
+        const nameMatch = user.name.toLowerCase().includes(query);
+        const companyMatch = user.company?.toLowerCase().includes(query) ?? false;
+        const positionMatch = user.position?.toLowerCase().includes(query) ?? false;
+        const keywordMatch = user.keywords.some(k => k.toLowerCase().includes(query));
+
+        if (nameMatch || companyMatch || positionMatch || keywordMatch) {
+          results.push({
+            id: user.id,
+            name: user.name,
+            company: user.company ?? "",
+            position: user.position ?? "",
+            profileImage: user.profileImage,
+            keywords: user.keywords,
+            degree: -1, // 연결되지 않은 전체 공개 사용자 표시
+            path: [],
+          });
+        }
+      }
+
+      // 연결 단계 순으로 정렬 (전체 공개 사용자는 마지막에)
+      return results.sort((a, b) => {
+        // -1(전체 공개)은 맨 뒤로
+        if (a.degree === -1 && b.degree !== -1) return 1;
+        if (a.degree !== -1 && b.degree === -1) return -1;
+        return a.degree - b.degree;
+      }).slice(0, 10);
     };
   }, [currentUserId, memos]);
 
@@ -201,15 +234,17 @@ export default function SearchBar() {
       setSelectedNode(existingNode);
       setFocusedNodeId(person.id);
     } else {
-      // 그래프에 없으면 (2촌 이상) 새 노드 객체 생성해서 표시
+      // 그래프에 없으면 (2촌 이상 또는 전체 공개) 새 노드 객체 생성해서 표시
+      // degree가 -1인 경우 (전체 공개)는 99로 설정하여 연결되지 않음을 표시
+      const displayDegree = person.degree === -1 ? 99 : person.degree;
       const newNode: NetworkNode = {
         id: person.id,
-        name: person.name,
+        name: person.degree === -1 ? `${person.name[0]}*님` : person.name,
         company: person.company,
         position: person.position,
-        profileImage: person.profileImage,
+        profileImage: person.degree === -1 ? undefined : person.profileImage,
         keywords: person.keywords,
-        degree: person.degree,
+        degree: displayDegree,
         connectionCount: demoConnections[person.id]?.length || 0,
       };
       setSelectedNode(newNode);
@@ -420,24 +455,30 @@ export default function SearchBar() {
                       className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[#162A4A] transition-colors text-left"
                     >
                       <Avatar
-                        src={person.profileImage}
+                        src={person.degree === -1 ? undefined : person.profileImage}
                         name={person.name}
                         size="sm"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-white font-medium truncate">
-                            {person.name}
+                            {person.degree === -1 ? `${person.name[0]}*님` : person.name}
                           </span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                            person.degree === 1
-                              ? 'bg-[#86C9F2]/20 text-[#86C9F2]'
-                              : person.degree === 2
-                                ? 'bg-[#2C529C]/20 text-[#2C529C]'
-                                : 'bg-[#FFB800]/20 text-[#FFB800]'
-                          }`}>
-                            {person.degree}촌
-                          </span>
+                          {person.degree === -1 ? (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981]">
+                              전체 공개
+                            </span>
+                          ) : (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                              person.degree === 1
+                                ? 'bg-[#86C9F2]/20 text-[#86C9F2]'
+                                : person.degree === 2
+                                  ? 'bg-[#2C529C]/20 text-[#2C529C]'
+                                  : 'bg-[#FFB800]/20 text-[#FFB800]'
+                            }`}>
+                              {person.degree}촌
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-[#8BA4C4]">
                           <Building size={10} />
@@ -449,6 +490,11 @@ export default function SearchBar() {
                           <div className="flex items-center gap-1 text-[10px] text-[#4A5E7A] mt-0.5">
                             <ArrowRight size={10} />
                             <span>{getPathString(person.path)} 통해 연결</span>
+                          </div>
+                        )}
+                        {person.degree === -1 && (
+                          <div className="flex items-center gap-1 text-[10px] text-[#10B981] mt-0.5">
+                            <span>키워드 매칭으로 검색됨</span>
                           </div>
                         )}
                         {person.memoMatch && (
