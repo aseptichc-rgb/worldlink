@@ -29,7 +29,6 @@ export function loadKakaoSDK(): Promise<void> {
     const script = document.createElement('script');
     script.id = 'kakao-sdk';
     script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
-    script.integrity = '';
     script.crossOrigin = 'anonymous';
     script.onload = () => {
       initKakao();

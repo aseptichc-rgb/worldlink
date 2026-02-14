@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Share2,
@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { Card, Button } from "@/components/ui";
+import { loadKakaoSDK, sendKakaoInvite } from "@/lib/kakao-sdk";
 
 interface InviteShareCardProps {
   inviteCode: string;
@@ -67,12 +68,19 @@ export function InviteShareCard({
     }
   };
 
-  // 카카오톡 공유 (URL scheme)
-  const shareKakao = () => {
-    const kakaoUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=YOUR_KAKAO_KEY&request_url=${encodeURIComponent(inviteLink)}`;
-    // 대안: 단순 링크 복사 후 카카오톡으로 이동 유도
-    copyLink();
-    window.open(`kakaotalk://`, "_blank");
+  // 카카오톡 공유 (SDK 사용)
+  const shareKakao = async () => {
+    try {
+      await loadKakaoSDK();
+      sendKakaoInvite({
+        senderName: userName,
+        inviteLink,
+      });
+    } catch {
+      // SDK 로드 실패 시 클립보드 복사 + 카카오톡 앱 열기
+      copyLink();
+      window.open("kakaotalk://", "_blank");
+    }
   };
 
   // SMS/메시지 공유

@@ -22,7 +22,10 @@
       "Bash(git commit:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npx next build:*)",
+      "Bash(python3:*)",
+      "Bash(git pull:*)"
     ]
   }
 }

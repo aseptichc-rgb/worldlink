@@ -54,7 +54,7 @@ export default function ScanPage() {
   const [scannedCard, setScannedCard] = useState<BusinessCard | null>(null);
   const [qrDetected, setQrDetected] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const qrReaderIdRef = useRef(`qr-reader-${Date.now()}`);
+  const [qrReaderId, setQrReaderId] = useState(`qr-reader-${Date.now()}`);
 
   // Paper card
   const [cardImage, setCardImage] = useState<string | null>(null);
@@ -89,9 +89,14 @@ export default function ScanPage() {
     setError(null);
     setQrDetected(false);
 
+    // DOM 요소가 렌더링될 때까지 대기
+    const el = document.getElementById(qrReaderId);
+    if (!el) {
+      return;
+    }
+
     try {
       // QR 스캐너 시작 (백그라운드 QR 감지)
-      const qrReaderId = qrReaderIdRef.current;
       const html5QrCode = new Html5Qrcode(qrReaderId);
       scannerRef.current = html5QrCode;
 
@@ -122,18 +127,30 @@ export default function ScanPage() {
       setError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [qrReaderId]);
 
   useEffect(() => {
     isMountedRef.current = true;
-    startUnifiedCamera();
 
     return () => {
       isMountedRef.current = false;
       stopQrScanning();
       stopCamera();
     };
-  }, [startUnifiedCamera, stopQrScanning, stopCamera]);
+  }, [stopQrScanning, stopCamera]);
+
+  // viewState가 'camera'이고 스캐너가 없을 때 카메라 시작 (재시작 포함)
+  useEffect(() => {
+    if (viewState === 'camera' && !scannerRef.current) {
+      // DOM이 렌더링된 후 시작하기 위해 requestAnimationFrame 사용
+      const rafId = requestAnimationFrame(() => {
+        if (isMountedRef.current) {
+          startUnifiedCamera();
+        }
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [viewState, startUnifiedCamera]);
 
   // ==================== QR 처리 ====================
   const handleQrScan = (data: string) => {
@@ -377,7 +394,7 @@ export default function ScanPage() {
   // ==================== 종이 명함 촬영 ====================
   const captureFromQrCamera = () => {
     // html5-qrcode의 비디오 엘리먼트에서 캡처
-    const qrReaderEl = document.getElementById(qrReaderIdRef.current);
+    const qrReaderEl = document.getElementById(qrReaderId);
     const video = qrReaderEl?.querySelector('video');
     if (!video) return;
 
@@ -441,15 +458,14 @@ export default function ScanPage() {
   };
 
   const resetAndRestart = () => {
+    stopQrScanning();
     setCardImage(null);
     setPaperCardInfo({ name: '', company: '', position: '', phone: '', email: '' });
     setScannedCard(null);
     setError(null);
+    // 새 ID를 생성하여 깨끗한 DOM 요소에서 카메라 시작
+    setQrReaderId(`qr-reader-${Date.now()}`);
     setViewState('camera');
-    // 카메라를 중지하지 않고 QR 스캐너만 재시작하여 권한 재요청 방지
-    if (!scannerRef.current) {
-      startUnifiedCamera();
-    }
   };
 
   const goBack = () => {
@@ -493,7 +509,7 @@ export default function ScanPage() {
             {/* QR 리더 (카메라 프리뷰 역할) */}
             <div className="relative">
               <div
-                id={qrReaderIdRef.current}
+                id={qrReaderId}
                 className="w-full aspect-[3/4] rounded-2xl overflow-hidden bg-[#162A4A]"
               />
 
