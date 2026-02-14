@@ -269,18 +269,18 @@ export default function ScanPage() {
     });
   };
 
-  // ==================== OCR + Gemini (서버 API) ====================
-  const parseWithGemini = async (ocrText: string): Promise<PaperCardInfo> => {
+  // ==================== Gemini Vision API (이미지 직접 분석) ====================
+  const parseWithGeminiVision = async (imageData: string): Promise<PaperCardInfo> => {
     try {
       const res = await fetch('/api/parse-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ocrText }),
+        body: JSON.stringify({ imageBase64: imageData }),
       });
 
       if (!res.ok) {
-        console.warn('API route failed, falling back to basic parsing');
-        return fallbackParse(ocrText);
+        console.warn('Vision API failed, falling back to OCR');
+        return await fallbackOcrParse(imageData);
       }
 
       const parsed = await res.json();
@@ -293,12 +293,54 @@ export default function ScanPage() {
       };
     } catch (err) {
       console.error('Parse card API error:', err);
-      return fallbackParse(ocrText);
+      return await fallbackOcrParse(imageData);
     }
   };
 
-  // Gemini 실패 시 기본 파싱 (간단한 regex 폴백)
-  const fallbackParse = (text: string): PaperCardInfo => {
+  // Vision API 실패 시 Tesseract OCR 폴백
+  const fallbackOcrParse = async (imageData: string): Promise<PaperCardInfo> => {
+    try {
+      const processedImage = await preprocessImage(imageData);
+      const result = await Tesseract.recognize(processedImage, 'kor+eng', { logger: () => {} });
+      let ocrText = result.data.text;
+
+      // 전처리 이미지 결과가 부실하면 원본으로 재시도
+      if (ocrText.trim().length < 10) {
+        const fallbackResult = await Tesseract.recognize(imageData, 'kor+eng', { logger: () => {} });
+        if (fallbackResult.data.text.trim().length > ocrText.trim().length) {
+          ocrText = fallbackResult.data.text;
+        }
+      }
+
+      // 서버 API로 텍스트 파싱 시도
+      try {
+        const res = await fetch('/api/parse-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ocrText }),
+        });
+        if (res.ok) {
+          const parsed = await res.json();
+          return {
+            name: parsed.name || '',
+            company: parsed.company || '',
+            position: parsed.position || '',
+            phone: parsed.phone || '',
+            email: parsed.email || '',
+          };
+        }
+      } catch {}
+
+      // 최종 폴백: 로컬 정규식 파싱
+      return localRegexParse(ocrText);
+    } catch (err) {
+      console.error('Fallback OCR error:', err);
+      return { name: '', company: '', position: '', phone: '', email: '' };
+    }
+  };
+
+  // 로컬 정규식 파싱 (최종 폴백)
+  const localRegexParse = (text: string): PaperCardInfo => {
     const info: PaperCardInfo = { name: '', company: '', position: '', phone: '', email: '' };
     const cleaned = text.replace(/[|}{[\]<>]/g, '').replace(/\s{2,}/g, ' ');
 
@@ -321,21 +363,8 @@ export default function ScanPage() {
     setIsOcrProcessing(true);
     setViewState('ocr-processing');
     try {
-      // Step 1: Tesseract OCR로 텍스트 추출
-      const processedImage = await preprocessImage(imageData);
-      const result = await Tesseract.recognize(processedImage, 'kor+eng', { logger: () => {} });
-      let ocrText = result.data.text;
-
-      // 전처리 이미지 결과가 부실하면 원본으로 재시도
-      if (ocrText.trim().length < 10) {
-        const fallbackResult = await Tesseract.recognize(imageData, 'kor+eng', { logger: () => {} });
-        if (fallbackResult.data.text.trim().length > ocrText.trim().length) {
-          ocrText = fallbackResult.data.text;
-        }
-      }
-
-      // Step 2: Gemini API로 텍스트 분류
-      const parsed = await parseWithGemini(ocrText);
+      // Gemini Vision API로 이미지 직접 분석 (OCR 불필요)
+      const parsed = await parseWithGeminiVision(imageData);
       setPaperCardInfo(parsed);
     } catch (err) {
       console.error('OCR error:', err);
