@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -19,8 +19,7 @@
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.562.0",
     "next": "^16.1.6",
-    "next-pwa": "^5.6.0",
-    "qrcode": "^1.5.4",
+"qrcode": "^1.5.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-force-graph-2d": "^1.29.0",
@@ -39,6 +38,6 @@
     "eslint-config-next": "16.1.1",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "5.9.3"
   }
 }

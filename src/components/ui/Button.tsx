@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonHTMLAttributes, forwardRef, ReactNode } from 'react';
+import { forwardRef, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
 interface ButtonProps {
@@ -29,12 +29,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     type = 'button',
     onClick,
   }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#101D33]';
+    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#161B22]';
 
     const variants = {
-      primary: 'bg-gradient-to-r from-[#2C529C] to-[#86C9F2] text-white hover:shadow-[0_10px_30px_rgba(134,201,242,0.25)] focus:ring-[#86C9F2]',
-      secondary: 'bg-transparent border border-[#1E3A5F] text-white hover:border-[#86C9F2] hover:bg-[rgba(134,201,242,0.1)] focus:ring-[#1E3A5F]',
-      ghost: 'bg-transparent text-[#8BA4C4] hover:text-white hover:bg-[#1E3A5F] focus:ring-[#1E3A5F]',
+      primary: 'bg-gradient-to-r from-[#1F6FEB] to-[#58A6FF] text-white hover:shadow-[0_8px_24px_rgba(88,166,255,0.25)] focus:ring-[#58A6FF]',
+      secondary: 'bg-transparent border border-[#30363D] text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[rgba(88,166,255,0.08)] focus:ring-[#30363D]',
+      ghost: 'bg-transparent text-[#8B949E] hover:text-[#F0F6FC] hover:bg-[rgba(240,246,252,0.05)] focus:ring-[#30363D]',
     };
 
     const sizes = {
@@ -49,7 +49,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <motion.button
         ref={ref}
         type={type}
-        whileHover={!isDisabled ? { y: -2 } : undefined}
+        whileHover={!isDisabled ? { y: -1 } : undefined}
         whileTap={!isDisabled ? { scale: 0.98 } : undefined}
         className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
         disabled={isDisabled}

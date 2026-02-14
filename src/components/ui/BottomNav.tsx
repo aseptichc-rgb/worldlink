@@ -9,7 +9,6 @@ import { useAuthStore } from '@/store/authStore';
 const navItems = [
   { path: '/card', icon: QrCode, label: '내 명함', requiresAuth: true },
   { path: '/scan', icon: Scan, label: '스캔', requiresAuth: false },
-  // { path: '/contacts', icon: BookUser, label: '연락처', requiresAuth: false }, // 임시 비활성화
   { path: '/network', icon: Network, label: '인맥', requiresAuth: true },
   { path: '/profile', icon: User, label: '프로필', requiresAuth: true },
 ];
@@ -38,7 +37,7 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#101D33]/95 backdrop-blur-xl border-t border-[#1E3A5F] safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[rgba(13,17,23,0.95)] backdrop-blur-xl border-t border-[rgba(240,246,252,0.05)] safe-area-bottom">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.path;
@@ -56,19 +55,19 @@ export default function BottomNav() {
               {isScan ? (
                 <motion.div
                   whileTap={{ scale: 0.9 }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#86C9F2] to-[#2C529C] flex items-center justify-center shadow-lg shadow-[#86C9F2]/20"
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#58A6FF] to-[#1F6FEB] flex items-center justify-center shadow-[0_4px_16px_rgba(88,166,255,0.3)]"
                 >
                   <Icon size={26} className="text-white" />
                 </motion.div>
               ) : (
                 <>
                   <Icon
-                    size={24}
-                    className={isActive ? 'text-[#86C9F2]' : 'text-[#4A5E7A]'}
+                    size={22}
+                    className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'}`}
                   />
                   <span
-                    className={`text-[10px] mt-1 ${
-                      isActive ? 'text-[#86C9F2]' : 'text-[#4A5E7A]'
+                    className={`text-[10px] mt-1 transition-colors duration-200 ${
+                      isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'
                     }`}
                   >
                     {item.label}
@@ -76,7 +75,7 @@ export default function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute -bottom-0 w-6 h-0.5 bg-[#86C9F2] rounded-full"
+                      className="absolute -bottom-0 w-6 h-0.5 rounded-full bg-[#58A6FF] shadow-[0_0_8px_rgba(88,166,255,0.5)]"
                     />
                   )}
                 </>
@@ -87,14 +86,14 @@ export default function BottomNav() {
         </div>
       </nav>
 
-      {/* 로그인 필요 모달 */}
+      {/* Auth Modal */}
       <AnimatePresence>
         {showAuthModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end"
+            className="fixed inset-0 z-50 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm flex items-end"
             onClick={() => setShowAuthModal(false)}
           >
             <motion.div
@@ -103,25 +102,25 @@ export default function BottomNav() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] p-6"
+              className="w-full bg-[rgba(22,27,34,0.95)] backdrop-blur-xl rounded-t-3xl border-t border-[rgba(240,246,252,0.1)] p-6"
             >
               <button
                 onClick={() => setShowAuthModal(false)}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#8BA4C4]" />
+                <X size={20} className="text-[#8B949E]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#30363D] rounded-full mx-auto mb-6" />
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#86C9F2]/20 to-[#2C529C]/20 flex items-center justify-center">
-                  <UserPlus size={28} className="text-[#86C9F2]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.15)] to-[rgba(31,111,235,0.15)] flex items-center justify-center">
+                  <UserPlus size={28} className="text-[#58A6FF]" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-[#F0F6FC] mb-2">
                   로그인이 필요해요
                 </h3>
-                <p className="text-sm text-[#8BA4C4]">
+                <p className="text-sm text-[#8B949E]">
                   내 명함을 만들고 네트워크를 확장하려면<br />
                   간단한 가입이 필요해요
                 </p>
@@ -130,7 +129,7 @@ export default function BottomNav() {
               <div className="space-y-3">
                 <button
                   onClick={handleAuth}
-                  className="w-full py-4 bg-[#86C9F2] text-[#0B162C] font-semibold rounded-xl"
+                  className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl"
                 >
                   30초만에 가입하기
                 </button>
@@ -139,7 +138,7 @@ export default function BottomNav() {
                     router.push('/login');
                     setShowAuthModal(false);
                   }}
-                  className="w-full py-4 bg-[#162A4A] text-white font-medium rounded-xl border border-[#1E3A5F]"
+                  className="w-full py-4 bg-[rgba(22,27,34,0.7)] text-[#F0F6FC] font-medium rounded-xl border border-[#30363D]"
                 >
                   이미 계정이 있어요
                 </button>

@@ -22,7 +22,7 @@ export default function Tag({
 }: TagProps) {
   const sizeStyles = {
     sm: 'px-2.5 py-1 text-xs',
-    md: 'px-3.5 py-1.5 text-sm',
+    md: 'px-3 py-1 text-sm',
   };
 
   return (
@@ -35,10 +35,10 @@ export default function Tag({
         transition-all duration-200 cursor-pointer max-w-full
         ${sizeStyles[size]}
         ${isActive
-          ? 'bg-gradient-to-r from-[#2C529C] to-[#86C9F2] text-white border-transparent'
+          ? 'bg-gradient-to-r from-[#1F6FEB] to-[#58A6FF] text-white border border-transparent'
           : isHighlighted
-            ? 'bg-[rgba(134,201,242,0.25)] text-[#86C9F2] border border-[#86C9F2]'
-            : 'bg-[#162A4A] text-[#8BA4C4] border border-[#1E3A5F] hover:bg-[#1E3A5F] hover:text-white'
+            ? 'bg-transparent text-[#7EE0FF] border border-[#7EE0FF] hover:bg-[rgba(126,224,255,0.08)]'
+            : 'bg-transparent text-[#8B949E] border border-[#30363D] hover:border-[#58A6FF] hover:text-[#58A6FF] hover:bg-[rgba(88,166,255,0.05)]'
         }
       `}
     >

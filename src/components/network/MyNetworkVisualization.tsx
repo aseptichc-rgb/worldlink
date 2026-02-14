@@ -81,16 +81,29 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
     const centerY = dimensions.height / 2;
     const maxRadius = Math.min(dimensions.width, dimensions.height) * 0.35;
 
+    // Deterministic hash for consistent positions based on user ID
+    const hashCode = (str: string) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    };
+
     const nodes: NetworkNode[] = connections.map((user, index) => {
       const angle = (index / connections.length) * Math.PI * 2 - Math.PI / 2;
-      const radius = maxRadius * (0.6 + Math.random() * 0.4);
+      const seed = hashCode(user.id);
+      const radiusVariation = (seed % 40) / 100; // 0.00 ~ 0.39
+      const radius = maxRadius * (0.6 + radiusVariation);
+      const nodeRadius = 20 + (seed % 8);
 
       return {
         id: user.id,
         user,
         x: centerX + Math.cos(angle) * radius,
         y: centerY + Math.sin(angle) * radius,
-        radius: 20 + Math.random() * 8,
+        radius: nodeRadius,
         angle,
       };
     });
@@ -131,8 +144,8 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
 
       const gradient = ctx.createLinearGradient(centerX, centerY, node.x, node.y);
       if (isHovered || isSelected) {
-        gradient.addColorStop(0, '#86C9F2');
-        gradient.addColorStop(1, '#2C529C');
+        gradient.addColorStop(0, '#58A6FF');
+        gradient.addColorStop(1, '#1F6FEB');
         ctx.lineWidth = 3;
       } else {
         gradient.addColorStop(0, 'rgba(0, 229, 255, 0.4)');
@@ -175,8 +188,8 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       centerX - 10, centerY - 10, 0,
       centerX, centerY, pulseSize
     );
-    centerGradient.addColorStop(0, '#86C9F2');
-    centerGradient.addColorStop(1, '#2C529C');
+    centerGradient.addColorStop(0, '#58A6FF');
+    centerGradient.addColorStop(1, '#1F6FEB');
     ctx.fillStyle = centerGradient;
     ctx.fill();
     ctx.strokeStyle = '#FFFFFF';
@@ -217,12 +230,12 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
         node.x, node.y, displayRadius
       );
       nodeGradient.addColorStop(0, '#2D333B');
-      nodeGradient.addColorStop(1, '#162A4A');
+      nodeGradient.addColorStop(1, '#1C2333');
       ctx.fillStyle = nodeGradient;
       ctx.fill();
 
       // 노드 테두리
-      ctx.strokeStyle = isHovered || isSelected ? '#86C9F2' : '#1E3A5F';
+      ctx.strokeStyle = isHovered || isSelected ? '#58A6FF' : '#30363D';
       ctx.lineWidth = isHovered || isSelected ? 2 : 1;
       ctx.stroke();
 
@@ -230,8 +243,8 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       ctx.font = `bold ${displayRadius * 0.7}px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = isHovered || isSelected ? '#86C9F2' : '#8BA4C4';
-      ctx.fillText(node.user.name[0], node.x, node.y);
+      ctx.fillStyle = isHovered || isSelected ? '#58A6FF' : '#8B949E';
+      ctx.fillText(node.user.name?.[0] || '?', node.x, node.y);
 
       // 이름 라벨 (hover/selected 시)
       if (isHovered || isSelected) {
@@ -252,7 +265,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
         if (node.user.company) {
           ctx.font = '10px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif';
           const companyY = labelY + 18;
-          ctx.fillStyle = '#8BA4C4';
+          ctx.fillStyle = '#8B949E';
           ctx.fillText(node.user.company, node.x, companyY);
         }
       }
@@ -325,18 +338,18 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
   if (connections.length === 0) {
     return (
       <div className="w-full py-12 flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 rounded-full bg-[#162A4A] border border-[#1E3A5F] flex items-center justify-center mb-4">
-          <Users size={32} className="text-[#4A5E7A]" />
+        <div className="w-20 h-20 rounded-full bg-[#1C2333] border border-[#30363D] flex items-center justify-center mb-4">
+          <Users size={32} className="text-[#484F58]" />
         </div>
         <h3 className="text-white font-semibold mb-2">아직 인맥이 없습니다</h3>
-        <p className="text-[#8BA4C4] text-sm mb-6 max-w-xs">
+        <p className="text-[#8B949E] text-sm mb-6 max-w-xs">
           네트워크에서 새로운 사람들과 연결하거나<br />
           초대 링크를 통해 인맥을 만들어보세요
         </p>
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push('/network')}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] rounded-xl text-white font-medium"
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] rounded-xl text-white font-medium"
         >
           <UserPlus size={18} />
           인맥 찾아보기
@@ -350,16 +363,16 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-[#86C9F2]" />
+          <Sparkles size={18} className="text-[#58A6FF]" />
           <h3 className="text-white font-semibold">내 인맥 네트워크</h3>
         </div>
-        <span className="text-sm text-[#8BA4C4]">{connections.length}명</span>
+        <span className="text-sm text-[#8B949E]">{connections.length}명</span>
       </div>
 
       {/* 그래프 컨테이너 */}
       <div
         ref={containerRef}
-        className="relative w-full h-64 bg-[#101D33] rounded-xl border border-[#1E3A5F] overflow-hidden"
+        className="relative w-full h-64 bg-[#161B22] rounded-xl border border-[#30363D] overflow-hidden"
       >
         <canvas
           ref={canvasRef}
@@ -377,7 +390,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-4 left-4 right-4 bg-[#162A4A]/95 backdrop-blur-xl border border-[#1E3A5F] rounded-xl p-4"
+              className="absolute bottom-4 left-4 right-4 bg-[#1C2333]/95 backdrop-blur-xl border border-[#30363D] rounded-xl p-4"
             >
               <div className="flex items-center gap-3">
                 <Avatar
@@ -387,13 +400,13 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
                 />
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-semibold">{selectedNode.user.name}</h4>
-                  <p className="text-[#8BA4C4] text-sm truncate">
+                  <p className="text-[#8B949E] text-sm truncate">
                     {selectedNode.user.company} · {selectedNode.user.position}
                   </p>
                 </div>
                 <button
                   onClick={() => handleViewProfile(selectedNode.user.id)}
-                  className="flex items-center gap-1 px-3 py-2 bg-[#86C9F2]/10 text-[#86C9F2] rounded-lg text-sm hover:bg-[#86C9F2]/20 transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 bg-[#58A6FF]/10 text-[#58A6FF] rounded-lg text-sm hover:bg-[#58A6FF]/20 transition-colors"
                 >
                   <ExternalLink size={14} />
                   <span>보기</span>
@@ -407,7 +420,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       {/* 전체보기 버튼 */}
       <button
         onClick={() => router.push('/network')}
-        className="w-full mt-4 py-3 text-center text-[#86C9F2] text-sm hover:bg-[#86C9F2]/5 rounded-xl transition-colors"
+        className="w-full mt-4 py-3 text-center text-[#58A6FF] text-sm hover:bg-[#58A6FF]/5 rounded-xl transition-colors"
       >
         네트워크에서 더 많은 인맥 찾아보기 →
       </button>

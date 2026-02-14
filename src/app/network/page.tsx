@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
@@ -22,12 +22,13 @@ import { Recommendation } from '@/types';
 export default function NetworkPage() {
   const router = useRouter();
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading, logout } = useAuthStore();
-  const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading } = useNetworkStore();
+  const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, setCenterUserId } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [centerUserName, setCenterUserName] = useState<string | null>(null);
 
   // 데모 메세지 생성 함수
   const generateDemoMessages = (currentUserId: string): Message[] => {
@@ -74,32 +75,48 @@ export default function NetworkPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Load network data
+  // Load network data (centerUserId가 바뀌면 해당 인물 중심으로 재로드)
   useEffect(() => {
     const loadNetworkData = async () => {
       if (!user) return;
 
+      const targetUserId = centerUserId || user.id;
+      const isMyNetwork = !centerUserId || centerUserId === user.id;
+
       setNetworkLoading(true);
       try {
-        const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, {
-          name: user.name,
-          profileImage: user.profileImage,
-          company: user.company,
-          position: user.position,
-          keywords: user.keywords,
-        });
-        // 프로필 페이지에서 변경한 사진을 네트워크 그래프에 반영
-        const syncedNodes = fetchedNodes.map(node =>
-          node.id === user.id && user.profileImage
-            ? { ...node, profileImage: user.profileImage }
-            : node
-        );
-        setNodes(syncedNodes);
-        setEdges(edges);
+        if (isMyNetwork) {
+          // 내 네트워크
+          const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, {
+            name: user.name,
+            profileImage: user.profileImage,
+            company: user.company,
+            position: user.position,
+            keywords: user.keywords,
+          });
+          const syncedNodes = fetchedNodes.map(node =>
+            node.id === user.id && user.profileImage
+              ? { ...node, profileImage: user.profileImage }
+              : node
+          );
+          setNodes(syncedNodes);
+          setEdges(edges);
+          setCenterUserName(null);
+        } else {
+          // 다른 인물의 네트워크
+          const { nodes: fetchedNodes, edges } = await getNetworkGraph(targetUserId);
+          setNodes(fetchedNodes);
+          setEdges(edges);
+          // 중심 인물 이름 저장
+          const centerNode = fetchedNodes.find(n => n.degree === 0);
+          setCenterUserName(centerNode?.name || null);
+        }
 
-        // Load recommendations
-        const recs = await getRecommendations(user.id, 3);
-        setRecommendations(recs);
+        // Load recommendations (내 네트워크일 때만)
+        if (isMyNetwork) {
+          const recs = await getRecommendations(user.id, 3);
+          setRecommendations(recs);
+        }
       } catch (error) {
         console.error('Error loading network data:', error);
       } finally {
@@ -108,7 +125,7 @@ export default function NetworkPage() {
     };
 
     loadNetworkData();
-  }, [user, setNodes, setEdges, setNetworkLoading]);
+  }, [user, centerUserId, setNodes, setEdges, setNetworkLoading]);
 
   // Load demo messages
   useEffect(() => {
@@ -127,10 +144,10 @@ export default function NetworkPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
         <div className="text-center">
           <div className="spinner mx-auto mb-4" />
-          <p className="text-[#8BA4C4]">로딩 중...</p>
+          <p className="text-[#8B949E]">로딩 중...</p>
         </div>
       </div>
     );
@@ -141,7 +158,7 @@ export default function NetworkPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen bg-[#0D1117] relative overflow-hidden">
       {/* Stars Background */}
       <div className="stars-bg" />
 
@@ -152,14 +169,14 @@ export default function NetworkPage() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
-        <div className="mx-5 mt-4 bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/50 rounded-2xl px-4 py-3">
+        <div className="mx-5 mt-4 bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/50 rounded-2xl px-4 py-3">
           <div className="flex items-center gap-4">
             {/* Menu Button */}
             <button
               onClick={() => setShowMenu(true)}
-              className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#1E3A5F]/80 transition-all duration-200 group"
+              className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#30363D]/80 transition-all duration-200 group"
             >
-              <Menu size={20} className="text-[#4A5E7A] group-hover:text-white transition-colors" />
+              <Menu size={20} className="text-[#484F58] group-hover:text-white transition-colors" />
             </button>
 
             {/* Search Bar */}
@@ -172,19 +189,19 @@ export default function NetworkPage() {
               {/* Messages */}
               <button
                 onClick={() => router.push('/messages')}
-                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#1E3A5F]/80 transition-all duration-200 relative group"
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#30363D]/80 transition-all duration-200 relative group"
               >
-                <Mail size={20} className="text-[#4A5E7A] group-hover:text-white transition-colors" />
+                <Mail size={20} className="text-[#484F58] group-hover:text-white transition-colors" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[16px] h-[16px] bg-[#FF4081] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+                  <span className="absolute top-1 right-1 min-w-[16px] h-[16px] bg-[#FF6B8A] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
               {/* Notifications */}
-              <button className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#1E3A5F]/80 transition-all duration-200 group">
-                <Bell size={20} className="text-[#4A5E7A] group-hover:text-white transition-colors" />
+              <button className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#30363D]/80 transition-all duration-200 group">
+                <Bell size={20} className="text-[#484F58] group-hover:text-white transition-colors" />
               </button>
 
               {/* Profile - 절제된 글로우 효과 */}
@@ -192,7 +209,7 @@ export default function NetworkPage() {
                 onClick={() => router.push('/profile')}
                 className="ml-1 relative group"
               >
-                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#1E3A5F] group-hover:border-[#86C9F2]/50 transition-all duration-300">
+                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#30363D] group-hover:border-[#58A6FF]/50 transition-all duration-300">
                   <Avatar
                     src={user.profileImage}
                     name={user.name}
@@ -200,12 +217,37 @@ export default function NetworkPage() {
                   />
                 </div>
                 {/* 온라인 상태 표시 (항상 켜진 글로우 대신) */}
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#00E676] border-2 border-[#101D33] rounded-full" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#3FB950] border-2 border-[#161B22] rounded-full" />
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* 다른 인물 네트워크 보기 중일 때 돌아가기 바 */}
+      {centerUserId && centerUserId !== user.id && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-[88px] left-0 right-0 z-30 px-5"
+        >
+          <button
+            onClick={() => setCenterUserId(null)}
+            className="w-full flex items-center gap-3 bg-[#1C2333]/90 backdrop-blur-xl border border-[#58A6FF]/30 rounded-xl px-4 py-3 hover:bg-[#30363D]/90 transition-all duration-200 group"
+          >
+            <ArrowLeft size={18} className="text-[#58A6FF] group-hover:text-white transition-colors" />
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Users size={16} className="text-[#58A6FF] flex-shrink-0" />
+              <span className="text-sm font-medium text-white truncate">
+                {centerUserName || '인물'}님의 인맥
+              </span>
+            </div>
+            <span className="text-xs text-[#58A6FF] flex-shrink-0">
+              내 네트워크로 돌아가기
+            </span>
+          </button>
+        </motion.div>
+      )}
 
       {/* Recommendations Panel - ProfileSheet보다 낮은 z-index */}
       <motion.div
@@ -216,17 +258,17 @@ export default function NetworkPage() {
         transition={{ type: 'spring', damping: 25 }}
         className="fixed top-20 right-0 bottom-0 w-full max-w-sm z-20"
       >
-        <div className="h-full bg-[#101D33]/95 backdrop-blur-xl border-l border-[#1E3A5F] p-4 overflow-y-auto">
+        <div className="h-full bg-[#161B22]/95 backdrop-blur-xl border-l border-[#30363D] p-4 overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-[#86C9F2]" />
+              <Sparkles size={18} className="text-[#58A6FF]" />
               <h2 className="font-semibold text-white">오늘의 추천</h2>
             </div>
             <button
               onClick={() => setShowRecommendations(false)}
-              className="p-1.5 rounded-lg hover:bg-[#1E3A5F] transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
             >
-              <X size={18} className="text-[#8BA4C4]" />
+              <X size={18} className="text-[#8B949E]" />
             </button>
           </div>
 
@@ -237,9 +279,9 @@ export default function NetworkPage() {
               ))
             ) : (
               <div className="text-center py-8">
-                <Sparkles size={32} className="text-[#4A5E7A] mx-auto mb-3" />
-                <p className="text-[#8BA4C4]">추천할 인맥이 없습니다</p>
-                <p className="text-[#4A5E7A] text-sm mt-1">
+                <Sparkles size={32} className="text-[#484F58] mx-auto mb-3" />
+                <p className="text-[#8B949E]">추천할 인맥이 없습니다</p>
+                <p className="text-[#484F58] text-sm mt-1">
                   더 많은 사람들과 연결해보세요
                 </p>
               </div>
@@ -257,7 +299,7 @@ export default function NetworkPage() {
           className="
             fixed right-4 top-1/2 -translate-y-1/2 z-20
             flex items-center gap-2 px-4 py-3
-            bg-gradient-to-r from-[#86C9F2] to-[#2C529C]
+            bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]
             rounded-l-2xl shadow-lg
             text-white font-medium text-sm
           "
@@ -265,7 +307,7 @@ export default function NetworkPage() {
           <Sparkles size={18} />
           <span className="hidden sm:inline">추천</span>
           {recommendations.length > 0 && (
-            <span className="w-5 h-5 bg-black/20 rounded-full flex items-center justify-center text-xs">
+            <span className="w-5 h-5 bg-[#0D1117]/20 rounded-full flex items-center justify-center text-xs">
               {recommendations.length}
             </span>
           )}
@@ -276,17 +318,17 @@ export default function NetworkPage() {
       <div className="fixed bottom-4 left-4 z-20">
         <div className="glass-light rounded-2xl px-4 py-3 flex items-center gap-4">
           <div className="text-center min-w-[48px]">
-            <p className="text-2xl font-bold text-[#86C9F2]">
+            <p className="text-2xl font-bold text-[#58A6FF]">
               {useNetworkStore.getState().nodes.filter(n => n.degree === 1).length}
             </p>
-            <p className="text-xs text-[#8BA4C4]">1촌</p>
+            <p className="text-xs text-[#8B949E]">1촌</p>
           </div>
-          <div className="w-px h-8 bg-[#1E3A5F]" />
+          <div className="w-px h-8 bg-[#30363D]" />
           <div className="text-center min-w-[48px]">
-            <p className="text-2xl font-bold text-[#2C529C]">
+            <p className="text-2xl font-bold text-[#1F6FEB]">
               {useNetworkStore.getState().nodes.filter(n => n.degree === 2).length}
             </p>
-            <p className="text-xs text-[#8BA4C4]">2촌</p>
+            <p className="text-xs text-[#8B949E]">2촌</p>
           </div>
         </div>
       </div>
@@ -299,14 +341,14 @@ export default function NetworkPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowMenu(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
           />
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25 }}
-            className="fixed top-0 left-0 bottom-0 w-72 bg-[#101D33] border-r border-[#1E3A5F] z-50 p-6"
+            className="fixed top-0 left-0 bottom-0 w-72 bg-[#161B22] border-r border-[#30363D] z-50 p-6"
           >
             <div className="flex items-center gap-3 mb-8">
               <Avatar
@@ -317,7 +359,7 @@ export default function NetworkPage() {
               />
               <div>
                 <h3 className="font-semibold text-white">{user.name}</h3>
-                <p className="text-sm text-[#8BA4C4]">{user.company}</p>
+                <p className="text-sm text-[#8B949E]">{user.company}</p>
               </div>
             </div>
 
@@ -327,7 +369,7 @@ export default function NetworkPage() {
                   setShowMenu(false);
                   router.push('/profile');
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#8BA4C4] hover:bg-[#162A4A] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#1C2333] hover:text-white transition-colors"
               >
                 <UserIcon size={20} />
                 <span>내 프로필</span>
@@ -337,7 +379,7 @@ export default function NetworkPage() {
                   setShowMenu(false);
                   router.push('/messages');
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#8BA4C4] hover:bg-[#162A4A] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#1C2333] hover:text-white transition-colors"
               >
                 <MessageCircle size={20} />
                 <span>메세지</span>
@@ -353,7 +395,7 @@ export default function NetworkPage() {
                     console.error('Error logging out:', error);
                   }
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#FF4081] hover:bg-[#FF4081]/10 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#FF6B8A] hover:bg-[#FF6B8A]/10 transition-colors"
               >
                 <LogOut size={20} />
                 <span>로그아웃</span>
@@ -361,10 +403,10 @@ export default function NetworkPage() {
             </nav>
 
             <div className="absolute bottom-6 left-6 right-6">
-              <div className="p-4 bg-[#162A4A] rounded-xl mb-4">
-                <p className="text-xs text-[#8BA4C4] mb-2">내 초대 코드</p>
-                <p className="font-mono text-lg text-[#86C9F2]">{user.inviteCode}</p>
-                <p className="text-xs text-[#4A5E7A] mt-1">
+              <div className="p-4 bg-[#1C2333] rounded-xl mb-4">
+                <p className="text-xs text-[#8B949E] mb-2">내 초대 코드</p>
+                <p className="font-mono text-lg text-[#58A6FF]">{user.inviteCode}</p>
+                <p className="text-xs text-[#484F58] mt-1">
                   남은 초대권: {user.invitesRemaining}개
                 </p>
               </div>
@@ -384,10 +426,10 @@ export default function NetworkPage() {
 
       {/* Loading Overlay */}
       {networkLoading && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-[#0D1117]/80 flex items-center justify-center z-50">
           <div className="text-center">
             <div className="spinner mx-auto mb-4" />
-            <p className="text-[#8BA4C4]">네트워크 로딩 중...</p>
+            <p className="text-[#8B949E]">네트워크 로딩 중...</p>
           </div>
         </div>
       )}

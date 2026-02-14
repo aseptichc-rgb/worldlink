@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { verifyAuthToken } from '@/lib/firebase-admin';
 
 // 멤버 데이터 (demo-data와 동일)
 const memberData = [
@@ -56,6 +57,12 @@ const memberData = [
 ];
 
 export async function POST(req: NextRequest) {
+  // Verify authenticated user
+  const uid = await verifyAuthToken(req);
+  if (!uid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });

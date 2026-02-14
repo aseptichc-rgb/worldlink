@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Send, Building, Briefcase, ArrowRight } from 'lucide-react';
 import { Modal, Button, Avatar } from '@/components/ui';
@@ -18,6 +18,12 @@ export default function ConnectionRequestModal() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     if (!isRequestModalOpen || !targetUserId) return;
@@ -53,7 +59,7 @@ export default function ConnectionRequestModal() {
     setIsLoading(false);
 
     // 2초 후 모달 닫기
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
       closeRequestModal();
       resetForm();
     }, 2000);
@@ -95,12 +101,12 @@ export default function ConnectionRequestModal() {
               transition={{ duration: 0.5 }}
               className="inline-block mb-6"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] flex items-center justify-center mx-auto">
                 <UserPlus size={32} className="text-white" />
               </div>
             </motion.div>
             <h3 className="text-xl font-bold text-white mb-2">인맥 신청을 보냈습니다!</h3>
-            <p className="text-[#8BA4C4]">
+            <p className="text-[#8B949E]">
               {middleConnector?.name}님을 통해 {targetUser?.name}님께 전달됩니다
             </p>
           </motion.div>
@@ -128,7 +134,7 @@ export default function ConnectionRequestModal() {
               <h3 className="text-lg font-bold text-white mb-1">
                 {targetUser?.name}
               </h3>
-              <div className="flex items-center justify-center gap-2 text-sm text-[#8BA4C4]">
+              <div className="flex items-center justify-center gap-2 text-sm text-[#8B949E]">
                 <Building size={14} />
                 <span>{targetUser?.company}</span>
                 <span>·</span>
@@ -139,8 +145,8 @@ export default function ConnectionRequestModal() {
 
             {/* Connection Path */}
             {connectionPath.length > 2 && (
-              <div className="mb-6 p-4 bg-[#162A4A] rounded-xl">
-                <p className="text-xs text-[#8BA4C4] mb-3">연결 경로</p>
+              <div className="mb-6 p-4 bg-[#1C2333] rounded-xl">
+                <p className="text-xs text-[#8B949E] mb-3">연결 경로</p>
                 <div className="flex items-center justify-center gap-2">
                   {connectionPath.map((user, idx) => (
                     <div key={user.id} className="flex items-center gap-2">
@@ -151,12 +157,12 @@ export default function ConnectionRequestModal() {
                           size="sm"
                           hasGlow={idx === 0 || idx === connectionPath.length - 1}
                         />
-                        <span className="text-[10px] text-[#8BA4C4] mt-1">
+                        <span className="text-[10px] text-[#8B949E] mt-1">
                           {idx === 0 ? '나' : user.name.slice(0, 3)}
                         </span>
                       </div>
                       {idx < connectionPath.length - 1 && (
-                        <ArrowRight size={14} className={idx === 0 ? 'text-[#86C9F2]' : 'text-[#2C529C]'} />
+                        <ArrowRight size={14} className={idx === 0 ? 'text-[#58A6FF]' : 'text-[#1F6FEB]'} />
                       )}
                     </div>
                   ))}
@@ -165,32 +171,32 @@ export default function ConnectionRequestModal() {
             )}
 
             {/* Info Box */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-[#86C9F2]/10 to-[#2C529C]/10 rounded-xl border border-[#86C9F2]/20">
+            <div className="mb-6 p-4 bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10 rounded-xl border border-[#58A6FF]/20">
               <p className="text-sm text-white mb-1">
-                <span className="text-[#86C9F2] font-medium">{middleConnector?.name}</span>님을 통해 연결됩니다
+                <span className="text-[#58A6FF] font-medium">{middleConnector?.name}</span>님을 통해 연결됩니다
               </p>
-              <p className="text-xs text-[#8BA4C4]">
+              <p className="text-xs text-[#8B949E]">
                 {middleConnector?.name}님이 수락하면 {targetUser?.name}님과 1촌이 됩니다
               </p>
             </div>
 
             {/* Message */}
             <div className="mb-6">
-              <p className="text-sm text-[#8BA4C4] mb-2">소개 메시지 (선택)</p>
+              <p className="text-sm text-[#8B949E] mb-2">소개 메시지 (선택)</p>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={`안녕하세요! ${targetUser?.name}님과 인맥을 맺고 싶습니다.`}
                 maxLength={200}
                 className="
-                  w-full bg-[#162A4A] border border-[#1E3A5F] text-white
+                  w-full bg-[#1C2333] border border-[#30363D] text-white
                   rounded-xl py-3 px-4 text-sm resize-none
-                  focus:outline-none focus:border-[#86C9F2]
-                  placeholder:text-[#4A5E7A]
+                  focus:outline-none focus:border-[#58A6FF]
+                  placeholder:text-[#484F58]
                 "
                 rows={3}
               />
-              <p className="text-xs text-[#4A5E7A] mt-1 text-right">
+              <p className="text-xs text-[#484F58] mt-1 text-right">
                 {message.length}/200
               </p>
             </div>
@@ -199,7 +205,7 @@ export default function ConnectionRequestModal() {
             <Button
               onClick={handleSubmit}
               isLoading={isLoading}
-              className="w-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C]"
+              className="w-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]"
               size="lg"
               leftIcon={<UserPlus size={18} />}
             >

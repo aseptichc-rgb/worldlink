@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { Modal, Button, Avatar } from '@/components/ui';
@@ -18,14 +18,20 @@ export default function CoffeeChatModal() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
       if (!targetUserId) return;
 
       try {
-        // 데모 유저인 경우
-        if (targetUserId.startsWith('demo-user-')) {
+        // 데모 유저인 경우 (member_ prefix)
+        if (targetUserId.startsWith('member_')) {
           const demoUser = demoUsers.find(u => u.id === targetUserId);
           if (demoUser) {
             setTargetUser(demoUser);
@@ -56,7 +62,7 @@ export default function CoffeeChatModal() {
     setIsLoading(false);
 
     // 2초 후 모달 닫기
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
       closeRequestModal();
       resetForm();
     }, 2000);
@@ -95,10 +101,10 @@ export default function CoffeeChatModal() {
               transition={{ duration: 1, ease: 'easeOut' }}
               className="inline-block mb-6"
             >
-              <Send size={48} className="text-[#86C9F2]" />
+              <Send size={48} className="text-[#58A6FF]" />
             </motion.div>
             <h3 className="text-xl font-bold text-white mb-2">메세지를 보냈습니다!</h3>
-            <p className="text-[#8BA4C4]">
+            <p className="text-[#8B949E]">
               {targetUser?.name}님이 확인하면 알림을 보내드릴게요
             </p>
           </motion.div>
@@ -122,7 +128,7 @@ export default function CoffeeChatModal() {
                 {targetUser?.name}님께 메세지 보내기
               </h3>
               {targetUser?.company && (
-                <p className="text-sm text-[#8BA4C4] mt-1">
+                <p className="text-sm text-[#8B949E] mt-1">
                   {targetUser.company} · {targetUser.position}
                 </p>
               )}
@@ -136,14 +142,14 @@ export default function CoffeeChatModal() {
                 placeholder="메세지를 입력해주세요..."
                 maxLength={500}
                 className="
-                  w-full bg-[#162A4A] border border-[#1E3A5F] text-white
+                  w-full bg-[#1C2333] border border-[#30363D] text-white
                   rounded-xl py-3 px-4 text-sm resize-none
-                  focus:outline-none focus:border-[#86C9F2]
-                  placeholder:text-[#4A5E7A]
+                  focus:outline-none focus:border-[#58A6FF]
+                  placeholder:text-[#484F58]
                 "
                 rows={4}
               />
-              <p className="text-xs text-[#4A5E7A] mt-1 text-right">
+              <p className="text-xs text-[#484F58] mt-1 text-right">
                 {message.length}/500
               </p>
             </div>

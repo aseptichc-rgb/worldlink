@@ -24,25 +24,25 @@ interface GraphEdge {
 // 색상 상수 - 계층별 차별화
 const COLORS = {
   // 노드 색상
-  nodeCore: '#86C9F2',           // 중앙 노드 - 밝은 청색
+  nodeCore: '#58A6FF',           // 중앙 노드 - 밝은 청색
   nodePrimary: '#4A90E2',        // 1차 연결 - 청색
-  nodeSecondary: '#2C529C',      // 2차 연결 - 보라색
+  nodeSecondary: '#1F6FEB',      // 2차 연결 - 보라색
   nodeTertiary: '#9B8ED9',       // 3차 연결 - 연보라
 
   // 엣지 색상
   edgePrimary: '#4A90E2',        // 1차 연결선
-  edgeSecondary: '#2C529C',      // 2차 연결선
+  edgeSecondary: '#1F6FEB',      // 2차 연결선
   edgeTertiary: '#9B8ED9',       // 3차 연결선
   edgeHighlighted: '#FFB800',    // 강조된 연결선
 
   // 상호작용 색상
-  hover: '#86C9F2',
+  hover: '#58A6FF',
   selected: '#FFD700',
   focused: '#FFB800',
   mutual: '#00E5FF',           // 공통 인맥 표시
 
   // 배경 색상
-  nodeBg: '#162A4A',
+  nodeBg: '#1C2333',
   nodeBgHover: '#2D3748',
 
   // 텍스트 색상
@@ -110,6 +110,7 @@ export default function NetworkGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>(0);
+  const edgeAnimFrameRef = useRef<number>(0);
   const nodesRef = useRef<GraphNode[]>([]);
   const edgesRef = useRef<GraphEdge[]>([]);
   const edgeAnimationRef = useRef<number>(0);
@@ -122,6 +123,8 @@ export default function NetworkGraph() {
     setSelectedNode,
     focusedNodeId,
     setFocusedNodeId,
+    setCenterUserId,
+    centerUserId,
   } = useNetworkStore();
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -134,6 +137,8 @@ export default function NetworkGraph() {
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
   const lastPosRef = useRef({ x: 0, y: 0 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastPinchDistRef = useRef<number>(0);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Initialize dimensions
   useEffect(() => {
@@ -151,16 +156,27 @@ export default function NetworkGraph() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Edge animation offset
+  // centerUserId 변경 시 뷰 리셋 (새 그래프가 중앙에 보이도록)
+  const prevCenterRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevCenterRef.current !== undefined && prevCenterRef.current !== centerUserId) {
+      setTransform({ x: 0, y: 0, scale: 1 });
+      setTargetTransform(null);
+      setExpandedNodeIds(new Set());
+    }
+    prevCenterRef.current = centerUserId;
+  }, [centerUserId]);
+
+  // Edge animation offset (separate rAF ref to avoid overwriting animationRef)
   useEffect(() => {
     const animate = () => {
       edgeAnimationRef.current = (edgeAnimationRef.current + 0.5) % 20;
-      animationRef.current = requestAnimationFrame(animate);
+      edgeAnimFrameRef.current = requestAnimationFrame(animate);
     };
     animate();
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (edgeAnimFrameRef.current) {
+        cancelAnimationFrame(edgeAnimFrameRef.current);
       }
     };
   }, []);
@@ -1170,8 +1186,187 @@ export default function NetworkGraph() {
     }
   };
 
+  // ===== Touch Event Handlers (모바일 핀치 줌 & 패닝) =====
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setTooltip(null);
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      const node = getNodeAtPosition(x, y);
+
+      if (node) {
+        setDraggedNode(node);
+        node.fx = node.x;
+        node.fy = node.y;
+      } else {
+        setIsDragging(true);
+      }
+
+      lastPosRef.current = { x: touch.clientX, y: touch.clientY };
+      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    } else if (e.touches.length === 2) {
+      // 핀치 줌 시작 - 드래그 중지
+      setIsDragging(false);
+      setDraggedNode(null);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
+      // 두 손가락 중심점 저장
+      lastPosRef.current = {
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+
+    if (e.touches.length === 1 && !lastPinchDistRef.current) {
+      const touch = e.touches[0];
+
+      if (draggedNode) {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        draggedNode.fx = (x - transform.x) / transform.scale;
+        draggedNode.fy = (y - transform.y) / transform.scale;
+      } else if (isDragging) {
+        const dx = touch.clientX - lastPosRef.current.x;
+        const dy = touch.clientY - lastPosRef.current.y;
+        setTransform(prev => ({
+          ...prev,
+          x: prev.x + dx,
+          y: prev.y + dy,
+        }));
+      }
+      lastPosRef.current = { x: touch.clientX, y: touch.clientY };
+    } else if (e.touches.length === 2) {
+      // 핀치 줌
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+      if (lastPinchDistRef.current > 0) {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const pinchX = centerX - rect.left;
+        const pinchY = centerY - rect.top;
+
+        const scaleFactor = dist / lastPinchDistRef.current;
+        const newScale = Math.max(0.3, Math.min(3, transform.scale * scaleFactor));
+
+        // 두 손가락 중심점으로 줌 + 패닝
+        const panDx = centerX - lastPosRef.current.x;
+        const panDy = centerY - lastPosRef.current.y;
+
+        setTransform(prev => ({
+          x: pinchX - (pinchX - prev.x) * (newScale / prev.scale) + panDx,
+          y: pinchY - (pinchY - prev.y) * (newScale / prev.scale) + panDy,
+          scale: newScale,
+        }));
+      }
+
+      lastPinchDistRef.current = dist;
+      lastPosRef.current = { x: centerX, y: centerY };
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+
+    // 탭 감지: 터치 시작 위치에서 거의 움직이지 않았으면 클릭으로 처리
+    if (e.changedTouches.length === 1 && touchStartPosRef.current && !lastPinchDistRef.current) {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartPosRef.current.x;
+      const dy = touch.clientY - touchStartPosRef.current.y;
+      const moved = Math.sqrt(dx * dx + dy * dy);
+
+      if (moved < 10) {
+        // 탭 → 클릭 이벤트 시뮬레이션
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (rect) {
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+
+          if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
+            const category = getClusterAtPosition(x, y);
+            if (category) {
+              const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+              if (catGraphNodes.length > 0) {
+                let cx = 0, cy = 0;
+                catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
+                cx /= catGraphNodes.length;
+                cy /= catGraphNodes.length;
+                const targetScale = 1.0;
+                setTargetTransform({
+                  x: dimensions.width / 2 - cx * targetScale,
+                  y: dimensions.height / 2 - cy * targetScale,
+                  scale: targetScale,
+                });
+              }
+            }
+          } else {
+            const node = getNodeAtPosition(x, y);
+            if (node) {
+              if (focusedNodeId === node.id) {
+                setFocusedNodeId(null);
+                setSelectedNode(null);
+                setExpandedNodeIds(prev => {
+                  const next = new Set(prev);
+                  next.delete(node.id);
+                  return next;
+                });
+              } else if (node.degree !== 0) {
+                // degree 0이 아닌 노드 터치 → 해당 인물 중심으로 그래프 재로드
+                setExpandedNodeIds(new Set());
+                setCenterUserId(node.id);
+              } else {
+                // 중앙 노드 터치
+                focusOnNode(node);
+                setSelectedNode(node);
+                setExpandedNodeIds(new Set());
+              }
+            } else {
+              setFocusedNodeId(null);
+              setSelectedNode(null);
+              setExpandedNodeIds(new Set());
+            }
+          }
+        }
+      }
+    }
+
+    if (draggedNode) {
+      draggedNode.x = draggedNode.fx ?? draggedNode.x;
+      draggedNode.y = draggedNode.fy ?? draggedNode.y;
+      setDraggedNode(null);
+    }
+    setIsDragging(false);
+    touchStartPosRef.current = null;
+
+    // 모든 손가락이 떼어졌을 때 핀치 상태 초기화
+    if (e.touches.length === 0) {
+      lastPinchDistRef.current = 0;
+    }
+  };
+
   const focusOnNode = (node: GraphNode) => {
-    if (!node.x || !node.y) return;
+    if (node.x == null || node.y == null) return;
 
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
@@ -1257,19 +1452,17 @@ export default function NetworkGraph() {
         return;
       }
 
+      // degree 0이 아닌 노드 클릭 시 → 해당 인물 중심으로 그래프 재로드
+      if (node.degree !== 0) {
+        setExpandedNodeIds(new Set());
+        setCenterUserId(node.id);
+        return;
+      }
+
+      // 중앙 노드(나) 클릭 시 모든 확장 해제
       focusOnNode(node);
       setSelectedNode(node);
-
-      // degree 1 노드 클릭 시 2차 인맥 표시 (이전 노드의 인맥은 숨김)
-      if (node.degree === 1) {
-        // 이전 확장을 모두 제거하고 현재 노드만 확장
-        setExpandedNodeIds(new Set([node.id]));
-      } else if (node.degree === 2) {
-        // 2촌 클릭 시 확장 상태 유지
-      } else {
-        // 중앙 노드(나) 클릭 시 모든 확장 해제
-        setExpandedNodeIds(new Set());
-      }
+      setExpandedNodeIds(new Set());
     } else {
       setFocusedNodeId(null);
       setSelectedNode(null);
@@ -1332,7 +1525,11 @@ export default function NetworkGraph() {
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'none' }}
       />
 
       {/* Tooltip */}
@@ -1346,15 +1543,15 @@ export default function NetworkGraph() {
             className="absolute pointer-events-none z-50"
             style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
           >
-            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#1E3A5F] rounded-xl px-4 py-3 shadow-2xl">
+            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl">
               <div className="text-sm font-semibold text-white mb-1">{tooltip.node.name}</div>
-              <div className="text-xs text-[#8BA4C4]">{tooltip.node.company}</div>
-              <div className="text-xs text-[#8BA4C4]">{tooltip.node.position}</div>
+              <div className="text-xs text-[#8B949E]">{tooltip.node.company}</div>
+              <div className="text-xs text-[#8B949E]">{tooltip.node.position}</div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800]">
                   {tooltip.node.degree}단계
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#86C9F2]/20 text-[#86C9F2]">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
                   {tooltip.node.connectionCount}명 연결
                 </span>
               </div>
@@ -1370,42 +1567,42 @@ export default function NetworkGraph() {
           className="zoom-btn group"
           title="확대"
         >
-          <Plus size={20} className="group-hover:text-[#86C9F2] transition-colors" />
+          <Plus size={20} className="group-hover:text-[#58A6FF] transition-colors" />
         </button>
         <button
           onClick={handleZoomOut}
           className="zoom-btn group"
           title="축소"
         >
-          <Minus size={20} className="group-hover:text-[#86C9F2] transition-colors" />
+          <Minus size={20} className="group-hover:text-[#58A6FF] transition-colors" />
         </button>
         <button
           onClick={handleFitToScreen}
           className="zoom-btn group"
           title="전체 보기"
         >
-          <Maximize2 size={18} className="group-hover:text-[#86C9F2] transition-colors" />
+          <Maximize2 size={18} className="group-hover:text-[#58A6FF] transition-colors" />
         </button>
         <button
           onClick={handleReset}
           className="zoom-btn group"
           title="초기화"
         >
-          <RotateCcw size={18} className="group-hover:text-[#86C9F2] transition-colors" />
+          <RotateCcw size={18} className="group-hover:text-[#58A6FF] transition-colors" />
         </button>
       </div>
 
       {/* Zoom Level Indicator */}
-      <div className="absolute bottom-6 left-6 text-xs text-[#4A5E7A] bg-[#162A4A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#1E3A5F] flex items-center gap-2">
+      <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#30363D] flex items-center gap-2">
         <span>{Math.round(transform.scale * 100)}%</span>
-        <span className="text-[#86C9F2]">
+        <span className="text-[#58A6FF]">
           {transform.scale < ZOOM_CLUSTER_THRESHOLD ? '클러스터' :
            transform.scale >= ZOOM_DETAIL_THRESHOLD ? '상세' : '노드'}
         </span>
       </div>
 
       {/* Category Legend */}
-      <div className="absolute top-6 right-6 bg-[#151922]/90 backdrop-blur-xl border border-[#1E3A5F] rounded-xl px-4 py-3 shadow-2xl max-w-xs">
+      <div className="absolute top-6 right-6 bg-[#151922]/90 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl max-w-xs">
         <div className="text-xs font-semibold text-white mb-2">분야별 인맥</div>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
@@ -1414,7 +1611,7 @@ export default function NetworkGraph() {
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-[11px] text-[#8BA4C4]">{category}</span>
+              <span className="text-[11px] text-[#8B949E]">{category}</span>
             </div>
           ))}
         </div>

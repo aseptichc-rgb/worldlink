@@ -86,6 +86,8 @@ export default function ProfileSheet() {
   }, [currentUser]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadConnectionPath = async () => {
       if (!selectedNode || !currentUser) return;
 
@@ -101,6 +103,7 @@ export default function ProfileSheet() {
             if (demoUser) return demoUser;
             return { id, name: '나', email: '', inviteCode: '', invitesRemaining: 0, coffeeStatus: 'available' as const, keywords: [], createdAt: new Date(), updatedAt: new Date() };
           });
+          if (cancelled) return;
           setConnectionPath(pathUsers);
 
           const demoUserData = demoUsers.find(u => u.id === selectedNode.id);
@@ -121,39 +124,45 @@ export default function ProfileSheet() {
           }
         } else {
           const pathIds = await findConnectionPath(currentUser.id, selectedNode.id);
+          if (cancelled) return;
           const pathUsers: User[] = [];
 
           for (const userId of pathIds) {
             const user = await getUser(userId);
+            if (cancelled) return;
             if (user) pathUsers.push(user);
           }
 
           setConnectionPath(pathUsers);
 
           const userData = await getUser(selectedNode.id);
+          if (cancelled) return;
           setSelectedUserData(userData);
 
           // 1촌일 때만 상대방의 인맥 목록 가져오기
           const isFirstDegree = pathIds.length === 2;
           if (isFirstDegree && userData) {
             const connections = await getUserConnectionsWithDetails(selectedNode.id);
+            if (cancelled) return;
             setTheirConnections(connections);
           } else if (userData) {
             // 1촌이 아니면 인맥 수만 표시하기 위해 임시 객체 설정
             const connections = await getUserConnectionsWithDetails(selectedNode.id);
+            if (cancelled) return;
             setTheirConnections(connections.map(c => ({ id: c.id } as User)));
           } else {
             setTheirConnections([]);
           }
         }
       } catch (error) {
-        console.error('Error loading connection path:', error);
+        if (!cancelled) console.error('Error loading connection path:', error);
       } finally {
-        setIsLoadingPath(false);
+        if (!cancelled) setIsLoadingPath(false);
       }
     };
 
     loadConnectionPath();
+    return () => { cancelled = true; };
   }, [selectedNode, currentUser]);
 
   const handleCoffeeChatClick = () => {
@@ -233,27 +242,27 @@ export default function ProfileSheet() {
           className="fixed top-0 right-0 bottom-0 w-full max-w-[380px] z-30 pointer-events-auto"
         >
           {/* Panel Container */}
-          <div className="h-full bg-gradient-to-l from-[#0B162C]/98 via-[#101D33]/95 to-transparent">
+          <div className="h-full bg-gradient-to-l from-[#0D1117]/98 via-[#161B22]/95 to-transparent">
             {/* Content Area */}
-            <div className="h-full w-[340px] ml-auto bg-[#101D33]/98 backdrop-blur-2xl border-l border-[#1E3A5F]/60 overflow-hidden flex flex-col">
+            <div className="h-full w-[340px] ml-auto bg-[#161B22]/98 backdrop-blur-2xl border-l border-[#30363D]/60 overflow-hidden flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#1E3A5F]/50 bg-[#0B162C]/50">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#30363D]/50 bg-[#0D1117]/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#86C9F2] animate-pulse" />
-                  <span className="text-sm font-medium text-[#8BA4C4]">프로필</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] animate-pulse" />
+                  <span className="text-sm font-medium text-[#8B949E]">프로필</span>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-2 rounded-lg hover:bg-[#1E3A5F] transition-all duration-200 group"
+                  className="p-2 rounded-lg hover:bg-[#30363D] transition-all duration-200 group"
                 >
-                  <X size={18} className="text-[#8BA4C4] group-hover:text-white transition-colors" />
+                  <X size={18} className="text-[#8B949E] group-hover:text-white transition-colors" />
                 </button>
               </div>
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto no-scrollbar">
                 {/* Profile Header Section */}
-                <div className="px-5 py-5 bg-gradient-to-b from-[#0B162C]/80 to-transparent">
+                <div className="px-5 py-5 bg-gradient-to-b from-[#0D1117]/80 to-transparent">
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <Avatar
@@ -263,8 +272,8 @@ export default function ProfileSheet() {
                         hasGlow={selectedNode.degree === 1}
                       />
                       {selectedNode.degree === 1 && (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#86C9F2] flex items-center justify-center">
-                          <Link2 size={12} className="text-[#0B162C]" />
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#58A6FF] flex items-center justify-center">
+                          <Link2 size={12} className="text-[#0D1117]" />
                         </div>
                       )}
                     </div>
@@ -287,19 +296,19 @@ export default function ProfileSheet() {
                               {displayInfo.name}
                             </h2>
                             {displayInfo.company && (
-                              <div className="flex items-center gap-2 mt-1.5 text-[#8BA4C4] text-sm">
-                                <Building size={14} className="text-[#4A90E2] flex-shrink-0" />
+                              <div className="flex items-center gap-2 mt-1.5 text-[#8B949E] text-sm">
+                                <Building size={14} className="text-[#58A6FF] flex-shrink-0" />
                                 <span className="truncate">{displayInfo.company}</span>
                               </div>
                             )}
                             {displayInfo.position && (
-                              <div className="flex items-center gap-2 mt-1 text-[#8BA4C4] text-sm">
-                                <Briefcase size={14} className="text-[#2C529C] flex-shrink-0" />
+                              <div className="flex items-center gap-2 mt-1 text-[#8B949E] text-sm">
+                                <Briefcase size={14} className="text-[#1F6FEB] flex-shrink-0" />
                                 <span className="truncate">{displayInfo.position}</span>
                               </div>
                             )}
                             {!displayInfo.company && !displayInfo.position && !isConnected && (
-                              <div className="flex items-center gap-2 mt-1.5 text-[#4A5E7A] text-sm">
+                              <div className="flex items-center gap-2 mt-1.5 text-[#484F58] text-sm">
                                 <span className="text-xs">1촌 연결 시 상세 정보 확인 가능</span>
                               </div>
                             )}
@@ -325,7 +334,7 @@ export default function ProfileSheet() {
                       )}
                     </div>
                     <div className="stat-badge flex-1">
-                      <span className="stat-badge-value text-[#86C9F2]">{selectedNode.connectionCount}</span>
+                      <span className="stat-badge-value text-[#58A6FF]">{selectedNode.connectionCount}</span>
                       <span className="stat-badge-label">연결된 인맥</span>
                     </div>
                   </div>
@@ -335,7 +344,7 @@ export default function ProfileSheet() {
                   {/* Contact Info - 1촌에게만 표시 */}
                   {selectedNode.degree === 1 && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
                     <section>
-                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider mb-3">
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Mail size={12} />
                         연락처
                       </h3>
@@ -343,10 +352,10 @@ export default function ProfileSheet() {
                         {selectedUserData.email && (
                           <a
                             href={`mailto:${selectedUserData.email}`}
-                            className="flex items-center gap-3 text-sm text-[#8BA4C4] hover:text-[#86C9F2] transition-colors group"
+                            className="flex items-center gap-3 text-sm text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-[#1E3A5F] flex items-center justify-center group-hover:bg-[#86C9F2]/10 transition-colors">
-                              <Mail size={14} className="text-[#86C9F2]" />
+                            <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <Mail size={14} className="text-[#58A6FF]" />
                             </div>
                             <span className="truncate">{selectedUserData.email}</span>
                           </a>
@@ -354,10 +363,10 @@ export default function ProfileSheet() {
                         {selectedUserData.phone && (
                           <a
                             href={`tel:${selectedUserData.phone}`}
-                            className="flex items-center gap-3 text-sm text-[#8BA4C4] hover:text-[#86C9F2] transition-colors group"
+                            className="flex items-center gap-3 text-sm text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-[#1E3A5F] flex items-center justify-center group-hover:bg-[#86C9F2]/10 transition-colors">
-                              <Phone size={14} className="text-[#86C9F2]" />
+                            <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <Phone size={14} className="text-[#58A6FF]" />
                             </div>
                             <span>{selectedUserData.phone}</span>
                           </a>
@@ -368,7 +377,7 @@ export default function ProfileSheet() {
 
                   {/* Connection Path */}
                   <section>
-                    <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider mb-3">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                       <Link2 size={12} />
                       {connectionDegree >= 99 ? '프로필 공개 상태' : '연결 경로'}
                     </h3>
@@ -380,7 +389,7 @@ export default function ProfileSheet() {
                           </div>
                           <div>
                             <p className="text-[#10B981] text-sm font-medium">전체 공개 프로필</p>
-                            <p className="text-[#4A5E7A] text-xs mt-0.5">인맥 신청을 통해 연결해보세요</p>
+                            <p className="text-[#484F58] text-xs mt-0.5">인맥 신청을 통해 연결해보세요</p>
                           </div>
                         </div>
                       </div>
@@ -402,19 +411,19 @@ export default function ProfileSheet() {
                                     hasGlow={idx === 0 || idx === connectionPath.length - 1}
                                   />
                                   {idx === 0 && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#86C9F2] flex items-center justify-center text-[8px] font-bold text-[#0B162C]">
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#58A6FF] flex items-center justify-center text-[8px] font-bold text-[#0D1117]">
                                       나
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-[#8BA4C4] mt-1.5 max-w-[48px] truncate text-center font-medium">
+                                <span className="text-[10px] text-[#8B949E] mt-1.5 max-w-[48px] truncate text-center font-medium">
                                   {idx === 0 ? '나' : user.name.slice(0, 4)}
                                 </span>
                               </div>
                               {idx < connectionPath.length - 1 && (
                                 <div className="flex items-center">
-                                  <div className={`w-6 h-0.5 ${idx === 0 ? 'bg-[#86C9F2]' : 'bg-[#2C529C]'}`} />
-                                  <ArrowRight size={14} className={`flex-shrink-0 -mx-1 ${idx === 0 ? 'text-[#86C9F2]' : 'text-[#2C529C]'}`} />
+                                  <div className={`w-6 h-0.5 ${idx === 0 ? 'bg-[#58A6FF]' : 'bg-[#1F6FEB]'}`} />
+                                  <ArrowRight size={14} className={`flex-shrink-0 -mx-1 ${idx === 0 ? 'text-[#58A6FF]' : 'text-[#1F6FEB]'}`} />
                                 </div>
                               )}
                             </div>
@@ -423,7 +432,7 @@ export default function ProfileSheet() {
                       </div>
                     ) : (
                       <div className="info-card">
-                        <p className="text-[#4A5E7A] text-sm text-center py-2">연결 경로를 찾을 수 없습니다</p>
+                        <p className="text-[#484F58] text-sm text-center py-2">연결 경로를 찾을 수 없습니다</p>
                       </div>
                     )}
                   </section>
@@ -431,7 +440,7 @@ export default function ProfileSheet() {
                   {/* Keywords & Tags */}
                   {selectedNode.keywords.length > 0 && (
                     <section>
-                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider mb-3">
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Hash size={12} />
                         {selectedNode.name}님은
                       </h3>
@@ -455,7 +464,7 @@ export default function ProfileSheet() {
                   {selectedNode.degree === 1 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider">
+                        <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider">
                           <StickyNote size={12} />
                           나만의 메모
                         </h3>
@@ -466,15 +475,15 @@ export default function ProfileSheet() {
                                 setMemoText(currentMemo.content);
                                 setIsEditingMemo(true);
                               }}
-                              className="p-1.5 rounded-lg hover:bg-[#1E3A5F] transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
                             >
-                              <Pencil size={12} className="text-[#8BA4C4]" />
+                              <Pencil size={12} className="text-[#8B949E]" />
                             </button>
                             <button
                               onClick={handleDeleteMemo}
-                              className="p-1.5 rounded-lg hover:bg-[#1E3A5F] transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
                             >
-                              <Trash2 size={12} className="text-[#FF5252]" />
+                              <Trash2 size={12} className="text-[#F85149]" />
                             </button>
                           </div>
                         )}
@@ -490,27 +499,27 @@ export default function ProfileSheet() {
                             className="
                               w-full bg-transparent text-white text-sm
                               resize-none focus:outline-none
-                              placeholder:text-[#4A5E7A]
+                              placeholder:text-[#484F58]
                               min-h-[80px]
                             "
                             autoFocus
                           />
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1E3A5F]/50">
-                            <span className="text-[10px] text-[#4A5E7A]">{memoText.length}/200</span>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#30363D]/50">
+                            <span className="text-[10px] text-[#484F58]">{memoText.length}/200</span>
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => {
                                   setIsEditingMemo(false);
                                   setMemoText(currentMemo?.content || '');
                                 }}
-                                className="text-xs text-[#8BA4C4] hover:text-white transition-colors"
+                                className="text-xs text-[#8B949E] hover:text-white transition-colors"
                               >
                                 취소
                               </button>
                               <button
                                 onClick={handleSaveMemo}
                                 disabled={!memoText.trim()}
-                                className="flex items-center gap-1.5 text-xs font-medium text-[#86C9F2] hover:text-[#86C9F2]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 text-xs font-medium text-[#58A6FF] hover:text-[#58A6FF]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Check size={12} />
                                 저장
@@ -521,20 +530,20 @@ export default function ProfileSheet() {
                       ) : currentMemo ? (
                         <div className="info-card">
                           <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{currentMemo.content}</p>
-                          <p className="text-[10px] text-[#4A5E7A] mt-3 pt-2 border-t border-[#1E3A5F]/50">
+                          <p className="text-[10px] text-[#484F58] mt-3 pt-2 border-t border-[#30363D]/50">
                             {new Date(currentMemo.updatedAt).toLocaleDateString('ko-KR')} 수정됨
                           </p>
                         </div>
                       ) : (
                         <button
                           onClick={() => setIsEditingMemo(true)}
-                          className="w-full info-card border-2 border-dashed border-[#1E3A5F] hover:border-[#86C9F2]/50 transition-all duration-200 text-left group"
+                          className="w-full info-card border-2 border-dashed border-[#30363D] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
                         >
                           <div className="flex items-center gap-3 py-1">
-                            <div className="w-8 h-8 rounded-lg bg-[#1E3A5F] flex items-center justify-center group-hover:bg-[#86C9F2]/10 transition-colors">
-                              <StickyNote size={14} className="text-[#4A5E7A] group-hover:text-[#86C9F2] transition-colors" />
+                            <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <StickyNote size={14} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
                             </div>
-                            <span className="text-sm text-[#4A5E7A] group-hover:text-[#8BA4C4] transition-colors">
+                            <span className="text-sm text-[#484F58] group-hover:text-[#8B949E] transition-colors">
                               메모 추가하기
                             </span>
                           </div>
@@ -550,15 +559,15 @@ export default function ProfileSheet() {
                         const mutualCount = theirConnections.filter(u => myConnectionIds.has(u.id)).length;
                         return (
                           <>
-                            <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8BA4C4] uppercase tracking-wider mb-2">
+                            <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider mb-2">
                               <Users size={12} />
                               {selectedNode.name}님의 인맥
-                              <span className="text-[#86C9F2]">({theirConnections.length})</span>
+                              <span className="text-[#58A6FF]">({theirConnections.length})</span>
                             </h3>
                             {selectedNode.degree === 1 && mutualCount > 0 && (
                               <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-[#FFB800]/10 border border-[#FFB800]/20">
                                 <div className="w-3 h-3 rounded-full bg-[#FFB800] flex items-center justify-center">
-                                  <Users size={7} className="text-[#0B162C]" />
+                                  <Users size={7} className="text-[#0D1117]" />
                                 </div>
                                 <span className="text-[10px] text-[#FFB800]">
                                   공통 인맥 {mutualCount}명
@@ -591,11 +600,11 @@ export default function ProfileSheet() {
                             return sortedIndustries.map((industry) => (
                               <div key={industry} className="info-card">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-2 h-2 rounded-full bg-[#86C9F2]" />
-                                  <span className="text-xs font-medium text-[#8BA4C4]">
+                                  <div className="w-2 h-2 rounded-full bg-[#58A6FF]" />
+                                  <span className="text-xs font-medium text-[#8B949E]">
                                     {industry}
                                   </span>
-                                  <span className="text-[10px] text-[#4A5E7A]">
+                                  <span className="text-[10px] text-[#484F58]">
                                     ({groupedByIndustry[industry].length}명)
                                   </span>
                                 </div>
@@ -616,12 +625,12 @@ export default function ProfileSheet() {
                                         />
                                         {isMutualConnection && (
                                           <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center" title="공통 인맥">
-                                            <Users size={8} className="text-[#0B162C]" />
+                                            <Users size={8} className="text-[#0D1117]" />
                                           </div>
                                         )}
-                                        <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#86C9F2]/50 transition-colors" />
+                                        <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#58A6FF]/50 transition-colors" />
                                       </div>
-                                      <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#FFB800] font-medium' : 'text-[#8BA4C4]'}`}>
+                                      <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#FFB800] font-medium' : 'text-[#8B949E]'}`}>
                                         {user.name?.slice(0, 4) || '?'}
                                       </span>
                                     </button>
@@ -629,7 +638,7 @@ export default function ProfileSheet() {
                                   })}
                                 </div>
                                 {groupedByIndustry[industry].length > 10 && (
-                                  <p className="text-[10px] text-[#4A5E7A] text-center mt-3 pt-3 border-t border-[#1E3A5F]/50">
+                                  <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#30363D]/50">
                                     +{groupedByIndustry[industry].length - 10}명 더
                                   </p>
                                 )}
@@ -643,19 +652,19 @@ export default function ProfileSheet() {
                           <div className="grid grid-cols-5 gap-3 opacity-20 blur-[2px]">
                             {Array.from({ length: Math.min(10, theirConnections.length) }).map((_, idx) => (
                               <div key={idx} className="flex flex-col items-center">
-                                <div className="w-8 h-8 rounded-full bg-[#4A5E7A]" />
-                                <div className="w-10 h-2 mt-1.5 rounded bg-[#4A5E7A]" />
+                                <div className="w-8 h-8 rounded-full bg-[#484F58]" />
+                                <div className="w-10 h-2 mt-1.5 rounded bg-[#484F58]" />
                               </div>
                             ))}
                           </div>
                           {/* 잠금 오버레이 */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#162A4A]/70 backdrop-blur-[1px]">
-                            <div className="flex items-center gap-2 text-[#8BA4C4] mb-2">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1C2333]/70 backdrop-blur-[1px]">
+                            <div className="flex items-center gap-2 text-[#8B949E] mb-2">
                               <Users size={18} />
                               <span className="text-xl font-bold text-white">{theirConnections.length}</span>
                               <span className="text-sm">명</span>
                             </div>
-                            <p className="text-xs text-[#4A5E7A]">
+                            <p className="text-xs text-[#484F58]">
                               1촌과 연결하면 볼 수 있어요
                             </p>
                           </div>
@@ -667,7 +676,7 @@ export default function ProfileSheet() {
               </div>
 
               {/* Action Buttons - 하단 고정 */}
-              <div className="px-5 py-4 border-t border-[#1E3A5F]/50 bg-[#0B162C]/80 backdrop-blur-xl">
+              <div className="px-5 py-4 border-t border-[#30363D]/50 bg-[#0D1117]/80 backdrop-blur-xl">
                 {selectedNode.degree === 1 ? (
                   <div className="flex gap-3">
                     <Button
@@ -688,7 +697,7 @@ export default function ProfileSheet() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     <Button
-                      className="w-full text-sm py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] hover:from-[#86C9F2] hover:to-[#8B7EFF] transition-all duration-300"
+                      className="w-full text-sm py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
                       leftIcon={<UserPlus size={16} />}
                       onClick={handleConnectionRequestClick}
                     >

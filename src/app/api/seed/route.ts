@@ -75,6 +75,11 @@ function phoneToPassword(phone: string): string {
 }
 
 export async function POST(request: Request) {
+  // Block seed endpoint in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+  }
+
   try {
     const app = getAdminApp();
     const adminAuth = getAuth(app);

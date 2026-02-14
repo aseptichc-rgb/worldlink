@@ -6,6 +6,7 @@ interface NetworkState {
   edges: NetworkEdge[];
   selectedNode: NetworkNode | null;
   focusedNodeId: string | null; // 현재 포커스된 노드 (화면 중앙에 있는 노드)
+  centerUserId: string | null; // 현재 그래프 중심 인물 ID (null이면 로그인 사용자)
   highlightedKeyword: string | null;
   searchFilters: SearchFilters;
   isLoading: boolean;
@@ -13,6 +14,7 @@ interface NetworkState {
   setEdges: (edges: NetworkEdge[]) => void;
   setSelectedNode: (node: NetworkNode | null) => void;
   setFocusedNodeId: (nodeId: string | null) => void;
+  setCenterUserId: (userId: string | null) => void;
   setHighlightedKeyword: (keyword: string | null) => void;
   setSearchFilters: (filters: SearchFilters) => void;
   setLoading: (loading: boolean) => void;
@@ -25,6 +27,7 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   edges: [],
   selectedNode: null,
   focusedNodeId: null,
+  centerUserId: null,
   highlightedKeyword: null,
   searchFilters: {},
   isLoading: false,
@@ -32,6 +35,7 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   setEdges: (edges) => set({ edges }),
   setSelectedNode: (selectedNode) => set({ selectedNode }),
   setFocusedNodeId: (focusedNodeId) => set({ focusedNodeId }),
+  setCenterUserId: (centerUserId) => set({ centerUserId, selectedNode: null, focusedNodeId: null }),
   setHighlightedKeyword: (highlightedKeyword) => set({ highlightedKeyword }),
   setSearchFilters: (searchFilters) => set({ searchFilters }),
   setLoading: (isLoading) => set({ isLoading }),
@@ -48,6 +52,7 @@ export const useNetworkStore = create<NetworkState>((set) => ({
     edges: [],
     selectedNode: null,
     focusedNodeId: null,
+    centerUserId: null,
     highlightedKeyword: null,
     searchFilters: {}
   }),

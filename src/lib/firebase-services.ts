@@ -13,6 +13,7 @@ import {
   limit,
   addDoc,
   serverTimestamp,
+  increment,
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
@@ -154,9 +155,11 @@ export const createInviteCode = async (userId: string): Promise<InviteCode> => {
 
 export const validateInviteCode = async (code: string): Promise<{ valid: boolean; createdBy?: string }> => {
   // 테스트용 초대 코드 - 개발 환경에서만 사용 (형식: XXX-XXX)
-  const TEST_CODES = ['TES-T00', 'NEX-TST', 'DEV-123'];
-  if (TEST_CODES.includes(code.toUpperCase())) {
-    return { valid: true, createdBy: 'admin' };
+  if (process.env.NODE_ENV === 'development') {
+    const TEST_CODES = ['TES-T00', 'NEX-TST', 'DEV-123'];
+    if (TEST_CODES.includes(code.toUpperCase())) {
+      return { valid: true, createdBy: 'admin' };
+    }
   }
 
   const inviteRef = doc(db, 'inviteCodes', code.toUpperCase());
@@ -175,10 +178,12 @@ export const validateInviteCode = async (code: string): Promise<{ valid: boolean
 };
 
 export const useInviteCode = async (code: string, userId: string): Promise<void> => {
-  // 테스트 코드는 Firestore에 저장하지 않음
-  const TEST_CODES = ['TES-T00', 'NEX-TST', 'DEV-123'];
-  if (TEST_CODES.includes(code.toUpperCase())) {
-    return;
+  // 테스트 코드는 Firestore에 저장하지 않음 (개발 환경 전용)
+  if (process.env.NODE_ENV === 'development') {
+    const TEST_CODES = ['TES-T00', 'NEX-TST', 'DEV-123'];
+    if (TEST_CODES.includes(code.toUpperCase())) {
+      return;
+    }
   }
 
   const inviteRef = doc(db, 'inviteCodes', code.toUpperCase());
@@ -456,16 +461,12 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
     conn.fromUserId === userId ? conn.toUserId : conn.fromUserId
   );
 
-  // 각 사용자 정보 가져오기
-  const users: User[] = [];
-  for (const connectedUserId of connectedUserIds) {
-    const user = await getUser(connectedUserId);
-    if (user) {
-      users.push(user);
-    }
-  }
+  // 각 사용자 정보 병렬로 가져오기
+  const userResults = await Promise.all(
+    connectedUserIds.map(id => getUser(id))
+  );
 
-  return users;
+  return userResults.filter((u): u is User => u !== null);
 };
 
 // 현재 사용자가 대상 사용자와 1촌인지 확인
@@ -552,16 +553,20 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   });
   userMap.set(currentUser.id, currentUser);
 
-  // Get 1st degree connections
+  // Get 1st degree connections (parallel fetch)
   const firstDegreeIds = new Set<string>();
+  const firstDegreeUserIds = directConnections.map(conn =>
+    conn.fromUserId === userId ? conn.toUserId : conn.fromUserId
+  );
+  firstDegreeUserIds.forEach(id => firstDegreeIds.add(id));
 
-  for (const conn of directConnections) {
-    const connectedUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
-    firstDegreeIds.add(connectedUserId);
+  const firstDegreeUsers = await Promise.all(
+    firstDegreeUserIds.map(id => getUser(id))
+  );
 
-    const connectedUser = await getUser(connectedUserId);
+  for (const connectedUser of firstDegreeUsers) {
     if (connectedUser) {
-      userMap.set(connectedUserId, connectedUser);
+      userMap.set(connectedUser.id, connectedUser);
       nodes.push({
         id: connectedUser.id,
         name: connectedUser.name,
@@ -576,54 +581,62 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
 
       edges.push({
         source: userId,
-        target: connectedUserId,
+        target: connectedUser.id,
         degree: 1,
       });
     }
   }
 
-  // Get 2nd degree connections
-  for (const firstDegreeId of firstDegreeIds) {
-    const secondDegreeConnections = await getDirectConnections(firstDegreeId);
+  // Get 2nd degree connections (parallel fetch of all 1st-degree connections)
+  const secondDegreeConnectionsByFirst = await Promise.all(
+    [...firstDegreeIds].map(async (firstDegreeId) => ({
+      firstDegreeId,
+      connections: await getDirectConnections(firstDegreeId),
+    }))
+  );
 
-    for (const conn of secondDegreeConnections) {
+  // Collect 2nd degree user IDs to fetch
+  const secondDegreeToFetch = new Set<string>();
+  const secondDegreeEdges: { source: string; target: string }[] = [];
+
+  for (const { firstDegreeId, connections: conns } of secondDegreeConnectionsByFirst) {
+    for (const conn of conns) {
       const secondDegreeUserId = conn.fromUserId === firstDegreeId ? conn.toUserId : conn.fromUserId;
-
-      // Skip if it's the current user or already a 1st degree connection
       if (secondDegreeUserId === userId || firstDegreeIds.has(secondDegreeUserId)) continue;
 
-      // Skip if already added as 2nd degree
-      if (userMap.has(secondDegreeUserId)) {
-        // Just add the edge
-        edges.push({
-          source: firstDegreeId,
-          target: secondDegreeUserId,
-          degree: 2,
-        });
-        continue;
+      secondDegreeEdges.push({ source: firstDegreeId, target: secondDegreeUserId });
+      if (!userMap.has(secondDegreeUserId)) {
+        secondDegreeToFetch.add(secondDegreeUserId);
       }
+    }
+  }
 
-      const secondDegreeUser = await getUser(secondDegreeUserId);
-      if (secondDegreeUser) {
-        userMap.set(secondDegreeUserId, secondDegreeUser);
-        nodes.push({
-          id: secondDegreeUser.id,
-          name: secondDegreeUser.name,
-          profileImage: secondDegreeUser.profileImage,
-          company: secondDegreeUser.company,
-          position: secondDegreeUser.position,
-          keywords: secondDegreeUser.keywords,
-          degree: 2,
-          connectionCount: 0,
-          category: secondDegreeUser.category || NAME_CATEGORY_MAP[secondDegreeUser.name],
-        });
+  // Parallel fetch all 2nd degree users
+  const secondDegreeUsers = await Promise.all(
+    [...secondDegreeToFetch].map(id => getUser(id))
+  );
 
-        edges.push({
-          source: firstDegreeId,
-          target: secondDegreeUserId,
-          degree: 2,
-        });
-      }
+  for (const user of secondDegreeUsers) {
+    if (user) {
+      userMap.set(user.id, user);
+      nodes.push({
+        id: user.id,
+        name: user.name,
+        profileImage: user.profileImage,
+        company: user.company,
+        position: user.position,
+        keywords: user.keywords,
+        degree: 2,
+        connectionCount: 0,
+        category: user.category || NAME_CATEGORY_MAP[user.name],
+      });
+    }
+  }
+
+  // Add all 2nd degree edges (only for users that were successfully fetched)
+  for (const { source, target } of secondDegreeEdges) {
+    if (userMap.has(target)) {
+      edges.push({ source, target, degree: 2 });
     }
   }
 
@@ -642,7 +655,8 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
 };
 
 export const findConnectionPath = async (fromUserId: string, toUserId: string): Promise<string[]> => {
-  // BFS to find shortest path
+  // BFS to find shortest path (max 3 degrees to prevent excessive Firestore reads)
+  const MAX_DEPTH = 3;
   const visited = new Set<string>();
   const queue: { userId: string; path: string[] }[] = [{ userId: fromUserId, path: [fromUserId] }];
 
@@ -655,6 +669,9 @@ export const findConnectionPath = async (fromUserId: string, toUserId: string): 
 
     if (visited.has(userId)) continue;
     visited.add(userId);
+
+    // Stop expanding beyond max depth
+    if (path.length > MAX_DEPTH) continue;
 
     const connections = await getDirectConnections(userId);
     for (const conn of connections) {
@@ -879,17 +896,9 @@ export const getPopularKeywords = async (limitCount: number = 20): Promise<strin
 
 export const incrementKeywordCount = async (tag: string): Promise<void> => {
   const keywordRef = doc(db, 'keywords', tag.toLowerCase());
-  const keywordSnap = await getDoc(keywordRef);
-
-  if (keywordSnap.exists()) {
-    await updateDoc(keywordRef, {
-      useCount: (keywordSnap.data().useCount || 0) + 1,
-    });
-  } else {
-    await setDoc(keywordRef, {
-      tag,
-      useCount: 1,
-      createdAt: serverTimestamp(),
-    });
-  }
+  await setDoc(keywordRef, {
+    tag,
+    useCount: increment(1),
+    createdAt: serverTimestamp(),
+  }, { merge: true });
 };

@@ -28,6 +28,7 @@ import { useCardStore } from '@/store/cardStore';
 import { BusinessCard, SavedCard } from '@/types';
 import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
+import { auth } from '@/lib/firebase';
 import KakaoInvitePrompt from '@/components/invite/KakaoInvitePrompt';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -289,9 +290,13 @@ export default function ScanPage() {
   // ==================== Gemini Vision API (이미지 직접 분석) ====================
   const parseWithGeminiVision = async (imageData: string): Promise<PaperCardInfo> => {
     try {
+      const idToken = await auth?.currentUser?.getIdToken();
       const res = await fetch('/api/parse-card', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}),
+        },
         body: JSON.stringify({ imageBase64: imageData }),
       });
 
@@ -331,9 +336,13 @@ export default function ScanPage() {
 
       // 서버 API로 텍스트 파싱 시도
       try {
+        const idToken = await auth?.currentUser?.getIdToken();
         const res = await fetch('/api/parse-card', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}),
+          },
           body: JSON.stringify({ ocrText }),
         });
         if (res.ok) {
@@ -481,9 +490,9 @@ export default function ScanPage() {
 
   // ==================== 렌더링 ====================
   return (
-    <div className="min-h-screen bg-[#0B162C] pb-24">
+    <div className="min-h-screen bg-[#0D1117] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0B162C]/80 backdrop-blur-xl border-b border-[#1E3A5F]">
+      <div className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#30363D]">
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={goBack} className="p-2 -ml-2">
             <ArrowLeft size={24} className="text-white" />
@@ -510,31 +519,31 @@ export default function ScanPage() {
             <div className="relative">
               <div
                 id={qrReaderId}
-                className="w-full aspect-[3/4] rounded-2xl overflow-hidden bg-[#162A4A]"
+                className="w-full aspect-[3/4] rounded-2xl overflow-hidden bg-[#1C2333]"
               />
 
               {/* 오버레이 가이드 */}
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
                 {/* QR 가이드 (상단) */}
                 <div className="w-48 h-48 relative mb-4">
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#86C9F2]" />
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#86C9F2]" />
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#86C9F2]" />
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#86C9F2]" />
+                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#58A6FF]" />
+                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#58A6FF]" />
+                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#58A6FF]" />
+                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#58A6FF]" />
                   <motion.div
                     initial={{ top: 0 }}
                     animate={{ top: '100%' }}
                     transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#86C9F2] to-transparent"
+                    className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#58A6FF] to-transparent"
                   />
                 </div>
 
                 {/* 안내 텍스트 */}
                 <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <QrCode size={14} className="text-[#86C9F2]" />
-                    <span className="text-[#86C9F2]">QR 자동 감지 중</span>
-                    <span className="text-[#8BA4C4] mx-1">|</span>
+                    <QrCode size={14} className="text-[#58A6FF]" />
+                    <span className="text-[#58A6FF]">QR 자동 감지 중</span>
+                    <span className="text-[#8B949E] mx-1">|</span>
                     <Camera size={14} className="text-white" />
                     <span className="text-white">종이 명함은 촬영 버튼</span>
                   </div>
@@ -546,9 +555,9 @@ export default function ScanPage() {
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="absolute inset-0 bg-[#00E676]/20 flex items-center justify-center rounded-2xl"
+                  className="absolute inset-0 bg-[#3FB950]/20 flex items-center justify-center rounded-2xl"
                 >
-                  <div className="bg-[#00E676] rounded-full p-4">
+                  <div className="bg-[#3FB950] rounded-full p-4">
                     <Check size={32} className="text-black" />
                   </div>
                 </motion.div>
@@ -562,7 +571,7 @@ export default function ScanPage() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={captureFromQrCamera}
-                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium flex items-center justify-center gap-2"
               >
                 <Camera size={20} />
                 종이 명함 촬영
@@ -570,7 +579,7 @@ export default function ScanPage() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => fileInputRef.current?.click()}
-                className="w-14 h-14 rounded-xl bg-[#162A4A] border border-[#1E3A5F] text-white flex items-center justify-center"
+                className="w-14 h-14 rounded-xl bg-[#1C2333] border border-[#30363D] text-white flex items-center justify-center"
               >
                 <ImageIcon size={24} />
               </motion.button>
@@ -595,19 +604,19 @@ export default function ScanPage() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-[#162A4A] to-[#101D33] border border-[#1E3A5F]">
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]">
                 <div className="flex items-start gap-4">
                   <Avatar src={scannedCard.profileImage} name={scannedCard.name} size="lg" hasGlow />
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-white mb-2">{scannedCard.name}</h3>
                     {scannedCard.position && (
-                      <div className="flex items-center gap-2 text-[#8BA4C4] mb-1">
+                      <div className="flex items-center gap-2 text-[#8B949E] mb-1">
                         <Briefcase size={14} />
                         <span className="text-sm">{scannedCard.position}</span>
                       </div>
                     )}
                     {scannedCard.company && (
-                      <div className="flex items-center gap-2 text-[#8BA4C4]">
+                      <div className="flex items-center gap-2 text-[#8B949E]">
                         <Building2 size={14} />
                         <span className="text-sm">{scannedCard.company}</span>
                       </div>
@@ -616,9 +625,9 @@ export default function ScanPage() {
                 </div>
 
                 {scannedCard.keywords && scannedCard.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#1E3A5F]">
+                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#30363D]">
                     {scannedCard.keywords.map((keyword, idx) => (
-                      <span key={idx} className="px-3 py-1 text-xs rounded-full bg-[#2C529C]/10 text-[#2C529C]">
+                      <span key={idx} className="px-3 py-1 text-xs rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]">
                         {keyword}
                       </span>
                     ))}
@@ -630,12 +639,12 @@ export default function ScanPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="p-4 rounded-xl bg-[#00E676]/10 border border-[#00E676]/30 flex items-center gap-3"
+                  className="p-4 rounded-xl bg-[#3FB950]/10 border border-[#3FB950]/30 flex items-center gap-3"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#00E676] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#3FB950] flex items-center justify-center">
                     <Check size={18} className="text-black" />
                   </div>
-                  <p className="text-[#00E676] font-medium">명함이 저장되었습니다!</p>
+                  <p className="text-[#3FB950] font-medium">명함이 저장되었습니다!</p>
                 </motion.div>
               )}
 
@@ -645,7 +654,7 @@ export default function ScanPage() {
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={handleSaveQrCard}
-                      className="py-4 rounded-xl bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium flex items-center justify-center gap-2"
+                      className="py-4 rounded-xl bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium flex items-center justify-center gap-2"
                     >
                       <Plus size={20} />
                       명함 저장
@@ -653,13 +662,13 @@ export default function ScanPage() {
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => router.push(`/network/${scannedCard.id}`)}
-                      className="py-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F] text-white font-medium flex items-center justify-center gap-2"
+                      className="py-4 rounded-xl bg-[#1C2333] border border-[#30363D] text-white font-medium flex items-center justify-center gap-2"
                     >
                       <Users size={20} />
                       인맥 보기
                     </motion.button>
                   </div>
-                  <button onClick={resetAndRestart} className="w-full py-3 text-[#8BA4C4] text-sm">
+                  <button onClick={resetAndRestart} className="w-full py-3 text-[#8B949E] text-sm">
                     다른 명함 스캔하기
                   </button>
                 </>
@@ -679,12 +688,12 @@ export default function ScanPage() {
               <img
                 src={cardImage}
                 alt="촬영된 명함"
-                className="w-full aspect-[3/2] object-cover rounded-2xl border border-[#1E3A5F] mb-4 opacity-60"
+                className="w-full aspect-[3/2] object-cover rounded-2xl border border-[#30363D] mb-4 opacity-60"
               />
             )}
-            <Loader2 size={40} className="text-[#86C9F2] animate-spin" />
-            <p className="text-[#86C9F2] font-medium">명함 정보를 인식하고 있습니다...</p>
-            <p className="text-sm text-[#8BA4C4]">잠시만 기다려주세요</p>
+            <Loader2 size={40} className="text-[#58A6FF] animate-spin" />
+            <p className="text-[#58A6FF] font-medium">명함 정보를 인식하고 있습니다...</p>
+            <p className="text-sm text-[#8B949E]">잠시만 기다려주세요</p>
           </motion.div>
         )}
 
@@ -700,7 +709,7 @@ export default function ScanPage() {
                 <img
                   src={cardImage}
                   alt="촬영된 명함"
-                  className="w-full aspect-[3/2] object-cover rounded-2xl border border-[#1E3A5F]"
+                  className="w-full aspect-[3/2] object-cover rounded-2xl border border-[#30363D]"
                 />
                 <button
                   onClick={resetAndRestart}
@@ -711,38 +720,38 @@ export default function ScanPage() {
               </div>
             )}
 
-            <div className="p-4 rounded-2xl bg-[#162A4A] border border-[#1E3A5F] space-y-4">
+            <div className="p-4 rounded-2xl bg-[#1C2333] border border-[#30363D] space-y-4">
               <h3 className="text-white font-medium mb-2">명함 정보 확인</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-3 bg-[#101D33] rounded-xl px-4 py-3">
-                  <User size={18} className="text-[#8BA4C4]" />
+                <div className="flex items-center gap-3 bg-[#161B22] rounded-xl px-4 py-3">
+                  <User size={18} className="text-[#8B949E]" />
                   <input type="text" placeholder="이름 *" value={paperCardInfo.name}
                     onChange={(e) => setPaperCardInfo(prev => ({ ...prev, name: e.target.value }))}
-                    className="flex-1 bg-transparent text-white placeholder-[#4A5E7A] outline-none" />
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none" />
                 </div>
-                <div className="flex items-center gap-3 bg-[#101D33] rounded-xl px-4 py-3">
-                  <Building2 size={18} className="text-[#8BA4C4]" />
+                <div className="flex items-center gap-3 bg-[#161B22] rounded-xl px-4 py-3">
+                  <Building2 size={18} className="text-[#8B949E]" />
                   <input type="text" placeholder="회사" value={paperCardInfo.company}
                     onChange={(e) => setPaperCardInfo(prev => ({ ...prev, company: e.target.value }))}
-                    className="flex-1 bg-transparent text-white placeholder-[#4A5E7A] outline-none" />
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none" />
                 </div>
-                <div className="flex items-center gap-3 bg-[#101D33] rounded-xl px-4 py-3">
-                  <Briefcase size={18} className="text-[#8BA4C4]" />
+                <div className="flex items-center gap-3 bg-[#161B22] rounded-xl px-4 py-3">
+                  <Briefcase size={18} className="text-[#8B949E]" />
                   <input type="text" placeholder="직책" value={paperCardInfo.position}
                     onChange={(e) => setPaperCardInfo(prev => ({ ...prev, position: e.target.value }))}
-                    className="flex-1 bg-transparent text-white placeholder-[#4A5E7A] outline-none" />
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none" />
                 </div>
-                <div className="flex items-center gap-3 bg-[#101D33] rounded-xl px-4 py-3">
-                  <Phone size={18} className="text-[#8BA4C4]" />
+                <div className="flex items-center gap-3 bg-[#161B22] rounded-xl px-4 py-3">
+                  <Phone size={18} className="text-[#8B949E]" />
                   <input type="tel" placeholder="전화번호" value={paperCardInfo.phone}
                     onChange={(e) => setPaperCardInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="flex-1 bg-transparent text-white placeholder-[#4A5E7A] outline-none" />
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none" />
                 </div>
-                <div className="flex items-center gap-3 bg-[#101D33] rounded-xl px-4 py-3">
-                  <Mail size={18} className="text-[#8BA4C4]" />
+                <div className="flex items-center gap-3 bg-[#161B22] rounded-xl px-4 py-3">
+                  <Mail size={18} className="text-[#8B949E]" />
                   <input type="email" placeholder="이메일" value={paperCardInfo.email}
                     onChange={(e) => setPaperCardInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="flex-1 bg-transparent text-white placeholder-[#4A5E7A] outline-none" />
+                    className="flex-1 bg-transparent text-white placeholder-[#484F58] outline-none" />
                 </div>
               </div>
             </div>
@@ -751,12 +760,12 @@ export default function ScanPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-4 rounded-xl bg-[#00E676]/10 border border-[#00E676]/30 flex items-center gap-3"
+                className="p-4 rounded-xl bg-[#3FB950]/10 border border-[#3FB950]/30 flex items-center gap-3"
               >
-                <div className="w-8 h-8 rounded-full bg-[#00E676] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#3FB950] flex items-center justify-center">
                   <Check size={18} className="text-black" />
                 </div>
-                <p className="text-[#00E676] font-medium">명함이 저장되었습니다!</p>
+                <p className="text-[#3FB950] font-medium">명함이 저장되었습니다!</p>
               </motion.div>
             )}
 
@@ -764,7 +773,7 @@ export default function ScanPage() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSavePaperCard}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium flex items-center justify-center gap-2"
               >
                 <Plus size={20} />
                 명함 저장
@@ -778,9 +787,9 @@ export default function ScanPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-[#FF5252]/10 border border-[#FF5252]/30"
+            className="p-4 rounded-xl bg-[#F85149]/10 border border-[#F85149]/30"
           >
-            <p className="text-sm text-[#FF5252]">{error}</p>
+            <p className="text-sm text-[#F85149]">{error}</p>
           </motion.div>
         )}
       </div>

@@ -99,10 +99,10 @@ export default function MessagesPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
         <div className="text-center">
           <div className="spinner mx-auto mb-4" />
-          <p className="text-[#8BA4C4]">로딩 중...</p>
+          <p className="text-[#8B949E]">로딩 중...</p>
         </div>
       </div>
     );
@@ -172,15 +172,15 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[#0D1117]">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-[#101D33] border-b border-[#1E3A5F]">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-[#161B22] border-b border-[#30363D]">
         <div className="flex items-center gap-4 px-4 py-4">
           <button
             onClick={() => router.push('/network')}
-            className="p-2 rounded-xl hover:bg-[#1E3A5F] transition-colors"
+            className="p-2 rounded-xl hover:bg-[#30363D] transition-colors"
           >
-            <ArrowLeft size={22} className="text-[#8BA4C4]" />
+            <ArrowLeft size={22} className="text-[#8B949E]" />
           </button>
           <h1 className="text-lg font-bold text-white">메세지</h1>
         </div>
@@ -192,15 +192,15 @@ export default function MessagesPage() {
             className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${activeTab === 'received'
-                ? 'bg-[#86C9F2] text-white'
-                : 'bg-[#162A4A] text-[#8BA4C4] hover:text-white'
+                ? 'bg-[#58A6FF] text-white'
+                : 'bg-[#1C2333] text-[#8B949E] hover:text-white'
               }
             `}
           >
             <Inbox size={16} />
             받은 메세지
             {unreadCount > 0 && (
-              <span className="w-5 h-5 bg-[#FF4081] text-white text-xs rounded-full flex items-center justify-center">
+              <span className="w-5 h-5 bg-[#FF6B8A] text-white text-xs rounded-full flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
@@ -210,8 +210,8 @@ export default function MessagesPage() {
             className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${activeTab === 'sent'
-                ? 'bg-[#86C9F2] text-white'
-                : 'bg-[#162A4A] text-[#8BA4C4] hover:text-white'
+                ? 'bg-[#58A6FF] text-white'
+                : 'bg-[#1C2333] text-[#8B949E] hover:text-white'
               }
             `}
           >
@@ -238,8 +238,8 @@ export default function MessagesPage() {
                   className={`
                     w-full flex items-start gap-3 p-4 rounded-2xl text-left transition-all
                     ${!message.isRead && activeTab === 'received'
-                      ? 'bg-[#86C9F2]/10 border border-[#86C9F2]/30'
-                      : 'bg-[#162A4A] border border-[#1E3A5F] hover:border-[#4A5E7A]'
+                      ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
+                      : 'bg-[#1C2333] border border-[#30363D] hover:border-[#484F58]'
                     }
                   `}
                 >
@@ -253,29 +253,29 @@ export default function MessagesPage() {
                       <span className={`font-medium ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#C9D1D9]'}`}>
                         {otherUser?.name || '알 수 없음'}
                       </span>
-                      <span className="text-xs text-[#4A5E7A]">
+                      <span className="text-xs text-[#484F58]">
                         {formatMessageTime(message.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-[#8BA4C4] truncate">
+                    <p className="text-sm text-[#8B949E] truncate">
                       {otherUser?.company} · {otherUser?.position}
                     </p>
-                    <p className={`text-sm mt-1 truncate ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#8BA4C4]'}`}>
+                    <p className={`text-sm mt-1 truncate ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#8B949E]'}`}>
                       {message.content}
                     </p>
                   </div>
                   {activeTab === 'received' && (
                     <div className="flex-shrink-0">
                       {message.isRead ? (
-                        <CheckCheck size={16} className="text-[#86C9F2]" />
+                        <CheckCheck size={16} className="text-[#58A6FF]" />
                       ) : (
-                        <div className="w-2 h-2 bg-[#86C9F2] rounded-full" />
+                        <div className="w-2 h-2 bg-[#58A6FF] rounded-full" />
                       )}
                     </div>
                   )}
                   {activeTab === 'sent' && (
                     <div className="flex-shrink-0">
-                      <Check size={16} className="text-[#4A5E7A]" />
+                      <Check size={16} className="text-[#484F58]" />
                     </div>
                   )}
                 </motion.button>
@@ -284,11 +284,11 @@ export default function MessagesPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <MessageCircle size={48} className="text-[#4A5E7A] mx-auto mb-4" />
-            <p className="text-[#8BA4C4]">
+            <MessageCircle size={48} className="text-[#484F58] mx-auto mb-4" />
+            <p className="text-[#8B949E]">
               {activeTab === 'received' ? '받은 메세지가 없습니다' : '보낸 메세지가 없습니다'}
             </p>
-            <p className="text-[#4A5E7A] text-sm mt-1">
+            <p className="text-[#484F58] text-sm mt-1">
               인맥에게 메세지를 보내보세요
             </p>
           </div>
@@ -308,17 +308,17 @@ export default function MessagesPage() {
                 setShowReplyInput(false);
                 setReplyContent('');
               }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
             />
             <motion.div
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#101D33] border-t border-[#1E3A5F] rounded-t-3xl max-h-[70vh] overflow-y-auto"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-[#161B22] border-t border-[#30363D] rounded-t-3xl max-h-[70vh] overflow-y-auto"
             >
               <div className="p-6">
                 {/* Handle */}
-                <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
+                <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
 
                 {(() => {
                   const otherUserId = selectedMessage.toUserId === currentUserId
@@ -338,7 +338,7 @@ export default function MessagesPage() {
                         />
                         <div>
                           <h3 className="font-bold text-white">{otherUser?.name}</h3>
-                          <p className="text-sm text-[#8BA4C4]">
+                          <p className="text-sm text-[#8B949E]">
                             {otherUser?.company} · {otherUser?.position}
                           </p>
                         </div>
@@ -347,21 +347,21 @@ export default function MessagesPage() {
                       {/* Direction */}
                       <div className="flex items-center gap-2 mb-4">
                         {isReceived ? (
-                          <span className="text-xs px-2 py-1 rounded-full bg-[#86C9F2]/20 text-[#86C9F2]">
+                          <span className="text-xs px-2 py-1 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
                             받은 메세지
                           </span>
                         ) : (
-                          <span className="text-xs px-2 py-1 rounded-full bg-[#2C529C]/20 text-[#2C529C]">
+                          <span className="text-xs px-2 py-1 rounded-full bg-[#1F6FEB]/20 text-[#1F6FEB]">
                             보낸 메세지
                           </span>
                         )}
-                        <span className="text-xs text-[#4A5E7A]">
+                        <span className="text-xs text-[#484F58]">
                           {format(selectedMessage.createdAt, 'yyyy년 M월 d일 a h:mm', { locale: ko })}
                         </span>
                       </div>
 
                       {/* Message Content */}
-                      <div className="bg-[#162A4A] rounded-xl p-4 mb-6">
+                      <div className="bg-[#1C2333] rounded-xl p-4 mb-6">
                         <p className="text-white whitespace-pre-wrap">{selectedMessage.content}</p>
                       </div>
 
@@ -374,7 +374,7 @@ export default function MessagesPage() {
                                 value={replyContent}
                                 onChange={(e) => setReplyContent(e.target.value)}
                                 placeholder="답장 내용을 입력하세요..."
-                                className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-xl py-3 px-4 text-sm resize-none focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                                className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-xl py-3 px-4 text-sm resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                                 rows={3}
                                 autoFocus
                               />
@@ -384,14 +384,14 @@ export default function MessagesPage() {
                                     setShowReplyInput(false);
                                     setReplyContent('');
                                   }}
-                                  className="flex-1 py-3 bg-[#162A4A] text-[#8BA4C4] font-medium rounded-xl border border-[#1E3A5F]"
+                                  className="flex-1 py-3 bg-[#1C2333] text-[#8B949E] font-medium rounded-xl border border-[#30363D]"
                                 >
                                   취소
                                 </button>
                                 <button
                                   onClick={handleReply}
                                   disabled={!replyContent.trim() || isSending}
-                                  className="flex-1 py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                                  className="flex-1 py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {isSending ? (
                                     <div className="spinner w-4 h-4" />
@@ -407,7 +407,7 @@ export default function MessagesPage() {
                           ) : (
                             <button
                               onClick={() => setShowReplyInput(true)}
-                              className="w-full py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-medium rounded-xl flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium rounded-xl flex items-center justify-center gap-2"
                             >
                               <Send size={16} />
                               답장하기

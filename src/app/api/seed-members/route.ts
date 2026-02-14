@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDSf4eUaIyE0tXOuZBHTmCKhpikfLbTZOc';
-const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'worldlink-bcd6f';
-const STORAGE_BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'worldlink-bcd6f.firebasestorage.app';
+const API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY!;
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
+const STORAGE_BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
 
 function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -190,6 +190,11 @@ async function createFirestoreDoc(collection: string, fields: Record<string, any
 }
 
 export async function POST() {
+  // Block seed endpoint in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+  }
+
   try {
     // future2members.json 읽기
     const jsonPath = path.join(process.cwd(), 'future2members.json');

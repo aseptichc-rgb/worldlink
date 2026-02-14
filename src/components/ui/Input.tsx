@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useState, ReactNode, InputHTMLAttributes } from 'react';
+import { forwardRef, useState, ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface InputProps {
@@ -39,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <div className={`
               absolute left-4 top-1/2 -translate-y-1/2
               transition-colors duration-200
-              ${isFocused ? 'text-[#86C9F2]' : 'text-[#4A5E7A]'}
+              ${isFocused ? 'text-[#58A6FF]' : 'text-[#484F58]'}
             `}>
               {leftIcon}
             </div>
@@ -48,15 +48,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={`
-              w-full bg-[#101D33]/80 border border-[#1E3A5F]/60 text-white
+              w-full bg-[rgba(22,27,34,0.8)] border border-[#30363D] text-[#F0F6FC]
               rounded-xl py-3.5 px-4 text-base font-medium
               transition-all duration-300 ease-out
-              focus:outline-none focus:border-[#86C9F2]/60 focus:shadow-[0_0_20px_rgba(134,201,242,0.15)]
-              placeholder:text-[#4A5E7A]
-              hover:border-[#1E3A5F]
+              focus:outline-none focus:border-[rgba(88,166,255,0.6)] focus:shadow-[0_0_0_3px_rgba(88,166,255,0.15)]
+              placeholder:text-[#484F58]
+              hover:border-[rgba(240,246,252,0.2)]
               ${leftIcon ? 'pl-12' : ''}
               ${rightIcon || isPassword ? 'pr-12' : ''}
-              ${error ? 'border-[#FF4081]/60 focus:border-[#FF4081] focus:shadow-[0_0_20px_rgba(255,64,129,0.15)]' : ''}
+              ${error ? 'border-[#F85149]/60 focus:border-[#F85149] focus:shadow-[0_0_0_3px_rgba(248,81,73,0.15)]' : ''}
               ${className}
             `}
             onFocus={(e) => {
@@ -73,19 +73,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A5E7A] hover:text-white transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58] hover:text-[#F0F6FC] transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           )}
           {rightIcon && !isPassword && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A5E7A]">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58]">
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-2 text-sm text-[#FF4081]">
+          <p className="mt-2 text-sm text-[#F85149]">
             {error}
           </p>
         )}

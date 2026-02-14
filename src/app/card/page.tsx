@@ -111,8 +111,8 @@ export default function MyCardPage() {
         width: 200,
         margin: 2,
         color: {
-          dark: '#86C9F2',
-          light: '#0B162C',
+          dark: '#58A6FF',
+          light: '#0D1117',
         },
       }).then(setQrDataUrl);
     }
@@ -165,16 +165,16 @@ export default function MyCardPage() {
 
   if (!user || !myCard) {
     return (
-      <div className="min-h-screen bg-[#0B162C] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
         <div className="spinner" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B162C] pb-24">
+    <div className="min-h-screen bg-[#0D1117] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0B162C]/80 backdrop-blur-xl border-b border-[#1E3A5F]">
+      <div className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#30363D]">
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={() => router.back()} className="p-2 -ml-2">
             <ArrowLeft size={24} className="text-white" />
@@ -184,7 +184,7 @@ export default function MyCardPage() {
             onClick={() => setShowSettings(true)}
             className="p-2 -mr-2"
           >
-            <Settings size={24} className="text-[#8BA4C4]" />
+            <Settings size={24} className="text-[#8B949E]" />
           </button>
         </div>
       </div>
@@ -194,11 +194,11 @@ export default function MyCardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#162A4A] to-[#101D33] border border-[#1E3A5F]"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]"
         >
           {/* 배경 장식 */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#86C9F2]/10 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#2C529C]/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#58A6FF]/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#1F6FEB]/10 to-transparent rounded-full blur-3xl" />
 
           <div className="relative p-6">
             {/* 프로필 섹션 */}
@@ -212,13 +212,13 @@ export default function MyCardPage() {
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl font-bold text-white mb-1">{myCard.name}</h2>
                 {myCard.position && (
-                  <div className="flex items-center gap-2 text-[#8BA4C4] mb-1">
+                  <div className="flex items-center gap-2 text-[#8B949E] mb-1">
                     <Briefcase size={14} />
                     <span className="text-sm">{myCard.position}</span>
                   </div>
                 )}
                 {myCard.company && (
-                  <div className="flex items-center gap-2 text-[#8BA4C4]">
+                  <div className="flex items-center gap-2 text-[#8B949E]">
                     <Building2 size={14} />
                     <span className="text-sm">{myCard.company}</span>
                   </div>
@@ -232,7 +232,7 @@ export default function MyCardPage() {
                 {myCard.keywords.slice(0, 5).map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 text-xs font-medium rounded-full bg-[#86C9F2]/10 text-[#86C9F2] border border-[#86C9F2]/20"
+                    className="px-3 py-1 text-xs font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
                   >
                     {keyword}
                   </span>
@@ -241,7 +241,7 @@ export default function MyCardPage() {
             )}
 
             {/* QR 코드 섹션 */}
-            <div className="flex flex-col items-center py-6 border-t border-[#1E3A5F]">
+            <div className="flex flex-col items-center py-6 border-t border-[#30363D]">
               {qrDataUrl ? (
                 <motion.img
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -251,11 +251,11 @@ export default function MyCardPage() {
                   className="w-48 h-48 rounded-xl"
                 />
               ) : (
-                <div className="w-48 h-48 rounded-xl bg-[#162A4A] flex items-center justify-center">
-                  <QrCode size={48} className="text-[#4A5E7A]" />
+                <div className="w-48 h-48 rounded-xl bg-[#1C2333] flex items-center justify-center">
+                  <QrCode size={48} className="text-[#484F58]" />
                 </div>
               )}
-              <p className="mt-4 text-sm text-[#8BA4C4]">
+              <p className="mt-4 text-sm text-[#8B949E]">
                 QR 코드를 스캔하면 명함을 저장할 수 있어요
               </p>
             </div>
@@ -267,21 +267,21 @@ export default function MyCardPage() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleShare}
-            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1C2333] border border-[#30363D]"
           >
-            <Share2 size={24} className="text-[#86C9F2]" />
+            <Share2 size={24} className="text-[#58A6FF]" />
             <span className="text-sm text-white">공유하기</span>
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleCopyLink}
-            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1C2333] border border-[#30363D]"
           >
             {copied ? (
-              <Check size={24} className="text-[#00E676]" />
+              <Check size={24} className="text-[#3FB950]" />
             ) : (
-              <Copy size={24} className="text-[#86C9F2]" />
+              <Copy size={24} className="text-[#58A6FF]" />
             )}
             <span className="text-sm text-white">{copied ? '복사됨!' : '링크 복사'}</span>
           </motion.button>
@@ -289,28 +289,28 @@ export default function MyCardPage() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleDownloadQR}
-            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1C2333] border border-[#30363D]"
           >
-            <Download size={24} className="text-[#86C9F2]" />
+            <Download size={24} className="text-[#58A6FF]" />
             <span className="text-sm text-white">QR 저장</span>
           </motion.button>
         </div>
 
         {/* 인맥 공개 설정 미리보기 */}
-        <div className="p-4 rounded-xl bg-[#162A4A] border border-[#1E3A5F]">
+        <div className="p-4 rounded-xl bg-[#1C2333] border border-[#30363D]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Users size={18} className="text-[#2C529C]" />
+              <Users size={18} className="text-[#1F6FEB]" />
               <span className="text-sm font-medium text-white">인맥 공개 설정</span>
             </div>
             <button
               onClick={() => setShowSettings(true)}
-              className="text-xs text-[#86C9F2]"
+              className="text-xs text-[#58A6FF]"
             >
               변경
             </button>
           </div>
-          <div className="flex items-center gap-2 text-[#8BA4C4]">
+          <div className="flex items-center gap-2 text-[#8B949E]">
             {(() => {
               const option = visibilityOptions.find(o => o.value === myCard.networkVisibility);
               if (option) {
@@ -344,12 +344,12 @@ export default function MyCardPage() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#162A4A] rounded-t-3xl border-t border-[#1E3A5F] p-6"
+              className="w-full bg-[#1C2333] rounded-t-3xl border-t border-[#30363D] p-6"
             >
-              <div className="w-12 h-1 bg-[#4A5E7A] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
 
               <h3 className="text-lg font-semibold text-white mb-4">인맥 공개 범위</h3>
-              <p className="text-sm text-[#8BA4C4] mb-6">
+              <p className="text-sm text-[#8B949E] mb-6">
                 내 명함을 받은 사람이 내 인맥을 얼마나 볼 수 있을지 설정하세요
               </p>
 
@@ -366,21 +366,21 @@ export default function MyCardPage() {
                       }}
                       className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${
                         isSelected
-                          ? 'bg-[#86C9F2]/10 border-[#86C9F2]'
-                          : 'bg-[#101D33] border-[#1E3A5F] hover:border-[#4A5E7A]'
+                          ? 'bg-[#58A6FF]/10 border-[#58A6FF]'
+                          : 'bg-[#161B22] border-[#30363D] hover:border-[#484F58]'
                       }`}
                     >
-                      <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#86C9F2]/20' : 'bg-[#1E3A5F]'}`}>
-                        <Icon size={20} className={isSelected ? 'text-[#86C9F2]' : 'text-[#8BA4C4]'} />
+                      <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#58A6FF]/20' : 'bg-[#30363D]'}`}>
+                        <Icon size={20} className={isSelected ? 'text-[#58A6FF]' : 'text-[#8B949E]'} />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className={`font-medium ${isSelected ? 'text-[#86C9F2]' : 'text-white'}`}>
+                        <p className={`font-medium ${isSelected ? 'text-[#58A6FF]' : 'text-white'}`}>
                           {option.label}
                         </p>
-                        <p className="text-sm text-[#8BA4C4]">{option.desc}</p>
+                        <p className="text-sm text-[#8B949E]">{option.desc}</p>
                       </div>
                       {isSelected && (
-                        <Check size={20} className="text-[#86C9F2]" />
+                        <Check size={20} className="text-[#58A6FF]" />
                       )}
                     </button>
                   );

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { verifyAuthToken } from '@/lib/firebase-admin';
 
 export async function POST(req: NextRequest) {
+  // Verify authenticated user
+  const uid = await verifyAuthToken(req);
+  if (!uid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
@@ -16,7 +23,9 @@ export async function POST(req: NextRequest) {
 
     // 이미지가 있으면 Vision API 사용 (더 정확)
     if (imageBase64) {
-      // base64 데이터에서 prefix 제거
+      // Extract MIME type from data URI before stripping prefix
+      const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
       const prompt = `이 명함 이미지에서 다음 정보를 추출해주세요.
@@ -42,7 +51,7 @@ export async function POST(req: NextRequest) {
       const imagePart = {
         inlineData: {
           data: base64Data,
-          mimeType: 'image/jpeg',
+          mimeType,
         },
       };
 

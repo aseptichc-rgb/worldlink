@@ -32,7 +32,7 @@ export const useCardStore = create<CardState>()(
       setMyCard: (card) => set({ myCard: card }),
 
       updateMyCard: (updates) => set((state) => ({
-        myCard: state.myCard ? { ...state.myCard, ...updates, updatedAt: new Date() } : null
+        myCard: state.myCard ? { ...state.myCard, ...updates, updatedAt: new Date().toISOString() as unknown as Date } : null
       })),
 
       addSavedCard: (card) => set((state) => ({

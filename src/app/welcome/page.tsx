@@ -360,17 +360,17 @@ function WelcomeContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0B162C] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
         <div className="spinner" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B162C] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="stars-bg" />
-      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#86C9F2]/10 rounded-full blur-[100px]" />
-      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#2C529C]/10 rounded-full blur-[100px]" />
+      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#58A6FF]/10 rounded-full blur-[100px]" />
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#1F6FEB]/10 rounded-full blur-[100px]" />
 
       <AnimatePresence mode="wait">
         {/* Step 1: 환영 인사 */}
@@ -386,7 +386,7 @@ function WelcomeContent() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-[#86C9F2] to-[#2C529C] flex items-center justify-center"
+              className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] flex items-center justify-center"
             >
               <Check size={48} className="text-white" />
             </motion.div>
@@ -405,12 +405,12 @@ function WelcomeContent() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="mb-6 p-4 bg-[#101D33]/80 border border-[#1E3A5F]/60 rounded-xl"
+                className="mb-6 p-4 bg-[#161B22]/80 border border-[#30363D]/60 rounded-xl"
               >
-                <p className="text-[#86C9F2] font-medium">
+                <p className="text-[#58A6FF] font-medium">
                   {inviterName}님과 인맥이 되었습니다!
                 </p>
-                <p className="text-[#4A5E7A] text-sm mt-1">
+                <p className="text-[#484F58] text-sm mt-1">
                   이제 서로의 네트워크를 확인할 수 있습니다
                 </p>
               </motion.div>
@@ -420,7 +420,7 @@ function WelcomeContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="text-[#8BA4C4] mb-8"
+              className="text-[#8B949E] mb-8"
             >
               프로필을 완성하면 더 많은 인맥을 만들 수 있어요
             </motion.p>
@@ -433,14 +433,14 @@ function WelcomeContent() {
             >
               <button
                 onClick={() => setStep('photo')}
-                className="w-full py-3.5 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
               >
                 프로필 완성하기
                 <ArrowRight size={18} />
               </button>
               <button
                 onClick={handleSkipToEnd}
-                className="w-full py-3 text-[#4A5E7A] text-sm hover:text-[#8BA4C4] transition-colors"
+                className="w-full py-3 text-[#484F58] text-sm hover:text-[#8B949E] transition-colors"
               >
                 나중에 하기
               </button>
@@ -457,9 +457,9 @@ function WelcomeContent() {
             exit={{ opacity: 0, x: -30 }}
             className="text-center w-full max-w-[400px]"
           >
-            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
+            <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl p-8">
               <div className="flex items-center gap-2 mb-6">
-                <Camera size={20} className="text-[#86C9F2]" />
+                <Camera size={20} className="text-[#58A6FF]" />
                 <h2 className="text-lg font-bold text-white">프로필 사진</h2>
               </div>
 
@@ -470,7 +470,7 @@ function WelcomeContent() {
                   size="xl"
                   hasGlow
                 />
-                <label className="absolute bottom-0 right-0 w-10 h-10 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] rounded-full flex items-center justify-center cursor-pointer shadow-lg">
+                <label className="absolute bottom-0 right-0 w-10 h-10 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] rounded-full flex items-center justify-center cursor-pointer shadow-lg">
                   {isUploading ? (
                     <Loader2 size={18} className="text-white animate-spin" />
                   ) : (
@@ -487,21 +487,21 @@ function WelcomeContent() {
                 </label>
               </div>
 
-              <p className="text-[#8BA4C4] text-sm mb-6">
+              <p className="text-[#8B949E] text-sm mb-6">
                 프로필 사진을 등록하면 신뢰도가 높아져요
               </p>
 
               <div className="space-y-3">
                 <button
                   onClick={() => setStep('card-ocr')}
-                  className="w-full py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
                 >
                   다음
                   <ArrowRight size={18} />
                 </button>
                 <button
                   onClick={() => setStep('card-ocr')}
-                  className="w-full py-2.5 text-[#4A5E7A] text-sm hover:text-[#8BA4C4] transition-colors"
+                  className="w-full py-2.5 text-[#484F58] text-sm hover:text-[#8B949E] transition-colors"
                 >
                   건너뛰기
                 </button>
@@ -519,35 +519,35 @@ function WelcomeContent() {
             exit={{ opacity: 0, x: -30 }}
             className="text-center w-full max-w-[400px]"
           >
-            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
+            <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl p-8">
               <div className="flex items-center gap-2 mb-6">
-                <CreditCard size={20} className="text-[#86C9F2]" />
+                <CreditCard size={20} className="text-[#58A6FF]" />
                 <h2 className="text-lg font-bold text-white">명함으로 정보 입력</h2>
               </div>
 
-              <p className="text-[#8BA4C4] text-sm mb-6">
+              <p className="text-[#8B949E] text-sm mb-6">
                 명함을 촬영하면 이름, 회사, 직책 등이<br />자동으로 입력됩니다
               </p>
 
               {isOcrProcessing ? (
                 <div className="py-12">
-                  <Loader2 size={40} className="text-[#86C9F2] animate-spin mx-auto mb-4" />
-                  <p className="text-[#8BA4C4]">명함을 인식하고 있습니다...</p>
+                  <Loader2 size={40} className="text-[#58A6FF] animate-spin mx-auto mb-4" />
+                  <p className="text-[#8B949E]">명함을 인식하고 있습니다...</p>
                 </div>
               ) : (
                 <div className="space-y-3 mb-6">
                   <button
                     onClick={() => cameraInputRef.current?.click()}
-                    className="w-full py-4 bg-[#162A4A] border border-[#1E3A5F] rounded-xl flex items-center justify-center gap-3 text-white hover:border-[#86C9F2] transition-colors"
+                    className="w-full py-4 bg-[#1C2333] border border-[#30363D] rounded-xl flex items-center justify-center gap-3 text-white hover:border-[#58A6FF] transition-colors"
                   >
-                    <Camera size={22} className="text-[#86C9F2]" />
+                    <Camera size={22} className="text-[#58A6FF]" />
                     <span>명함 촬영하기</span>
                   </button>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-4 bg-[#162A4A] border border-[#1E3A5F] rounded-xl flex items-center justify-center gap-3 text-white hover:border-[#86C9F2] transition-colors"
+                    className="w-full py-4 bg-[#1C2333] border border-[#30363D] rounded-xl flex items-center justify-center gap-3 text-white hover:border-[#58A6FF] transition-colors"
                   >
-                    <ImageIcon size={22} className="text-[#86C9F2]" />
+                    <ImageIcon size={22} className="text-[#58A6FF]" />
                     <span>갤러리에서 선택</span>
                   </button>
                 </div>
@@ -572,13 +572,13 @@ function WelcomeContent() {
               <div className="space-y-3">
                 <button
                   onClick={() => setStep('card-form')}
-                  className="w-full py-2.5 text-[#86C9F2] text-sm hover:text-[#86C9F2]/80 transition-colors"
+                  className="w-full py-2.5 text-[#58A6FF] text-sm hover:text-[#58A6FF]/80 transition-colors"
                 >
                   직접 입력하기
                 </button>
                 <button
                   onClick={() => setStep('keywords')}
-                  className="w-full py-2.5 text-[#4A5E7A] text-sm hover:text-[#8BA4C4] transition-colors"
+                  className="w-full py-2.5 text-[#484F58] text-sm hover:text-[#8B949E] transition-colors"
                 >
                   건너뛰기
                 </button>
@@ -596,10 +596,10 @@ function WelcomeContent() {
             exit={{ opacity: 0, x: -30 }}
             className="w-full max-w-[400px]"
           >
-            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
+            <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <CreditCard size={20} className="text-[#86C9F2]" />
+                  <CreditCard size={20} className="text-[#58A6FF]" />
                   <h2 className="text-lg font-bold text-white">정보 확인</h2>
                 </div>
                 {cardImage && (
@@ -608,7 +608,7 @@ function WelcomeContent() {
                       setCardImage(null);
                       setStep('card-ocr');
                     }}
-                    className="text-sm text-[#4A5E7A] flex items-center gap-1 hover:text-[#8BA4C4]"
+                    className="text-sm text-[#484F58] flex items-center gap-1 hover:text-[#8B949E]"
                   >
                     <RotateCcw size={14} />
                     다시 촬영
@@ -617,65 +617,65 @@ function WelcomeContent() {
               </div>
 
               {cardImage && (
-                <div className="mb-4 rounded-lg overflow-hidden border border-[#1E3A5F]">
+                <div className="mb-4 rounded-lg overflow-hidden border border-[#30363D]">
                   <img src={cardImage} alt="명함" className="w-full h-32 object-cover" />
                 </div>
               )}
 
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="text-[#8BA4C4] text-xs mb-1 flex items-center gap-1">
+                  <label className="text-[#8B949E] text-xs mb-1 flex items-center gap-1">
                     <User size={12} /> 이름
                   </label>
                   <input
                     value={cardInfo.name}
                     onChange={(e) => setCardInfo({ ...cardInfo, name: e.target.value })}
                     placeholder="이름"
-                    className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                    className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#8BA4C4] text-xs mb-1 flex items-center gap-1">
+                  <label className="text-[#8B949E] text-xs mb-1 flex items-center gap-1">
                     <Building2 size={12} /> 회사
                   </label>
                   <input
                     value={cardInfo.company}
                     onChange={(e) => setCardInfo({ ...cardInfo, company: e.target.value })}
                     placeholder="회사명"
-                    className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                    className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#8BA4C4] text-xs mb-1 flex items-center gap-1">
+                  <label className="text-[#8B949E] text-xs mb-1 flex items-center gap-1">
                     <Briefcase size={12} /> 직책
                   </label>
                   <input
                     value={cardInfo.position}
                     onChange={(e) => setCardInfo({ ...cardInfo, position: e.target.value })}
                     placeholder="직책"
-                    className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                    className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#8BA4C4] text-xs mb-1 flex items-center gap-1">
+                  <label className="text-[#8B949E] text-xs mb-1 flex items-center gap-1">
                     <Phone size={12} /> 전화번호
                   </label>
                   <input
                     value={cardInfo.phone}
                     onChange={(e) => setCardInfo({ ...cardInfo, phone: e.target.value })}
                     placeholder="010-0000-0000"
-                    className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                    className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#8BA4C4] text-xs mb-1 flex items-center gap-1">
+                  <label className="text-[#8B949E] text-xs mb-1 flex items-center gap-1">
                     <Mail size={12} /> 이메일
                   </label>
                   <input
                     value={cardInfo.email}
                     onChange={(e) => setCardInfo({ ...cardInfo, email: e.target.value })}
                     placeholder="email@example.com"
-                    className="w-full bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                    className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                     readOnly
                   />
                 </div>
@@ -683,7 +683,7 @@ function WelcomeContent() {
 
               <button
                 onClick={handleSaveCardInfo}
-                className="w-full py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
               >
                 저장하고 다음
                 <ArrowRight size={18} />
@@ -701,12 +701,12 @@ function WelcomeContent() {
             exit={{ opacity: 0, x: -30 }}
             className="w-full max-w-[400px]"
           >
-            <div className="bg-[#101D33]/80 backdrop-blur-2xl border border-[#1E3A5F]/60 rounded-2xl p-8">
+            <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl p-8">
               <div className="flex items-center gap-2 mb-2">
-                <Hash size={20} className="text-[#86C9F2]" />
+                <Hash size={20} className="text-[#58A6FF]" />
                 <h2 className="text-lg font-bold text-white">나를 표현하는 #태그</h2>
               </div>
-              <p className="text-[#4A5E7A] text-sm mb-6">
+              <p className="text-[#484F58] text-sm mb-6">
                 관심 분야, 소속 단체 등 나를 표현하는 태그를 추가해보세요 (최대 5개)
               </p>
 
@@ -718,8 +718,8 @@ function WelcomeContent() {
                     className={`
                       px-3 py-1.5 rounded-full text-sm transition-all
                       ${keywords.includes(kw)
-                        ? 'bg-[#86C9F2]/20 text-[#86C9F2] border border-[#86C9F2]/40'
-                        : 'bg-[#162A4A] text-[#8BA4C4] border border-[#1E3A5F] hover:border-[#4A5E7A]'}
+                        ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]/40'
+                        : 'bg-[#1C2333] text-[#8B949E] border border-[#30363D] hover:border-[#484F58]'}
                     `}
                   >
                     #{kw}
@@ -733,23 +733,23 @@ function WelcomeContent() {
                   onChange={(e) => setNewKeyword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addCustomKeyword()}
                   placeholder="소속 단체, 동아리, 관심사 등"
-                  className="flex-1 bg-[#162A4A] border border-[#1E3A5F] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#86C9F2] placeholder:text-[#4A5E7A]"
+                  className="flex-1 bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                 />
                 <button
                   onClick={addCustomKeyword}
                   disabled={!newKeyword.trim() || keywords.length >= 5}
-                  className="px-4 py-2 bg-[#1E3A5F] text-[#86C9F2] rounded-lg text-sm disabled:opacity-40"
+                  className="px-4 py-2 bg-[#30363D] text-[#58A6FF] rounded-lg text-sm disabled:opacity-40"
                 >
                   추가
                 </button>
               </div>
 
               {keywords.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6 p-3 bg-[#162A4A]/50 rounded-lg">
+                <div className="flex flex-wrap gap-2 mb-6 p-3 bg-[#1C2333]/50 rounded-lg">
                   {keywords.map((kw) => (
                     <span
                       key={kw}
-                      className="px-3 py-1 bg-[#86C9F2]/20 text-[#86C9F2] rounded-full text-sm flex items-center gap-1"
+                      className="px-3 py-1 bg-[#58A6FF]/20 text-[#58A6FF] rounded-full text-sm flex items-center gap-1"
                     >
                       #{kw}
                       <button onClick={() => toggleKeyword(kw)}>
@@ -763,14 +763,14 @@ function WelcomeContent() {
               <div className="space-y-3">
                 <button
                   onClick={handleSaveKeywords}
-                  className="w-full py-3 bg-gradient-to-r from-[#86C9F2] to-[#2C529C] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
                 >
                   완료
                   <Check size={18} />
                 </button>
                 <button
                   onClick={handleSkipToEnd}
-                  className="w-full py-2.5 text-[#4A5E7A] text-sm hover:text-[#8BA4C4] transition-colors"
+                  className="w-full py-2.5 text-[#484F58] text-sm hover:text-[#8B949E] transition-colors"
                 >
                   건너뛰기
                 </button>
@@ -791,12 +791,12 @@ function WelcomeContent() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200 }}
-              className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-[#00E676] to-[#00C853] flex items-center justify-center"
+              className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-[#3FB950] to-[#00C853] flex items-center justify-center"
             >
               <Sparkles size={48} className="text-white" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-2">프로필 완성!</h2>
-            <p className="text-[#8BA4C4]">내 명함 페이지로 이동합니다...</p>
+            <p className="text-[#8B949E]">내 명함 페이지로 이동합니다...</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -812,7 +812,7 @@ function WelcomeContent() {
               <div
                 key={s}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  targetIdx <= currentIdx ? 'bg-[#86C9F2]' : 'bg-[#1E3A5F]'
+                  targetIdx <= currentIdx ? 'bg-[#58A6FF]' : 'bg-[#30363D]'
                 }`}
               />
             );
@@ -827,7 +827,7 @@ export default function WelcomePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#0B162C] flex items-center justify-center">
+        <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
           <div className="spinner" />
         </div>
       }
