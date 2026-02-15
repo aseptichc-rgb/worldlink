@@ -220,7 +220,7 @@ export default function ScanPage() {
             <div className="relative">
               <div
                 id={qrReaderId}
-                className="w-full aspect-[3/4] rounded-2xl overflow-hidden bg-[#1C2333]"
+                className="w-full aspect-[3/4] rounded-xl overflow-hidden bg-[#1C2333]"
               />
 
               {/* 오버레이 가이드 */}
@@ -239,7 +239,7 @@ export default function ScanPage() {
                 </div>
 
                 <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2">
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-base">
                     <QrCode size={14} className="text-[#58A6FF]" />
                     <span className="text-[#58A6FF]">QR 코드를 화면에 맞춰주세요</span>
                   </div>
@@ -251,7 +251,7 @@ export default function ScanPage() {
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="absolute inset-0 bg-[#3FB950]/20 flex items-center justify-center rounded-2xl"
+                  className="absolute inset-0 bg-[#3FB950]/20 flex items-center justify-center rounded-xl"
                 >
                   <div className="bg-[#3FB950] rounded-full p-4">
                     <Check size={32} className="text-black" />
@@ -271,7 +271,7 @@ export default function ScanPage() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]">
+              <div className="p-6 rounded-xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]">
                 <div className="flex items-start gap-4">
                   <Avatar src={scannedCard.profileImage} name={scannedCard.name} size="lg" hasGlow />
                   <div className="flex-1">
@@ -279,13 +279,13 @@ export default function ScanPage() {
                     {scannedCard.position && (
                       <div className="flex items-center gap-2 text-[#8B949E] mb-1">
                         <Briefcase size={14} />
-                        <span className="text-sm">{scannedCard.position}</span>
+                        <span className="text-base">{scannedCard.position}</span>
                       </div>
                     )}
                     {scannedCard.company && (
                       <div className="flex items-center gap-2 text-[#8B949E]">
                         <Building2 size={14} />
-                        <span className="text-sm">{scannedCard.company}</span>
+                        <span className="text-base">{scannedCard.company}</span>
                       </div>
                     )}
                   </div>
@@ -294,7 +294,7 @@ export default function ScanPage() {
                 {scannedCard.keywords && scannedCard.keywords.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#30363D]">
                     {scannedCard.keywords.map((keyword, idx) => (
-                      <span key={idx} className="px-3 py-1 text-xs rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]">
+                      <span key={idx} className="px-3 py-1 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]">
                         {keyword}
                       </span>
                     ))}
@@ -335,7 +335,7 @@ export default function ScanPage() {
                       인맥 보기
                     </motion.button>
                   </div>
-                  <button onClick={resetAndRestart} className="w-full py-3 text-[#8B949E] text-sm">
+                  <button onClick={resetAndRestart} className="w-full py-3 text-[#8B949E] text-base">
                     다른 명함 스캔하기
                   </button>
                 </>
@@ -351,7 +351,7 @@ export default function ScanPage() {
             animate={{ opacity: 1, y: 0 }}
             className="p-4 rounded-xl bg-[#F85149]/10 border border-[#F85149]/30"
           >
-            <p className="text-sm text-[#F85149]">{error}</p>
+            <p className="text-base text-[#F85149]">{error}</p>
           </motion.div>
         )}
       </div>

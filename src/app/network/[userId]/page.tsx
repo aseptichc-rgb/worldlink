@@ -151,7 +151,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]"
+          className="p-6 rounded-xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]"
         >
           <div className="flex items-center gap-4">
             <Avatar
@@ -165,13 +165,13 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               {targetUser.position && (
                 <div className="flex items-center gap-2 text-[#8B949E] mt-1">
                   <Briefcase size={14} />
-                  <span className="text-sm">{targetUser.position}</span>
+                  <span className="text-base">{targetUser.position}</span>
                 </div>
               )}
               {targetUser.company && (
                 <div className="flex items-center gap-2 text-[#8B949E]">
                   <Building2 size={14} />
-                  <span className="text-sm">{targetUser.company}</span>
+                  <span className="text-base">{targetUser.company}</span>
                 </div>
               )}
             </div>
@@ -183,7 +183,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               {targetUser.keywords.map((keyword, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1 text-xs rounded-full bg-[#58A6FF]/10 text-[#58A6FF]"
+                  className="px-3 py-1 text-sm rounded-full bg-[#58A6FF]/10 text-[#58A6FF]"
                 >
                   {keyword}
                 </span>
@@ -206,7 +206,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               <Lock size={32} className="text-[#484F58]" />
             </div>
             <p className="text-white font-medium mb-2">비공개 인맥</p>
-            <p className="text-sm text-[#8B949E] text-center">
+            <p className="text-base text-[#8B949E] text-center">
               {targetUser.name}님이 인맥을 비공개로 설정했습니다
             </p>
           </div>
@@ -214,7 +214,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
           <>
             <div className="flex items-center justify-between">
               <h3 className="text-white font-semibold">인맥 목록</h3>
-              <span className="text-sm text-[#8B949E]">{connections.length}명</span>
+              <span className="text-base text-[#8B949E]">{connections.length}명</span>
             </div>
 
             <div className="space-y-3">
@@ -234,7 +234,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-white">{connection.name}</h4>
-                      <p className="text-sm text-[#8B949E]">
+                      <p className="text-base text-[#8B949E]">
                         {connection.position} @ {connection.company}
                       </p>
                       {connection.keywords && connection.keywords.length > 0 && (
@@ -242,7 +242,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                           {connection.keywords.slice(0, 2).map((keyword, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 text-xs rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
+                              className="px-2 py-0.5 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
                             >
                               {keyword}
                             </span>
@@ -280,7 +280,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-h-[85vh] overflow-y-auto bg-[#1C2333] rounded-t-3xl border-t border-[#30363D] p-6"
+              className="w-full max-h-[85vh] overflow-y-auto bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] p-6"
             >
               <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
 
@@ -303,31 +303,31 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   <h3 className="text-lg font-semibold text-white mb-4">소개 요청하기</h3>
 
                   {/* 소개 경로 */}
-                  <div className="flex items-center justify-center gap-3 mb-6 p-4 rounded-xl bg-[#161B22]">
+                  <div className="flex items-center justify-center gap-3 mb-6 p-4 rounded-lg bg-[#161B22]">
                     <div className="text-center">
                       <Avatar src={user?.profileImage} name={user?.name || '나'} size="sm" />
-                      <p className="text-xs text-[#8B949E] mt-1">나</p>
+                      <p className="text-sm text-[#8B949E] mt-1">나</p>
                     </div>
                     <div className="flex-1 h-0.5 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]" />
                     <div className="text-center">
                       <Avatar src={targetUser.profileImage} name={targetUser.name} size="sm" />
-                      <p className="text-xs text-[#8B949E] mt-1">{targetUser.name}</p>
+                      <p className="text-sm text-[#8B949E] mt-1">{targetUser.name}</p>
                     </div>
                     <div className="flex-1 h-0.5 bg-gradient-to-r from-[#1F6FEB] to-[#58A6FF]" />
                     <div className="text-center">
                       <Avatar src={selectedConnection.profileImage} name={selectedConnection.name} size="sm" />
-                      <p className="text-xs text-[#8B949E] mt-1">{selectedConnection.name}</p>
+                      <p className="text-sm text-[#8B949E] mt-1">{selectedConnection.name}</p>
                     </div>
                   </div>
 
                   {/* 소개받고 싶은 사람 정보 */}
-                  <div className="p-4 rounded-xl bg-[#161B22] border border-[#30363D] mb-4">
-                    <p className="text-sm text-[#8B949E] mb-2">소개받고 싶은 분</p>
+                  <div className="p-4 rounded-lg bg-[#161B22] border border-[#30363D] mb-4">
+                    <p className="text-base text-[#8B949E] mb-2">소개받고 싶은 분</p>
                     <div className="flex items-center gap-3">
                       <Avatar src={selectedConnection.profileImage} name={selectedConnection.name} size="md" />
                       <div>
                         <p className="font-medium text-white">{selectedConnection.name}</p>
-                        <p className="text-sm text-[#8B949E]">
+                        <p className="text-base text-[#8B949E]">
                           {selectedConnection.position} @ {selectedConnection.company}
                         </p>
                       </div>
@@ -336,13 +336,13 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
                   {/* 목적 선택 */}
                   <div className="mb-4">
-                    <p className="text-sm text-[#8B949E] mb-2">소개 목적</p>
+                    <p className="text-base text-[#8B949E] mb-2">소개 목적</p>
                     <div className="flex flex-wrap gap-2">
                       {purposes.map((purpose) => (
                         <button
                           key={purpose.value}
                           onClick={() => setIntroPurpose(purpose.value)}
-                          className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                          className={`px-3 py-2 rounded-lg text-base transition-all ${
                             introPurpose === purpose.value
                               ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]'
                               : 'bg-[#30363D] text-[#8B949E] border border-transparent'
@@ -356,7 +356,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
                   {/* 메시지 */}
                   <div className="mb-6">
-                    <p className="text-sm text-[#8B949E] mb-2">소개 요청 메시지</p>
+                    <p className="text-base text-[#8B949E] mb-2">소개 요청 메시지</p>
                     <textarea
                       value={introMessage}
                       onChange={(e) => setIntroMessage(e.target.value)}

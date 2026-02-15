@@ -134,7 +134,7 @@ export default function ConnectionRequestModal() {
               <h3 className="text-lg font-bold text-white mb-1">
                 {targetUser?.name}
               </h3>
-              <div className="flex items-center justify-center gap-2 text-sm text-[#8B949E]">
+              <div className="flex items-center justify-center gap-2 text-base text-[#8B949E]">
                 <Building size={14} />
                 <span>{targetUser?.company}</span>
                 <span>·</span>
@@ -146,7 +146,7 @@ export default function ConnectionRequestModal() {
             {/* Connection Path */}
             {connectionPath.length > 2 && (
               <div className="mb-6 p-4 bg-[#1C2333] rounded-xl">
-                <p className="text-xs text-[#8B949E] mb-3">연결 경로</p>
+                <p className="text-sm text-[#8B949E] mb-3">연결 경로</p>
                 <div className="flex items-center justify-center gap-2">
                   {connectionPath.map((user, idx) => (
                     <div key={user.id} className="flex items-center gap-2">
@@ -172,17 +172,17 @@ export default function ConnectionRequestModal() {
 
             {/* Info Box */}
             <div className="mb-6 p-4 bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10 rounded-xl border border-[#58A6FF]/20">
-              <p className="text-sm text-white mb-1">
+              <p className="text-base text-white mb-1">
                 <span className="text-[#58A6FF] font-medium">{middleConnector?.name}</span>님을 통해 연결됩니다
               </p>
-              <p className="text-xs text-[#8B949E]">
+              <p className="text-sm text-[#8B949E]">
                 {middleConnector?.name}님이 수락하면 {targetUser?.name}님과 1촌이 됩니다
               </p>
             </div>
 
             {/* Message */}
             <div className="mb-6">
-              <p className="text-sm text-[#8B949E] mb-2">소개 메시지 (선택)</p>
+              <p className="text-base text-[#8B949E] mb-2">소개 메시지 (선택)</p>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -190,7 +190,7 @@ export default function ConnectionRequestModal() {
                 maxLength={200}
                 className="
                   w-full bg-[#1C2333] border border-[#30363D] text-white
-                  rounded-xl py-3 px-4 text-sm resize-none
+                  rounded-xl py-3 px-4 text-base resize-none
                   focus:outline-none focus:border-[#58A6FF]
                   placeholder:text-[#484F58]
                 "

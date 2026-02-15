@@ -181,14 +181,14 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 text-[#FF6B8A] text-sm"
+            className="mt-4 text-[#FF6B8A] text-base"
           >
             {error}
           </motion.p>
         )}
       </AnimatePresence>
 
-      <p className="mt-8 text-[#484F58] text-sm text-center leading-relaxed">
+      <p className="mt-8 text-[#484F58] text-base text-center leading-relaxed">
         NODDED는 초대를 통해서만 가입할 수 있습니다.<br />
         <span className="text-[#484F58]">신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.</span>
       </p>

@@ -331,7 +331,7 @@ export default function SearchBar() {
           className="
             flex-1 bg-transparent text-white
             py-3 pr-4
-            text-sm font-medium
+            text-base font-medium
             placeholder:text-[#484F58]
             focus:outline-none
             tracking-wide
@@ -358,7 +358,7 @@ export default function SearchBar() {
             exit={{ opacity: 0, y: -10 }}
             className="mt-2 flex items-center gap-2"
           >
-            <span className="text-xs text-[#8B949E]">필터:</span>
+            <span className="text-sm text-[#8B949E]">필터:</span>
             <Tag
               label={highlightedKeyword}
               isActive
@@ -387,7 +387,7 @@ export default function SearchBar() {
             {(aiLoading || aiResponse) && (
               <div className="p-3 border-b border-[#30363D]">
                 <div className="flex items-center justify-between mb-2 px-1">
-                <p className="text-xs text-[#A78BFA] flex items-center gap-1">
+                <p className="text-sm text-[#A78BFA] flex items-center gap-1">
                   <Sparkles size={12} />
                   AI 추천
                 </p>
@@ -405,13 +405,13 @@ export default function SearchBar() {
                 )}
               </div>
                 {aiLoading ? (
-                  <div className="flex items-center gap-2 p-3 text-[#8B949E] text-sm">
+                  <div className="flex items-center gap-2 p-3 text-[#8B949E] text-base">
                     <Loader2 size={16} className="animate-spin text-[#A78BFA]" />
                     인맥을 분석하고 있습니다...
                   </div>
                 ) : aiResponse && (
                   <div>
-                    <p className="text-xs text-[#C4B5FD] mb-2 px-1 bg-[#A78BFA]/10 rounded-lg py-2">
+                    <p className="text-sm text-[#C4B5FD] mb-2 px-1 bg-[#A78BFA]/10 rounded-lg py-2">
                       {aiResponse.summary}
                     </p>
                     <div className="space-y-1">
@@ -448,7 +448,7 @@ export default function SearchBar() {
                                   AI 추천
                                 </span>
                               </div>
-                              <div className="flex items-center gap-1 text-xs text-[#8B949E]">
+                              <div className="flex items-center gap-1 text-sm text-[#8B949E]">
                                 <Building size={10} />
                                 <span className="truncate">{member.company}</span>
                                 <span className="mx-1">·</span>
@@ -470,7 +470,7 @@ export default function SearchBar() {
             {/* Person Results */}
             {personResults.length > 0 && (
               <div className="p-3 border-b border-[#30363D]">
-                <p className="text-xs text-[#8B949E] mb-2 px-1 flex items-center gap-1">
+                <p className="text-sm text-[#8B949E] mb-2 px-1 flex items-center gap-1">
                   <User size={12} />
                   인물 검색 결과
                 </p>
@@ -507,7 +507,7 @@ export default function SearchBar() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-[#8B949E]">
+                        <div className="flex items-center gap-1 text-sm text-[#8B949E]">
                           <Building size={10} />
                           <span className="truncate">{person.company}</span>
                           <span className="mx-1">·</span>
@@ -540,7 +540,7 @@ export default function SearchBar() {
             {/* Keyword Suggestions */}
             {keywordSuggestions.length > 0 ? (
               <div className="p-3">
-                <p className="text-xs text-[#8B949E] mb-2 px-1 flex items-center gap-1">
+                <p className="text-sm text-[#8B949E] mb-2 px-1 flex items-center gap-1">
                   <Hash size={12} />
                   키워드
                 </p>
@@ -559,7 +559,7 @@ export default function SearchBar() {
               </div>
             ) : !query ? (
               <div className="p-3">
-                <p className="text-xs text-[#8B949E] mb-2 px-1">인기 키워드</p>
+                <p className="text-sm text-[#8B949E] mb-2 px-1">인기 키워드</p>
                 <div className="flex flex-wrap gap-2">
                   {popularKeywords.map((keyword) => (
                     <button
@@ -575,8 +575,8 @@ export default function SearchBar() {
               </div>
             ) : personResults.length === 0 && (
               <div className="p-4 text-center">
-                <p className="text-[#8B949E] text-sm">검색 결과가 없습니다</p>
-                <p className="text-[#484F58] text-xs mt-1">
+                <p className="text-[#8B949E] text-base">검색 결과가 없습니다</p>
+                <p className="text-[#484F58] text-sm mt-1">
                   이름, 회사, 키워드 또는 메모 내용으로 검색해보세요
                 </p>
               </div>

@@ -342,7 +342,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
           <Users size={32} className="text-[#484F58]" />
         </div>
         <h3 className="text-white font-semibold mb-2">아직 인맥이 없습니다</h3>
-        <p className="text-[#8B949E] text-sm mb-6 max-w-xs">
+        <p className="text-[#8B949E] text-base mb-6 max-w-xs">
           네트워크에서 새로운 사람들과 연결하거나<br />
           초대 링크를 통해 인맥을 만들어보세요
         </p>
@@ -366,7 +366,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
           <Sparkles size={18} className="text-[#58A6FF]" />
           <h3 className="text-white font-semibold">내 인맥 네트워크</h3>
         </div>
-        <span className="text-sm text-[#8B949E]">{connections.length}명</span>
+        <span className="text-base text-[#8B949E]">{connections.length}명</span>
       </div>
 
       {/* 그래프 컨테이너 */}
@@ -400,7 +400,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
                 />
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-semibold">{selectedNode.user.name}</h4>
-                  <p className="text-[#8B949E] text-sm truncate">
+                  <p className="text-[#8B949E] text-base truncate">
                     {selectedNode.user.company} · {selectedNode.user.position}
                   </p>
                 </div>
@@ -420,7 +420,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       {/* 전체보기 버튼 */}
       <button
         onClick={() => router.push('/network')}
-        className="w-full mt-4 py-3 text-center text-[#58A6FF] text-sm hover:bg-[#58A6FF]/5 rounded-xl transition-colors"
+        className="w-full mt-4 py-3 text-center text-[#58A6FF] text-base hover:bg-[#58A6FF]/5 rounded-xl transition-colors"
       >
         네트워크에서 더 많은 인맥 찾아보기 →
       </button>

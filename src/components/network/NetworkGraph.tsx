@@ -1866,9 +1866,9 @@ export default function NetworkGraph() {
             style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
           >
             <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl">
-              <div className="text-sm font-semibold text-white mb-1">{tooltip.node.name}</div>
-              <div className="text-xs text-[#8B949E]">{tooltip.node.company}</div>
-              <div className="text-xs text-[#8B949E]">{tooltip.node.position}</div>
+              <div className="text-base font-semibold text-white mb-1">{tooltip.node.name}</div>
+              <div className="text-sm text-[#8B949E]">{tooltip.node.company}</div>
+              <div className="text-sm text-[#8B949E]">{tooltip.node.position}</div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800]">
                   {tooltip.node.degree}단계
@@ -1929,7 +1929,7 @@ export default function NetworkGraph() {
               active:scale-95 transition-all duration-200 cursor-pointer group shadow-lg shadow-[#58A6FF]/10"
           >
             <Home size={16} className="text-[#58A6FF] group-hover:text-white transition-colors" />
-            <span className="text-xs font-medium text-[#58A6FF] group-hover:text-white transition-colors">
+            <span className="text-sm font-medium text-[#58A6FF] group-hover:text-white transition-colors">
               나의 인맥으로
             </span>
           </motion.button>
@@ -1937,7 +1937,7 @@ export default function NetworkGraph() {
       </AnimatePresence>
 
       {/* Zoom Level Indicator */}
-      <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#30363D] flex items-center gap-2">
+      <div className="absolute bottom-6 left-6 text-sm text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#30363D] flex items-center gap-2">
         <span>{Math.round(transform.scale * 100)}%</span>
         <span className="text-[#58A6FF]">
           {transform.scale < ZOOM_CLUSTER_THRESHOLD ? '클러스터' :
@@ -1947,7 +1947,7 @@ export default function NetworkGraph() {
 
       {/* Category Legend */}
       <div className="absolute top-6 right-6 bg-[#151922]/90 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl max-w-xs">
-        <div className="text-xs font-semibold text-white mb-2">분야별 인맥</div>
+        <div className="text-sm font-semibold text-white mb-2">분야별 인맥</div>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
             <div key={category} className="flex items-center gap-2">

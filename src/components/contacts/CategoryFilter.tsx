@@ -52,7 +52,7 @@ export default function CategoryFilter({
             : 'bg-[#30363D] text-[#8B949E] hover:bg-[#30363D] hover:text-white'
         }`}
       >
-        <span className="text-sm">전체</span>
+        <span className="text-base">전체</span>
         <span
           className={`text-xs px-1.5 py-0.5 rounded-full ${
             selectedCategory === 'all' ? 'bg-black/10' : 'bg-[#30363D]'
@@ -79,7 +79,7 @@ export default function CategoryFilter({
             }}
           >
             <span className="text-base">{info.icon}</span>
-            <span className="text-sm whitespace-nowrap">{info.name}</span>
+            <span className="text-base whitespace-nowrap">{info.name}</span>
             <span
               className="text-xs px-1.5 py-0.5 rounded-full"
               style={{

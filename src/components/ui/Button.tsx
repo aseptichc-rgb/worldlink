@@ -40,9 +40,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-5 py-2.5 text-base',
-      lg: 'px-7 py-3.5 text-lg',
+      sm: 'px-3.5 py-2 text-base',
+      md: 'px-5 py-3 text-base',
+      lg: 'px-7 py-4 text-lg',
     };
 
     const isDisabled = disabled || isLoading;

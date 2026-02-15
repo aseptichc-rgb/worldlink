@@ -42,12 +42,12 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
                 {recommendation.connectionPath.length - 1}촌
               </span>
             </div>
-            <p className="text-sm text-[#8B949E] truncate">
+            <p className="text-base text-[#8B949E] truncate">
               {[displayInfo.company, displayInfo.position].filter(Boolean).join(' · ') || '정보 비공개'}
             </p>
 
             {/* Reason */}
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-[#58A6FF]">
+            <div className="flex items-center gap-1.5 mt-2 text-sm text-[#58A6FF]">
               <Sparkles size={12} />
               <span>{recommendation.reason}</span>
             </div>
@@ -66,8 +66,8 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
 
             {/* Connection Path */}
             <div className="mt-3 pt-3 border-t border-[#30363D]">
-              <p className="text-xs text-[#484F58] mb-2">연결 경로</p>
-              <div className="flex items-center gap-1 text-xs">
+              <p className="text-sm text-[#484F58] mb-2">연결 경로</p>
+              <div className="flex items-center gap-1 text-sm">
                 {recommendation.connectionPath.map((userId, i) => (
                   <span key={userId} className="flex items-center">
                     {i === 0 ? (
@@ -94,7 +94,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
             w-full mt-4 py-2.5
             bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10
             border border-[#30363D] rounded-xl
-            text-sm font-medium text-white
+            text-base font-medium text-white
             hover:border-[#58A6FF] transition-all
           "
         >

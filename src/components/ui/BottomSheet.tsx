@@ -63,7 +63,7 @@ export default function BottomSheet({
             className={`
               fixed bottom-0 left-0 right-0 z-50
               bg-[#161B22] border-t border-[rgba(240,246,252,0.1)]
-              rounded-t-3xl overflow-hidden
+              rounded-t-2xl overflow-hidden
               shadow-[0_-8px_32px_rgba(0,0,0,0.4)]
               ${heights[height]}
             `}

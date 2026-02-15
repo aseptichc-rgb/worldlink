@@ -53,7 +53,7 @@ export default function BottomNav() {
                   className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'}`}
                 />
                 <span
-                  className={`text-[10px] mt-1 transition-colors duration-200 ${
+                  className={`text-sm mt-1 transition-colors duration-200 ${
                     isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'
                   }`}
                 >
@@ -87,7 +87,7 @@ export default function BottomNav() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[rgba(22,27,34,0.95)] backdrop-blur-xl rounded-t-3xl border-t border-[rgba(240,246,252,0.1)] p-6"
+              className="w-full bg-[rgba(22,27,34,0.95)] backdrop-blur-xl rounded-t-2xl border-t border-[rgba(240,246,252,0.1)] p-6"
             >
               <button
                 onClick={() => setShowAuthModal(false)}
@@ -105,7 +105,7 @@ export default function BottomNav() {
                 <h3 className="text-xl font-semibold text-[#F0F6FC] mb-2">
                   로그인이 필요해요
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-base text-[#8B949E]">
                   내 명함을 만들고 네트워크를 확장하려면<br />
                   간단한 가입이 필요해요
                 </p>

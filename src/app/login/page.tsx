@@ -127,7 +127,7 @@ function LoginContent() {
           {/* Subtle glow effect - 절제된 방식 */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#58A6FF]/20 to-[#1F6FEB]/20 blur-2xl -z-10" />
         </div>
-        <p className="text-[#484F58] mt-3 text-sm md:text-base font-medium tracking-wide">
+        <p className="text-[#484F58] mt-3 text-base md:text-lg font-medium tracking-wide">
           신뢰 기반 비즈니스 네트워크
         </p>
       </motion.div>
@@ -139,13 +139,13 @@ function LoginContent() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="w-full max-w-[400px]"
       >
-        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl px-10 py-10">
+        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-xl px-10 py-10">
           {/* Header */}
           <div className="text-center mb-10">
             <h2 className="text-xl font-bold text-white tracking-tight">
               다시 만나서 반갑습니다
             </h2>
-            <p className="text-[#484F58] text-sm mt-2">
+            <p className="text-[#484F58] text-base mt-2">
               네트워크로 돌아가기
             </p>
           </div>
@@ -179,7 +179,7 @@ function LoginContent() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-[#30363D] bg-[#0D1117] text-[#58A6FF] focus:ring-[#58A6FF] focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-sm text-[#8B949E]">로그인 정보 저장</span>
+              <span className="text-base text-[#8B949E]">로그인 정보 저장</span>
             </label>
 
             <Button
@@ -196,7 +196,7 @@ function LoginContent() {
           {/* Divider */}
           <div className="flex items-center gap-4 my-8">
             <div className="flex-1 h-px bg-[#30363D]" />
-            <span className="text-[#484F58] text-xs">또는</span>
+            <span className="text-[#484F58] text-sm">또는</span>
             <div className="flex-1 h-px bg-[#30363D]" />
           </div>
 
@@ -211,12 +211,12 @@ function LoginContent() {
 
           {/* Sign Up Link */}
           <div className="text-center mt-6">
-            <p className="text-[#484F58] text-sm">
+            <p className="text-[#484F58] text-base">
               아직 계정이 없으신가요?
             </p>
             <button
               onClick={() => router.push('/onboarding')}
-              className="mt-2 inline-flex items-center gap-2 text-[#58A6FF] hover:text-[#58A6FF]/80 transition-colors text-sm font-medium group"
+              className="mt-2 inline-flex items-center gap-2 text-[#58A6FF] hover:text-[#58A6FF]/80 transition-colors text-base font-medium group"
             >
               <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
               회원가입하기
@@ -231,7 +231,7 @@ function LoginContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-8 text-[#484F58] text-xs text-center"
+        className="mt-8 text-[#484F58] text-sm text-center"
       >
         로그인 시 서비스 이용약관 및 개인정보처리방침에 동의합니다
       </motion.p>

@@ -98,7 +98,7 @@ export default function KakaoInvitePrompt({
               </div>
               <div>
                 <h3 className="text-white font-semibold">일촌 초대</h3>
-                <p className="text-xs text-[#8B949E]">카카오톡으로 초대장을 보냅니다</p>
+                <p className="text-sm text-[#8B949E]">카카오톡으로 초대장을 보냅니다</p>
               </div>
             </div>
             <button onClick={onClose} className="p-1 text-[#8B949E] hover:text-white">
@@ -107,11 +107,11 @@ export default function KakaoInvitePrompt({
           </div>
 
           <div className="p-4 rounded-xl bg-[#161B22] mb-4">
-            <p className="text-sm text-[#8B949E]">
+            <p className="text-base text-[#8B949E]">
               <span className="text-white font-medium">{recipientName}</span>님에게
               NODDED 일촌 초대 링크를 카카오톡으로 보낼까요?
             </p>
-            <p className="text-xs text-[#484F58] mt-2">
+            <p className="text-sm text-[#484F58] mt-2">
               상대방이 가입하면 일촌 수락 여부와 정보 공개 범위를 직접 결정할 수 있습니다.
             </p>
           </div>

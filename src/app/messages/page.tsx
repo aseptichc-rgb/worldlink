@@ -236,7 +236,7 @@ export default function MessagesPage() {
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => handleMessageClick(message)}
                   className={`
-                    w-full flex items-start gap-3 p-4 rounded-2xl text-left transition-all
+                    w-full flex items-start gap-3 p-4 rounded-xl text-left transition-all
                     ${!message.isRead && activeTab === 'received'
                       ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
                       : 'bg-[#1C2333] border border-[#30363D] hover:border-[#484F58]'
@@ -253,14 +253,14 @@ export default function MessagesPage() {
                       <span className={`font-medium ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#C9D1D9]'}`}>
                         {otherUser?.name || '알 수 없음'}
                       </span>
-                      <span className="text-xs text-[#484F58]">
+                      <span className="text-sm text-[#484F58]">
                         {formatMessageTime(message.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-[#8B949E] truncate">
+                    <p className="text-base text-[#8B949E] truncate">
                       {otherUser?.company} · {otherUser?.position}
                     </p>
-                    <p className={`text-sm mt-1 truncate ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#8B949E]'}`}>
+                    <p className={`text-base mt-1 truncate ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#8B949E]'}`}>
                       {message.content}
                     </p>
                   </div>
@@ -288,7 +288,7 @@ export default function MessagesPage() {
             <p className="text-[#8B949E]">
               {activeTab === 'received' ? '받은 메세지가 없습니다' : '보낸 메세지가 없습니다'}
             </p>
-            <p className="text-[#484F58] text-sm mt-1">
+            <p className="text-[#484F58] text-base mt-1">
               인맥에게 메세지를 보내보세요
             </p>
           </div>
@@ -314,7 +314,7 @@ export default function MessagesPage() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#161B22] border-t border-[#30363D] rounded-t-3xl max-h-[70vh] overflow-y-auto"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-[#161B22] border-t border-[#30363D] rounded-t-2xl max-h-[70vh] overflow-y-auto"
             >
               <div className="p-6">
                 {/* Handle */}
@@ -338,7 +338,7 @@ export default function MessagesPage() {
                         />
                         <div>
                           <h3 className="font-bold text-white">{otherUser?.name}</h3>
-                          <p className="text-sm text-[#8B949E]">
+                          <p className="text-base text-[#8B949E]">
                             {otherUser?.company} · {otherUser?.position}
                           </p>
                         </div>
@@ -347,15 +347,15 @@ export default function MessagesPage() {
                       {/* Direction */}
                       <div className="flex items-center gap-2 mb-4">
                         {isReceived ? (
-                          <span className="text-xs px-2 py-1 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
+                          <span className="text-sm px-2 py-1 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
                             받은 메세지
                           </span>
                         ) : (
-                          <span className="text-xs px-2 py-1 rounded-full bg-[#1F6FEB]/20 text-[#1F6FEB]">
+                          <span className="text-sm px-2 py-1 rounded-full bg-[#1F6FEB]/20 text-[#1F6FEB]">
                             보낸 메세지
                           </span>
                         )}
-                        <span className="text-xs text-[#484F58]">
+                        <span className="text-sm text-[#484F58]">
                           {format(selectedMessage.createdAt, 'yyyy년 M월 d일 a h:mm', { locale: ko })}
                         </span>
                       </div>
@@ -374,7 +374,7 @@ export default function MessagesPage() {
                                 value={replyContent}
                                 onChange={(e) => setReplyContent(e.target.value)}
                                 placeholder="답장 내용을 입력하세요..."
-                                className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-xl py-3 px-4 text-sm resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
+                                className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-xl py-3 px-4 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                                 rows={3}
                                 autoFocus
                               />

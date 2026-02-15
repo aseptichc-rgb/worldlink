@@ -721,7 +721,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
           >
             <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl min-w-[220px]">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-semibold text-white">{tooltip.node.name}</span>
+                <span className="text-base font-semibold text-white">{tooltip.node.name}</span>
                 {tooltip.node.isHub && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] flex items-center gap-1">
                     <Star size={10} fill="currentColor" /> 허브
@@ -729,13 +729,13 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                 )}
               </div>
               {tooltip.node.company && (
-                <div className="text-xs text-[#8B949E] mb-0.5 flex items-center gap-1">
+                <div className="text-sm text-[#8B949E] mb-0.5 flex items-center gap-1">
                   <Building2 size={12} />
                   {tooltip.node.company}
                 </div>
               )}
               {tooltip.node.position && (
-                <div className="text-xs text-[#484F58] line-clamp-2">{tooltip.node.position}</div>
+                <div className="text-sm text-[#484F58] line-clamp-2">{tooltip.node.position}</div>
               )}
 
               {/* Connected people from same company */}
@@ -754,7 +754,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                         {sameCompanyConnections.slice(0, 3).map((conn, i) => {
                           const other = conn.from.id === tooltip.node.id ? conn.to : conn.from;
                           return (
-                            <div key={i} className="text-xs text-[#8B949E] flex items-center gap-1">
+                            <div key={i} className="text-sm text-[#8B949E] flex items-center gap-1">
                               <span style={{ color: CATEGORY_INFO[other.category].color }}>●</span>
                               {other.name}
                               <span className="text-[10px] text-[#484F58]">
@@ -817,7 +817,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
         <button
           onClick={() => setShowCompanyLinks(!showCompanyLinks)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
             showCompanyLinks
               ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
               : 'bg-[#1C2333]/90 text-[#8B949E] border border-[#30363D]'
@@ -828,7 +828,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
         </button>
         <button
           onClick={() => setShowHubs(!showHubs)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
             showHubs
               ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
               : 'bg-[#1C2333]/90 text-[#8B949E] border border-[#30363D]'
@@ -840,7 +840,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       </div>
 
       {/* Instructions */}
-      <div className="absolute top-4 left-4 text-xs text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-[#30363D]">
+      <div className="absolute top-4 left-4 text-sm text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-[#30363D]">
         <div className="text-[#8B949E] font-medium mb-1">인사이트</div>
         <div>• 금색 테두리 = 여러 분야 연결 허브</div>
         <div>• 금색 선 = 같은 회사, 다른 분야</div>

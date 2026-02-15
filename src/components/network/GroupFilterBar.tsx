@@ -12,7 +12,7 @@ export default function GroupFilterBar() {
       {/* 전체 칩 */}
       <button
         onClick={() => setActiveGroupFilter(null)}
-        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
           activeGroupFilter === null
             ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]/40'
             : 'bg-[#1C2333]/80 text-[#8B949E] border border-[#30363D]/50 hover:border-[#484F58]'
@@ -29,7 +29,7 @@ export default function GroupFilterBar() {
           <button
             key={group.id}
             onClick={() => setActiveGroupFilter(isActive ? null : group.id)}
-            className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+            className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
               isActive
                 ? 'bg-[#58A6FF]/20 text-white border border-[#58A6FF]/40'
                 : 'bg-[#1C2333]/80 text-[#8B949E] border border-[#30363D]/50 hover:border-[#484F58]'

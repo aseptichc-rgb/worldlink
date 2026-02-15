@@ -93,7 +93,7 @@ export function InviteShareCard({
     <>
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-[#8B949E] flex items-center gap-2">
+          <h3 className="text-base font-medium text-[#8B949E] flex items-center gap-2">
             <Users size={16} />
             친구 초대하기
           </h3>
@@ -104,7 +104,7 @@ export function InviteShareCard({
 
         {/* 초대 코드 표시 */}
         <div className="bg-[#1C2333] rounded-xl p-4 mb-4">
-          <p className="text-xs text-[#484F58] mb-1">내 초대 코드</p>
+          <p className="text-sm text-[#484F58] mb-1">내 초대 코드</p>
           <div className="flex items-center justify-between">
             <p className="font-mono text-2xl font-bold bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] bg-clip-text text-transparent">
               {inviteCode}
@@ -125,7 +125,7 @@ export function InviteShareCard({
         {/* 초대 링크 */}
         <div className="bg-[#1C2333] rounded-xl p-3 mb-4 flex items-center gap-2">
           <Link size={14} className="text-[#484F58] flex-shrink-0" />
-          <p className="text-xs text-[#8B949E] truncate flex-1">{inviteLink}</p>
+          <p className="text-sm text-[#8B949E] truncate flex-1">{inviteLink}</p>
           <button
             onClick={copyLink}
             className="text-xs text-[#58A6FF] hover:underline flex-shrink-0"
@@ -156,7 +156,7 @@ export function InviteShareCard({
         </div>
 
         {/* 안내 문구 */}
-        <p className="text-xs text-[#484F58] text-center mt-4">
+        <p className="text-sm text-[#484F58] text-center mt-4">
           링크를 받은 친구는 바로 가입할 수 있어요
         </p>
       </Card>
@@ -175,7 +175,7 @@ export function InviteShareCard({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#1C2333] rounded-2xl p-6 max-w-sm w-full"
+              className="bg-[#1C2333] rounded-xl p-6 max-w-sm w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -192,13 +192,13 @@ export function InviteShareCard({
               <div className="bg-white rounded-xl p-4 mb-4 flex items-center justify-center">
                 <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
                   <QrCode size={48} className="text-gray-400" />
-                  <p className="text-xs text-gray-500 absolute mt-20">
+                  <p className="text-sm text-gray-500 absolute mt-20">
                     QR 생성 중...
                   </p>
                 </div>
               </div>
 
-              <p className="text-sm text-[#8B949E] text-center">
+              <p className="text-base text-[#8B949E] text-center">
                 친구가 이 QR코드를 스캔하면
                 <br />
                 바로 NODDED에 가입할 수 있어요

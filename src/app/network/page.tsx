@@ -174,7 +174,7 @@ export default function NetworkPage() {
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
-        <div className="mx-5 mt-4 bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/50 rounded-2xl px-4 py-3">
+        <div className="mx-5 mt-4 bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/50 rounded-xl px-4 py-3">
           <div className="flex items-center gap-4">
             {/* Menu Button 또는 뒤로가기 버튼 */}
             {centerUserId && centerUserId !== user.id ? (
@@ -197,7 +197,7 @@ export default function NetworkPage() {
             {centerUserId && centerUserId !== user.id ? (
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <Users size={16} className="text-[#58A6FF] flex-shrink-0" />
-                <span className="text-sm font-medium text-white truncate">
+                <span className="text-base font-medium text-white truncate">
                   {centerUserName || '인물'}님의 인맥
                 </span>
               </div>
@@ -288,7 +288,7 @@ export default function NetworkPage() {
               <div className="text-center py-8">
                 <Sparkles size={32} className="text-[#484F58] mx-auto mb-3" />
                 <p className="text-[#8B949E]">추천할 인맥이 없습니다</p>
-                <p className="text-[#484F58] text-sm mt-1">
+                <p className="text-[#484F58] text-base mt-1">
                   더 많은 사람들과 연결해보세요
                 </p>
               </div>
@@ -308,7 +308,7 @@ export default function NetworkPage() {
             flex items-center gap-2 px-4 py-3
             bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]
             rounded-l-2xl shadow-lg
-            text-white font-medium text-sm
+            text-white font-medium text-base
           "
         >
           <Sparkles size={18} />
@@ -323,19 +323,19 @@ export default function NetworkPage() {
 
       {/* Network Stats */}
       <div className="fixed bottom-4 left-4 z-20">
-        <div className="glass-light rounded-2xl px-4 py-3 flex items-center gap-4">
+        <div className="glass-light rounded-xl px-4 py-3 flex items-center gap-4">
           <div className="text-center min-w-[48px]">
             <p className="text-2xl font-bold text-[#58A6FF]">
               {useNetworkStore.getState().nodes.filter(n => n.degree === 1).length}
             </p>
-            <p className="text-xs text-[#8B949E]">1촌</p>
+            <p className="text-sm text-[#8B949E]">1촌</p>
           </div>
           <div className="w-px h-8 bg-[#30363D]" />
           <div className="text-center min-w-[48px]">
             <p className="text-2xl font-bold text-[#1F6FEB]">
               {useNetworkStore.getState().nodes.filter(n => n.degree === 2).length}
             </p>
-            <p className="text-xs text-[#8B949E]">2촌</p>
+            <p className="text-sm text-[#8B949E]">2촌</p>
           </div>
         </div>
       </div>
@@ -366,7 +366,7 @@ export default function NetworkPage() {
               />
               <div>
                 <h3 className="font-semibold text-white">{user.name}</h3>
-                <p className="text-sm text-[#8B949E]">{user.company}</p>
+                <p className="text-base text-[#8B949E]">{user.company}</p>
               </div>
             </div>
 
@@ -401,7 +401,7 @@ export default function NetworkPage() {
                 <FolderOpen size={20} />
                 <span>그룹 관리</span>
                 {groups.length > 0 && (
-                  <span className="ml-auto text-xs text-[#484F58]">{groups.length}</span>
+                  <span className="ml-auto text-sm text-[#484F58]">{groups.length}</span>
                 )}
               </button>
               <button
@@ -424,9 +424,9 @@ export default function NetworkPage() {
 
             <div className="absolute bottom-6 left-6 right-6">
               <div className="p-4 bg-[#1C2333] rounded-xl mb-4">
-                <p className="text-xs text-[#8B949E] mb-2">내 초대 코드</p>
+                <p className="text-sm text-[#8B949E] mb-2">내 초대 코드</p>
                 <p className="font-mono text-lg text-[#58A6FF]">{user.inviteCode}</p>
-                <p className="text-xs text-[#484F58] mt-1">
+                <p className="text-sm text-[#484F58] mt-1">
                   남은 초대권: {user.invitesRemaining}개
                 </p>
               </div>

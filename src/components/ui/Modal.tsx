@@ -55,7 +55,7 @@ export default function Modal({
             className={`
               relative w-full ${sizes[size]}
               bg-[rgba(22,27,34,0.95)] backdrop-blur-xl
-              border border-[rgba(240,246,252,0.1)] rounded-2xl
+              border border-[rgba(240,246,252,0.1)] rounded-xl
               shadow-[0_16px_48px_rgba(0,0,0,0.4)] overflow-hidden
             `}
           >

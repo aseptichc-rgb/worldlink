@@ -128,7 +128,7 @@ export default function CoffeeChatModal() {
                 {targetUser?.name}님께 메세지 보내기
               </h3>
               {targetUser?.company && (
-                <p className="text-sm text-[#8B949E] mt-1">
+                <p className="text-base text-[#8B949E] mt-1">
                   {targetUser.company} · {targetUser.position}
                 </p>
               )}
@@ -143,7 +143,7 @@ export default function CoffeeChatModal() {
                 maxLength={500}
                 className="
                   w-full bg-[#1C2333] border border-[#30363D] text-white
-                  rounded-xl py-3 px-4 text-sm resize-none
+                  rounded-xl py-3 px-4 text-base resize-none
                   focus:outline-none focus:border-[#58A6FF]
                   placeholder:text-[#484F58]
                 "

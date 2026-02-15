@@ -146,7 +146,7 @@ export default function ContactsPage() {
                 </div>
                 <div>
                   <h1 className="text-lg font-bold">내 연락처</h1>
-                  <p className="text-xs text-[#8B949E]">
+                  <p className="text-sm text-[#8B949E]">
                     {contacts.length}명 중 {invitedCount}명 초대됨
                   </p>
                 </div>
@@ -198,7 +198,7 @@ export default function ContactsPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterMode('all')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 py-2 px-3 rounded-lg text-base font-medium transition-all ${
                   filterMode === 'all'
                     ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]/50'
                     : 'bg-[#1C2333] text-[#8B949E] border border-[#30363D]'
@@ -208,7 +208,7 @@ export default function ContactsPage() {
               </button>
               <button
                 onClick={() => setFilterMode('pending')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-2 px-3 rounded-lg text-base font-medium transition-all flex items-center justify-center gap-1 ${
                   filterMode === 'pending'
                     ? 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/50'
                     : 'bg-[#1C2333] text-[#8B949E] border border-[#30363D]'
@@ -219,7 +219,7 @@ export default function ContactsPage() {
               </button>
               <button
                 onClick={() => setFilterMode('invited')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-2 px-3 rounded-lg text-base font-medium transition-all flex items-center justify-center gap-1 ${
                   filterMode === 'invited'
                     ? 'bg-[#3FB950]/20 text-[#3FB950] border border-[#3FB950]/50'
                     : 'bg-[#1C2333] text-[#8B949E] border border-[#30363D]'

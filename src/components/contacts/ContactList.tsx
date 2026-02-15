@@ -128,20 +128,20 @@ export default function ContactList({
                             {contact.name}
                           </span>
                           {contact.position && (
-                            <span className="text-xs text-[#8B949E] truncate">
+                            <span className="text-sm text-[#8B949E] truncate">
                               {contact.position.split('/')[0].trim()}
                             </span>
                           )}
                         </div>
 
                         {contact.company && (
-                          <div className="flex items-center gap-1.5 text-sm text-[#8B949E] mb-2">
+                          <div className="flex items-center gap-1.5 text-base text-[#8B949E] mb-2">
                             <Building2 size={14} className="shrink-0" />
                             <span className="truncate">{contact.company}</span>
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 text-xs text-[#484F58]">
+                        <div className="flex items-center gap-3 text-sm text-[#484F58]">
                           {contact.phone && (
                             <div className="flex items-center gap-1">
                               <Phone size={12} />
@@ -189,7 +189,7 @@ export default function ContactList({
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-4">🔍</div>
             <div className="text-lg font-semibold text-white mb-2">검색 결과가 없습니다</div>
-            <div className="text-sm text-[#8B949E]">다른 검색어를 시도해보세요</div>
+            <div className="text-base text-[#8B949E]">다른 검색어를 시도해보세요</div>
           </div>
         )}
       </div>
@@ -210,7 +210,7 @@ export default function ContactList({
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#1C2333] rounded-t-3xl border-t border-[#30363D] p-6"
+              className="w-full bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] p-6"
             >
               <button
                 onClick={() => setInviteModal(null)}
@@ -228,7 +228,7 @@ export default function ContactList({
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {inviteModal.name}님 초대하기
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-base text-[#8B949E]">
                   {inviteModal.company && `${inviteModal.company} · `}
                   {inviteModal.position?.split('/')[0].trim()}
                 </p>

@@ -76,7 +76,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-[#484F58] text-sm"
+          className="text-[#484F58] text-base"
         >
           단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다
         </motion.p>

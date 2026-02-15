@@ -45,8 +45,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
           <Icon size={16} className="text-[#8B949E]" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs text-[#8B949E] mb-0.5">{label}</div>
-          <div className="text-sm text-white break-words">{value}</div>
+          <div className="text-sm text-[#8B949E] mb-0.5">{label}</div>
+          <div className="text-base text-white break-words">{value}</div>
         </div>
         {copyable && (
           <button
@@ -90,11 +90,11 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
 
         {/* Profile Card */}
         <div className="px-4 -mt-16">
-          <div className="bg-[#1C2333] border border-[#30363D] rounded-2xl p-5">
+          <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-5">
             <div className="flex items-start gap-4">
               {/* Avatar */}
               <div
-                className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold shrink-0 shadow-lg"
+                className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl font-bold shrink-0 shadow-lg"
                 style={{
                   backgroundColor: info.bgColor,
                   color: info.color,
@@ -108,7 +108,7 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl font-bold text-white mb-1">{contact.name}</h2>
                 {contact.position && (
-                  <p className="text-sm text-[#8B949E] mb-2 line-clamp-2">{contact.position}</p>
+                  <p className="text-base text-[#8B949E] mb-2 line-clamp-2">{contact.position}</p>
                 )}
                 <div
                   className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full"
@@ -131,7 +131,7 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#58A6FF]/10 text-[#58A6FF] rounded-xl hover:bg-[#58A6FF]/20 transition-colors"
                 >
                   <Phone size={18} />
-                  <span className="text-sm font-medium">전화</span>
+                  <span className="text-base font-medium">전화</span>
                 </a>
               )}
               {contact.email && (
@@ -140,14 +140,14 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#8B5CF6]/10 text-[#8B5CF6] rounded-xl hover:bg-[#8B5CF6]/20 transition-colors"
                 >
                   <Mail size={18} />
-                  <span className="text-sm font-medium">이메일</span>
+                  <span className="text-base font-medium">이메일</span>
                 </a>
               )}
               <button
                 className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#10B981]/10 text-[#10B981] rounded-xl hover:bg-[#10B981]/20 transition-colors"
               >
                 <MessageCircle size={18} />
-                <span className="text-sm font-medium">메시지</span>
+                <span className="text-base font-medium">메시지</span>
               </button>
             </div>
           </div>
@@ -156,8 +156,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
 
       {/* Contact Information */}
       <div className="px-4 mt-4">
-        <div className="bg-[#1C2333] border border-[#30363D] rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+        <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-4">
+          <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
             <span className="w-1 h-4 rounded-full bg-[#58A6FF]" />
             연락처 정보
           </h3>
@@ -174,8 +174,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
       {/* Company Information */}
       {(contact.company || contact.department) && (
         <div className="px-4 mt-4">
-          <div className="bg-[#1C2333] border border-[#30363D] rounded-2xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-4">
+            <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
               <span className="w-1 h-4 rounded-full bg-[#8B5CF6]" />
               회사 정보
             </h3>
@@ -191,8 +191,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
       {/* Additional Info */}
       {(contact.registeredDate || contact.memo) && (
         <div className="px-4 mt-4">
-          <div className="bg-[#1C2333] border border-[#30363D] rounded-2xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-4">
+            <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
               <span className="w-1 h-4 rounded-full bg-[#F59E0B]" />
               추가 정보
             </h3>
@@ -200,8 +200,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
             <InfoRow icon={Calendar} label="등록일" value={contact.registeredDate} />
             {contact.memo && (
               <div className="py-3">
-                <div className="text-xs text-[#8B949E] mb-1">메모</div>
-                <div className="text-sm text-white bg-[#30363D] rounded-lg p-3">
+                <div className="text-sm text-[#8B949E] mb-1">메모</div>
+                <div className="text-base text-white bg-[#30363D] rounded-lg p-3">
                   {contact.memo}
                 </div>
               </div>
@@ -213,17 +213,17 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
       {/* Category Badge */}
       <div className="px-4 mt-4">
         <div
-          className="rounded-2xl p-4 text-center"
+          className="rounded-xl p-4 text-center"
           style={{
             backgroundColor: info.bgColor,
             border: `1px solid ${info.borderColor}`,
           }}
         >
           <div className="text-3xl mb-2">{info.icon}</div>
-          <div className="text-sm font-medium" style={{ color: info.color }}>
+          <div className="text-base font-medium" style={{ color: info.color }}>
             {info.name} 분야
           </div>
-          <div className="text-xs text-[#8B949E] mt-1">
+          <div className="text-sm text-[#8B949E] mt-1">
             자동 분류된 카테고리입니다
           </div>
         </div>

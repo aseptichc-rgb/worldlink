@@ -270,7 +270,7 @@ body {
   align-items: center;
   padding: 4px 12px;
   border-radius: var(--radius-full);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   background: transparent;
   color: var(--color-text-secondary);
@@ -554,13 +554,13 @@ body {
   min-width: 72px;
 }
 .stat-badge-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.2;
 }
 .stat-badge-label {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--color-text-tertiary);
   margin-top: 2px;
 }

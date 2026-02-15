@@ -257,9 +257,9 @@ export function InviteManager({
 
   return (
     <>
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-sm font-medium text-[#8BA4C4] flex items-center gap-2">
+      <Card className="px-7 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-base font-medium text-[#8BA4C4] flex items-center gap-2">
             <Users size={16} />
             친구 초대하기
           </h3>
@@ -269,7 +269,7 @@ export function InviteManager({
         </div>
 
         {/* 초대 방법 선택 버튼들 */}
-        <div className="grid grid-cols-2 gap-3.5 mb-5">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <Button
             variant="secondary"
             className="flex items-center justify-center gap-2"
@@ -323,20 +323,20 @@ export function InviteManager({
 
         {/* 발송한 초대 목록 */}
         {invitations.length > 0 && (
-          <div className="border-t border-[#30363D] pt-5 mt-1">
-            <h4 className="text-xs text-[#4A5E7A] mb-3">보낸 초대</h4>
-            <div className="space-y-2.5 max-h-48 overflow-y-auto">
+          <div className="border-t border-[#30363D] pt-5 mt-2">
+            <h4 className="text-sm text-[#4A5E7A] mb-3">보낸 초대</h4>
+            <div className="space-y-3 max-h-48 overflow-y-auto">
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex items-center justify-between p-3 bg-[#162A4A] rounded-lg"
+                  className="flex items-center justify-between p-3.5 bg-[#162A4A] rounded-lg"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-[#1E3A5F] rounded-lg text-[#8BA4C4]">
                       {getMethodIcon(invitation.method)}
                     </div>
                     <div>
-                      <p className="text-xs text-white">
+                      <p className="text-sm text-white">
                         {invitation.recipientEmail ||
                           invitation.recipientPhone ||
                           "링크 공유"}
@@ -374,7 +374,7 @@ export function InviteManager({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#162A4A] rounded-2xl p-6 max-w-sm w-full"
+              className="bg-[#162A4A] rounded-xl p-6 max-w-sm w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -429,7 +429,7 @@ export function InviteManager({
 
               {error && (
                 <div className="mb-4 p-3 bg-[#FF4081]/10 border border-[#FF4081]/30 rounded-lg">
-                  <p className="text-sm text-[#FF4081]">{error}</p>
+                  <p className="text-base text-[#FF4081]">{error}</p>
                 </div>
               )}
 
@@ -460,7 +460,7 @@ export function InviteManager({
 
               {selectedMethod === "kakao" && (
                 <div className="space-y-4">
-                  <p className="text-sm text-[#8BA4C4]">
+                  <p className="text-base text-[#8BA4C4]">
                     카카오톡 공유 창이 열리며 초대 메시지가 전송됩니다.
                   </p>
                   <Button
@@ -485,13 +485,13 @@ export function InviteManager({
                   {/* 선택된 연락처 이름 표시 */}
                   {selectedContactName && (
                     <div className="p-3 bg-[#1E3A5F] rounded-lg">
-                      <p className="text-xs text-[#4A5E7A] mb-1">선택된 연락처</p>
-                      <p className="text-sm text-white font-medium">{selectedContactName}</p>
+                      <p className="text-sm text-[#4A5E7A] mb-1">선택된 연락처</p>
+                      <p className="text-base text-white font-medium">{selectedContactName}</p>
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-[#8B949E] mb-2 tracking-wide">
+                    <label className="block text-base font-medium text-[#8B949E] mb-2 tracking-wide">
                       초대할 전화번호
                     </label>
                     <div className="flex gap-2">
@@ -515,7 +515,7 @@ export function InviteManager({
                       </Button>
                     </div>
                     {!contactPickerSupported && (
-                      <p className="text-xs text-[#4A5E7A] mt-2">
+                      <p className="text-sm text-[#4A5E7A] mt-2">
                         💡 Android Chrome에서 주소록 연동을 사용할 수 있습니다
                       </p>
                     )}
@@ -543,8 +543,8 @@ export function InviteManager({
                   {generatedLink ? (
                     <>
                       <div className="p-3 bg-[#1E3A5F] rounded-lg">
-                        <p className="text-xs text-[#4A5E7A] mb-1">생성된 초대 링크</p>
-                        <p className="text-sm text-white break-all">{generatedLink}</p>
+                        <p className="text-sm text-[#4A5E7A] mb-1">생성된 초대 링크</p>
+                        <p className="text-base text-white break-all">{generatedLink}</p>
                       </div>
                       <Button
                         className="w-full flex items-center justify-center gap-2"
@@ -575,7 +575,7 @@ export function InviteManager({
                     </>
                   ) : (
                     <>
-                      <p className="text-sm text-[#8BA4C4]">
+                      <p className="text-base text-[#8BA4C4]">
                         새로운 초대 링크를 생성합니다. 생성된 링크를 친구에게
                         공유해주세요.
                       </p>
@@ -596,7 +596,7 @@ export function InviteManager({
                 </div>
               )}
 
-              <p className="text-xs text-[#4A5E7A] text-center mt-4">
+              <p className="text-sm text-[#4A5E7A] text-center mt-4">
                 초대 횟수 무제한
               </p>
             </motion.div>

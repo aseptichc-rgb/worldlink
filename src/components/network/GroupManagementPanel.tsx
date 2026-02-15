@@ -90,13 +90,13 @@ export default function GroupManagementPanel() {
               <div className="mx-6 mb-3 px-3 py-2 rounded-xl bg-[#58A6FF]/10 border border-[#58A6FF]/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Filter size={12} className="text-[#58A6FF]" />
-                  <span className="text-xs text-[#58A6FF]">
+                  <span className="text-sm text-[#58A6FF]">
                     {groups.find(g => g.id === activeGroupFilter)?.name} 필터 적용 중
                   </span>
                 </div>
                 <button
                   onClick={() => setActiveGroupFilter(null)}
-                  className="text-xs text-[#8B949E] hover:text-white transition-colors"
+                  className="text-sm text-[#8B949E] hover:text-white transition-colors"
                 >
                   해제
                 </button>
@@ -107,11 +107,11 @@ export default function GroupManagementPanel() {
             <div className="flex-1 overflow-y-auto px-6">
               {groups.length === 0 && !showCreateForm ? (
                 <div className="text-center py-12">
-                  <div className="w-14 h-14 rounded-2xl bg-[#1C2333] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-[#1C2333] flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">🏷️</span>
                   </div>
-                  <p className="text-[#8B949E] text-sm mb-1">아직 그룹이 없습니다</p>
-                  <p className="text-[#484F58] text-xs mb-4">인맥을 그룹으로 분류해보세요</p>
+                  <p className="text-[#8B949E] text-base mb-1">아직 그룹이 없습니다</p>
+                  <p className="text-[#484F58] text-sm mb-4">인맥을 그룹으로 분류해보세요</p>
                   <button
                     onClick={() => setShowCreateForm(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#58A6FF]/10 text-[#58A6FF] text-sm font-medium hover:bg-[#58A6FF]/20 transition-colors"
@@ -134,7 +134,7 @@ export default function GroupManagementPanel() {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             maxLength={20}
-                            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#58A6FF] transition-colors"
+                            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#58A6FF] transition-colors"
                             autoFocus
                           />
                           <div className="flex flex-wrap gap-1.5">
@@ -165,14 +165,14 @@ export default function GroupManagementPanel() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => setEditingGroupId(null)}
-                              className="flex-1 py-2 rounded-lg text-xs text-[#8B949E] hover:bg-[#30363D] transition-colors"
+                              className="flex-1 py-2 rounded-lg text-sm text-[#8B949E] hover:bg-[#30363D] transition-colors"
                             >
                               취소
                             </button>
                             <button
                               onClick={handleSaveEdit}
                               disabled={!editName.trim()}
-                              className="flex-1 py-2 rounded-lg text-xs font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 transition-colors"
+                              className="flex-1 py-2 rounded-lg text-sm font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 transition-colors"
                             >
                               저장
                             </button>
@@ -200,10 +200,10 @@ export default function GroupManagementPanel() {
                           style={{ backgroundColor: group.color }}
                         />
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm text-white block truncate">{group.name}</span>
+                          <span className="text-base text-white block truncate">{group.name}</span>
                           <span className="text-[10px] text-[#484F58]">{memberCount}명</span>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -240,11 +240,11 @@ export default function GroupManagementPanel() {
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="그룹 이름"
                     maxLength={20}
-                    className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors"
+                    className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl px-4 py-2.5 text-base text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors"
                     autoFocus
                   />
                   <div>
-                    <p className="text-xs text-[#8B949E] mb-1.5">색상</p>
+                    <p className="text-sm text-[#8B949E] mb-1.5">색상</p>
                     <div className="flex flex-wrap gap-2">
                       {GROUP_COLORS.map((color) => (
                         <button
@@ -261,7 +261,7 @@ export default function GroupManagementPanel() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-[#8B949E] mb-1.5">아이콘</p>
+                    <p className="text-sm text-[#8B949E] mb-1.5">아이콘</p>
                     <div className="flex flex-wrap gap-1.5">
                       {GROUP_ICONS.map((icon) => (
                         <button

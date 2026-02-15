@@ -100,7 +100,7 @@ export function InstallPrompt() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-50 p-4 safe-area-bottom"
           >
-            <div className="mx-auto max-w-md bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10 overflow-hidden">
+            <div className="mx-auto max-w-md bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10 overflow-hidden">
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   {/* 아이콘 */}
@@ -113,7 +113,7 @@ export function InstallPrompt() {
                     <h3 className="text-white font-semibold text-base">
                       NODDED 앱 설치하기
                     </h3>
-                    <p className="text-gray-400 text-sm mt-0.5">
+                    <p className="text-gray-400 text-base mt-0.5">
                       홈 화면에 추가하면 더 빠르게 접속할 수 있어요
                     </p>
                   </div>
@@ -156,7 +156,7 @@ export function InstallPrompt() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="w-full max-w-md bg-gray-900 rounded-t-3xl overflow-hidden"
+              className="w-full max-w-md bg-gray-900 rounded-t-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 핸들 */}
@@ -182,7 +182,7 @@ export function InstallPrompt() {
                       </p>
                       <div className="mt-2 flex items-center gap-2 text-gray-400">
                         <Share className="w-5 h-5" />
-                        <span className="text-sm">공유 아이콘을 찾아주세요</span>
+                        <span className="text-base">공유 아이콘을 찾아주세요</span>
                       </div>
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export function InstallPrompt() {
                       </p>
                       <div className="mt-2 flex items-center gap-2 text-gray-400">
                         <Plus className="w-5 h-5" />
-                        <span className="text-sm">
+                        <span className="text-base">
                           스크롤해서 찾아주세요
                         </span>
                       </div>
@@ -214,7 +214,7 @@ export function InstallPrompt() {
                       <p className="text-white font-medium">
                         &quot;추가&quot; 버튼 탭하기
                       </p>
-                      <p className="text-gray-400 text-sm mt-1">
+                      <p className="text-gray-400 text-base mt-1">
                         홈 화면에서 바로 NODDED를 실행할 수 있어요
                       </p>
                     </div>

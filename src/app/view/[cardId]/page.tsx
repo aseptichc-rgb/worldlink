@@ -350,7 +350,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]"
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1C2333] to-[#161B22] border border-[#30363D]"
         >
           {/* 배경 장식 */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#58A6FF]/10 to-transparent rounded-full blur-3xl" />
@@ -370,13 +370,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 {card.position && (
                   <div className="flex items-center gap-2 text-[#8B949E] mb-1">
                     <Briefcase size={14} />
-                    <span className="text-sm">{card.position}</span>
+                    <span className="text-base">{card.position}</span>
                   </div>
                 )}
                 {card.company && (
                   <div className="flex items-center gap-2 text-[#8B949E]">
                     <Building2 size={14} />
-                    <span className="text-sm">{card.company}</span>
+                    <span className="text-base">{card.company}</span>
                   </div>
                 )}
               </div>
@@ -384,17 +384,17 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
 
             {/* 연락처 정보 */}
             {(card.email || card.phone) && (
-              <div className="space-y-2 mb-6 p-4 rounded-xl bg-[#161B22]/50">
+              <div className="space-y-2 mb-6 p-4 rounded-lg bg-[#161B22]/50">
                 {card.email && (
                   <div className="flex items-center gap-3">
                     <Mail size={16} className="text-[#58A6FF]" />
-                    <span className="text-sm text-white">{card.email}</span>
+                    <span className="text-base text-white">{card.email}</span>
                   </div>
                 )}
                 {card.phone && (
                   <div className="flex items-center gap-3">
                     <Phone size={16} className="text-[#58A6FF]" />
-                    <span className="text-sm text-white">{card.phone}</span>
+                    <span className="text-base text-white">{card.phone}</span>
                   </div>
                 )}
               </div>
@@ -402,7 +402,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
 
             {/* 소개 */}
             {card.bio && (
-              <p className="text-sm text-[#8B949E] mb-6 leading-relaxed">
+              <p className="text-base text-[#8B949E] mb-6 leading-relaxed">
                 {card.bio}
               </p>
             )}
@@ -413,7 +413,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 {card.keywords.slice(0, 6).map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 text-xs font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
+                    className="px-3 py-1 text-sm font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
                   >
                     {keyword}
                   </span>
@@ -435,15 +435,15 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 <Smartphone size={20} className="text-[#1F6FEB]" />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-white mb-1">
+                <h3 className="text-base font-semibold text-white mb-1">
                   앱으로 저장하기
                 </h3>
                 {isIos ? (
                   <div className="space-y-2">
-                    <p className="text-xs text-[#8B949E]">
+                    <p className="text-sm text-[#8B949E]">
                       Safari에서 아래 단계를 따라주세요:
                     </p>
-                    <div className="space-y-1.5 text-xs text-[#8B949E]">
+                    <div className="space-y-1.5 text-sm text-[#8B949E]">
                       <p>1. 하단 <span className="text-white font-medium">공유 버튼</span> (□↑) 탭</p>
                       <p>2. <span className="text-white font-medium">&quot;홈 화면에 추가&quot;</span> 선택</p>
                       <p>3. <span className="text-white font-medium">&quot;추가&quot;</span> 탭</p>
@@ -451,12 +451,12 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                   </div>
                 ) : (
                   <>
-                    <p className="text-xs text-[#8B949E] mb-3">
+                    <p className="text-sm text-[#8B949E] mb-3">
                       홈 화면에 추가하면 언제든 명함을 확인할 수 있어요
                     </p>
                     <button
                       onClick={handleInstallPwa}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#1F6FEB] text-white text-sm font-medium rounded-lg"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#1F6FEB] text-white text-base font-medium rounded-lg"
                     >
                       <Download size={16} />
                       홈 화면에 추가
@@ -480,8 +480,8 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 <UserPlus size={20} className="text-[#3FB950]" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#3FB950]">명함이 저장되었습니다!</p>
-                <p className="text-xs text-[#8B949E]">내 명함첩에서 확인할 수 있어요</p>
+                <p className="text-base font-medium text-[#3FB950]">명함이 저장되었습니다!</p>
+                <p className="text-sm text-[#8B949E]">내 명함첩에서 확인할 수 있어요</p>
               </div>
             </div>
           </motion.div>
@@ -511,7 +511,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
             </motion.button>
           )}
         </div>
-        <p className="text-center text-xs text-[#8B949E] mt-3">
+        <p className="text-center text-sm text-[#8B949E] mt-3">
           {!isAuthenticated && '메시지를 보내려면 가입이 필요해요'}
         </p>
       </div>
@@ -532,7 +532,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#1C2333] rounded-t-3xl border-t border-[#30363D] p-6"
+              className="w-full bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] p-6"
             >
               <button
                 onClick={() => setShowAuthModal(false)}
@@ -550,7 +550,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {authAction === 'message' ? '메시지를 보내시겠어요?' : '명함을 저장하시겠어요?'}
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-base text-[#8B949E]">
                   {authAction === 'message'
                     ? '메시지를 보내려면 간단한 가입이 필요해요'
                     : '내 명함을 만들고 네트워크를 확장해보세요'}
@@ -592,7 +592,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#1C2333] rounded-t-3xl border-t border-[#30363D] p-6"
+              className="w-full bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] p-6"
             >
               <button
                 onClick={() => setShowPwaPrompt(false)}
@@ -610,14 +610,14 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 <h3 className="text-xl font-semibold text-white mb-2">
                   홈 화면에 추가하시겠어요?
                 </h3>
-                <p className="text-sm text-[#8B949E]">
+                <p className="text-base text-[#8B949E]">
                   앱처럼 사용하고 언제든 {card.name}님의 명함을 확인하세요
                 </p>
               </div>
 
               <div className="space-y-3">
                 {isIos ? (
-                  <div className="p-4 rounded-xl bg-[#161B22] space-y-3 text-sm text-[#8B949E]">
+                  <div className="p-4 rounded-lg bg-[#161B22] space-y-3 text-base text-[#8B949E]">
                     <p>1. Safari 하단의 <span className="text-white font-medium">공유 버튼</span> (□↑)을 탭하세요</p>
                     <p>2. 메뉴에서 <span className="text-white font-medium">&quot;홈 화면에 추가&quot;</span>를 선택하세요</p>
                     <p>3. 우측 상단 <span className="text-white font-medium">&quot;추가&quot;</span>를 탭하세요</p>

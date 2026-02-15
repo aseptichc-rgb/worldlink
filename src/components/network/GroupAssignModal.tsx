@@ -76,14 +76,14 @@ export default function GroupAssignModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-sm bg-[rgba(22,27,34,0.95)] backdrop-blur-xl border border-[rgba(240,246,252,0.1)] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.4)] overflow-hidden"
+            className="relative w-full max-w-sm bg-[rgba(22,27,34,0.95)] backdrop-blur-xl border border-[rgba(240,246,252,0.1)] rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.4)] overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(240,246,252,0.1)]">
               <div>
                 <h2 className="text-lg font-semibold text-[#F0F6FC]">그룹 지정</h2>
                 {targetNode && (
-                  <p className="text-xs text-[#8B949E] mt-0.5">{targetNode.name}</p>
+                  <p className="text-sm text-[#8B949E] mt-0.5">{targetNode.name}</p>
                 )}
               </div>
               <button
@@ -98,7 +98,7 @@ export default function GroupAssignModal() {
             <div className="px-6 py-4 max-h-[300px] overflow-y-auto">
               {groups.length === 0 && !showCreateForm ? (
                 <div className="text-center py-6">
-                  <p className="text-[#484F58] text-sm mb-3">아직 그룹이 없습니다</p>
+                  <p className="text-[#484F58] text-base mb-3">아직 그룹이 없습니다</p>
                   <button
                     onClick={() => setShowCreateForm(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#58A6FF]/10 text-[#58A6FF] text-sm font-medium hover:bg-[#58A6FF]/20 transition-colors"
@@ -128,7 +128,7 @@ export default function GroupAssignModal() {
                           className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: group.color }}
                         />
-                        <span className="flex-1 text-left text-sm text-white">{group.name}</span>
+                        <span className="flex-1 text-left text-base text-white">{group.name}</span>
                         {isInGroup && (
                           <Check size={16} className="text-[#58A6FF] flex-shrink-0" />
                         )}
@@ -148,12 +148,12 @@ export default function GroupAssignModal() {
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="그룹 이름 입력"
                   maxLength={20}
-                  className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors mb-3"
+                  className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl px-4 py-2.5 text-base text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors mb-3"
                   autoFocus
                 />
 
                 {/* Color Picker */}
-                <p className="text-xs text-[#8B949E] mb-2">색상</p>
+                <p className="text-sm text-[#8B949E] mb-2">색상</p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {GROUP_COLORS.map((color) => (
                     <button
@@ -170,7 +170,7 @@ export default function GroupAssignModal() {
                 </div>
 
                 {/* Icon Picker */}
-                <p className="text-xs text-[#8B949E] mb-2">아이콘</p>
+                <p className="text-sm text-[#8B949E] mb-2">아이콘</p>
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {GROUP_ICONS.map((icon) => (
                     <button
