@@ -21,12 +21,15 @@ import {
   Hash,
   Send,
   Loader2,
+  FolderOpen,
+  Plus,
 } from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
 import { useNetworkStore } from '@/store/networkStore';
 import { useCoffeeChatStore } from '@/store/coffeeChatStore';
 import { useConnectionRequestStore } from '@/store/connectionRequestStore';
 import { useMemoStore } from '@/store/memoStore';
+import { useGroupStore } from '@/store/groupStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
@@ -39,6 +42,7 @@ export default function ProfileSheet() {
   const { openRequestModal } = useCoffeeChatStore();
   const { openRequestModal: openConnectionRequestModal } = useConnectionRequestStore();
   const { getMemo, setMemo, deleteMemo } = useMemoStore();
+  const { getGroupsForNode, removeNodeFromGroup, openGroupAssignModal } = useGroupStore();
   const { user: currentUser } = useAuthStore();
   const { addMessage } = useMessageStore();
 
@@ -511,6 +515,62 @@ export default function ProfileSheet() {
                           );
                         })}
                       </div>
+                    </section>
+                  )}
+
+                  {/* Groups Section */}
+                  {selectedNode.degree !== 0 && (
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="flex items-center gap-2 text-xs font-semibold text-[#8B949E] uppercase tracking-wider">
+                          <FolderOpen size={12} />
+                          그룹
+                        </h3>
+                        <button
+                          onClick={() => openGroupAssignModal(selectedNode.id)}
+                          className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
+                        >
+                          <Plus size={12} className="text-[#8B949E]" />
+                        </button>
+                      </div>
+
+                      {(() => {
+                        const nodeGroups = getGroupsForNode(selectedNode.id);
+                        return nodeGroups.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {nodeGroups.map((group) => (
+                              <span
+                                key={group.id}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1C2333] border border-[#30363D]"
+                                style={{ borderColor: group.color + '60' }}
+                              >
+                                <span>{group.icon}</span>
+                                <span style={{ color: group.color }}>{group.name}</span>
+                                <button
+                                  onClick={() => removeNodeFromGroup(selectedNode.id, group.id)}
+                                  className="ml-0.5 hover:text-[#F85149] transition-colors"
+                                >
+                                  <X size={10} className="text-[#484F58]" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => openGroupAssignModal(selectedNode.id)}
+                            className="w-full info-card border-2 border-dashed border-[#30363D] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
+                          >
+                            <div className="flex items-center gap-3 py-1">
+                              <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                                <FolderOpen size={14} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
+                              </div>
+                              <span className="text-sm text-[#484F58] group-hover:text-[#8B949E] transition-colors">
+                                그룹에 추가하기
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })()}
                     </section>
                   )}
 

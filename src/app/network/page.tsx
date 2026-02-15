@@ -3,17 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users, FolderOpen } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
 import CoffeeChatModal from '@/components/coffee-chat/CoffeeChatModal';
 import ConnectionRequestModal from '@/components/connection/ConnectionRequestModal';
 import RecommendationCard from '@/components/coffee-chat/RecommendationCard';
+import GroupManagementPanel from '@/components/network/GroupManagementPanel';
+import GroupFilterBar from '@/components/network/GroupFilterBar';
+import GroupAssignModal from '@/components/network/GroupAssignModal';
 import { Avatar, Button } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
+import { useGroupStore } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
@@ -24,6 +28,7 @@ export default function NetworkPage() {
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading, logout } = useAuthStore();
   const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, setCenterUserId } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
+  const { groups, toggleGroupPanel } = useGroupStore();
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
@@ -242,6 +247,15 @@ export default function NetworkPage() {
         </div>
       </div>
 
+      {/* Group Filter Bar */}
+      {groups.length > 0 && (
+        <div className="fixed top-[88px] left-0 right-0 z-25 px-5">
+          <div className="bg-[#161B22]/60 backdrop-blur-xl rounded-xl px-3 py-1.5">
+            <GroupFilterBar />
+          </div>
+        </div>
+      )}
+
       {/* Recommendations Panel - ProfileSheet보다 낮은 z-index */}
       <motion.div
         initial={false}
@@ -378,6 +392,19 @@ export default function NetworkPage() {
                 <span>메세지</span>
               </button>
               <button
+                onClick={() => {
+                  setShowMenu(false);
+                  toggleGroupPanel();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#8B949E] hover:bg-[#1C2333] hover:text-white transition-colors"
+              >
+                <FolderOpen size={20} />
+                <span>그룹 관리</span>
+                {groups.length > 0 && (
+                  <span className="ml-auto text-xs text-[#484F58]">{groups.length}</span>
+                )}
+              </button>
+              <button
                 onClick={async () => {
                   setShowMenu(false);
                   try {
@@ -416,6 +443,12 @@ export default function NetworkPage() {
 
       {/* Connection Request Modal */}
       <ConnectionRequestModal />
+
+      {/* Group Management Panel */}
+      <GroupManagementPanel />
+
+      {/* Group Assign Modal */}
+      <GroupAssignModal />
 
       {/* Loading Overlay */}
       {networkLoading && (

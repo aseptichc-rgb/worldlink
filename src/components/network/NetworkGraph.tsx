@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkStore } from '@/store/networkStore';
-import { NetworkNode } from '@/types';
+import { useGroupStore } from '@/store/groupStore';
+import { NetworkNode, NodeGroup } from '@/types';
 import { Plus, Minus, Maximize2, RotateCcw, Home } from 'lucide-react';
 
 interface GraphNode extends NetworkNode {
@@ -153,6 +154,14 @@ export default function NetworkGraph() {
     setCenterUserId,
     centerUserId,
   } = useNetworkStore();
+
+  const {
+    groups: allGroups,
+    memberships: allMemberships,
+    activeGroupFilter,
+    getGroupsForNode,
+    getNodesInGroup,
+  } = useGroupStore();
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -867,6 +876,52 @@ export default function NetworkGraph() {
     }
   }, [getNodeSize, transform.scale, labelOverlapsNode]);
 
+  // 그룹 배지 그리기 (노드 주변에 소속 그룹 색상 점 표시)
+  const drawGroupBadges = useCallback((
+    ctx: CanvasRenderingContext2D,
+    node: GraphNode,
+    nodeGroups: NodeGroup[],
+    radius: number
+  ) => {
+    if (nodeGroups.length === 0 || transform.scale < PROFILE_IMAGE_ZOOM_THRESHOLD) return;
+
+    const x = node.x || 0;
+    const y = node.y || 0;
+    const badgeSize = 4.5;
+    const maxBadges = Math.min(nodeGroups.length, 4);
+
+    for (let i = 0; i < maxBadges; i++) {
+      const angle = -Math.PI * 0.75 + (i / Math.max(maxBadges - 1, 1)) * (Math.PI * 0.5);
+      const badgeX = x + Math.cos(angle) * (radius + 9);
+      const badgeY = y + Math.sin(angle) * (radius + 9);
+
+      // 배지 외곽 글로우
+      ctx.beginPath();
+      ctx.arc(badgeX, badgeY, badgeSize + 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#0D1117';
+      ctx.fill();
+
+      // 배지 본체
+      ctx.beginPath();
+      ctx.arc(badgeX, badgeY, badgeSize, 0, Math.PI * 2);
+      ctx.fillStyle = nodeGroups[i].color;
+      ctx.fill();
+    }
+
+    // 4개 초과 시 "+N" 표시
+    if (nodeGroups.length > 4) {
+      const lastAngle = -Math.PI * 0.75 + (Math.PI * 0.5) + 0.3;
+      const extraX = x + Math.cos(lastAngle) * (radius + 9);
+      const extraY = y + Math.sin(lastAngle) * (radius + 9);
+
+      ctx.font = 'bold 8px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#8B949E';
+      ctx.fillText(`+${nodeGroups.length - 4}`, extraX, extraY);
+    }
+  }, [transform.scale]);
+
   // Render
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -903,6 +958,11 @@ export default function NetworkGraph() {
         }
       }
     }
+
+    // 그룹 필터: 활성화 시 해당 그룹 소속 노드 ID 셋
+    const filteredGroupNodeIds = activeGroupFilter
+      ? new Set(getNodesInGroup(activeGroupFilter))
+      : null;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -1185,7 +1245,8 @@ export default function NetworkGraph() {
 
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
-      const isDimmed = !!(highlightedKeyword && !isHighlighted);
+      const isGroupDimmed = !!(filteredGroupNodeIds && node.degree !== 0 && !filteredGroupNodeIds.has(node.id));
+      const isDimmed = !!(highlightedKeyword && !isHighlighted) || isGroupDimmed;
 
       // 새로 나타나는 노드: 페이드인
       const isNewNode = isTransitioning && !transition.prevPositions.has(node.id);
@@ -1216,29 +1277,39 @@ export default function NetworkGraph() {
         const isFocused = focusedNodeId === node.id;
         const isHovered = hoveredNode?.id === node.id;
 
+        const isGroupDimmedConn = !!(filteredGroupNodeIds && node.degree !== 0 && !filteredGroupNodeIds.has(node.id));
         drawNode(ctx, node, {
           isHovered,
-          isFocused,
-          isConnected: true,
-          isDimmed: false,
+          isFocused: isGroupDimmedConn ? false : isFocused,
+          isConnected: isGroupDimmedConn ? false : true,
+          isDimmed: isGroupDimmedConn,
           isHighlighted: false,
-          isMutual: mutualNodeIds.has(node.id),
+          isMutual: isGroupDimmedConn ? false : mutualNodeIds.has(node.id),
         });
       }
     }
 
     // ===== Draw Labels (separate pass - always on top of all nodes) =====
     for (const node of nodes) {
-      const isConnectedToFocused = connectedNodeIds.has(node.id);
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
-      const isDimmed = !!(highlightedKeyword && !isHighlighted);
+      const isGroupDimmedLabel = !!(filteredGroupNodeIds && node.degree !== 0 && !filteredGroupNodeIds.has(node.id));
+      const isDimmed = !!(highlightedKeyword && !isHighlighted) || isGroupDimmedLabel;
       const isFocused = focusedNodeId === node.id;
 
       drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes, isMutual: mutualNodeIds.has(node.id) });
+
+      // 그룹 배지 그리기
+      if (!isDimmed && node.degree !== 0) {
+        const nodeGroups = getGroupsForNode(node.id);
+        if (nodeGroups.length > 0) {
+          const radius = getNodeSize(node, hoveredNode?.id === node.id, isFocused);
+          drawGroupBadges(ctx, node, nodeGroups, radius);
+        }
+      }
     }
 
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, dimensions.width, dimensions.height]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, drawGroupBadges, getGroupsForNode, getNodeSize, activeGroupFilter, getNodesInGroup, allMemberships, allGroups, dimensions.width, dimensions.height]);
 
   // Smooth animation to target transform
   useEffect(() => {

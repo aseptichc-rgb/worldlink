@@ -154,6 +154,22 @@ export interface NetworkEdge {
   degree: number;
 }
 
+// Custom Group Types (사용자 정의 그룹)
+export interface NodeGroup {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GroupMembership {
+  groupId: string;
+  nodeId: string;
+  addedAt: Date;
+}
+
 export interface NetworkGraph {
   nodes: NetworkNode[];
   edges: NetworkEdge[];
