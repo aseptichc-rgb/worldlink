@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Building2,
   User as UserIcon,
+  Mail,
   Check,
 } from 'lucide-react';
 import { Avatar, Input, Tag, Card } from '@/components/ui';
@@ -414,6 +415,7 @@ export default function ProfilePage() {
                             nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                             companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
                             positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
+                            emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                           },
                           updatedAt: new Date(),
                         };
@@ -471,6 +473,7 @@ export default function ProfilePage() {
                                     nameDisplay: option.value as 'full' | 'partial',
                                     companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
                                     positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
+                                    emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                                   },
                                   updatedAt: new Date(),
                                 };
@@ -519,6 +522,7 @@ export default function ProfilePage() {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                                     companyDisplay: option.value as 'full' | 'industry' | 'size' | 'hidden',
                                     positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
+                                    emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                                   },
                                   updatedAt: new Date(),
                                 };
@@ -566,6 +570,7 @@ export default function ProfilePage() {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                                     companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
                                     positionDisplay: option.value as 'full' | 'level' | 'hidden',
+                                    emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                                   },
                                   updatedAt: new Date(),
                                 };
@@ -589,6 +594,54 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
+                    {/* 이메일 표시 설정 */}
+                    <div className="p-5 bg-[#161B22] border border-[#30363D] rounded-lg">
+                      <div className="flex items-center gap-2.5 mb-4">
+                        <Mail size={16} className="text-[#1F6FEB]" />
+                        <h4 className="text-white font-medium text-base">이메일 표시</h4>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { value: 'full', label: '전체 공개', example: user.email || 'email@example.com' },
+                          { value: 'partial', label: '부분 공개', example: user.email ? `${user.email.slice(0, 2)}***@${user.email.split('@')[1]}` : 'em***@example.com' },
+                          { value: 'hidden', label: '비공개', example: '표시 안 함' },
+                        ].map((option) => {
+                          const isSelected = (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') === option.value;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={async () => {
+                                const newSettings = {
+                                  allowProfileDiscovery: user.privacySettings?.allowProfileDiscovery ?? false,
+                                  displaySettings: {
+                                    nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
+                                    companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                                    positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
+                                    emailDisplay: option.value as 'full' | 'partial' | 'hidden',
+                                  },
+                                  updatedAt: new Date(),
+                                };
+                                await updateUser(user.id, { privacySettings: newSettings });
+                                const updatedUser = { ...user, privacySettings: newSettings };
+                                setUser(updatedUser);
+                                setEditedUser(updatedUser);
+                              }}
+                              className={`
+                                p-4 rounded-lg border transition-all text-left
+                                ${isSelected
+                                  ? 'bg-[#58A6FF]/10 border-[#58A6FF] text-[#58A6FF]'
+                                  : 'bg-[#1C2333] border-[#30363D] text-[#8B949E] hover:border-[#484F58]'}
+                              `}
+                            >
+                              <span className="text-sm font-medium block">{option.label}</span>
+                              <span className="text-xs opacity-70 mt-1 block truncate">{option.example}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* 미리보기 */}
                     <div className="p-5 bg-[#1C2333] border border-[#30363D] rounded-xl">
                       <h4 className="text-[#8B949E] text-sm font-medium mb-4 flex items-center gap-2">
@@ -599,7 +652,7 @@ export default function ProfilePage() {
                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] flex items-center justify-center text-white font-bold text-base">
                           {user.name?.[0] || '?'}
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="text-white font-medium text-base">
                             {user.privacySettings?.displaySettings?.nameDisplay === 'partial'
                               ? `${user.name?.[0] || '?'}*님`
@@ -634,6 +687,21 @@ export default function ProfilePage() {
                               return parts.length > 0 ? parts.join(' · ') : '비공개';
                             })()}
                           </p>
+                          {/* 이메일 미리보기 */}
+                          {user.privacySettings?.displaySettings?.emailDisplay !== 'hidden' && (
+                            <p className="text-[#58A6FF] text-sm mt-1 truncate">
+                              {(() => {
+                                const ds = user.privacySettings?.displaySettings;
+                                if (ds?.emailDisplay === 'full') {
+                                  return user.email || 'email@example.com';
+                                } else if (ds?.emailDisplay === 'partial' && user.email) {
+                                  const [local, domain] = user.email.split('@');
+                                  return `${local.slice(0, 2)}***@${domain}`;
+                                }
+                                return '';
+                              })()}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

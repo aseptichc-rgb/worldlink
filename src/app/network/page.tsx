@@ -13,6 +13,9 @@ import RecommendationCard from '@/components/coffee-chat/RecommendationCard';
 import GroupManagementPanel from '@/components/network/GroupManagementPanel';
 import GroupFilterBar from '@/components/network/GroupFilterBar';
 import GroupAssignModal from '@/components/network/GroupAssignModal';
+import GroupDetailPanel from '@/components/network/GroupDetailPanel';
+import AddMembersToGroupModal from '@/components/network/AddMembersToGroupModal';
+import GroupInviteModal from '@/components/network/GroupInviteModal';
 import { Avatar, Button } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { useAuthStore } from '@/store/authStore';
@@ -449,6 +452,15 @@ export default function NetworkPage() {
 
       {/* Group Assign Modal */}
       <GroupAssignModal />
+
+      {/* Group Detail Panel */}
+      <GroupDetailPanel />
+
+      {/* Add Members to Group Modal */}
+      <AddMembersToGroupModal />
+
+      {/* Group Invite Modal */}
+      <GroupInviteModal />
 
       {/* Loading Overlay */}
       {networkLoading && (

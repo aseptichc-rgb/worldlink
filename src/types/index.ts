@@ -10,6 +10,8 @@ export interface PrivacySettings {
     companyDisplay: 'full' | 'industry' | 'size' | 'hidden';
     // 직책 표시 방식: 'full' = 전체, 'level' = 직급 수준 (예: 실무자급, 관리자급)
     positionDisplay: 'full' | 'level' | 'hidden';
+    // 이메일 표시 방식: 'full' = 전체 공개, 'partial' = 부분 공개 (예: u***@example.com), 'hidden' = 비공개
+    emailDisplay?: 'full' | 'partial' | 'hidden';
   };
   // 동의 일시
   consentedAt?: Date;
@@ -168,6 +170,14 @@ export interface GroupMembership {
   groupId: string;
   nodeId: string;
   addedAt: Date;
+}
+
+// 그룹 내 연결 (그룹 멤버들 간의 자동 연결)
+export interface GroupConnection {
+  groupId: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  createdAt: Date;
 }
 
 export interface NetworkGraph {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Pencil, Trash2, Check, Filter } from 'lucide-react';
+import { X, Plus, Pencil, Trash2, Check, Filter, ChevronRight, Users } from 'lucide-react';
 import { useGroupStore, GROUP_COLORS, GROUP_ICONS } from '@/store/groupStore';
 
 export default function GroupManagementPanel() {
@@ -17,6 +17,7 @@ export default function GroupManagementPanel() {
     updateGroup,
     deleteGroup,
     getNodesInGroup,
+    openGroupDetailPanel,
   } = useGroupStore();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -189,10 +190,7 @@ export default function GroupManagementPanel() {
                             ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
                             : 'hover:bg-[#1C2333] border border-transparent'
                         }`}
-                        onClick={() => {
-                          setActiveGroupFilter(isActive ? null : group.id);
-                          setGroupPanelOpen(false);
-                        }}
+                        onClick={() => openGroupDetailPanel(group.id)}
                       >
                         <span className="text-lg flex-shrink-0">{group.icon}</span>
                         <div
@@ -201,27 +199,35 @@ export default function GroupManagementPanel() {
                         />
                         <div className="flex-1 min-w-0">
                           <span className="text-base text-white block truncate">{group.name}</span>
-                          <span className="text-[10px] text-[#484F58]">{memberCount}명</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-[#484F58]">
+                              <Users size={10} className="inline mr-0.5" />
+                              {memberCount}명
+                            </span>
+                            {isActive && (
+                              <span className="text-[10px] text-[#58A6FF] flex items-center gap-0.5">
+                                <Filter size={8} />
+                                필터 적용 중
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              startEdit(group);
+                              setActiveGroupFilter(isActive ? null : group.id);
                             }}
-                            className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              isActive
+                                ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
+                                : 'hover:bg-[#30363D] text-[#8B949E]'
+                            }`}
+                            title={isActive ? '필터 해제' : '이 그룹만 보기'}
                           >
-                            <Pencil size={12} className="text-[#8B949E]" />
+                            <Filter size={12} />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(group.id);
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
-                          >
-                            <Trash2 size={12} className="text-[#F85149]" />
-                          </button>
+                          <ChevronRight size={14} className="text-[#484F58]" />
                         </div>
                       </div>
                     );
