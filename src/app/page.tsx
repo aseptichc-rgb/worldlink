@@ -8,14 +8,14 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function Home() {
   const router = useRouter();
-  const { setUser, setLoading, isAuthenticated } = useAuthStore();
+  const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
         setUser(userData);
-        router.push('/card');
+        router.push('/network');
       } else {
         setUser(null);
         // Redirect to login immediately

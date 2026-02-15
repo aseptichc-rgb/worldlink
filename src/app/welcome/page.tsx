@@ -355,7 +355,7 @@ function WelcomeContent() {
   };
 
   const handleSkipToEnd = async () => {
-    router.push('/card');
+    router.push('/network');
   };
 
   if (!user) {

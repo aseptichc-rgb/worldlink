@@ -62,7 +62,7 @@ function LoginContent() {
         }
 
         setUser(userData);
-        router.push('/card');
+        router.push('/network');
       } else {
         setError('사용자 정보를 찾을 수 없습니다');
       }
@@ -99,11 +99,11 @@ function LoginContent() {
       updatedAt: new Date(),
     };
     setUser(demoUser);
-    router.push('/card');
+    router.push('/network');
   };
 
   return (
-    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-8 py-10 relative overflow-hidden">
       {/* Background Effects */}
       <div className="stars-bg" />
 
@@ -139,9 +139,9 @@ function LoginContent() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="w-full max-w-[400px]"
       >
-        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl p-8">
+        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-2xl px-10 py-10">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
             <h2 className="text-xl font-bold text-white tracking-tight">
               다시 만나서 반갑습니다
             </h2>
@@ -151,7 +151,7 @@ function LoginContent() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               type="email"
               label="이메일"
@@ -194,7 +194,7 @@ function LoginContent() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
+          <div className="flex items-center gap-4 my-8">
             <div className="flex-1 h-px bg-[#30363D]" />
             <span className="text-[#484F58] text-xs">또는</span>
             <div className="flex-1 h-px bg-[#30363D]" />
@@ -210,7 +210,7 @@ function LoginContent() {
           </button>
 
           {/* Sign Up Link */}
-          <div className="text-center mt-4">
+          <div className="text-center mt-6">
             <p className="text-[#484F58] text-sm">
               아직 계정이 없으신가요?
             </p>

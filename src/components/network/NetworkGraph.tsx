@@ -80,6 +80,23 @@ const FONT_SIZES = {
   tertiary: 13,
 };
 
+// 트랜지션 이징 함수
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+// 트랜지션 상태 타입
+interface TransitionState {
+  isActive: boolean;
+  startTime: number;
+  duration: number;
+  prevPositions: Map<string, { x: number; y: number }>;
+  targetPositions: Map<string, { x: number; y: number }>;
+  fadingNodes: GraphNode[];
+  centerX: number;
+  centerY: number;
+}
+
 // 프로필 이미지 캐시
 const imageCache = new Map<string, HTMLImageElement>();
 const imageLoadingSet = new Set<string>();
@@ -115,6 +132,16 @@ export default function NetworkGraph() {
   const edgesRef = useRef<GraphEdge[]>([]);
   const edgeAnimationRef = useRef<number>(0);
   const categoryAnglesRef = useRef<Map<string, { start: number; end: number; nodes: NetworkNode[] }>>(new Map());
+  const transitionRef = useRef<TransitionState>({
+    isActive: false,
+    startTime: 0,
+    duration: 800,
+    prevPositions: new Map(),
+    targetPositions: new Map(),
+    fadingNodes: [],
+    centerX: 0,
+    centerY: 0,
+  });
 
   const {
     nodes,
@@ -156,12 +183,12 @@ export default function NetworkGraph() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // centerUserId 변경 시 뷰 리셋 (새 그래프가 중앙에 보이도록)
+  // centerUserId 변경 시 뷰를 부드럽게 전환
   const prevCenterRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     if (prevCenterRef.current !== undefined && prevCenterRef.current !== centerUserId) {
-      setTransform({ x: 0, y: 0, scale: 1 });
-      setTargetTransform(null);
+      // 부드럽게 뷰 리셋 (instant 대신 smooth transition)
+      setTargetTransform({ x: 0, y: 0, scale: 1 });
       setExpandedNodeIds(new Set());
     }
     prevCenterRef.current = centerUserId;
@@ -184,6 +211,16 @@ export default function NetworkGraph() {
   // Initialize nodes with fixed positions (category-based clustering)
   useEffect(() => {
     if (nodes.length === 0 || dimensions.width === 0) return;
+
+    // 트랜지션을 위해 이전 노드 위치 저장
+    const prevPositions = new Map<string, { x: number; y: number }>();
+    const prevNodesCopy: GraphNode[] = [];
+    for (const node of nodesRef.current) {
+      if (node.x != null && node.y != null) {
+        prevPositions.set(node.id, { x: node.x, y: node.y });
+        prevNodesCopy.push({ ...node });
+      }
+    }
 
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
@@ -295,6 +332,54 @@ export default function NetworkGraph() {
       source: edge.source,
       target: edge.target,
     }));
+
+    // 트랜지션 애니메이션 설정: 이전 위치가 있으면 부드럽게 이동
+    if (prevPositions.size > 0 && nodesRef.current.length > 0) {
+      const targetPositions = new Map<string, { x: number; y: number }>();
+      const fadingNodes: GraphNode[] = [];
+
+      // 새 노드들의 최종 목표 위치 저장
+      nodesRef.current.forEach(node => {
+        if (node.x != null && node.y != null) {
+          targetPositions.set(node.id, { x: node.x, y: node.y });
+        }
+      });
+
+      // 사라지는 노드 찾기 (이전에 있었지만 새 데이터에 없는 노드)
+      for (const prevNode of prevNodesCopy) {
+        if (!nodesRef.current.find(n => n.id === prevNode.id)) {
+          fadingNodes.push(prevNode);
+        }
+      }
+
+      // 노드들을 이전 위치에서 시작하도록 설정
+      nodesRef.current.forEach(node => {
+        const prev = prevPositions.get(node.id);
+        if (prev) {
+          node.x = prev.x;
+          node.y = prev.y;
+          node.fx = prev.x;
+          node.fy = prev.y;
+        } else {
+          // 새로 나타나는 노드: 중앙에서 시작
+          node.x = centerX;
+          node.y = centerY;
+          node.fx = centerX;
+          node.fy = centerY;
+        }
+      });
+
+      transitionRef.current = {
+        isActive: true,
+        startTime: performance.now(),
+        duration: 800,
+        prevPositions,
+        targetPositions,
+        fadingNodes,
+        centerX,
+        centerY,
+      };
+    }
   }, [nodes, edges, dimensions]);
 
   // 충돌 해소 함수: 모든 노드가 서로 겹치지 않도록 위치 조정
@@ -831,6 +916,111 @@ export default function NetworkGraph() {
     const isDetailView = transform.scale >= ZOOM_DETAIL_THRESHOLD;
 
     // ===================================================================
+    // ===== 트랜지션 시각 효과 (노드 전환 시 리플 + 트레일 + 고스트) =====
+    // ===================================================================
+    const transition = transitionRef.current;
+    if (transition.isActive) {
+      const elapsed = performance.now() - transition.startTime;
+      const rawProgress = Math.min(1, elapsed / transition.duration);
+      const eased = easeOutCubic(rawProgress);
+
+      // 1. 리플 웨이브 - 중앙에서 바깥으로 퍼지는 원형 파동 (2겹)
+      for (let i = 0; i < 2; i++) {
+        const rippleDelay = i * 0.15;
+        const rippleT = Math.max(0, Math.min(1, (rawProgress - rippleDelay) / (1 - rippleDelay)));
+        if (rippleT <= 0) continue;
+
+        const rippleMaxRadius = 700;
+        const rippleRadius = rippleMaxRadius * rippleT;
+        const rippleOpacity = Math.max(0, 0.25 * (1 - rippleT));
+        const ringWidth = 40 - 20 * rippleT;
+
+        const rippleGrad = ctx.createRadialGradient(
+          centerX, centerY, Math.max(0, rippleRadius - ringWidth),
+          centerX, centerY, rippleRadius
+        );
+        rippleGrad.addColorStop(0, 'transparent');
+        rippleGrad.addColorStop(0.4, `rgba(88, 166, 255, ${rippleOpacity})`);
+        rippleGrad.addColorStop(0.6, `rgba(88, 166, 255, ${rippleOpacity * 0.6})`);
+        rippleGrad.addColorStop(1, 'transparent');
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = rippleGrad;
+        ctx.fill();
+      }
+
+      // 2. 트레일 라인 - 이전 위치에서 현재 위치까지 잔상 선
+      const trailOpacity = Math.max(0, 0.35 * (1 - eased));
+      if (trailOpacity > 0.01) {
+        for (const node of nodes) {
+          const prev = transition.prevPositions.get(node.id);
+          if (prev && node.x != null && node.y != null) {
+            const dx = node.x - prev.x;
+            const dy = node.y - prev.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 15) {
+              const category = node.category || '기타';
+              const catColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+              const cr = parseInt(catColor.slice(1, 3), 16);
+              const cg = parseInt(catColor.slice(3, 5), 16);
+              const cb = parseInt(catColor.slice(5, 7), 16);
+
+              // 그라디언트 트레일 (이전 위치는 투명, 현재 위치 근처는 색상)
+              const grad = ctx.createLinearGradient(prev.x, prev.y, node.x, node.y);
+              grad.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0)`);
+              grad.addColorStop(0.6, `rgba(${cr}, ${cg}, ${cb}, ${trailOpacity * 0.5})`);
+              grad.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, ${trailOpacity})`);
+
+              ctx.beginPath();
+              ctx.moveTo(prev.x, prev.y);
+              ctx.lineTo(node.x, node.y);
+              ctx.strokeStyle = grad;
+              ctx.lineWidth = 2;
+              ctx.setLineDash([6, 4]);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+          }
+        }
+      }
+
+      // 3. 사라지는 고스트 노드 (이전에 있었지만 사라지는 노드들)
+      for (const fadeNode of transition.fadingNodes) {
+        const fadeOpacity = Math.max(0, 0.4 * (1 - eased));
+        if (fadeOpacity < 0.01) continue;
+
+        ctx.save();
+        ctx.globalAlpha = fadeOpacity;
+
+        const r = fadeNode.degree === 0 ? NODE_SIZES.core : NODE_SIZES.primary;
+        const shrinkR = r * (1 - eased * 0.6);
+        const fx = fadeNode.x || 0;
+        const fy = fadeNode.y || 0;
+
+        // 글로우
+        const glowGrad = ctx.createRadialGradient(fx, fy, shrinkR, fx, fy, shrinkR * 2);
+        glowGrad.addColorStop(0, 'rgba(88, 166, 255, 0.3)');
+        glowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(fx, fy, shrinkR * 2, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.fill();
+
+        // 노드 원
+        ctx.beginPath();
+        ctx.arc(fx, fy, shrinkR, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS.nodeBg;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(88, 166, 255, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    // ===================================================================
     // ===== CLUSTER VIEW (줌 아웃 시: 카테고리별 하나의 큰 원) =====
     // ===================================================================
     if (isClusterView) {
@@ -980,6 +1170,14 @@ export default function NetworkGraph() {
     }
 
     // ===== Draw Nodes =====
+    // 트랜지션 중 새 노드 페이드인을 위한 진행도 계산
+    const isTransitioning = transition.isActive;
+    let transEased = 1;
+    if (isTransitioning) {
+      const elapsed = performance.now() - transition.startTime;
+      transEased = easeOutCubic(Math.min(1, elapsed / transition.duration));
+    }
+
     // 1. Non-connected nodes first
     for (const node of nodes) {
       const isConnectedToFocused = connectedNodeIds.has(node.id);
@@ -989,6 +1187,13 @@ export default function NetworkGraph() {
       const isHovered = hoveredNode?.id === node.id;
       const isDimmed = !!(highlightedKeyword && !isHighlighted);
 
+      // 새로 나타나는 노드: 페이드인
+      const isNewNode = isTransitioning && !transition.prevPositions.has(node.id);
+      if (isNewNode) {
+        ctx.save();
+        ctx.globalAlpha = transEased;
+      }
+
       drawNode(ctx, node, {
         isHovered,
         isFocused: false,
@@ -996,6 +1201,10 @@ export default function NetworkGraph() {
         isDimmed,
         isHighlighted,
       });
+
+      if (isNewNode) {
+        ctx.restore();
+      }
     }
 
     // 2. Connected nodes (drawn on top)
@@ -1059,9 +1268,51 @@ export default function NetworkGraph() {
     return () => clearInterval(intervalId);
   }, [targetTransform]);
 
-  // Animation loop
+  // Animation loop (트랜지션 위치 보간 포함)
   useEffect(() => {
     const animate = () => {
+      // 트랜지션 활성화 시 노드 위치를 보간
+      const transition = transitionRef.current;
+      if (transition.isActive) {
+        const elapsed = performance.now() - transition.startTime;
+        const rawProgress = Math.min(1, elapsed / transition.duration);
+        const eased = easeOutCubic(rawProgress);
+
+        for (const node of nodesRef.current) {
+          const target = transition.targetPositions.get(node.id);
+          const prev = transition.prevPositions.get(node.id);
+
+          if (prev && target) {
+            // 기존 노드: 이전 위치 → 새 위치로 부드럽게 이동
+            node.x = prev.x + (target.x - prev.x) * eased;
+            node.y = prev.y + (target.y - prev.y) * eased;
+            node.fx = node.x;
+            node.fy = node.y;
+          } else if (target) {
+            // 새 노드: 중앙에서 퍼져나감
+            node.x = transition.centerX + (target.x - transition.centerX) * eased;
+            node.y = transition.centerY + (target.y - transition.centerY) * eased;
+            node.fx = node.x;
+            node.fy = node.y;
+          }
+        }
+
+        if (rawProgress >= 1) {
+          // 완료: 최종 위치 확정
+          for (const node of nodesRef.current) {
+            const target = transition.targetPositions.get(node.id);
+            if (target) {
+              node.x = target.x;
+              node.y = target.y;
+              node.fx = target.x;
+              node.fy = target.y;
+            }
+          }
+          transition.isActive = false;
+          transition.fadingNodes = [];
+        }
+      }
+
       render();
       animationRef.current = requestAnimationFrame(animate);
     };

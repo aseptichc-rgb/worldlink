@@ -320,7 +320,7 @@ export default function ProfileSheet() {
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <Avatar
-                        src={selectedNode.degree === 1 ? selectedNode.profileImage : undefined}
+                        src={selectedNode.profileImage}
                         name={selectedNode.name}
                         size="xl"
                         hasGlow={selectedNode.degree === 1}

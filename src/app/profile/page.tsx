@@ -187,7 +187,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="pt-24 px-6">
+      <div className="pt-24 px-8">
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -247,8 +247,8 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* Bio */}
-        <Card className="p-5 mb-8">
-          <h3 className="text-sm font-medium text-[#8B949E] mb-3">한 줄 소개</h3>
+        <Card className="p-6 mb-6">
+          <h3 className="text-sm font-medium text-[#8B949E] mb-4">한 줄 소개</h3>
           {isEditing ? (
             <textarea
               value={editedUser.bio}
@@ -271,12 +271,12 @@ export default function ProfilePage() {
         </Card>
 
         {/* Keywords */}
-        <Card className="p-5 mb-8">
-          <div className="flex items-center justify-between mb-3">
+        <Card className="p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-[#8B949E]">관심 키워드</h3>
             <span className="text-xs text-[#484F58]">{editedUser.keywords.length}/5</span>
           </div>
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-2.5 mb-4">
             {editedUser.keywords.map((keyword) => (
               <Tag
                 key={keyword}
@@ -322,7 +322,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Privacy Settings */}
-        <Card className="p-5 mb-8">
+        <Card className="p-6 mb-6">
           <button
             onClick={() => setShowPrivacySettings(true)}
             className="w-full flex items-center justify-between"
@@ -343,7 +343,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Invite Manager */}
-        <div className="mb-10">
+        <div className="mb-8">
           <InviteManager
             userId={user.id}
             invitesRemaining={user.invitesRemaining}
@@ -362,7 +362,7 @@ export default function ProfilePage() {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3 text-[#FF6B8A] hover:bg-[#FF6B8A]/10 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-4 text-[#FF6B8A] hover:bg-[#FF6B8A]/10 rounded-xl transition-colors"
         >
           <LogOut size={18} />
           <span>로그아웃</span>

@@ -30,7 +30,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#8B949E] mb-2 tracking-wide">
+          <label className="block text-sm font-medium text-[#8B949E] mb-3 tracking-wide">
             {label}
           </label>
         )}
@@ -49,7 +49,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             type={isPassword && showPassword ? 'text' : type}
             className={`
               w-full bg-[rgba(22,27,34,0.8)] border border-[#30363D] text-[#F0F6FC]
-              rounded-lg py-4 px-4 text-base font-medium
+              rounded-lg py-4 px-5 text-base font-medium
               transition-all duration-300 ease-out
               focus:outline-none focus:border-[rgba(88,166,255,0.6)] focus:shadow-[0_0_0_3px_rgba(88,166,255,0.15)]
               placeholder:text-[#484F58]

@@ -151,7 +151,7 @@ function OnboardingContent() {
       if (inviteCode && inviterInfo) {
         setStep('connection');
       } else {
-        router.push('/card');
+        router.push('/network');
       }
     } catch (err: any) {
       console.error('Registration error:', err);
@@ -175,10 +175,10 @@ function OnboardingContent() {
       await createAutoConnection(inviterInfo.id, newUserId);
       // 초대 수락 처리
       await acceptInvitation(inviteCode, newUserId);
-      router.push('/card');
+      router.push('/network');
     } catch (err) {
       console.error('Failed to accept connection:', err);
-      router.push('/card');
+      router.push('/network');
     } finally {
       setConnectionLoading(false);
     }
@@ -195,7 +195,7 @@ function OnboardingContent() {
       console.error('Error:', err);
     } finally {
       setConnectionLoading(false);
-      router.push('/card');
+      router.push('/network');
     }
   };
 
