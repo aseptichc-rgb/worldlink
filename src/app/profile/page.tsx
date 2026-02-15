@@ -188,7 +188,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="pt-24 px-8">
+      <div className="pt-24 px-6">
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -248,8 +248,8 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* Bio */}
-        <Card className="px-7 py-6 mb-7">
-          <h3 className="text-base font-medium text-[#8B949E] mb-4">한 줄 소개</h3>
+        <Card className="px-6 py-5 mb-5">
+          <h3 className="text-base font-medium text-[#8B949E] mb-3">한 줄 소개</h3>
           {isEditing ? (
             <textarea
               value={editedUser.bio}
@@ -272,8 +272,8 @@ export default function ProfilePage() {
         </Card>
 
         {/* Keywords */}
-        <Card className="px-7 py-6 mb-7">
-          <div className="flex items-center justify-between mb-5">
+        <Card className="px-6 py-5 mb-5">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-medium text-[#8B949E]">관심 키워드</h3>
             <span className="text-sm text-[#484F58]">{editedUser.keywords.length}/5</span>
           </div>
@@ -323,7 +323,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Privacy Settings */}
-        <Card className="px-7 py-5 mb-7">
+        <Card className="px-6 py-5 mb-5">
           <button
             onClick={() => setShowPrivacySettings(true)}
             className="w-full flex items-center justify-between"
@@ -344,7 +344,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Invite Manager */}
-        <div className="mb-8">
+        <div className="mb-6">
           <InviteManager
             userId={user.id}
             invitesRemaining={user.invitesRemaining}

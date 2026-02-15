@@ -175,7 +175,7 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-[#0D1117]">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-30 bg-[#161B22] border-b border-[#30363D]">
-        <div className="flex items-center gap-4 px-4 py-4">
+        <div className="flex items-center gap-4 px-5 py-4">
           <button
             onClick={() => router.push('/network')}
             className="p-2 rounded-xl hover:bg-[#30363D] transition-colors"
@@ -186,7 +186,7 @@ export default function MessagesPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex px-4 gap-2 pb-3">
+        <div className="flex px-5 gap-2 pb-3">
           <button
             onClick={() => setActiveTab('received')}
             className={`
@@ -222,7 +222,7 @@ export default function MessagesPage() {
       </div>
 
       {/* Message List */}
-      <div className="pt-32 pb-8 px-4">
+      <div className="pt-32 pb-8 px-5">
         {displayMessages.length > 0 ? (
           <div className="space-y-2">
             {displayMessages.map((message) => {

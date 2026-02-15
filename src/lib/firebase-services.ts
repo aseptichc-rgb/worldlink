@@ -902,3 +902,103 @@ export const incrementKeywordCount = async (tag: string): Promise<void> => {
     createdAt: serverTimestamp(),
   }, { merge: true });
 };
+
+// ==================== GROUP INVITE SERVICES ====================
+
+// 그룹 초대 정보 저장
+export const createGroupInvite = async (
+  groupId: string,
+  groupName: string,
+  inviterId: string,
+  memberIds: string[]
+): Promise<string> => {
+  const inviteRef = doc(collection(db, 'groupInvites'));
+
+  await setDoc(inviteRef, {
+    id: inviteRef.id,
+    groupId,
+    groupName,
+    inviterId,
+    memberIds,
+    createdAt: serverTimestamp(),
+    status: 'pending',
+  });
+
+  return inviteRef.id;
+};
+
+// 그룹 초대 정보 조회
+export const getGroupInvite = async (inviteId: string): Promise<{
+  id: string;
+  groupId: string;
+  groupName: string;
+  inviterId: string;
+  memberIds: string[];
+  status: string;
+} | null> => {
+  const inviteRef = doc(db, 'groupInvites', inviteId);
+  const inviteSnap = await getDoc(inviteRef);
+
+  if (!inviteSnap.exists()) return null;
+
+  const data = inviteSnap.data();
+  return {
+    id: inviteSnap.id,
+    groupId: data.groupId,
+    groupName: data.groupName,
+    inviterId: data.inviterId,
+    memberIds: data.memberIds || [],
+    status: data.status,
+  };
+};
+
+// 그룹 초대 수락 - 모든 멤버와 자동 인맥 연결
+export const acceptGroupInvite = async (
+  inviteId: string,
+  acceptedUserId: string
+): Promise<void> => {
+  const invite = await getGroupInvite(inviteId);
+  if (!invite) throw new Error('초대를 찾을 수 없습니다');
+
+  const batch = writeBatch(db);
+
+  // 초대한 사람과 연결
+  if (invite.inviterId !== acceptedUserId) {
+    const connRef1 = doc(collection(db, 'connections'));
+    batch.set(connRef1, {
+      id: connRef1.id,
+      fromUserId: acceptedUserId,
+      toUserId: invite.inviterId,
+      status: 'accepted',
+      method: 'group_invite',
+      createdAt: serverTimestamp(),
+      acceptedAt: serverTimestamp(),
+    });
+  }
+
+  // 모든 그룹 멤버와 연결
+  for (const memberId of invite.memberIds) {
+    if (memberId !== acceptedUserId && memberId !== invite.inviterId) {
+      const connRef = doc(collection(db, 'connections'));
+      batch.set(connRef, {
+        id: connRef.id,
+        fromUserId: acceptedUserId,
+        toUserId: memberId,
+        status: 'accepted',
+        method: 'group_invite',
+        createdAt: serverTimestamp(),
+        acceptedAt: serverTimestamp(),
+      });
+    }
+  }
+
+  // 초대 상태 업데이트
+  const inviteRef = doc(db, 'groupInvites', inviteId);
+  batch.update(inviteRef, {
+    status: 'accepted',
+    acceptedBy: acceptedUserId,
+    acceptedAt: serverTimestamp(),
+  });
+
+  await batch.commit();
+};

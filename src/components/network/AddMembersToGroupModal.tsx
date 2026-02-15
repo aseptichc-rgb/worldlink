@@ -47,11 +47,10 @@ export default function AddMembersToGroupModal() {
 
   // AI 추천 요청
   const fetchAiRecommendations = useCallback(async () => {
-    if (!group || availableNodes.length === 0) return;
+    if (!group) return;
 
     // 로그인 상태 확인
     if (!auth?.currentUser) {
-      // 로그인되지 않은 상태에서는 AI 추천 요청하지 않음
       return;
     }
 
@@ -78,14 +77,13 @@ export default function AddMembersToGroupModal() {
       });
 
       if (!res.ok) {
-        // 인증 에러나 서버 에러는 무시하고 조용히 실패
         return;
       }
       const data: AiRecommendResponse = await res.json();
 
-      // 이미 그룹에 있는 멤버 제외
+      // 이미 그룹에 있는 멤버만 제외 (1촌 제한 없이 전체 추천)
       const filteredResults = data.results.filter(
-        (r) => !existingMemberIds.has(r.memberId) && availableNodes.some((n) => n.id === r.memberId)
+        (r) => !existingMemberIds.has(r.memberId)
       );
 
       setAiRecommendations({
@@ -94,16 +92,16 @@ export default function AddMembersToGroupModal() {
       });
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        // 에러 발생 시 조용히 실패 (콘솔 출력 제거)
+        // 에러 발생 시 조용히 실패
       }
     } finally {
       setAiLoading(false);
     }
-  }, [group, availableNodes, existingMemberIds]);
+  }, [group, existingMemberIds]);
 
   // 모달 열릴 때 AI 추천 자동 요청
   useEffect(() => {
-    if (isAddMembersModalOpen && group && availableNodes.length > 0) {
+    if (isAddMembersModalOpen && group) {
       fetchAiRecommendations();
     }
     return () => {
@@ -113,7 +111,7 @@ export default function AddMembersToGroupModal() {
 
   // 검색어로 AI 추천 요청
   const triggerAiSearchWithQuery = useCallback(async (query: string) => {
-    if (!query.trim() || availableNodes.length === 0) return;
+    if (!query.trim()) return;
 
     // 로그인 상태 확인
     if (!auth?.currentUser) {
@@ -141,14 +139,13 @@ export default function AddMembersToGroupModal() {
       });
 
       if (!res.ok) {
-        // 인증 에러나 서버 에러는 무시
         return;
       }
       const data: AiRecommendResponse = await res.json();
 
-      // 이미 그룹에 있는 멤버 제외
+      // 이미 그룹에 있는 멤버만 제외 (1촌 제한 없이 전체 추천)
       const filteredResults = data.results.filter(
-        (r) => !existingMemberIds.has(r.memberId) && availableNodes.some((n) => n.id === r.memberId)
+        (r) => !existingMemberIds.has(r.memberId)
       );
 
       setAiRecommendations({
@@ -162,7 +159,7 @@ export default function AddMembersToGroupModal() {
     } finally {
       setAiLoading(false);
     }
-  }, [availableNodes, existingMemberIds]);
+  }, [existingMemberIds]);
 
   // 검색 필터
   const filteredNodes = useMemo(() => {
@@ -217,8 +214,15 @@ export default function AddMembersToGroupModal() {
 
   // AI 추천 결과에서 노드 정보 가져오기
   const getNodeFromAiResult = (memberId: string) => {
-    return availableNodes.find((n) => n.id === memberId) ||
-           demoUsers.find((u) => u.id === memberId);
+    // 1촌 인맥에서 먼저 찾기
+    const availableNode = availableNodes.find((n) => n.id === memberId);
+    if (availableNode) return { node: availableNode, isFirstDegree: true };
+
+    // demoUsers에서 찾기
+    const demoUser = demoUsers.find((u) => u.id === memberId);
+    if (demoUser) return { node: demoUser, isFirstDegree: false };
+
+    return null;
   };
 
   return (
@@ -322,17 +326,18 @@ export default function AddMembersToGroupModal() {
                     <p className="text-sm text-[#C4B5FD] mb-2 px-2 py-1.5 bg-[#A78BFA]/10 rounded-lg">
                       {aiRecommendations.summary}
                     </p>
-                    <div className="space-y-1 max-h-[180px] overflow-y-auto">
+                    <div className="space-y-1 max-h-[200px] overflow-y-auto">
                       {aiRecommendations.results.length > 0 ? (
                         aiRecommendations.results.map((result) => {
-                          const node = getNodeFromAiResult(result.memberId);
-                          if (!node) return null;
+                          const nodeInfo = getNodeFromAiResult(result.memberId);
+                          if (!nodeInfo) return null;
+                          const { node, isFirstDegree } = nodeInfo;
                           const isSelected = selectedNodeIds.has(result.memberId);
                           return (
                             <button
                               key={result.memberId}
                               onClick={() => handleToggleNode(result.memberId)}
-                              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 ${
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
                                 isSelected
                                   ? 'bg-[#A78BFA]/20 border border-[#A78BFA]/40'
                                   : 'hover:bg-[#1C2333] border border-transparent'
@@ -349,11 +354,20 @@ export default function AddMembersToGroupModal() {
                               </div>
                               <Avatar src={node.profileImage} name={node.name} size="sm" />
                               <div className="flex-1 min-w-0 text-left">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <p className="text-sm text-white truncate">{node.name}</p>
                                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#A78BFA]/20 text-[#A78BFA] flex-shrink-0">
                                     AI 추천
                                   </span>
+                                  {isFirstDegree ? (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF] flex-shrink-0">
+                                      1촌
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800] flex-shrink-0">
+                                      연결 필요
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-[#8B949E] truncate">
                                   {node.company} {node.position && `· ${node.position}`}

@@ -257,9 +257,9 @@ export function InviteManager({
 
   return (
     <>
-      <Card className="px-7 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-base font-medium text-[#8BA4C4] flex items-center gap-2">
+      <Card className="px-6 py-5">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-base font-medium text-[#8B949E] flex items-center gap-2">
             <Users size={16} />
             친구 초대하기
           </h3>
@@ -269,7 +269,7 @@ export function InviteManager({
         </div>
 
         {/* 초대 방법 선택 버튼들 */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-5">
           <Button
             variant="secondary"
             className="flex items-center justify-center gap-2"
@@ -323,16 +323,16 @@ export function InviteManager({
 
         {/* 발송한 초대 목록 */}
         {invitations.length > 0 && (
-          <div className="border-t border-[#30363D] pt-5 mt-2">
-            <h4 className="text-sm text-[#4A5E7A] mb-3">보낸 초대</h4>
-            <div className="space-y-3 max-h-48 overflow-y-auto">
+          <div className="border-t border-[#30363D] pt-4 mt-2">
+            <h4 className="text-sm text-[#8B949E] mb-3">보낸 초대</h4>
+            <div className="space-y-2.5 max-h-48 overflow-y-auto">
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex items-center justify-between p-3.5 bg-[#162A4A] rounded-lg"
+                  className="flex items-center justify-between p-3 bg-[#161B22] rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#1E3A5F] rounded-lg text-[#8BA4C4]">
+                    <div className="p-2 bg-[#1C2333] rounded-lg text-[#8B949E]">
                       {getMethodIcon(invitation.method)}
                     </div>
                     <div>
@@ -341,14 +341,14 @@ export function InviteManager({
                           invitation.recipientPhone ||
                           "링크 공유"}
                       </p>
-                      <p className="text-[10px] text-[#4A5E7A] mt-0.5">
+                      <p className="text-xs text-[#484F58] mt-0.5">
                         {invitation.sentAt.toLocaleDateString("ko-KR")}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs">
                     {getStatusIcon(invitation.status)}
-                    <span className="text-[#8BA4C4]">
+                    <span className="text-[#8B949E]">
                       {getStatusText(invitation.status)}
                     </span>
                   </div>

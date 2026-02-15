@@ -19,6 +19,7 @@ import {
   getUser,
 } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
+import { useGroupStore } from '@/store/groupStore';
 import { User as UserType, Invitation } from '@/types';
 import { Mail, Lock, ArrowRight, User, Users, Check, X, Shield, Eye, EyeOff } from 'lucide-react';
 
@@ -28,8 +29,10 @@ function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = useAuthStore();
+  const { groups, getNodesInGroup, addNodeToGroup } = useGroupStore();
 
   const [step, setStep] = useState<OnboardingStep>('auth');
+  const [pendingGroupInvite, setPendingGroupInvite] = useState<{ groupId: string; fromUserId: string } | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -56,6 +59,17 @@ function OnboardingContent() {
       setInviteCode(code);
       // 초대자 정보 미리 로드
       loadInviterInfo(code);
+    }
+
+    // 그룹 초대 정보 확인
+    const pendingInvite = sessionStorage.getItem('pendingGroupInvite');
+    if (pendingInvite) {
+      try {
+        const parsed = JSON.parse(pendingInvite);
+        setPendingGroupInvite(parsed);
+      } catch (e) {
+        sessionStorage.removeItem('pendingGroupInvite');
+      }
     }
   }, [searchParams]);
 
@@ -146,6 +160,36 @@ function OnboardingContent() {
 
       setUser(newUser);
       setNewUserId(firebaseUser.uid);
+
+      // 그룹 초대가 있으면 처리
+      if (pendingGroupInvite) {
+        try {
+          const { groupId, fromUserId } = pendingGroupInvite;
+          const memberNodeIds = getNodesInGroup(groupId);
+
+          // 그룹에 새 멤버 추가
+          addNodeToGroup(firebaseUser.uid, groupId);
+
+          // 초대한 사람과 인맥 연결
+          if (fromUserId && fromUserId !== firebaseUser.uid) {
+            await createAutoConnection(firebaseUser.uid, fromUserId);
+          }
+
+          // 기존 그룹 멤버들과 인맥 연결
+          for (const memberId of memberNodeIds) {
+            if (memberId !== firebaseUser.uid && memberId !== fromUserId) {
+              await createAutoConnection(firebaseUser.uid, memberId);
+            }
+          }
+
+          sessionStorage.removeItem('pendingGroupInvite');
+          sessionStorage.removeItem('redirectAfterAuth');
+          router.push('/network');
+          return;
+        } catch (err) {
+          console.error('Failed to process group invite:', err);
+        }
+      }
 
       // 초대 코드가 있고 초대자 정보가 있으면 일촌 수락 단계로
       if (inviteCode && inviterInfo) {

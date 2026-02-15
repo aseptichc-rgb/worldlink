@@ -129,7 +129,7 @@ export default function ContactsPage() {
     <div className="min-h-screen bg-[#161B22] text-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#161B22]/95 backdrop-blur-xl border-b border-[#30363D]">
-        <div className="px-4 py-4">
+        <div className="px-5 py-4">
           <div className="flex items-center justify-between mb-4">
             {selectedContact ? (
               <button
