@@ -14,6 +14,7 @@ interface ButtonProps {
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
   onClick?: () => void;
+  title?: string;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -28,6 +29,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     disabled,
     type = 'button',
     onClick,
+    title,
   }, ref) => {
     const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#161B22]';
 
@@ -54,6 +56,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
         disabled={isDisabled}
         onClick={onClick}
+        title={title}
       >
         {isLoading ? (
           <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
