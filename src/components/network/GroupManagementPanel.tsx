@@ -231,26 +231,29 @@ export default function GroupManagementPanel() {
             </div>
 
             {/* Create Group Form / Button */}
-            <div className="p-6 pt-3 border-t border-[#30363D]">
+            <div className="p-6 pt-4 border-t border-[#30363D]">
               {showCreateForm ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="그룹 이름"
-                    maxLength={20}
-                    className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl px-4 py-2.5 text-base text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors"
-                    autoFocus
-                  />
+                <div className="space-y-5">
                   <div>
-                    <p className="text-sm text-[#8B949E] mb-1.5">색상</p>
-                    <div className="flex flex-wrap gap-2">
+                    <p className="text-base text-[#8B949E] mb-2.5">그룹 이름</p>
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="그룹 이름을 입력하세요"
+                      maxLength={20}
+                      className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-4 py-3.5 text-base text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <p className="text-base text-[#8B949E] mb-3">색상</p>
+                    <div className="flex flex-wrap gap-3">
                       {GROUP_COLORS.map((color) => (
                         <button
                           key={color}
                           onClick={() => setSelectedColor(color)}
-                          className={`w-7 h-7 rounded-full transition-all ${
+                          className={`w-8 h-8 rounded-full transition-all ${
                             selectedColor === color
                               ? 'ring-2 ring-white ring-offset-2 ring-offset-[#161B22] scale-110'
                               : 'hover:scale-110'
@@ -261,13 +264,13 @@ export default function GroupManagementPanel() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-[#8B949E] mb-1.5">아이콘</p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <p className="text-base text-[#8B949E] mb-3">아이콘</p>
+                    <div className="flex flex-wrap gap-2">
                       {GROUP_ICONS.map((icon) => (
                         <button
                           key={icon}
                           onClick={() => setSelectedIcon(icon)}
-                          className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
                             selectedIcon === icon
                               ? 'bg-[#58A6FF]/20 ring-1 ring-[#58A6FF]'
                               : 'hover:bg-[#1C2333]'
@@ -278,20 +281,20 @@ export default function GroupManagementPanel() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-3 pt-2">
                     <button
                       onClick={() => {
                         setShowCreateForm(false);
                         setNewName('');
                       }}
-                      className="flex-1 py-2.5 rounded-xl text-sm text-[#8B949E] hover:bg-[#1C2333] transition-colors"
+                      className="flex-1 py-3 rounded-lg text-base text-[#8B949E] hover:bg-[#1C2333] transition-colors"
                     >
                       취소
                     </button>
                     <button
                       onClick={handleCreateGroup}
                       disabled={!newName.trim()}
-                      className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex-1 py-3 rounded-lg text-base font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       만들기
                     </button>
