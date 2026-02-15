@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Check, Users, Sparkles, Loader2 } from 'lucide-react';
+import { X, Search, Check, Users, Sparkles, Loader2, Globe } from 'lucide-react';
 import { useGroupStore } from '@/store/groupStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { Avatar } from '@/components/ui';
@@ -36,6 +36,7 @@ export default function AddMembersToGroupModal() {
   const [aiRecommendations, setAiRecommendations] = useState<AiRecommendResponse | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const aiAbortRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const group = groups.find((g) => g.id === detailGroupId);
   const existingMemberIds = detailGroupId ? new Set(getNodesInGroup(detailGroupId)) : new Set<string>();
@@ -109,6 +110,28 @@ export default function AddMembersToGroupModal() {
     };
   }, [isAddMembersModalOpen, group?.id]);
 
+  // 검색어 변경 시 debounce로 AI 검색 자동 실행
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      // 검색어가 없거나 너무 짧으면 그룹 기본 추천으로 복귀
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (isAddMembersModalOpen && group && !searchQuery.trim()) {
+        fetchAiRecommendations();
+      }
+      return;
+    }
+
+    // 500ms 후 AI 검색 실행
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      triggerAiSearchWithQuery(searchQuery);
+    }, 500);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery, isAddMembersModalOpen, group?.id]);
+
   // 검색어로 AI 추천 요청
   const triggerAiSearchWithQuery = useCallback(async (query: string) => {
     if (!query.trim()) return;
@@ -161,7 +184,7 @@ export default function AddMembersToGroupModal() {
     }
   }, [existingMemberIds]);
 
-  // 검색 필터
+  // 검색 필터 - 1촌 인맥
   const filteredNodes = useMemo(() => {
     if (!searchQuery.trim()) return availableNodes;
     const query = searchQuery.toLowerCase();
@@ -173,6 +196,33 @@ export default function AddMembersToGroupModal() {
         n.keywords.some((k) => k.toLowerCase().includes(query))
     );
   }, [availableNodes, searchQuery]);
+
+  // 검색 허용된 전체 사용자 중 검색 (인맥 아닌 사람 포함)
+  const discoveredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase();
+
+    // 이미 1촌이거나 그룹에 있는 사람 제외
+    const firstDegreeIds = new Set(availableNodes.map(n => n.id));
+
+    return demoUsers.filter((user) => {
+      // 이미 1촌이면 제외
+      if (firstDegreeIds.has(user.id)) return false;
+      // 이미 그룹에 있으면 제외
+      if (existingMemberIds.has(user.id)) return false;
+      // 검색 허용 설정 확인
+      if (!user.privacySettings?.allowProfileDiscovery) return false;
+
+      // 자연어 검색: 이름, 회사, 직책, 키워드, bio 모두 검색
+      return (
+        user.name.toLowerCase().includes(query) ||
+        user.company?.toLowerCase().includes(query) ||
+        user.position?.toLowerCase().includes(query) ||
+        user.bio?.toLowerCase().includes(query) ||
+        user.keywords.some((k) => k.toLowerCase().includes(query))
+      );
+    });
+  }, [searchQuery, availableNodes, existingMemberIds]);
 
   const handleToggleNode = (nodeId: string) => {
     setSelectedNodeIds((prev) => {
@@ -319,14 +369,14 @@ export default function AddMembersToGroupModal() {
                 {aiLoading ? (
                   <div className="flex items-center gap-2 py-3 text-[#8B949E] text-sm">
                     <Loader2 size={16} className="animate-spin text-[#A78BFA]" />
-                    관련 인맥을 분석하고 있습니다...
+                    {searchQuery.trim() ? `"${searchQuery}" 관련 인맥을 찾고 있습니다...` : '관련 인맥을 분석하고 있습니다...'}
                   </div>
                 ) : aiRecommendations && (
                   <div>
-                    <p className="text-sm text-[#C4B5FD] mb-2 px-2 py-1.5 bg-[#A78BFA]/10 rounded-lg">
-                      {aiRecommendations.summary}
+                    <p className="text-sm text-[#C4B5FD] mb-3 px-3 py-2 bg-[#A78BFA]/10 rounded-lg">
+                      💡 {aiRecommendations.summary}
                     </p>
-                    <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    <div className="space-y-2 max-h-[250px] overflow-y-auto">
                       {aiRecommendations.results.length > 0 ? (
                         aiRecommendations.results.map((result) => {
                           const nodeInfo = getNodeFromAiResult(result.memberId);
@@ -337,14 +387,14 @@ export default function AddMembersToGroupModal() {
                             <button
                               key={result.memberId}
                               onClick={() => handleToggleNode(result.memberId)}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                              className={`w-full flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                                 isSelected
                                   ? 'bg-[#A78BFA]/20 border border-[#A78BFA]/40'
                                   : 'hover:bg-[#1C2333] border border-transparent'
                               }`}
                             >
                               <div
-                                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all mt-0.5 ${
                                   isSelected
                                     ? 'bg-[#A78BFA] border-[#A78BFA]'
                                     : 'border-[#30363D]'
@@ -369,19 +419,21 @@ export default function AddMembersToGroupModal() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-[#8B949E] truncate">
+                                <p className="text-xs text-[#8B949E]">
                                   {node.company} {node.position && `· ${node.position}`}
                                 </p>
-                                <p className="text-[10px] text-[#C4B5FD] truncate mt-0.5">
-                                  {result.reason}
-                                </p>
+                                <div className="mt-1.5 p-2 bg-[#A78BFA]/5 rounded-lg border border-[#A78BFA]/10">
+                                  <p className="text-xs text-[#C4B5FD] leading-relaxed">
+                                    ✨ {result.reason}
+                                  </p>
+                                </div>
                               </div>
                             </button>
                           );
                         })
                       ) : (
                         <p className="text-sm text-[#8B949E] py-2 text-center">
-                          추가 가능한 추천 인맥이 없습니다
+                          관련된 추천 인맥이 없습니다. 다른 키워드로 검색해보세요.
                         </p>
                       )}
                     </div>
@@ -418,53 +470,136 @@ export default function AddMembersToGroupModal() {
 
             {/* Node List */}
             <div className="flex-1 overflow-y-auto px-6 py-3">
-              {availableNodes.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-14 h-14 rounded-xl bg-[#1C2333] flex items-center justify-center mx-auto mb-4">
-                    <Users size={24} className="text-[#484F58]" />
-                  </div>
-                  <p className="text-[#8B949E] text-base mb-1">추가할 인맥이 없습니다</p>
-                  <p className="text-[#484F58] text-sm">
-                    모든 1촌 인맥이 이미 그룹에 있습니다
+              {/* 1촌 인맥 */}
+              {filteredNodes.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs text-[#58A6FF] mb-2 px-1 flex items-center gap-1">
+                    <Users size={12} />
+                    1촌 인맥
                   </p>
-                </div>
-              ) : filteredNodes.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-[#8B949E] text-base">검색 결과가 없습니다</p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {filteredNodes.map((node) => {
-                    const isSelected = selectedNodeIds.has(node.id);
-                    return (
-                      <button
-                        key={node.id}
-                        onClick={() => handleToggleNode(node.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
-                          isSelected
-                            ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
-                            : 'hover:bg-[#1C2333] border border-transparent'
-                        }`}
-                      >
-                        <div
-                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                  <div className="space-y-1">
+                    {filteredNodes.map((node) => {
+                      const isSelected = selectedNodeIds.has(node.id);
+                      return (
+                        <button
+                          key={node.id}
+                          onClick={() => handleToggleNode(node.id)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
                             isSelected
-                              ? 'bg-[#58A6FF] border-[#58A6FF]'
-                              : 'border-[#30363D]'
+                              ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
+                              : 'hover:bg-[#1C2333] border border-transparent'
                           }`}
                         >
-                          {isSelected && <Check size={12} className="text-white" />}
-                        </div>
-                        <Avatar src={node.profileImage} name={node.name} size="sm" />
-                        <div className="flex-1 min-w-0 text-left">
-                          <p className="text-base text-white truncate">{node.name}</p>
-                          <p className="text-xs text-[#8B949E] truncate">
-                            {node.company} {node.position && `· ${node.position}`}
-                          </p>
-                        </div>
+                          <div
+                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                              isSelected
+                                ? 'bg-[#58A6FF] border-[#58A6FF]'
+                                : 'border-[#30363D]'
+                            }`}
+                          >
+                            {isSelected && <Check size={12} className="text-white" />}
+                          </div>
+                          <Avatar src={node.profileImage} name={node.name} size="sm" />
+                          <div className="flex-1 min-w-0 text-left">
+                            <div className="flex items-center gap-2">
+                              <p className="text-base text-white truncate">{node.name}</p>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF] flex-shrink-0">
+                                1촌
+                              </span>
+                            </div>
+                            <p className="text-xs text-[#8B949E] truncate">
+                              {node.company} {node.position && `· ${node.position}`}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 검색 허용된 다른 사용자 */}
+              {discoveredUsers.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs text-[#10B981] mb-2 px-1 flex items-center gap-1">
+                    <Globe size={12} />
+                    검색 허용된 사용자
+                  </p>
+                  <div className="space-y-1">
+                    {discoveredUsers.slice(0, 10).map((user) => {
+                      const isSelected = selectedNodeIds.has(user.id);
+                      return (
+                        <button
+                          key={user.id}
+                          onClick={() => handleToggleNode(user.id)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                            isSelected
+                              ? 'bg-[#10B981]/10 border border-[#10B981]/30'
+                              : 'hover:bg-[#1C2333] border border-transparent'
+                          }`}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                              isSelected
+                                ? 'bg-[#10B981] border-[#10B981]'
+                                : 'border-[#30363D]'
+                            }`}
+                          >
+                            {isSelected && <Check size={12} className="text-white" />}
+                          </div>
+                          <Avatar src={user.profileImage} name={user.name} size="sm" />
+                          <div className="flex-1 min-w-0 text-left">
+                            <div className="flex items-center gap-2">
+                              <p className="text-base text-white truncate">{user.name}</p>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] flex-shrink-0">
+                                검색 허용
+                              </span>
+                            </div>
+                            <p className="text-xs text-[#8B949E] truncate">
+                              {user.company} {user.position && `· ${user.position}`}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 검색 결과 없음 */}
+              {filteredNodes.length === 0 && discoveredUsers.length === 0 && !aiRecommendations && !aiLoading && (
+                <div className="text-center py-8">
+                  {searchQuery.trim() ? (
+                    <>
+                      <p className="text-[#8B949E] text-base mb-2">검색 결과가 없습니다</p>
+                      <p className="text-[#484F58] text-sm mb-4">
+                        자연어로 검색해보세요
+                      </p>
+                      <button
+                        onClick={() => triggerAiSearchWithQuery(searchQuery)}
+                        disabled={aiLoading}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#A78BFA]/20 text-[#A78BFA] hover:bg-[#A78BFA]/30 transition-colors text-sm"
+                      >
+                        <Sparkles size={14} />
+                        AI로 &quot;{searchQuery}&quot; 검색하기
                       </button>
-                    );
-                  })}
+                    </>
+                  ) : availableNodes.length === 0 ? (
+                    <>
+                      <div className="w-14 h-14 rounded-xl bg-[#1C2333] flex items-center justify-center mx-auto mb-4">
+                        <Users size={24} className="text-[#484F58]" />
+                      </div>
+                      <p className="text-[#8B949E] text-base mb-1">추가할 인맥이 없습니다</p>
+                      <p className="text-[#484F58] text-sm">
+                        모든 1촌 인맥이 이미 그룹에 있습니다
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[#8B949E] text-sm">
+                      이름, 회사, 키워드로 검색하거나<br />
+                      AI에게 추천을 요청해보세요
+                    </p>
+                  )}
                 </div>
               )}
             </div>

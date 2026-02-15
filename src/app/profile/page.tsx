@@ -15,7 +15,7 @@ import {
   Building2,
   User as UserIcon,
   Mail,
-  Check,
+  Search,
 } from 'lucide-react';
 import { Avatar, Input, Tag, Card } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
@@ -335,7 +335,9 @@ export default function ProfilePage() {
               <div className="text-left">
                 <h3 className="text-white font-medium">개인정보 공개 설정</h3>
                 <p className="text-[#8B949E] text-base mt-1">
-                  {user.privacySettings?.allowProfileDiscovery ? '네트워크에 공개 중' : '비공개 모드'}
+                  {user.privacySettings?.allowProfileDiscovery
+                    ? (user.privacySettings?.allowGlobalSearch ? '검색 허용 · 네트워크 공개' : '검색 비허용 · 네트워크 공개')
+                    : '비공개 모드'}
                 </p>
               </div>
             </div>
@@ -411,6 +413,7 @@ export default function ProfilePage() {
                         const newAllowDiscovery = !(user.privacySettings?.allowProfileDiscovery ?? false);
                         const newSettings = {
                           allowProfileDiscovery: newAllowDiscovery,
+                          allowGlobalSearch: newAllowDiscovery ? (user.privacySettings?.allowGlobalSearch ?? false) : false,
                           displaySettings: {
                             nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                             companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
@@ -447,6 +450,57 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* 전체 검색 허용 토글 */}
+                {user.privacySettings?.allowProfileDiscovery && (
+                  <div className="p-5 bg-[#161B22] border border-[#30363D] rounded-lg">
+                    <div className="flex items-start gap-4">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const newAllowGlobalSearch = !(user.privacySettings?.allowGlobalSearch ?? false);
+                          const newSettings = {
+                            allowProfileDiscovery: user.privacySettings?.allowProfileDiscovery ?? false,
+                            allowGlobalSearch: newAllowGlobalSearch,
+                            displaySettings: {
+                              nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
+                              companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                              positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
+                              emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
+                            },
+                            updatedAt: new Date(),
+                          };
+                          await updateUser(user.id, { privacySettings: newSettings });
+                          const updatedUser = { ...user, privacySettings: newSettings };
+                          setUser(updatedUser);
+                          setEditedUser(updatedUser);
+                        }}
+                        className={`
+                          flex-shrink-0 w-12 h-7 rounded-full transition-all duration-300
+                          ${user.privacySettings?.allowGlobalSearch
+                            ? 'bg-[#58A6FF]'
+                            : 'bg-[#30363D]'}
+                        `}
+                      >
+                        <div className={`
+                          w-5 h-5 mt-1 rounded-full bg-white shadow-md transition-transform duration-300
+                          ${user.privacySettings?.allowGlobalSearch ? 'translate-x-6' : 'translate-x-1'}
+                        `} />
+                      </button>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Search size={16} className="text-[#58A6FF]" />
+                          <h4 className="text-white font-medium">전체 검색 허용</h4>
+                        </div>
+                        <p className="text-[#8B949E] text-base leading-relaxed">
+                          {user.privacySettings?.allowGlobalSearch
+                            ? '다른 회원들이 이름이나 키워드로 나를 검색할 수 있습니다.'
+                            : '검색에 노출되지 않습니다. 네트워크 탐색에서만 발견됩니다.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* 상세 설정 (공개 시에만) */}
                 {user.privacySettings?.allowProfileDiscovery && (
                   <div className="space-y-5">
@@ -469,6 +523,7 @@ export default function ProfilePage() {
                               onClick={async () => {
                                 const newSettings = {
                                   allowProfileDiscovery: user.privacySettings?.allowProfileDiscovery ?? false,
+                                  allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: option.value as 'full' | 'partial',
                                     companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
@@ -518,6 +573,7 @@ export default function ProfilePage() {
                               onClick={async () => {
                                 const newSettings = {
                                   allowProfileDiscovery: user.privacySettings?.allowProfileDiscovery ?? false,
+                                  allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                                     companyDisplay: option.value as 'full' | 'industry' | 'size' | 'hidden',
@@ -566,6 +622,7 @@ export default function ProfilePage() {
                               onClick={async () => {
                                 const newSettings = {
                                   allowProfileDiscovery: user.privacySettings?.allowProfileDiscovery ?? false,
+                                  allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                                     companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
@@ -614,6 +671,7 @@ export default function ProfilePage() {
                               onClick={async () => {
                                 const newSettings = {
                                   allowProfileDiscovery: user.privacySettings?.allowProfileDiscovery ?? false,
+                                  allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
                                     companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',

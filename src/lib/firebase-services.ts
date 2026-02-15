@@ -879,7 +879,11 @@ export const getPublicCard = async (cardId: string): Promise<{
 // ==================== STORAGE SERVICES ====================
 
 export const uploadProfileImage = async (userId: string, file: File): Promise<string> => {
-  const storageRef = ref(storage, `profiles/${userId}/${file.name}`);
+  // 파일명에 타임스탬프를 추가하여 매번 고유한 URL 생성 (브라우저 캐시 무효화)
+  const timestamp = Date.now();
+  const extension = file.name.split('.').pop() || 'jpg';
+  const fileName = `profile_${timestamp}.${extension}`;
+  const storageRef = ref(storage, `profiles/${userId}/${fileName}`);
   await uploadBytes(storageRef, file);
   return getDownloadURL(storageRef);
 };

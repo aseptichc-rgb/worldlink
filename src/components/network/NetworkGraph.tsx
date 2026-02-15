@@ -101,6 +101,8 @@ interface TransitionState {
 // 프로필 이미지 캐시
 const imageCache = new Map<string, HTMLImageElement>();
 const imageLoadingSet = new Set<string>();
+// 노드 ID별 마지막으로 로드한 이미지 URL 추적 (캐시 무효화용)
+const nodeImageUrlMap = new Map<string, string>();
 
 function getProfileImage(src: string): HTMLImageElement | null {
   if (imageCache.has(src)) return imageCache.get(src)!;
@@ -117,6 +119,19 @@ function getProfileImage(src: string): HTMLImageElement | null {
   };
   img.src = src;
   return null;
+}
+
+// 노드의 프로필 이미지가 변경되었는지 확인하고 캐시 무효화
+function invalidateNodeImageCache(nodeId: string, newImageUrl: string | undefined): void {
+  if (!newImageUrl) return;
+
+  const prevUrl = nodeImageUrlMap.get(nodeId);
+  if (prevUrl && prevUrl !== newImageUrl) {
+    // 이전 이미지 URL 캐시 삭제
+    imageCache.delete(prevUrl);
+    imageLoadingSet.delete(prevUrl);
+  }
+  nodeImageUrlMap.set(nodeId, newImageUrl);
 }
 
 // 시맨틱 줌 레벨 상수
@@ -220,6 +235,13 @@ export default function NetworkGraph() {
   // Initialize nodes with fixed positions (category-based clustering)
   useEffect(() => {
     if (nodes.length === 0 || dimensions.width === 0) return;
+
+    // 프로필 이미지 캐시 무효화 (이미지가 변경된 노드 감지)
+    for (const node of nodes) {
+      if (node.profileImage) {
+        invalidateNodeImageCache(node.id, node.profileImage);
+      }
+    }
 
     // 트랜지션을 위해 이전 노드 위치 저장
     const prevPositions = new Map<string, { x: number; y: number }>();

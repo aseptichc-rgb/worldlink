@@ -2,6 +2,8 @@
 export interface PrivacySettings {
   // 등록 현황 공개 동의 (네트워크에 표시되기 위한 필수 조건)
   allowProfileDiscovery: boolean;
+  // 전체 검색 허용 (다른 회원이 키워드/이름으로 검색 가능)
+  allowGlobalSearch?: boolean;
   // 공개 범위 설정
   displaySettings: {
     // 이름 표시 방식: 'full' = 전체, 'partial' = 성씨만 (예: 김*님)
