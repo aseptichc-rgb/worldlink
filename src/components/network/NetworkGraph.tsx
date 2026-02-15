@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkStore } from '@/store/networkStore';
 import { NetworkNode } from '@/types';
-import { Plus, Minus, Maximize2, RotateCcw } from 'lucide-react';
+import { Plus, Minus, Maximize2, RotateCcw, Home } from 'lucide-react';
 
 interface GraphNode extends NetworkNode {
   x?: number;
@@ -1842,6 +1842,28 @@ export default function NetworkGraph() {
           <RotateCcw size={18} className="group-hover:text-[#58A6FF] transition-colors" />
         </button>
       </div>
+
+      {/* 나의 노드로 돌아가기 버튼 */}
+      <AnimatePresence>
+        {centerUserId && (
+          <motion.button
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            onClick={() => setCenterUserId(null)}
+            className="absolute bottom-16 left-6 z-20 flex items-center gap-2 px-4 py-2.5 rounded-full
+              bg-[#58A6FF]/15 backdrop-blur-xl border border-[#58A6FF]/40
+              hover:bg-[#58A6FF]/25 hover:border-[#58A6FF]/70 hover:scale-105
+              active:scale-95 transition-all duration-200 cursor-pointer group shadow-lg shadow-[#58A6FF]/10"
+          >
+            <Home size={16} className="text-[#58A6FF] group-hover:text-white transition-colors" />
+            <span className="text-xs font-medium text-[#58A6FF] group-hover:text-white transition-colors">
+              나의 인맥으로
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Zoom Level Indicator */}
       <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#30363D] flex items-center gap-2">
