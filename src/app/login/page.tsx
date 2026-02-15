@@ -139,7 +139,7 @@ function LoginContent() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="w-full max-w-[400px]"
       >
-        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-xl px-10 py-10">
+        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-xl px-10 py-12">
           {/* Header */}
           <div className="text-center mb-10">
             <h2 className="text-xl font-bold text-white tracking-tight">
@@ -172,19 +172,19 @@ function LoginContent() {
             />
 
             {/* 로그인 정보 저장 체크박스 */}
-            <label className="flex items-center gap-2 cursor-pointer select-none">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-[#30363D] bg-[#0D1117] text-[#58A6FF] focus:ring-[#58A6FF] focus:ring-offset-0 cursor-pointer"
+                className="w-5 h-5 rounded border-[#30363D] bg-[#0D1117] text-[#58A6FF] focus:ring-[#58A6FF] focus:ring-offset-0 cursor-pointer"
               />
               <span className="text-base text-[#8B949E]">로그인 정보 저장</span>
             </label>
 
             <Button
               type="submit"
-              className="w-full mt-2 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
+              className="w-full mt-4 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
               size="lg"
               isLoading={isLoading}
               rightIcon={!isLoading ? <ArrowRight size={18} /> : undefined}
@@ -203,14 +203,14 @@ function LoginContent() {
           {/* Demo Mode Button */}
           <button
             onClick={handleDemoMode}
-            className="w-full py-3.5 rounded-lg bg-[#1F6FEB]/20 border border-[#1F6FEB]/40 text-[#1F6FEB] font-medium flex items-center justify-center gap-2 hover:bg-[#1F6FEB]/30 transition-colors"
+            className="w-full py-4 rounded-lg bg-[#1F6FEB]/20 border border-[#1F6FEB]/40 text-[#1F6FEB] font-medium flex items-center justify-center gap-2 hover:bg-[#1F6FEB]/30 transition-colors"
           >
             <Play size={18} />
             데모로 체험하기
           </button>
 
           {/* Sign Up Link */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-8">
             <p className="text-[#484F58] text-base">
               아직 계정이 없으신가요?
             </p>
