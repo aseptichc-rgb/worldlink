@@ -171,18 +171,36 @@ export default function NetworkPage() {
       <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
         <div className="mx-5 mt-4 bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/50 rounded-2xl px-4 py-3">
           <div className="flex items-center gap-4">
-            {/* Menu Button */}
-            <button
-              onClick={() => setShowMenu(true)}
-              className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#30363D]/80 transition-all duration-200 group"
-            >
-              <Menu size={20} className="text-[#484F58] group-hover:text-white transition-colors" />
-            </button>
+            {/* Menu Button 또는 뒤로가기 버튼 */}
+            {centerUserId && centerUserId !== user.id ? (
+              <button
+                onClick={() => setCenterUserId(null)}
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#58A6FF]/20 transition-all duration-200 group"
+              >
+                <ArrowLeft size={20} className="text-[#58A6FF] group-hover:text-white transition-colors" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowMenu(true)}
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#30363D]/80 transition-all duration-200 group"
+              >
+                <Menu size={20} className="text-[#484F58] group-hover:text-white transition-colors" />
+              </button>
+            )}
 
-            {/* Search Bar */}
-            <div className="flex-1 min-w-0">
-              <SearchBar />
-            </div>
+            {/* Search Bar 또는 인맥 보기 표시 */}
+            {centerUserId && centerUserId !== user.id ? (
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <Users size={16} className="text-[#58A6FF] flex-shrink-0" />
+                <span className="text-sm font-medium text-white truncate">
+                  {centerUserName || '인물'}님의 인맥
+                </span>
+              </div>
+            ) : (
+              <div className="flex-1 min-w-0">
+                <SearchBar />
+              </div>
+            )}
 
             {/* Right Actions - 통일된 아이콘 스타일 */}
             <div className="flex-shrink-0 flex items-center gap-2">
@@ -223,31 +241,6 @@ export default function NetworkPage() {
           </div>
         </div>
       </div>
-
-      {/* 다른 인물 네트워크 보기 중일 때 돌아가기 바 */}
-      {centerUserId && centerUserId !== user.id && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-[88px] left-0 right-0 z-30 px-5"
-        >
-          <button
-            onClick={() => setCenterUserId(null)}
-            className="w-full flex items-center gap-3 bg-[#1C2333]/90 backdrop-blur-xl border border-[#58A6FF]/30 rounded-xl px-4 py-3 hover:bg-[#30363D]/90 transition-all duration-200 group"
-          >
-            <ArrowLeft size={18} className="text-[#58A6FF] group-hover:text-white transition-colors" />
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Users size={16} className="text-[#58A6FF] flex-shrink-0" />
-              <span className="text-sm font-medium text-white truncate">
-                {centerUserName || '인물'}님의 인맥
-              </span>
-            </div>
-            <span className="text-xs text-[#58A6FF] flex-shrink-0">
-              내 네트워크로 돌아가기
-            </span>
-          </button>
-        </motion.div>
-      )}
 
       {/* Recommendations Panel - ProfileSheet보다 낮은 z-index */}
       <motion.div

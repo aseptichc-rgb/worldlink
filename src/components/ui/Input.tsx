@@ -49,7 +49,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             type={isPassword && showPassword ? 'text' : type}
             className={`
               w-full bg-[rgba(22,27,34,0.8)] border border-[#30363D] text-[#F0F6FC]
-              rounded-xl py-3.5 px-4 text-base font-medium
+              rounded-lg py-4 px-4 text-base font-medium
               transition-all duration-300 ease-out
               focus:outline-none focus:border-[rgba(88,166,255,0.6)] focus:shadow-[0_0_0_3px_rgba(88,166,255,0.15)]
               placeholder:text-[#484F58]

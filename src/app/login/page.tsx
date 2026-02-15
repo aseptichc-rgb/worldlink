@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Play } from 'lucide-react';
@@ -8,6 +8,8 @@ import { Input, Button } from '@/components/ui';
 import { loginWithEmail, getUser } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
 import { User } from '@/types';
+
+const STORAGE_KEY = 'nodded_saved_credentials';
 
 export default function LoginPage() {
   return (
@@ -25,6 +27,22 @@ function LoginContent() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // 저장된 로그인 정보 불러오기
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(saved);
+        if (savedEmail) setEmail(savedEmail);
+        if (savedPassword) setPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch (e) {
+      console.error('Failed to load saved credentials:', e);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +54,13 @@ function LoginContent() {
       const userData = await getUser(userCredential.user.uid);
 
       if (userData) {
+        // 로그인 정보 저장/삭제
+        if (rememberMe) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, password }));
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+
         setUser(userData);
         router.push('/card');
       } else {
@@ -146,6 +171,17 @@ function LoginContent() {
               required
             />
 
+            {/* 로그인 정보 저장 체크박스 */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-[#30363D] bg-[#0D1117] text-[#58A6FF] focus:ring-[#58A6FF] focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-sm text-[#8B949E]">로그인 정보 저장</span>
+            </label>
+
             <Button
               type="submit"
               className="w-full mt-2 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
@@ -167,7 +203,7 @@ function LoginContent() {
           {/* Demo Mode Button */}
           <button
             onClick={handleDemoMode}
-            className="w-full py-3 rounded-xl bg-[#1F6FEB]/20 border border-[#1F6FEB]/40 text-[#1F6FEB] font-medium flex items-center justify-center gap-2 hover:bg-[#1F6FEB]/30 transition-colors"
+            className="w-full py-3.5 rounded-lg bg-[#1F6FEB]/20 border border-[#1F6FEB]/40 text-[#1F6FEB] font-medium flex items-center justify-center gap-2 hover:bg-[#1F6FEB]/30 transition-colors"
           >
             <Play size={18} />
             데모로 체험하기

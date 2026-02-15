@@ -31,7 +31,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     onClick,
     title,
   }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#161B22]';
+    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#161B22]';
 
     const variants = {
       primary: 'bg-gradient-to-r from-[#1F6FEB] to-[#58A6FF] text-white hover:shadow-[0_8px_24px_rgba(88,166,255,0.25)] focus:ring-[#58A6FF]',

@@ -19,6 +19,8 @@ import {
   Phone,
   Link2,
   Hash,
+  Send,
+  Loader2,
 } from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
 import { useNetworkStore } from '@/store/networkStore';
@@ -26,6 +28,7 @@ import { useCoffeeChatStore } from '@/store/coffeeChatStore';
 import { useConnectionRequestStore } from '@/store/connectionRequestStore';
 import { useMemoStore } from '@/store/memoStore';
 import { useAuthStore } from '@/store/authStore';
+import { useMessageStore, Message } from '@/store/messageStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
@@ -37,6 +40,7 @@ export default function ProfileSheet() {
   const { openRequestModal: openConnectionRequestModal } = useConnectionRequestStore();
   const { getMemo, setMemo, deleteMemo } = useMemoStore();
   const { user: currentUser } = useAuthStore();
+  const { addMessage } = useMessageStore();
 
   const [connectionPath, setConnectionPath] = useState<User[]>([]);
   const [isLoadingPath, setIsLoadingPath] = useState(false);
@@ -48,13 +52,22 @@ export default function ProfileSheet() {
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [memoText, setMemoText] = useState('');
 
+  // 메시지 관련 상태
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageContent, setMessageContent] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [messageSent, setMessageSent] = useState(false);
+
   // 선택된 노드의 메모 가져오기
   const currentMemo = selectedNode ? getMemo(selectedNode.id) : null;
 
-  // 노드가 바뀌면 메모 편집 모드 초기화
+  // 노드가 바뀌면 메모 편집 모드 및 메시지 모달 초기화
   useEffect(() => {
     setIsEditingMemo(false);
     setMemoText(currentMemo?.content || '');
+    setShowMessageModal(false);
+    setMessageContent('');
+    setMessageSent(false);
   }, [selectedNode?.id, currentMemo?.content]);
 
   // 내 1촌 목록 불러오기 (공통 인맥 표시용)
@@ -168,6 +181,47 @@ export default function ProfileSheet() {
   const handleCoffeeChatClick = () => {
     if (selectedNode) {
       openRequestModal(selectedNode.id);
+    }
+  };
+
+  // 메시지 보내기 핸들러
+  const handleSendMessage = async () => {
+    if (!selectedNode || !currentUser || !messageContent.trim()) return;
+
+    setIsSendingMessage(true);
+
+    const currentUserId = getDemoCompatibleId(currentUser) !== currentUser.id
+      ? getDemoCompatibleId(currentUser)
+      : currentUser.id;
+
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      fromUserId: currentUserId,
+      toUserId: selectedNode.id,
+      content: messageContent.trim(),
+      createdAt: new Date(),
+      isRead: false,
+    };
+
+    // 전송 시뮬레이션
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    addMessage(newMessage);
+    setMessageSent(true);
+    setIsSendingMessage(false);
+
+    // 2초 후 모달 닫기
+    setTimeout(() => {
+      setShowMessageModal(false);
+      setMessageContent('');
+      setMessageSent(false);
+    }, 1500);
+  };
+
+  // 메시지 버튼 클릭 (1촌용)
+  const handleMessageClick = () => {
+    if (selectedNode?.degree === 1) {
+      setShowMessageModal(true);
     }
   };
 
@@ -689,7 +743,7 @@ export default function ProfileSheet() {
                     <Button
                       className="flex-1 text-sm py-2.5"
                       leftIcon={<MessageCircle size={16} />}
-                      onClick={handleCoffeeChatClick}
+                      onClick={handleMessageClick}
                     >
                       메세지
                     </Button>
@@ -725,6 +779,92 @@ export default function ProfileSheet() {
               </div>
             </div>
           </div>
+        </motion.div>
+      )}
+
+      {/* 메시지 보내기 모달 */}
+      {showMessageModal && selectedNode && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => {
+            if (!isSendingMessage) {
+              setShowMessageModal(false);
+              setMessageContent('');
+            }
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {messageSent ? (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#58A6FF]/20 flex items-center justify-center">
+                  <Check size={32} className="text-[#58A6FF]" />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">메시지 전송 완료!</h3>
+                <p className="text-sm text-[#8B949E]">
+                  {selectedNode.name}님에게 메시지를 보냈습니다
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={selectedNode.profileImage}
+                      name={selectedNode.name}
+                      size="md"
+                    />
+                    <div>
+                      <h3 className="font-bold text-white">{selectedNode.name}</h3>
+                      <p className="text-xs text-[#8B949E]">
+                        {selectedNode.company} · {selectedNode.position}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowMessageModal(false);
+                      setMessageContent('');
+                    }}
+                    className="p-2 rounded-lg hover:bg-[#30363D] transition-colors"
+                  >
+                    <X size={18} className="text-[#8B949E]" />
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <textarea
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    placeholder={`${selectedNode.name}님에게 보낼 메시지를 작성하세요...`}
+                    className="w-full bg-[#0D1117] border border-[#30363D] text-white rounded-xl py-3 px-4 text-sm resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58] min-h-[120px]"
+                    autoFocus
+                    maxLength={500}
+                  />
+                  <div className="flex justify-end mt-2">
+                    <span className="text-xs text-[#484F58]">{messageContent.length}/500</span>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={handleSendMessage}
+                  disabled={!messageContent.trim() || isSendingMessage}
+                  leftIcon={isSendingMessage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                >
+                  {isSendingMessage ? '전송 중...' : '메시지 보내기'}
+                </Button>
+              </>
+            )}
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
