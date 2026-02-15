@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, Scan, User, Network, X, UserPlus } from 'lucide-react';
+import { QrCode, User, Network, X, UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const navItems = [
   { path: '/card', icon: QrCode, label: '내 명함', requiresAuth: true },
-  { path: '/scan', icon: Scan, label: '스캔', requiresAuth: false },
   { path: '/network', icon: Network, label: '인맥', requiresAuth: true },
   { path: '/profile', icon: User, label: '프로필', requiresAuth: true },
 ];
@@ -42,46 +41,32 @@ export default function BottomNav() {
           {navItems.map((item) => {
             const isActive = pathname === item.path;
             const Icon = item.icon;
-            const isScan = item.path === '/scan';
 
             return (
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path, item.requiresAuth)}
-                className={`relative flex flex-col items-center justify-center w-16 h-full ${
-                  isScan ? '-mt-4' : ''
-                }`}
+                className="relative flex flex-col items-center justify-center w-16 h-full"
               >
-              {isScan ? (
-                <motion.div
-                  whileTap={{ scale: 0.9 }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#58A6FF] to-[#1F6FEB] flex items-center justify-center shadow-[0_4px_16px_rgba(88,166,255,0.3)]"
+                <Icon
+                  size={22}
+                  className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'}`}
+                />
+                <span
+                  className={`text-[10px] mt-1 transition-colors duration-200 ${
+                    isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'
+                  }`}
                 >
-                  <Icon size={26} className="text-white" />
-                </motion.div>
-              ) : (
-                <>
-                  <Icon
-                    size={22}
-                    className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'}`}
+                  {item.label}
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute -bottom-0 w-6 h-0.5 rounded-full bg-[#58A6FF] shadow-[0_0_8px_rgba(88,166,255,0.5)]"
                   />
-                  <span
-                    className={`text-[10px] mt-1 transition-colors duration-200 ${
-                      isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute -bottom-0 w-6 h-0.5 rounded-full bg-[#58A6FF] shadow-[0_0_8px_rgba(88,166,255,0.5)]"
-                    />
-                  )}
-                </>
-              )}
-            </button>
-          );
+                )}
+              </button>
+            );
           })}
         </div>
       </nav>
