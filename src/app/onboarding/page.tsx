@@ -243,7 +243,7 @@ function OnboardingContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="flex items-center gap-2 mb-8"
+        className="flex items-center gap-3 mb-10"
       >
         {steps.map((s, index) => {
           const Icon = s.icon;
@@ -254,20 +254,20 @@ function OnboardingContent() {
             <div key={s.key} className="flex items-center">
               <div
                 className={`
-                  flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium
+                  flex items-center gap-2.5 px-4 py-2 rounded-full text-base font-medium
                   transition-all duration-300
                   ${isActive
-                    ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]/40'
+                    ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]/50 shadow-[0_0_12px_rgba(88,166,255,0.2)]'
                     : isCompleted
-                      ? 'bg-[#3FB950]/20 text-[#3FB950]'
-                      : 'text-[#484F58]'}
+                      ? 'bg-[#3FB950]/20 text-[#3FB950] border border-[#3FB950]/30'
+                      : 'text-[#484F58] border border-transparent'}
                 `}
               >
-                <Icon size={14} />
+                <Icon size={16} />
                 <span className="hidden sm:inline">{s.label}</span>
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-8 h-px mx-2 ${isCompleted ? 'bg-[#3FB950]' : 'bg-[#30363D]'}`} />
+                <div className={`w-10 h-0.5 mx-3 rounded-full ${isCompleted ? 'bg-[#3FB950]' : 'bg-[#30363D]'}`} />
               )}
             </div>
           );
@@ -345,7 +345,7 @@ function OnboardingContent() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF]"
+                  className="w-full mt-2 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF]"
                   size="lg"
                   rightIcon={<ArrowRight size={18} />}
                 >
@@ -520,7 +520,7 @@ function OnboardingContent() {
                 <button
                   onClick={handleRejectConnection}
                   disabled={connectionLoading}
-                  className="flex-1 py-3.5 rounded-xl bg-[#30363D] text-[#8B949E] font-medium flex items-center justify-center gap-2 hover:bg-[#253D5E] transition-colors"
+                  className="flex-1 py-4 rounded-lg bg-[#30363D] text-[#8B949E] font-medium flex items-center justify-center gap-2 hover:bg-[#253D5E] transition-colors"
                 >
                   <X size={18} />
                   거절
@@ -528,7 +528,7 @@ function OnboardingContent() {
                 <button
                   onClick={handleAcceptConnection}
                   disabled={connectionLoading}
-                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium flex items-center justify-center gap-2"
+                  className="flex-1 py-4 rounded-lg bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium flex items-center justify-center gap-2"
                 >
                   {connectionLoading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

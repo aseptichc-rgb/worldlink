@@ -289,9 +289,9 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                 maxLength={100}
                 className="
                   w-full bg-[#161B22] border border-[#30363D] text-white
-                  rounded-xl py-3.5 px-5 text-base leading-relaxed
+                  rounded-lg py-4 px-5 text-base leading-relaxed
                   transition-all duration-300 resize-none
-                  focus:outline-none focus:border-[#58A6FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]
+                  focus:outline-none focus:border-[#58A6FF] focus:shadow-[0_0_0_3px_rgba(88,166,255,0.15)]
                   placeholder:text-[#484F58]
                 "
                 rows={3}
