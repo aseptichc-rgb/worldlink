@@ -209,17 +209,17 @@ export default function MyCardPage() {
                 size="xl"
                 hasGlow
               />
-              <div className="flex-1 min-w-0">
-                <h2 className="text-2xl font-bold text-white mb-2">{myCard.name}</h2>
+              <div className="flex-1 min-w-0 py-1">
+                <h2 className="text-2xl font-bold text-white mb-3">{myCard.name}</h2>
                 {myCard.position && (
-                  <div className="flex items-center gap-2 text-[#8B949E] mb-1.5">
-                    <Briefcase size={14} />
+                  <div className="flex items-center gap-2.5 text-[#8B949E] mb-2">
+                    <Briefcase size={14} className="flex-shrink-0" />
                     <span className="text-base">{myCard.position}</span>
                   </div>
                 )}
                 {myCard.company && (
-                  <div className="flex items-center gap-2 text-[#8B949E]">
-                    <Building2 size={14} />
+                  <div className="flex items-center gap-2.5 text-[#8B949E]">
+                    <Building2 size={14} className="flex-shrink-0" />
                     <span className="text-base">{myCard.company}</span>
                   </div>
                 )}
@@ -228,13 +228,13 @@ export default function MyCardPage() {
 
             {/* 키워드 태그 */}
             {myCard.keywords && myCard.keywords.length > 0 && (
-              <div className="flex flex-wrap gap-2.5 mb-7">
+              <div className="flex flex-wrap gap-2.5 mb-7 mt-1">
                 {myCard.keywords.slice(0, 5).map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-4 py-2 text-sm font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
+                    className="px-4 py-2.5 text-sm font-medium rounded-lg bg-[#7EE0FF]/10 text-[#7EE0FF]"
                   >
-                    {keyword}
+                    #{keyword}
                   </span>
                 ))}
               </div>
