@@ -37,9 +37,9 @@ export default function Avatar({
   };
 
   const statusColors = {
-    available: 'bg-[#10B981]',
-    busy: 'bg-[#EF4444]',
-    pending: 'bg-[#F59E0B]',
+    available: 'bg-[#3FB950]',
+    busy: 'bg-[#FF6B8A]',
+    pending: 'bg-[#D29922]',
   };
 
   const initials = name
@@ -54,8 +54,9 @@ export default function Avatar({
       <div
         className={`
           ${sizes[size]} rounded-full overflow-hidden
-          border-2 ${hasGlow ? 'border-[#2563EB]' : 'border-[#E2E8F0]'}
-          bg-[#F1F3F5] flex items-center justify-center
+          border-2 ${hasGlow ? 'border-[#58A6FF]' : 'border-[#30363D]'}
+          ${hasGlow ? 'shadow-[0_0_16px_rgba(88,166,255,0.25)]' : ''}
+          bg-[#1C2333] flex items-center justify-center
         `}
       >
         {src ? (
@@ -66,11 +67,11 @@ export default function Avatar({
             className="object-cover rounded-full"
           />
         ) : initials ? (
-          <span className="text-[#64748B] font-medium">
+          <span className="text-[#8B949E] font-medium">
             {initials}
           </span>
         ) : (
-          <User className="text-[#94A3B8]" size={size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'md' ? 20 : size === 'lg' ? 28 : 36} />
+          <User className="text-[#484F58]" size={size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'md' ? 20 : size === 'lg' ? 28 : 36} />
         )}
       </div>
       {status && (
@@ -78,7 +79,7 @@ export default function Avatar({
           className={`
             absolute bottom-0 right-0 rounded-full
             ${statusSizes[size]} ${statusColors[status]}
-            border-2 border-white
+            border-2 border-[#161B22]
           `}
         />
       )}

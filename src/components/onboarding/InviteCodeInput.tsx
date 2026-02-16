@@ -113,21 +113,21 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
             whileFocus={{ scale: 1.1 }}
             className={`
               w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold
-              bg-[#FFFFFF] border-2 rounded-xl
-              text-[#1A1A2E] uppercase
+              bg-[#161B22] border-2 rounded-xl
+              text-white uppercase
               transition-all duration-300
               focus:outline-none
               ${error
-                ? 'border-[#EF4444] focus:border-[#EF4444] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
+                ? 'border-[#FF6B8A] focus:border-[#FF6B8A] focus:shadow-[0_0_0_3px_rgba(255,64,129,0.25)]'
                 : digit
-                  ? 'border-[#2563EB] focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)]'
-                  : 'border-[#E2E8F0] focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)]'
+                  ? 'border-[#58A6FF] focus:border-[#58A6FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
+                  : 'border-[#30363D] focus:border-[#58A6FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
               }
             `}
           />
         ))}
 
-        <span className="text-[#94A3B8] text-2xl font-bold mx-1">-</span>
+        <span className="text-[#484F58] text-2xl font-bold mx-1">-</span>
 
         {code.slice(3).map((digit, idx) => {
           const index = idx + 3;
@@ -145,15 +145,15 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
               whileFocus={{ scale: 1.1 }}
               className={`
                 w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold
-                bg-[#FFFFFF] border-2 rounded-xl
-                text-[#1A1A2E] uppercase
+                bg-[#161B22] border-2 rounded-xl
+                text-white uppercase
                 transition-all duration-300
                 focus:outline-none
                 ${error
-                  ? 'border-[#EF4444] focus:border-[#EF4444] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
+                  ? 'border-[#FF6B8A] focus:border-[#FF6B8A] focus:shadow-[0_0_0_3px_rgba(255,64,129,0.25)]'
                   : digit
-                    ? 'border-[#2563EB] focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)]'
-                    : 'border-[#E2E8F0] focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)]'
+                    ? 'border-[#58A6FF] focus:border-[#58A6FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
+                    : 'border-[#30363D] focus:border-[#58A6FF] focus:shadow-[0_0_0_3px_rgba(0,229,255,0.25)]'
                 }
               `}
             />
@@ -167,9 +167,9 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="mt-6 flex items-center gap-2 text-[#64748B]"
+            className="mt-6 flex items-center gap-2 text-[#8B949E]"
           >
-            <div className="w-5 h-5 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[#58A6FF] border-t-transparent rounded-full animate-spin" />
             <span>코드 검증 중...</span>
           </motion.div>
         )}
@@ -181,16 +181,16 @@ export default function InviteCodeInput({ onValidCode }: InviteCodeInputProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 text-[#EF4444] text-base"
+            className="mt-4 text-[#FF6B8A] text-base"
           >
             {error}
           </motion.p>
         )}
       </AnimatePresence>
 
-      <p className="mt-8 text-[#94A3B8] text-base text-center leading-relaxed">
+      <p className="mt-8 text-[#484F58] text-base text-center leading-relaxed">
         NODDED는 초대를 통해서만 가입할 수 있습니다.<br />
-        <span className="text-[#94A3B8]">신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.</span>
+        <span className="text-[#484F58]">신뢰할 수 있는 네트워크를 위한 첫 걸음입니다.</span>
       </p>
     </motion.div>
   );

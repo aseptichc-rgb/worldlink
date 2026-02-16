@@ -74,7 +74,7 @@ export default function ContactList({
               {/* Category Header */}
               <div
                 className="sticky top-[140px] z-20 px-4 py-3 backdrop-blur-xl"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                style={{ backgroundColor: 'rgba(22, 27, 34, 0.95)' }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function ContactList({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.02 }}
-                    className="w-full bg-white border border-[#E2E8F0] rounded-xl p-4 hover:border-[#E2E8F0] hover:bg-[#F8F9FA] transition-all group"
+                    className="w-full bg-[#1C2333] border border-[#30363D] rounded-xl p-4 hover:border-[#30363D] hover:bg-[#161B22] transition-all group"
                   >
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
@@ -124,24 +124,24 @@ export default function ContactList({
                         className="flex-1 min-w-0 text-left"
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-[#1A1A2E] group-hover:text-[#2563EB] transition-colors">
+                          <span className="font-semibold text-white group-hover:text-[#58A6FF] transition-colors">
                             {contact.name}
                           </span>
                           {contact.position && (
-                            <span className="text-sm text-[#64748B] truncate">
+                            <span className="text-sm text-[#8B949E] truncate">
                               {contact.position.split('/')[0].trim()}
                             </span>
                           )}
                         </div>
 
                         {contact.company && (
-                          <div className="flex items-center gap-1.5 text-base text-[#64748B] mb-2">
+                          <div className="flex items-center gap-1.5 text-base text-[#8B949E] mb-2">
                             <Building2 size={14} className="shrink-0" />
                             <span className="truncate">{contact.company}</span>
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 text-sm text-[#94A3B8]">
+                        <div className="flex items-center gap-3 text-sm text-[#484F58]">
                           {contact.phone && (
                             <div className="flex items-center gap-1">
                               <Phone size={12} />
@@ -161,7 +161,7 @@ export default function ContactList({
                       {showInviteButton && (
                         <div className="shrink-0">
                           {contact.isInvited ? (
-                            <div className="flex items-center gap-1 px-3 py-1.5 bg-[#10B981]/20 text-[#10B981] rounded-lg text-xs">
+                            <div className="flex items-center gap-1 px-3 py-1.5 bg-[#238636]/20 text-[#3FB950] rounded-lg text-xs">
                               <Check size={14} />
                               <span>초대됨</span>
                             </div>
@@ -169,7 +169,7 @@ export default function ContactList({
                             <motion.button
                               whileTap={{ scale: 0.95 }}
                               onClick={(e) => handleInvite(e, contact)}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-[#2563EB]/20 text-[#2563EB] rounded-lg text-xs hover:bg-[#2563EB]/30 transition-colors"
+                              className="flex items-center gap-1 px-3 py-1.5 bg-[#58A6FF]/20 text-[#58A6FF] rounded-lg text-xs hover:bg-[#58A6FF]/30 transition-colors"
                             >
                               <UserPlus size={14} />
                               <span>초대</span>
@@ -188,8 +188,8 @@ export default function ContactList({
         {contacts.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-4">🔍</div>
-            <div className="text-lg font-semibold text-[#1A1A2E] mb-2">검색 결과가 없습니다</div>
-            <div className="text-base text-[#64748B]">다른 검색어를 시도해보세요</div>
+            <div className="text-lg font-semibold text-white mb-2">검색 결과가 없습니다</div>
+            <div className="text-base text-[#8B949E]">다른 검색어를 시도해보세요</div>
           </div>
         )}
       </div>
@@ -201,7 +201,7 @@ export default function ContactList({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm flex items-end"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end"
             onClick={() => setInviteModal(null)}
           >
             <motion.div
@@ -210,25 +210,25 @@ export default function ContactList({
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-white rounded-t-2xl border-t border-[#E2E8F0] p-6"
+              className="w-full bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] p-6"
             >
               <button
                 onClick={() => setInviteModal(null)}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#64748B]" />
+                <X size={20} className="text-[#8B949E]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#94A3B8] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#EFF6FF] flex items-center justify-center">
-                  <Send size={28} className="text-[#2563EB]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#58A6FF]/20 to-[#1F6FEB]/20 flex items-center justify-center">
+                  <Send size={28} className="text-[#58A6FF]" />
                 </div>
-                <h3 className="text-xl font-semibold text-[#1A1A2E] mb-2">
+                <h3 className="text-xl font-semibold text-white mb-2">
                   {inviteModal.name}님 초대하기
                 </h3>
-                <p className="text-base text-[#64748B]">
+                <p className="text-base text-[#8B949E]">
                   {inviteModal.company && `${inviteModal.company} · `}
                   {inviteModal.position?.split('/')[0].trim()}
                 </p>
@@ -238,7 +238,7 @@ export default function ContactList({
                 {inviteModal.phone && (
                   <button
                     onClick={() => confirmInvite('sms')}
-                    className="w-full py-4 bg-[#2563EB] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#58A6FF] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={20} />
                     문자로 초대하기
@@ -246,11 +246,11 @@ export default function ContactList({
                 )}
                 <button
                   onClick={() => confirmInvite('copy')}
-                  className="w-full py-4 bg-[#E2E8F0] text-[#1A1A2E] font-medium rounded-xl flex items-center justify-center gap-2 border border-[#E2E8F0]"
+                  className="w-full py-4 bg-[#30363D] text-white font-medium rounded-xl flex items-center justify-center gap-2 border border-[#30363D]"
                 >
                   {copied ? (
                     <>
-                      <Check size={20} className="text-[#10B981]" />
+                      <Check size={20} className="text-[#3FB950]" />
                       복사됨!
                     </>
                   ) : (

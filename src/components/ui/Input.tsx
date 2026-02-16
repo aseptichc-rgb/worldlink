@@ -30,7 +30,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-[13px] font-medium text-[#64748B] mb-2 tracking-wide">
+          <label className="block text-[13px] font-medium text-[#CCCCCC] mb-2 tracking-wide">
             {label}
           </label>
         )}
@@ -39,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <div className={`
               absolute left-4 top-1/2 -translate-y-1/2
               transition-colors duration-200
-              ${isFocused ? 'text-[#2563EB]' : 'text-[#94A3B8]'}
+              ${isFocused ? 'text-[#007AFF]' : 'text-[#484F58]'}
             `}>
               {leftIcon}
             </div>
@@ -48,15 +48,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={`
-              w-full bg-[#F8F9FA] border border-[#E2E8F0] text-[#1A1A2E]
-              rounded-xl h-[52px] px-5 text-base font-medium
-              transition-all duration-200 ease-out
-              focus:outline-none focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.15)] focus:bg-white
-              placeholder:text-[#CBD5E1]
-              hover:border-[#CBD5E1]
+              w-full bg-[#252525] border border-[#333333] text-[#FFFFFF]
+              rounded-lg h-[52px] px-5 text-base font-medium
+              transition-all duration-300 ease-out
+              focus:outline-none focus:border-[#007AFF] focus:shadow-[0_0_0_3px_rgba(0,122,255,0.15)]
+              placeholder:text-[#484F58]
+              hover:border-[rgba(240,246,252,0.2)]
               ${leftIcon ? 'pl-12' : ''}
               ${rightIcon || isPassword ? 'pr-12' : ''}
-              ${error ? 'border-[#EF4444]/60 focus:border-[#EF4444] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]' : ''}
+              ${error ? 'border-[#FF4D4D]/60 focus:border-[#FF4D4D] focus:shadow-[0_0_0_3px_rgba(255,77,77,0.15)]' : ''}
               ${className}
             `}
             onFocus={(e) => {
@@ -73,19 +73,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#1A1A2E] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58] hover:text-[#F0F6FC] transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           )}
           {rightIcon && !isPassword && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58]">
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-2 text-xs text-[#EF4444]">
+          <p className="mt-2 text-xs text-[#FF4D4D]">
             {error}
           </p>
         )}

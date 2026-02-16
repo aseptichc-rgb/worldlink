@@ -84,21 +84,21 @@ export default function CardsPage() {
   // 비로그인 사용자도 로컬에 저장된 명함 볼 수 있음
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC] pb-24">
+    <div className="min-h-screen bg-[#0D1117] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#FAFBFC]/80 backdrop-blur-sm border-b border-[#E2E8F0]">
+      <div className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#30363D]">
         <div className="px-5 py-4">
-          <h1 className="text-lg font-semibold text-[#1A1A2E] mb-4">명함첩</h1>
+          <h1 className="text-lg font-semibold text-white mb-4">명함첩</h1>
 
           {/* 검색바 */}
           <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#484F58]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="이름, 회사, 키워드로 검색"
-              className="w-full pl-11 pr-5 py-3 rounded-xl bg-[#FFFFFF] border border-[#E2E8F0] text-[#1A1A2E] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
+              className="w-full pl-11 pr-5 py-3 rounded-xl bg-[#1C2333] border border-[#30363D] text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF]"
             />
           </div>
         </div>
@@ -107,10 +107,10 @@ export default function CardsPage() {
       <div className="px-5 py-4">
         {/* 카드 수 */}
         <div className="flex items-center justify-between mb-5">
-          <span className="text-base text-[#64748B]">
+          <span className="text-base text-[#8B949E]">
             총 {filteredCards.length}개의 명함
           </span>
-          <button className="flex items-center gap-1 text-base text-[#64748B]">
+          <button className="flex items-center gap-1 text-base text-[#8B949E]">
             <Filter size={16} />
             필터
           </button>
@@ -119,13 +119,13 @@ export default function CardsPage() {
         {/* 명함 목록 */}
         {filteredCards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 rounded-full bg-[#F1F3F5] flex items-center justify-center mb-4">
-              <Users size={32} className="text-[#94A3B8]" />
+            <div className="w-20 h-20 rounded-full bg-[#1C2333] flex items-center justify-center mb-4">
+              <Users size={32} className="text-[#484F58]" />
             </div>
-            <p className="text-[#64748B] text-center">
+            <p className="text-[#8B949E] text-center">
               {searchQuery ? '검색 결과가 없습니다' : '저장된 명함이 없습니다'}
             </p>
-            <p className="text-base text-[#94A3B8] mt-1">
+            <p className="text-base text-[#484F58] mt-1">
               {!searchQuery && 'QR 코드를 스캔해서 명함을 저장해보세요'}
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function CardsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="relative p-5 rounded-xl bg-[#FFFFFF] border border-[#E2E8F0]"
+                className="relative p-5 rounded-xl bg-[#1C2333] border border-[#30363D]"
               >
                 {/* 명함 이미지 썸네일 */}
                 {saved.cardImage && (
@@ -148,7 +148,7 @@ export default function CardsPage() {
                     <img
                       src={saved.cardImage}
                       alt="명함 이미지"
-                      className="w-full h-24 object-cover rounded-lg border border-[#E2E8F0]"
+                      className="w-full h-24 object-cover rounded-lg border border-[#30363D]"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg flex items-center justify-center">
                       <ImageIcon size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -170,16 +170,16 @@ export default function CardsPage() {
                       onClick={() => handleViewNetwork(saved.cardId)}
                       className="text-left"
                     >
-                      <h3 className="font-semibold text-[#1A1A2E]">{saved.card.name}</h3>
+                      <h3 className="font-semibold text-white">{saved.card.name}</h3>
                     </button>
 
                     {(saved.card.position || saved.card.company) && (
-                      <div className="flex items-center gap-2 text-base text-[#64748B] mt-0.5">
+                      <div className="flex items-center gap-2 text-base text-[#8B949E] mt-0.5">
                         {saved.card.position && (
                           <span>{saved.card.position}</span>
                         )}
                         {saved.card.position && saved.card.company && (
-                          <span className="text-[#94A3B8]">@</span>
+                          <span className="text-[#484F58]">@</span>
                         )}
                         {saved.card.company && (
                           <span>{saved.card.company}</span>
@@ -193,13 +193,13 @@ export default function CardsPage() {
                         {saved.card.keywords.slice(0, 3).map((keyword, idx) => (
                           <span
                             key={idx}
-                            className="px-2.5 py-1 text-sm rounded-full bg-[#3B82F6]/10 text-[#3B82F6]"
+                            className="px-2.5 py-1 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
                           >
                             {keyword}
                           </span>
                         ))}
                         {saved.card.keywords.length > 3 && (
-                          <span className="px-2 py-0.5 text-sm text-[#94A3B8]">
+                          <span className="px-2 py-0.5 text-sm text-[#484F58]">
                             +{saved.card.keywords.length - 3}
                           </span>
                         )}
@@ -208,13 +208,13 @@ export default function CardsPage() {
 
                     {/* 메모 */}
                     {saved.memo && (
-                      <div className="mt-3 p-3 rounded-lg bg-[#F8F9FA] border border-[#E2E8F0]">
-                        <p className="text-sm text-[#64748B] line-clamp-2">{saved.memo}</p>
+                      <div className="mt-3 p-3 rounded-lg bg-[#161B22] border border-[#30363D]">
+                        <p className="text-sm text-[#8B949E] line-clamp-2">{saved.memo}</p>
                       </div>
                     )}
 
                     {/* 저장 시간 */}
-                    <div className="flex items-center gap-1 mt-2 text-sm text-[#94A3B8]">
+                    <div className="flex items-center gap-1 mt-2 text-sm text-[#484F58]">
                       <Clock size={12} />
                       <span>{formatDate(saved.savedAt)}</span>
                     </div>
@@ -224,21 +224,21 @@ export default function CardsPage() {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => handleViewNetwork(saved.cardId)}
-                      className="p-2 rounded-lg bg-[#2563EB]/10 text-[#2563EB] hover:bg-[#2563EB]/20 transition-colors"
+                      className="p-2 rounded-lg bg-[#58A6FF]/10 text-[#58A6FF] hover:bg-[#58A6FF]/20 transition-colors"
                       title="인맥 보기"
                     >
                       <Network size={18} />
                     </button>
                     <button
                       onClick={() => handleEditMemo(saved)}
-                      className="p-2 rounded-lg bg-[#E2E8F0] text-[#64748B] hover:bg-[#CBD5E1] transition-colors"
+                      className="p-2 rounded-lg bg-[#30363D] text-[#8B949E] hover:bg-[#2D333B] transition-colors"
                       title="메모"
                     >
                       <StickyNote size={18} />
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(saved.cardId)}
-                      className="p-2 rounded-lg bg-[#E2E8F0] text-[#64748B] hover:bg-[#EF4444]/20 hover:text-[#EF4444] transition-colors"
+                      className="p-2 rounded-lg bg-[#30363D] text-[#8B949E] hover:bg-[#F85149]/20 hover:text-[#F85149] transition-colors"
                       title="삭제"
                     >
                       <Trash2 size={18} />
@@ -253,20 +253,20 @@ export default function CardsPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 rounded-lg bg-[#FFFFFF]/95 backdrop-blur-sm flex items-center justify-center"
+                      className="absolute inset-0 rounded-lg bg-[#161B22]/95 backdrop-blur-sm flex items-center justify-center"
                     >
                       <div className="text-center">
-                        <p className="text-[#1A1A2E] mb-4">명함을 삭제하시겠습니까?</p>
+                        <p className="text-white mb-4">명함을 삭제하시겠습니까?</p>
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => setShowDeleteConfirm(null)}
-                            className="px-4 py-2 rounded-lg bg-[#E2E8F0] text-[#1A1A2E]"
+                            className="px-4 py-2 rounded-lg bg-[#30363D] text-white"
                           >
                             취소
                           </button>
                           <button
                             onClick={() => handleDelete(saved.cardId)}
-                            className="px-4 py-2 rounded-lg bg-[#EF4444] text-white"
+                            className="px-4 py-2 rounded-lg bg-[#F85149] text-white"
                           >
                             삭제
                           </button>
@@ -288,7 +288,7 @@ export default function CardsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm flex items-end"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end"
             onClick={() => setShowMemoModal(false)}
           >
             <motion.div
@@ -297,14 +297,14 @@ export default function CardsPage() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#FFFFFF] rounded-t-2xl border-t border-[#E2E8F0] px-8 py-7"
+              className="w-full bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] px-8 py-7"
             >
-              <div className="w-12 h-1 bg-[#CBD5E1] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
 
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-semibold text-[#1A1A2E]">메모</h3>
+                <h3 className="text-lg font-semibold text-white">메모</h3>
                 <button onClick={() => setShowMemoModal(false)}>
-                  <X size={24} className="text-[#64748B]" />
+                  <X size={24} className="text-[#8B949E]" />
                 </button>
               </div>
 
@@ -315,8 +315,8 @@ export default function CardsPage() {
                   size="sm"
                 />
                 <div>
-                  <p className="font-medium text-[#1A1A2E]">{selectedCard.card.name}</p>
-                  <p className="text-base text-[#64748B] mt-0.5">
+                  <p className="font-medium text-white">{selectedCard.card.name}</p>
+                  <p className="text-base text-[#8B949E] mt-0.5">
                     {selectedCard.card.position} @ {selectedCard.card.company}
                   </p>
                 </div>
@@ -326,12 +326,12 @@ export default function CardsPage() {
                 value={memoText}
                 onChange={(e) => setMemoText(e.target.value)}
                 placeholder="이 사람에 대한 메모를 작성하세요..."
-                className="w-full h-32 p-5 rounded-xl bg-[#FFFFFF] border border-[#E2E8F0] text-[#1A1A2E] placeholder:text-[#94A3B8] resize-none focus:outline-none focus:border-[#2563EB] leading-relaxed"
+                className="w-full h-32 p-5 rounded-xl bg-[#161B22] border border-[#30363D] text-white placeholder:text-[#484F58] resize-none focus:outline-none focus:border-[#58A6FF] leading-relaxed"
               />
 
               <button
                 onClick={handleSaveMemo}
-                className="w-full mt-5 py-4 rounded-xl bg-[#2563EB] text-white font-medium"
+                className="w-full mt-5 py-4 rounded-xl bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium"
               >
                 저장
               </button>
@@ -347,7 +347,7 @@ export default function CardsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setShowImageModal(null)}
           >
             <motion.div
@@ -366,7 +366,7 @@ export default function CardsPage() {
               <img
                 src={showImageModal}
                 alt="명함 이미지"
-                className="w-full rounded-xl border border-[#E2E8F0]"
+                className="w-full rounded-xl border border-[#30363D]"
               />
             </motion.div>
           </motion.div>

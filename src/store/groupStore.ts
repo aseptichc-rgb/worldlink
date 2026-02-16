@@ -25,41 +25,18 @@ export const GROUP_ICONS = [
 // Firebase 동기화를 위한 debounce 타이머
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let currentUserId: string | null = null;
-let pendingSyncData: { groups: NodeGroup[]; memberships: GroupMembership[]; groupConnections: GroupConnection[] } | null = null;
 
 const syncToFirebase = (state: { groups: NodeGroup[]; memberships: GroupMembership[]; groupConnections: GroupConnection[] }) => {
   if (!currentUserId) return;
   if (syncTimer) clearTimeout(syncTimer);
-  pendingSyncData = state;
   const userId = currentUserId;
   syncTimer = setTimeout(() => {
-    pendingSyncData = null;
     saveUserGroups(userId, {
       groups: state.groups,
       memberships: state.memberships,
       groupConnections: state.groupConnections,
     }).catch(err => console.error('그룹 동기화 실패:', err));
   }, 1000);
-};
-
-// 로그아웃 전 대기 중인 동기화를 즉시 실행
-export const flushGroupSync = async () => {
-  if (syncTimer) {
-    clearTimeout(syncTimer);
-    syncTimer = null;
-  }
-  if (pendingSyncData && currentUserId) {
-    try {
-      await saveUserGroups(currentUserId, {
-        groups: pendingSyncData.groups,
-        memberships: pendingSyncData.memberships,
-        groupConnections: pendingSyncData.groupConnections,
-      });
-    } catch (err) {
-      console.error('그룹 동기화 flush 실패:', err);
-    }
-    pendingSyncData = null;
-  }
 };
 
 interface GroupState {
@@ -148,7 +125,6 @@ export const useGroupStore = create<GroupState>()(
       clearGroups: () => {
         currentUserId = null;
         if (syncTimer) clearTimeout(syncTimer);
-        pendingSyncData = null;
         set({
           groups: [],
           memberships: [],
