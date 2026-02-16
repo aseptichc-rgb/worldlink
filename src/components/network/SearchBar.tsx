@@ -444,7 +444,7 @@ export default function SearchBar() {
                         <p className="text-xs text-[#484F58] mt-1">다른 키워드로 검색해보세요</p>
                       </div>
                     ) : (
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {aiResponse.results.map((aiResult, index) => {
                         const member = demoUsers.find(u => u.id === aiResult.memberId);
                         if (!member) return null;
@@ -496,19 +496,18 @@ export default function SearchBar() {
                                 <span className="mx-1">·</span>
                                 <span className="truncate">{member.position}</span>
                               </div>
-                              {/* 관련성 바 */}
-                              <div className="w-full h-1 bg-[#21262D] rounded-full mt-1.5 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all duration-500"
-                                  style={{ width: `${score}%`, backgroundColor: scoreColor }}
-                                />
+                              {/* 추천 이유 박스 */}
+                              <div className="mt-2 p-2 bg-[#A78BFA]/5 border border-[#A78BFA]/15 rounded-lg">
+                                <p className="text-xs font-medium text-[#A78BFA] mb-1 flex items-center gap-1">
+                                  <Sparkles size={10} />
+                                  추천 이유
+                                </p>
+                                <p className="text-sm text-[#E2D9F3] leading-relaxed">
+                                  {aiResult.reason}
+                                </p>
                               </div>
-                              {/* 추천 이유 */}
-                              <p className="text-xs text-[#C4B5FD] mt-1.5 leading-relaxed">
-                                {aiResult.reason}
-                              </p>
                               {aiResult.traits && aiResult.traits.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                <div className="flex flex-wrap gap-1 mt-2">
                                   {aiResult.traits.map((trait, i) => (
                                     <span
                                       key={i}
