@@ -156,14 +156,14 @@ function LoginContent() {
         transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-[380px] z-10"
       >
-        <div className="relative bg-[rgba(22,27,34,0.6)] backdrop-blur-2xl border border-[rgba(240,246,252,0.08)] rounded-2xl p-8 shadow-[0_16px_64px_rgba(0,0,0,0.4)]">
+        <div className="relative bg-[rgba(22,27,34,0.6)] backdrop-blur-2xl border border-[rgba(240,246,252,0.08)] rounded-2xl px-9 py-10 shadow-[0_16px_64px_rgba(0,0,0,0.4)]">
           {/* Subtle card inner glow */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[rgba(88,166,255,0.04)] to-transparent pointer-events-none" />
 
           <div className="relative">
             {/* Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-xl font-semibold text-[#F0F6FC] mb-2">
+            <div className="text-center mb-10">
+              <h2 className="text-xl font-semibold text-[#F0F6FC] mb-3">
                 다시 만나서 반갑습니다
               </h2>
               <p className="text-sm text-[#484F58]">
@@ -172,7 +172,7 @@ function LoginContent() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
               <div>
                 <label className="block text-xs font-medium text-[#8B949E] mb-3 uppercase tracking-wider">
@@ -215,7 +215,7 @@ function LoginContent() {
               </div>
 
               {/* Remember Me - custom checkbox */}
-              <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+              <label className="flex items-center gap-2.5 py-1 cursor-pointer select-none group">
                 <div
                   className={`w-[18px] h-[18px] rounded flex items-center justify-center border transition-all duration-200 ${
                     rememberMe
@@ -248,7 +248,7 @@ function LoginContent() {
             </form>
 
             {/* Divider */}
-            <div className="flex items-center gap-4 my-6">
+            <div className="flex items-center gap-4 my-8">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
               <span className="text-xs text-[#30363D] uppercase tracking-wider">또는</span>
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
@@ -264,8 +264,8 @@ function LoginContent() {
             </button>
 
             {/* Sign Up */}
-            <div className="text-center mt-6 pt-6 border-t border-[rgba(240,246,252,0.05)]">
-              <p className="text-xs text-[#30363D] mb-2.5">
+            <div className="text-center mt-8 pt-8 border-t border-[rgba(240,246,252,0.05)]">
+              <p className="text-xs text-[#30363D] mb-3">
                 아직 계정이 없으신가요?
               </p>
               <button
@@ -286,7 +286,7 @@ function LoginContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 text-[10px] text-[#30363D] text-center z-10 tracking-wide"
+        className="mt-10 text-[10px] text-[#30363D] text-center z-10 tracking-wide py-2"
       >
         로그인 시 서비스 이용약관 및 개인정보처리방침에 동의합니다
       </motion.p>
