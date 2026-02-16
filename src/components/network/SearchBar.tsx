@@ -73,7 +73,8 @@ export default function SearchBar() {
     return (searchQuery: string): PersonResult[] => {
       if (!searchQuery || searchQuery.length < 1) return [];
 
-      const query = searchQuery.toLowerCase();
+      const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+      if (queryWords.length === 0) return [];
       const results: PersonResult[] = [];
       const visited = new Set<string>();
 
@@ -94,15 +95,15 @@ export default function SearchBar() {
         if (userId !== currentUserId) {
           const user = demoUsers.find(u => u.id === userId);
           if (user) {
-            // 이름, 회사, 직책, 키워드로 검색
-            const nameMatch = user.name.toLowerCase().includes(query);
-            const companyMatch = user.company?.toLowerCase().includes(query) ?? false;
-            const positionMatch = user.position?.toLowerCase().includes(query) ?? false;
-            const keywordMatch = user.keywords.some(k => k.toLowerCase().includes(query));
+            // 이름, 회사, 직책, 키워드로 검색 (각 단어를 OR로 매칭)
+            const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
+            const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
+            const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
+            const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
 
             // 메모 검색 (나만의 메모)
             const userMemo = memos[userId];
-            const memoMatch = userMemo?.content.toLowerCase().includes(query);
+            const memoMatch = queryWords.some(w => userMemo?.content.toLowerCase().includes(w));
             const memoMatchContent = memoMatch ? userMemo.content : undefined;
 
             if (nameMatch || companyMatch || positionMatch || keywordMatch || memoMatch) {
@@ -144,11 +145,11 @@ export default function SearchBar() {
         // 전체 공개 설정 확인
         if (!user.privacySettings?.allowProfileDiscovery) continue;
 
-        // 키워드 매칭 검색 (이름, 회사, 직책, 키워드)
-        const nameMatch = user.name.toLowerCase().includes(query);
-        const companyMatch = user.company?.toLowerCase().includes(query) ?? false;
-        const positionMatch = user.position?.toLowerCase().includes(query) ?? false;
-        const keywordMatch = user.keywords.some(k => k.toLowerCase().includes(query));
+        // 키워드 매칭 검색 (이름, 회사, 직책, 키워드 - 각 단어 OR 매칭)
+        const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
+        const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
+        const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
+        const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
 
         if (nameMatch || companyMatch || positionMatch || keywordMatch) {
           results.push({
@@ -177,11 +178,12 @@ export default function SearchBar() {
   // 검색어 변경 시 결과 업데이트
   useEffect(() => {
     if (query && query.length >= 1) {
-      // 키워드 검색
+      // 키워드 검색 (각 단어 OR 매칭)
+      const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
       const allKeywords = new Set<string>();
       nodes.forEach(node => {
         node.keywords.forEach(k => {
-          if (k.toLowerCase().includes(query.toLowerCase())) {
+          if (queryWords.some(w => k.toLowerCase().includes(w))) {
             allKeywords.add(k);
           }
         });
@@ -237,6 +239,16 @@ export default function SearchBar() {
       setAiLoading(false);
     }
   }, []);
+
+  // 로컬 검색 결과가 없을 때 AI 검색 자동 트리거 (디바운스 800ms)
+  useEffect(() => {
+    if (query && query.length >= 2 && personResults.length === 0 && keywordSuggestions.length === 0 && !aiLoading && !aiResponse) {
+      const timer = setTimeout(() => {
+        triggerAiSearch(query);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [query, personResults.length, keywordSuggestions.length, aiLoading, aiResponse, triggerAiSearch]);
 
   // Cleanup abort controller on unmount
   useEffect(() => {
@@ -596,12 +608,19 @@ export default function SearchBar() {
                   ))}
                 </div>
               </div>
-            ) : personResults.length === 0 && (
+            ) : personResults.length === 0 && !aiLoading && !aiResponse && (
               <div className="p-4 text-center">
                 <p className="text-[#8B949E] text-base">검색 결과가 없습니다</p>
                 <p className="text-[#484F58] text-sm mt-1">
                   이름, 회사, 키워드 또는 메모 내용으로 검색해보세요
                 </p>
+                <button
+                  onClick={() => triggerAiSearch(query)}
+                  className="mt-3 px-4 py-2 rounded-lg bg-[#A78BFA]/20 text-[#A78BFA] text-sm hover:bg-[#A78BFA]/30 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Sparkles size={14} />
+                  AI에게 추천 요청하기
+                </button>
               </div>
             )}
           </motion.div>

@@ -31,14 +31,14 @@ export default function Tag({
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className={`
-        inline-flex items-center gap-1.5 rounded-full font-medium
+        inline-flex items-center gap-1.5 rounded-lg font-medium
         transition-all duration-200 cursor-pointer whitespace-nowrap
         ${sizeStyles[size]}
         ${isActive
-          ? 'bg-gradient-to-r from-[#1F6FEB] to-[#58A6FF] text-white border border-transparent'
+          ? 'bg-transparent text-[#58A6FF] border border-[#58A6FF]'
           : isHighlighted
             ? 'bg-transparent text-[#7EE0FF] border border-[#7EE0FF] hover:bg-[rgba(126,224,255,0.08)]'
-            : 'bg-transparent text-[#8B949E] border border-[#30363D] hover:border-[#58A6FF] hover:text-[#58A6FF] hover:bg-[rgba(88,166,255,0.05)]'
+            : 'bg-transparent text-[#8B949E] border border-[#363636] hover:border-[#58A6FF] hover:text-[#58A6FF] hover:bg-[rgba(88,166,255,0.05)]'
         }
       `}
     >

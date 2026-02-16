@@ -31,12 +31,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     onClick,
     title,
   }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#161B22]';
+    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1E1E1E]';
 
     const variants = {
       primary: 'bg-gradient-to-r from-[#1F6FEB] to-[#58A6FF] text-white hover:shadow-[0_8px_24px_rgba(88,166,255,0.25)] focus:ring-[#58A6FF]',
-      secondary: 'bg-transparent border border-[#30363D] text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[rgba(88,166,255,0.08)] focus:ring-[#30363D]',
-      ghost: 'bg-transparent text-[#8B949E] hover:text-[#F0F6FC] hover:bg-[rgba(240,246,252,0.05)] focus:ring-[#30363D]',
+      secondary: 'bg-[#252525] border border-[#363636] text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[rgba(88,166,255,0.08)] focus:ring-[#363636]',
+      ghost: 'bg-transparent text-[#8B949E] hover:text-[#F0F6FC] hover:bg-[rgba(240,246,252,0.05)] focus:ring-[#363636]',
     };
 
     const sizes = {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, User, Network, X, UserPlus, Users, Share2, Mail, Copy, Check, MessageCircle, Link2 } from 'lucide-react';
+import { QrCode, User, Network, X, UserPlus, Users, Share2, Mail, Copy, Check, MessageCircle, Link2, UserRound } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
 import { Avatar } from '@/components/ui';
@@ -147,7 +147,7 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[rgba(13,17,23,0.95)] backdrop-blur-xl border-t border-[rgba(240,246,252,0.05)] safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[rgba(18,18,18,0.95)] backdrop-blur-xl border-t border-[rgba(240,246,252,0.05)] safe-area-bottom">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = item.isInvite ? showInviteModal : pathname === item.path;
@@ -159,13 +159,24 @@ export default function BottomNav() {
                 onClick={() => handleNavClick(item.path, item.requiresAuth, item.isInvite)}
                 className="relative flex flex-col items-center justify-center w-16 h-full"
               >
-                <Icon
-                  size={22}
-                  className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'}`}
-                />
+                {/* 활성 상태: Filled 아이콘, 비활성: Outline 아이콘 (선 두께 증가) */}
+                {isActive && item.path === '/profile' ? (
+                  <UserRound
+                    size={24}
+                    strokeWidth={2.5}
+                    fill="#58A6FF"
+                    className="text-[#58A6FF] transition-colors duration-200"
+                  />
+                ) : (
+                  <Icon
+                    size={24}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#6B7280]'}`}
+                  />
+                )}
                 <span
-                  className={`text-sm mt-1 transition-colors duration-200 ${
-                    isActive ? 'text-[#58A6FF]' : 'text-[#484F58]'
+                  className={`text-xs mt-0.5 transition-colors duration-200 ${
+                    isActive ? 'text-[#58A6FF] font-medium' : 'text-[#6B7280]'
                   }`}
                 >
                   {item.label}
@@ -198,7 +209,7 @@ export default function BottomNav() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[rgba(22,27,34,0.95)] backdrop-blur-xl rounded-t-2xl border-t border-[rgba(240,246,252,0.1)] px-8 py-6"
+              className="w-full bg-[rgba(30,30,30,0.95)] backdrop-blur-xl rounded-t-[16px] border-t border-[rgba(240,246,252,0.1)] px-8 py-6"
             >
               <button
                 onClick={() => setShowAuthModal(false)}
@@ -225,7 +236,7 @@ export default function BottomNav() {
               <div className="space-y-3">
                 <button
                   onClick={handleAuth}
-                  className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl"
+                  className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-[10px]"
                 >
                   30초만에 가입하기
                 </button>
@@ -234,7 +245,7 @@ export default function BottomNav() {
                     router.push('/login');
                     setShowAuthModal(false);
                   }}
-                  className="w-full py-4 bg-[rgba(22,27,34,0.7)] text-[#F0F6FC] font-medium rounded-xl border border-[#30363D]"
+                  className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-medium rounded-[10px] border border-[#363636]"
                 >
                   이미 계정이 있어요
                 </button>
@@ -260,7 +271,7 @@ export default function BottomNav() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[rgba(22,27,34,0.95)] backdrop-blur-xl rounded-t-2xl border-t border-[rgba(240,246,252,0.1)] px-8 py-6 max-h-[80vh] overflow-y-auto"
+              className="w-full bg-[rgba(30,30,30,0.95)] backdrop-blur-xl rounded-t-[16px] border-t border-[rgba(240,246,252,0.1)] px-8 py-6 max-h-[80vh] overflow-y-auto"
             >
               <button
                 onClick={resetInviteModal}
@@ -288,14 +299,14 @@ export default function BottomNav() {
                   <div className="space-y-3">
                     <button
                       onClick={() => setInviteStep('personal')}
-                      className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-[10px] flex items-center justify-center gap-3"
                     >
                       <User size={20} />
                       개인 초대하기
                     </button>
                     <button
                       onClick={() => setInviteStep('group')}
-                      className="w-full py-4 bg-[rgba(22,27,34,0.7)] text-[#F0F6FC] font-medium rounded-xl border border-[#30363D] flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-medium rounded-[10px] border border-[#363636] flex items-center justify-center gap-3"
                     >
                       <Users size={20} />
                       그룹으로 초대하기
@@ -325,7 +336,7 @@ export default function BottomNav() {
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => setSelectedMethod('kakao')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#FEE500]/10 border border-[#FEE500]/30 rounded-xl"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#FEE500]/10 border border-[#FEE500]/30 rounded-[10px]"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="#FEE500">
                           <path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.82 5.32 4.55 6.73-.15.54-.82 2.93-.86 3.15 0 0-.02.14.07.19.09.06.2.03.2.03.26-.04 3.04-1.99 3.52-2.32.83.12 1.68.18 2.52.18 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
@@ -334,21 +345,21 @@ export default function BottomNav() {
                       </button>
                       <button
                         onClick={() => setSelectedMethod('email')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#58A6FF]/10 border border-[#58A6FF]/30 rounded-xl"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#58A6FF]/10 border border-[#58A6FF]/30 rounded-[10px]"
                       >
                         <Mail size={24} className="text-[#58A6FF]" />
                         <span className="text-sm text-[#58A6FF]">이메일</span>
                       </button>
                       <button
                         onClick={() => setSelectedMethod('sms')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#3FB950]/10 border border-[#3FB950]/30 rounded-xl"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#3FB950]/10 border border-[#3FB950]/30 rounded-[10px]"
                       >
                         <MessageCircle size={24} className="text-[#3FB950]" />
                         <span className="text-sm text-[#3FB950]">문자</span>
                       </button>
                       <button
                         onClick={() => setSelectedMethod('link')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#A371F7]/10 border border-[#A371F7]/30 rounded-xl"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#A371F7]/10 border border-[#A371F7]/30 rounded-[10px]"
                       >
                         <Link2 size={24} className="text-[#A371F7]" />
                         <span className="text-sm text-[#A371F7]">링크 복사</span>
@@ -363,12 +374,12 @@ export default function BottomNav() {
                             placeholder="friend@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-[#0D1117] border border-[#30363D] rounded-xl text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
+                            className="w-full px-4 py-3 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                           />
                           <button
                             onClick={handleSendPersonalInvite}
                             disabled={!email || isSending}
-                            className="w-full py-3 bg-[#58A6FF] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#58A6FF] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             <Mail size={18} />
                             이메일로 초대하기
@@ -380,7 +391,7 @@ export default function BottomNav() {
                         <button
                           onClick={handleSendPersonalInvite}
                           disabled={isSending}
-                          className="w-full py-3 bg-[#FEE500] text-[#3C1E1E] font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="w-full py-3 bg-[#FEE500] text-[#3C1E1E] font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.82 5.32 4.55 6.73-.15.54-.82 2.93-.86 3.15 0 0-.02.14.07.19.09.06.2.03.2.03.26-.04 3.04-1.99 3.52-2.32.83.12 1.68.18 2.52.18 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
@@ -396,12 +407,12 @@ export default function BottomNav() {
                             placeholder="010-1234-5678"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className="w-full px-4 py-3 bg-[#0D1117] border border-[#30363D] rounded-xl text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
+                            className="w-full px-4 py-3 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                           />
                           <button
                             onClick={handleSendPersonalInvite}
                             disabled={!phone || isSending}
-                            className="w-full py-3 bg-[#3FB950] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#3FB950] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             <MessageCircle size={18} />
                             문자로 초대하기
@@ -413,7 +424,7 @@ export default function BottomNav() {
                         <>
                           {generatedLink ? (
                             <div className="space-y-3">
-                              <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl">
+                              <div className="p-3 bg-[#121212] border border-[#363636] rounded-[10px]">
                                 <p className="text-xs text-[#484F58] mb-1">초대 링크</p>
                                 <p className="text-sm text-white break-all">{generatedLink}</p>
                               </div>
@@ -423,7 +434,7 @@ export default function BottomNav() {
                                   setCopied(true);
                                   setTimeout(() => setCopied(false), 2000);
                                 }}
-                                className="w-full py-3 bg-[#A371F7] text-white font-medium rounded-xl flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-[#A371F7] text-white font-medium rounded-[10px] flex items-center justify-center gap-2"
                               >
                                 {copied ? <Check size={18} /> : <Copy size={18} />}
                                 {copied ? '복사됨!' : '다시 복사하기'}
@@ -433,7 +444,7 @@ export default function BottomNav() {
                             <button
                               onClick={handleSendPersonalInvite}
                               disabled={isSending}
-                              className="w-full py-3 bg-[#A371F7] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-[#A371F7] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               <Link2 size={18} />
                               초대 링크 생성하기
@@ -467,7 +478,7 @@ export default function BottomNav() {
                     </h3>
                   </div>
 
-                  <div className="bg-[#58A6FF]/10 border border-[#58A6FF]/20 rounded-xl p-4 mb-4">
+                  <div className="bg-[#58A6FF]/10 border border-[#58A6FF]/20 rounded-[10px] p-4 mb-4">
                     <div className="flex items-start gap-3">
                       <UserPlus size={18} className="text-[#58A6FF] mt-0.5" />
                       <div>
@@ -501,7 +512,7 @@ export default function BottomNav() {
                           <button
                             key={group.id}
                             onClick={() => handleSelectGroup(group.id)}
-                            className="w-full flex items-center gap-3 p-4 bg-[#0D1117] border border-[#30363D] rounded-xl hover:border-[#58A6FF] transition-colors"
+                            className="w-full flex items-center gap-3 p-4 bg-[#121212] border border-[#363636] rounded-[10px] hover:border-[#58A6FF] transition-colors"
                           >
                             <div
                               className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
