@@ -30,7 +30,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-base font-medium text-[#8B949E] mb-3 tracking-wide">
+          <label className="block text-[13px] font-medium text-[#CCCCCC] mb-2 tracking-wide">
             {label}
           </label>
         )}
@@ -39,7 +39,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <div className={`
               absolute left-4 top-1/2 -translate-y-1/2
               transition-colors duration-200
-              ${isFocused ? 'text-[#58A6FF]' : 'text-[#484F58]'}
+              ${isFocused ? 'text-[#007AFF]' : 'text-[#484F58]'}
             `}>
               {leftIcon}
             </div>
@@ -48,15 +48,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={`
-              w-full bg-[#252525] border border-[#363636] text-[#F0F6FC]
-              rounded-[10px] py-4 px-5 text-base font-medium
+              w-full bg-[#252525] border border-[#333333] text-[#FFFFFF]
+              rounded-lg h-[52px] px-5 text-base font-medium
               transition-all duration-300 ease-out
-              focus:outline-none focus:border-[rgba(88,166,255,0.6)] focus:shadow-[0_0_0_3px_rgba(88,166,255,0.15)]
+              focus:outline-none focus:border-[#007AFF] focus:shadow-[0_0_0_3px_rgba(0,122,255,0.15)]
               placeholder:text-[#484F58]
               hover:border-[rgba(240,246,252,0.2)]
               ${leftIcon ? 'pl-12' : ''}
               ${rightIcon || isPassword ? 'pr-12' : ''}
-              ${error ? 'border-[#F85149]/60 focus:border-[#F85149] focus:shadow-[0_0_0_3px_rgba(248,81,73,0.15)]' : ''}
+              ${error ? 'border-[#FF4D4D]/60 focus:border-[#FF4D4D] focus:shadow-[0_0_0_3px_rgba(255,77,77,0.15)]' : ''}
               ${className}
             `}
             onFocus={(e) => {
@@ -85,7 +85,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && (
-          <p className="mt-2 text-base text-[#F85149]">
+          <p className="mt-2 text-xs text-[#FF4D4D]">
             {error}
           </p>
         )}

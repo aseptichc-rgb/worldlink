@@ -135,9 +135,12 @@ export default function ProfileSheet() {
               .filter((u): u is User => u !== undefined);
             setTheirConnections(theirConnectionUsers);
           } else {
-            // 1촌이 아니면 인맥 수만 보여주기 위해 빈 배열 설정
+            // 2촌 이상에서도 공통 인맥 표시를 위해 전체 User 데이터 로드
             const theirConnectionIds = demoConnections[selectedNode.id] || [];
-            setTheirConnections(theirConnectionIds.map(id => ({ id } as User)));
+            const theirConnectionUsers = theirConnectionIds
+              .map(id => demoUsers.find(u => u.id === id))
+              .filter((u): u is User => u !== undefined);
+            setTheirConnections(theirConnectionUsers);
           }
         } else {
           const pathIds = await findConnectionPath(currentUser.id, selectedNode.id);
@@ -163,10 +166,10 @@ export default function ProfileSheet() {
             if (cancelled) return;
             setTheirConnections(connections);
           } else if (userData) {
-            // 1촌이 아니면 인맥 수만 표시하기 위해 임시 객체 설정
+            // 2촌 이상에서도 공통 인맥 표시를 위해 전체 User 데이터 유지
             const connections = await getUserConnectionsWithDetails(selectedNode.id);
             if (cancelled) return;
-            setTheirConnections(connections.map(c => ({ id: c.id } as User)));
+            setTheirConnections(connections);
           } else {
             setTheirConnections([]);
           }
@@ -300,18 +303,18 @@ export default function ProfileSheet() {
           className="fixed top-0 right-0 bottom-0 w-full max-w-[380px] z-30 pointer-events-auto"
         >
           {/* Panel Container */}
-          <div className="h-full bg-gradient-to-l from-[#0D1117]/98 via-[#161B22]/95 to-transparent">
+          <div className="h-full bg-gradient-to-l from-[#121212]/98 via-[#1E1E1E]/95 to-transparent">
             {/* Content Area */}
-            <div className="h-full w-[340px] ml-auto bg-[#161B22]/98 backdrop-blur-2xl border-l border-[#30363D]/60 overflow-hidden flex flex-col">
+            <div className="h-full w-[340px] ml-auto bg-[#1E1E1E]/98 backdrop-blur-2xl border-l border-[#363636]/60 overflow-hidden flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#30363D]/50 bg-[#0D1117]/50">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#363636]/50 bg-[#121212]/50">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] animate-pulse" />
                   <span className="text-base font-medium text-[#8B949E]">프로필</span>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-2 rounded-lg hover:bg-[#30363D] transition-all duration-200 group"
+                  className="p-2 rounded-lg hover:bg-[#363636] transition-all duration-200 group"
                 >
                   <X size={18} className="text-[#8B949E] group-hover:text-white transition-colors" />
                 </button>
@@ -320,7 +323,7 @@ export default function ProfileSheet() {
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto no-scrollbar">
                 {/* Profile Header Section */}
-                <div className="px-5 py-5 bg-gradient-to-b from-[#0D1117]/80 to-transparent">
+                <div className="px-5 py-5 bg-gradient-to-b from-[#121212]/80 to-transparent">
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <Avatar
@@ -331,7 +334,7 @@ export default function ProfileSheet() {
                       />
                       {selectedNode.degree === 1 && (
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#58A6FF] flex items-center justify-center">
-                          <Link2 size={12} className="text-[#0D1117]" />
+                          <Link2 size={12} className="text-[#121212]" />
                         </div>
                       )}
                     </div>
@@ -377,25 +380,39 @@ export default function ProfileSheet() {
                   </div>
 
                   {/* Stats Badges */}
-                  <div className="flex items-center gap-3 mt-5">
-                    <div className="stat-badge flex-1">
-                      {connectionDegree >= 99 ? (
-                        <>
-                          <span className="stat-badge-value text-[#10B981] text-sm">전체</span>
-                          <span className="stat-badge-label">공개 프로필</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="stat-badge-value text-[#FFB800]">{connectionDegree}</span>
-                          <span className="stat-badge-label">단계 거리</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="stat-badge flex-1">
-                      <span className="stat-badge-value text-[#58A6FF]">{selectedNode.connectionCount}</span>
-                      <span className="stat-badge-label">연결된 인맥</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const mutualCount = theirConnections
+                      .map(u => u.id)
+                      .filter(id => myConnectionIds.has(id)).length;
+
+                    return (
+                      <div className="flex items-center gap-3 mt-5">
+                        <div className="stat-badge flex-1">
+                          {connectionDegree >= 99 ? (
+                            <>
+                              <span className="stat-badge-value text-[#10B981] text-sm">전체</span>
+                              <span className="stat-badge-label">공개 프로필</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="stat-badge-value text-[#FFB800]">{connectionDegree}</span>
+                              <span className="stat-badge-label">단계 거리</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="stat-badge flex-1">
+                          <span className="stat-badge-value text-[#58A6FF]">{selectedNode.connectionCount}</span>
+                          <span className="stat-badge-label">연결된 인맥</span>
+                        </div>
+                        {mutualCount > 0 && (
+                          <div className="stat-badge flex-1">
+                            <span className="stat-badge-value text-[#FFB800]">{mutualCount}</span>
+                            <span className="stat-badge-label">공통 인맥</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="px-5 pb-5 space-y-5">
@@ -412,7 +429,7 @@ export default function ProfileSheet() {
                             href={`mailto:${selectedUserData.email}`}
                             className="flex items-center gap-3 text-base text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
                               <Mail size={14} className="text-[#58A6FF]" />
                             </div>
                             <span className="truncate">{selectedUserData.email}</span>
@@ -423,7 +440,7 @@ export default function ProfileSheet() {
                             href={`tel:${selectedUserData.phone}`}
                             className="flex items-center gap-3 text-base text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
                               <Phone size={14} className="text-[#58A6FF]" />
                             </div>
                             <span>{selectedUserData.phone}</span>
@@ -469,7 +486,7 @@ export default function ProfileSheet() {
                                     hasGlow={idx === 0 || idx === connectionPath.length - 1}
                                   />
                                   {idx === 0 && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#58A6FF] flex items-center justify-center text-[8px] font-bold text-[#0D1117]">
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#58A6FF] flex items-center justify-center text-[8px] font-bold text-[#121212]">
                                       나
                                     </div>
                                   )}
@@ -528,7 +545,7 @@ export default function ProfileSheet() {
                         </h3>
                         <button
                           onClick={() => openGroupAssignModal(selectedNode.id)}
-                          className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-[#363636] transition-colors"
                         >
                           <Plus size={12} className="text-[#8B949E]" />
                         </button>
@@ -541,7 +558,7 @@ export default function ProfileSheet() {
                             {nodeGroups.map((group) => (
                               <span
                                 key={group.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#1C2333] border border-[#30363D]"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#252525] border border-[#363636]"
                                 style={{ borderColor: group.color + '60' }}
                               >
                                 <span>{group.icon}</span>
@@ -558,10 +575,10 @@ export default function ProfileSheet() {
                         ) : (
                           <button
                             onClick={() => openGroupAssignModal(selectedNode.id)}
-                            className="w-full info-card border-2 border-dashed border-[#30363D] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
+                            className="w-full info-card border-2 border-dashed border-[#363636] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
                           >
                             <div className="flex items-center gap-3 py-1">
-                              <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
                                 <FolderOpen size={14} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
                               </div>
                               <span className="text-base text-[#484F58] group-hover:text-[#8B949E] transition-colors">
@@ -589,13 +606,13 @@ export default function ProfileSheet() {
                                 setMemoText(currentMemo.content);
                                 setIsEditingMemo(true);
                               }}
-                              className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-[#363636] transition-colors"
                             >
                               <Pencil size={12} className="text-[#8B949E]" />
                             </button>
                             <button
                               onClick={handleDeleteMemo}
-                              className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-[#363636] transition-colors"
                             >
                               <Trash2 size={12} className="text-[#F85149]" />
                             </button>
@@ -618,7 +635,7 @@ export default function ProfileSheet() {
                             "
                             autoFocus
                           />
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#30363D]/50">
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#363636]/50">
                             <span className="text-[10px] text-[#484F58]">{memoText.length}/200</span>
                             <div className="flex items-center gap-3">
                               <button
@@ -644,17 +661,17 @@ export default function ProfileSheet() {
                       ) : currentMemo ? (
                         <div className="info-card">
                           <p className="text-base text-white whitespace-pre-wrap leading-relaxed">{currentMemo.content}</p>
-                          <p className="text-[10px] text-[#484F58] mt-3 pt-2 border-t border-[#30363D]/50">
+                          <p className="text-[10px] text-[#484F58] mt-3 pt-2 border-t border-[#363636]/50">
                             {new Date(currentMemo.updatedAt).toLocaleDateString('ko-KR')} 수정됨
                           </p>
                         </div>
                       ) : (
                         <button
                           onClick={() => setIsEditingMemo(true)}
-                          className="w-full info-card border-2 border-dashed border-[#30363D] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
+                          className="w-full info-card border-2 border-dashed border-[#363636] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
                         >
                           <div className="flex items-center gap-3 py-1">
-                            <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
                               <StickyNote size={14} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
                             </div>
                             <span className="text-base text-[#484F58] group-hover:text-[#8B949E] transition-colors">
@@ -706,7 +723,7 @@ export default function ProfileSheet() {
                                     size="sm"
                                   />
                                   <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center">
-                                    <Users size={8} className="text-[#0D1117]" />
+                                    <Users size={8} className="text-[#121212]" />
                                   </div>
                                   <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#FFB800]/50 transition-colors" />
                                 </div>
@@ -717,7 +734,7 @@ export default function ProfileSheet() {
                             ))}
                           </div>
                           {mutualUsers.length > 15 && (
-                            <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#30363D]/50">
+                            <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#363636]/50">
                               +{mutualUsers.length - 15}명 더
                             </p>
                           )}
@@ -782,7 +799,7 @@ export default function ProfileSheet() {
                                         />
                                         {isMutualConnection && (
                                           <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center" title="공통 인맥">
-                                            <Users size={8} className="text-[#0D1117]" />
+                                            <Users size={8} className="text-[#121212]" />
                                           </div>
                                         )}
                                         <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#58A6FF]/50 transition-colors" />
@@ -795,7 +812,7 @@ export default function ProfileSheet() {
                                   })}
                                 </div>
                                 {groupedByIndustry[industry].length > 10 && (
-                                  <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#30363D]/50">
+                                  <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#363636]/50">
                                     +{groupedByIndustry[industry].length - 10}명 더
                                   </p>
                                 )}
@@ -815,7 +832,7 @@ export default function ProfileSheet() {
                             ))}
                           </div>
                           {/* 잠금 오버레이 */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1C2333]/70 backdrop-blur-[1px]">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525]/70 backdrop-blur-[1px]">
                             <div className="flex items-center gap-2 text-[#8B949E] mb-2">
                               <Users size={18} />
                               <span className="text-xl font-bold text-white">{theirConnections.length}</span>
@@ -833,7 +850,7 @@ export default function ProfileSheet() {
               </div>
 
               {/* Action Buttons - 하단 고정 */}
-              <div className="px-5 py-4 border-t border-[#30363D]/50 bg-[#0D1117]/80 backdrop-blur-xl">
+              <div className="px-5 py-4 border-t border-[#363636]/50 bg-[#121212]/80 backdrop-blur-xl">
                 {selectedNode.degree === 1 ? (
                   <div className="flex gap-3">
                     <Button
@@ -903,7 +920,7 @@ export default function ProfileSheet() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[#161B22] border border-[#30363D] rounded-xl p-5 max-w-sm w-full"
+            className="bg-[#1E1E1E] border border-[#363636] rounded-[10px] p-5 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {messageSent ? (
@@ -937,7 +954,7 @@ export default function ProfileSheet() {
                       setShowMessageModal(false);
                       setMessageContent('');
                     }}
-                    className="p-2 rounded-lg hover:bg-[#30363D] transition-colors"
+                    className="p-2 rounded-lg hover:bg-[#363636] transition-colors"
                   >
                     <X size={18} className="text-[#8B949E]" />
                   </button>
@@ -948,7 +965,7 @@ export default function ProfileSheet() {
                     value={messageContent}
                     onChange={(e) => setMessageContent(e.target.value)}
                     placeholder={`${selectedNode.name}님에게 보낼 메시지를 작성하세요...`}
-                    className="w-full bg-[#0D1117] border border-[#30363D] text-white rounded-xl py-3 px-4 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58] min-h-[120px]"
+                    className="w-full bg-[#121212] border border-[#363636] text-white rounded-[10px] py-3 px-4 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58] min-h-[120px]"
                     autoFocus
                     maxLength={500}
                   />

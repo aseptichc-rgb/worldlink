@@ -264,7 +264,7 @@ body {
   color: var(--color-text-muted);
 }
 
-/* ===== Tag/Chip Styles (Outline, 둥글기 축소) ===== */
+/* ===== Tag/Chip Styles (테두리 없음, 둥글기 축소) ===== */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -272,28 +272,25 @@ body {
   border-radius: var(--radius-md);
   font-size: 15px;
   font-weight: 500;
-  background: transparent;
+  background: rgba(54, 54, 54, 0.4);
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-light-navy);
+  border: none;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 .tag:hover {
-  border-color: var(--color-cyan);
   color: var(--color-cyan);
-  background: rgba(88, 166, 255, 0.05);
+  background: rgba(88, 166, 255, 0.1);
 }
 
 .tag-active {
-  background: transparent;
+  background: rgba(88, 166, 255, 0.1);
   color: var(--color-cyan);
-  border-color: var(--color-cyan);
 }
 
 .tag-highlight {
-  background: transparent;
+  background: rgba(126, 224, 255, 0.1);
   color: var(--color-accent);
-  border-color: var(--color-accent);
 }
 
 /* ===== Card Styles (Glassmorphism, 둥글기 축소) ===== */
