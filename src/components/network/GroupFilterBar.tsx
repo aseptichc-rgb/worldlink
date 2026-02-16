@@ -14,8 +14,8 @@ export default function GroupFilterBar() {
         onClick={() => setActiveGroupFilter(null)}
         className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
           activeGroupFilter === null
-            ? 'bg-[#58A6FF]/20 text-[#58A6FF] border border-[#58A6FF]/40'
-            : 'bg-[#1C2333]/80 text-[#8B949E] border border-[#30363D]/50 hover:border-[#484F58]'
+            ? 'bg-[#2563EB]/20 text-[#2563EB] border border-[#2563EB]/40'
+            : 'bg-[#F1F3F5]/80 text-[#64748B] border border-[#E2E8F0]/50 hover:border-[#94A3B8]'
         }`}
       >
         전체
@@ -31,8 +31,8 @@ export default function GroupFilterBar() {
             onClick={() => setActiveGroupFilter(isActive ? null : group.id)}
             className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
               isActive
-                ? 'bg-[#58A6FF]/20 text-white border border-[#58A6FF]/40'
-                : 'bg-[#1C2333]/80 text-[#8B949E] border border-[#30363D]/50 hover:border-[#484F58]'
+                ? 'bg-[#2563EB]/20 text-[#1A1A2E] border border-[#2563EB]/40'
+                : 'bg-[#F1F3F5]/80 text-[#64748B] border border-[#E2E8F0]/50 hover:border-[#94A3B8]'
             }`}
           >
             <div
@@ -42,7 +42,7 @@ export default function GroupFilterBar() {
             <span>{group.icon}</span>
             <span>{group.name}</span>
             {count > 0 && (
-              <span className="text-[10px] text-[#484F58]">{count}</span>
+              <span className="text-[10px] text-[#94A3B8]">{count}</span>
             )}
           </button>
         );

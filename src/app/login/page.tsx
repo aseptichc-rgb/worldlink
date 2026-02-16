@@ -13,7 +13,7 @@ const STORAGE_KEY = 'nodded_saved_credentials';
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0D1117]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFBFC]" />}>
       <LoginContent />
     </Suspense>
   );
@@ -101,37 +101,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      {/* Ambient background layers */}
-      <div className="absolute inset-0">
-        {/* Top gradient orb */}
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.12, 0.18, 0.12] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#58A6FF] rounded-full blur-[150px]"
-        />
-        {/* Bottom-left accent */}
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.14, 0.08] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-          className="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-[#7EE0FF] rounded-full blur-[130px]"
-        />
-        {/* Bottom-right accent */}
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.06, 0.1, 0.06] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-          className="absolute -bottom-20 -right-20 w-[300px] h-[300px] bg-[#1F6FEB] rounded-full blur-[120px]"
-        />
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(88,166,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(88,166,255,0.3) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
-          }}
-        />
-      </div>
-
+    <div className="min-h-screen bg-[#FAFBFC] flex flex-col items-center justify-center px-6 relative overflow-hidden">
       {/* Logo */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -140,33 +110,30 @@ function LoginContent() {
         className="relative mb-12 text-center z-10"
       >
         <h1 className="text-5xl font-extrabold tracking-tight">
-          <span className="bg-gradient-to-b from-white via-[#58A6FF] to-[#1F6FEB] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-b from-[#1A1A2E] to-[#2563EB] bg-clip-text text-transparent">
             NODDED
           </span>
         </h1>
-        <p className="text-[#484F58] mt-2 text-sm font-medium tracking-[0.2em] uppercase">
+        <p className="text-[#94A3B8] mt-2 text-sm font-medium tracking-[0.2em] uppercase">
           신뢰 기반 비즈니스 네트워크
         </p>
       </motion.div>
 
-      {/* Login Card - Glassmorphism */}
+      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-[380px] z-10"
       >
-        <div className="relative bg-[rgba(22,27,34,0.6)] backdrop-blur-2xl border border-[rgba(240,246,252,0.08)] rounded-2xl p-8 shadow-[0_16px_64px_rgba(0,0,0,0.4)]">
-          {/* Subtle card inner glow */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[rgba(88,166,255,0.04)] to-transparent pointer-events-none" />
-
+        <div className="relative bg-white border border-[#E2E8F0] rounded-2xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.03)]">
           <div className="relative">
             {/* Title */}
             <div className="text-center mb-8">
-              <h2 className="text-xl font-semibold text-[#F0F6FC] mb-1">
+              <h2 className="text-xl font-semibold text-[#1A1A2E] mb-1">
                 다시 만나서 반갑습니다
               </h2>
-              <p className="text-sm text-[#484F58]">
+              <p className="text-sm text-[#94A3B8]">
                 네트워크로 돌아가기
               </p>
             </div>
@@ -175,10 +142,10 @@ function LoginContent() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-medium text-[#64748B] mb-2 uppercase tracking-wider">
                   이메일
                 </label>
-                <div className={`relative rounded-lg transition-all duration-300 ${emailFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
+                <div className={`relative rounded-lg transition-all duration-300 ${emailFocused ? 'shadow-[0_0_0_3px_rgba(37,99,235,0.15)]' : ''}`}>
                   <input
                     type="email"
                     value={email}
@@ -187,17 +154,17 @@ function LoginContent() {
                     onBlur={() => setEmailFocused(false)}
                     placeholder="email@example.com"
                     required
-                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
+                    className="w-full bg-[#F8F9FA] border border-[#E2E8F0] text-[#1A1A2E] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(37,99,235,0.4)] placeholder:text-[#94A3B8] hover:border-[#CBD5E1]"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-medium text-[#64748B] mb-2 uppercase tracking-wider">
                   비밀번호
                 </label>
-                <div className={`relative rounded-lg transition-all duration-300 ${passwordFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
+                <div className={`relative rounded-lg transition-all duration-300 ${passwordFocused ? 'shadow-[0_0_0_3px_rgba(37,99,235,0.15)]' : ''}`}>
                   <input
                     type="password"
                     value={password}
@@ -206,11 +173,11 @@ function LoginContent() {
                     onBlur={() => setPasswordFocused(false)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
+                    className="w-full bg-[#F8F9FA] border border-[#E2E8F0] text-[#1A1A2E] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(37,99,235,0.4)] placeholder:text-[#94A3B8] hover:border-[#CBD5E1]"
                   />
                 </div>
                 {error && (
-                  <p className="mt-2 text-xs text-[#F85149]">{error}</p>
+                  <p className="mt-2 text-xs text-[#EF4444]">{error}</p>
                 )}
               </div>
 
@@ -219,8 +186,8 @@ function LoginContent() {
                 <div
                   className={`w-[18px] h-[18px] rounded flex items-center justify-center border transition-all duration-200 ${
                     rememberMe
-                      ? 'bg-[#58A6FF] border-[#58A6FF]'
-                      : 'bg-transparent border-[#30363D] group-hover:border-[#484F58]'
+                      ? 'bg-[#2563EB] border-[#2563EB]'
+                      : 'bg-transparent border-[#E2E8F0] group-hover:border-[#94A3B8]'
                   }`}
                   onClick={() => setRememberMe(!rememberMe)}
                 >
@@ -232,7 +199,7 @@ function LoginContent() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="hidden"
                 />
-                <span className="text-sm text-[#8B949E] group-hover:text-[#F0F6FC] transition-colors">로그인 정보 저장</span>
+                <span className="text-sm text-[#64748B] group-hover:text-[#1A1A2E] transition-colors">로그인 정보 저장</span>
               </label>
 
               {/* Login Button */}
@@ -249,28 +216,28 @@ function LoginContent() {
 
             {/* Divider */}
             <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
-              <span className="text-xs text-[#30363D] uppercase tracking-wider">또는</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#E2E8F0] to-transparent" />
+              <span className="text-xs text-[#94A3B8] uppercase tracking-wider">또는</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#E2E8F0] to-transparent" />
             </div>
 
             {/* Demo Button */}
             <button
               onClick={handleDemoMode}
-              className="w-full py-3 rounded-lg bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
+              className="w-full py-3 rounded-lg bg-[rgba(37,99,235,0.06)] border border-[rgba(37,99,235,0.15)] text-[#2563EB] text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(37,99,235,0.12)] hover:border-[rgba(37,99,235,0.3)] transition-all duration-300"
             >
               <Play size={15} fill="currentColor" />
               데모로 체험하기
             </button>
 
             {/* Sign Up */}
-            <div className="text-center mt-6 pt-6 border-t border-[rgba(240,246,252,0.05)]">
-              <p className="text-xs text-[#30363D] mb-2.5">
+            <div className="text-center mt-6 pt-6 border-t border-[#E2E8F0]">
+              <p className="text-xs text-[#94A3B8] mb-2.5">
                 아직 계정이 없으신가요?
               </p>
               <button
                 onClick={() => router.push('/onboarding')}
-                className="inline-flex items-center gap-1.5 text-[#7EE0FF] hover:text-white transition-colors text-sm font-medium group"
+                className="inline-flex items-center gap-1.5 text-[#60A5FA] hover:text-[#2563EB] transition-colors text-sm font-medium group"
               >
                 <Sparkles size={13} className="group-hover:rotate-12 transition-transform" />
                 회원가입하기
@@ -286,7 +253,7 @@ function LoginContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 text-[10px] text-[#30363D] text-center z-10 tracking-wide"
+        className="mt-8 text-[10px] text-[#94A3B8] text-center z-10 tracking-wide"
       >
         로그인 시 서비스 이용약관 및 개인정보처리방침에 동의합니다
       </motion.p>

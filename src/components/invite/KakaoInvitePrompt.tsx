@@ -78,7 +78,7 @@ export default function KakaoInvitePrompt({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(0,0,0,0.3)] backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -86,7 +86,7 @@ export default function KakaoInvitePrompt({
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="w-full max-w-md bg-[#1C2333] rounded-t-2xl p-6"
+          className="w-full max-w-md bg-[#FFFFFF] rounded-t-2xl p-6"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4">
@@ -97,21 +97,21 @@ export default function KakaoInvitePrompt({
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold">일촌 초대</h3>
-                <p className="text-sm text-[#8B949E]">카카오톡으로 초대장을 보냅니다</p>
+                <h3 className="text-[#1A1A2E] font-semibold">일촌 초대</h3>
+                <p className="text-sm text-[#64748B]">카카오톡으로 초대장을 보냅니다</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1 text-[#8B949E] hover:text-white">
+            <button onClick={onClose} className="p-1 text-[#64748B] hover:text-[#1A1A2E]">
               <X size={20} />
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#161B22] mb-4">
-            <p className="text-base text-[#8B949E]">
-              <span className="text-white font-medium">{recipientName}</span>님에게
+          <div className="p-4 rounded-xl bg-[#F8F9FA] mb-4">
+            <p className="text-base text-[#64748B]">
+              <span className="text-[#1A1A2E] font-medium">{recipientName}</span>님에게
               NODDED 일촌 초대 링크를 카카오톡으로 보낼까요?
             </p>
-            <p className="text-sm text-[#484F58] mt-2">
+            <p className="text-sm text-[#94A3B8] mt-2">
               상대방이 가입하면 일촌 수락 여부와 정보 공개 범위를 직접 결정할 수 있습니다.
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function KakaoInvitePrompt({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl bg-[#30363D] text-[#8B949E] font-medium"
+              className="flex-1 py-3 rounded-xl bg-[#E2E8F0] text-[#64748B] font-medium"
             >
               건너뛰기
             </button>

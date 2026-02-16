@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Nodded",
     startupImage: [
       {
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-status-bar-style": "default",
     "apple-mobile-web-app-title": "Nodded",
   },
 };
@@ -75,7 +75,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#0D1117",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({
@@ -86,7 +86,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${inter.variable} antialiased bg-[#0D1117] text-white`}
+        className={`${inter.variable} antialiased bg-[#FAFBFC] text-[#1A1A2E]`}
       >
         {children}
         <InstallPrompt />

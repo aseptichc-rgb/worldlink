@@ -99,10 +99,10 @@ export default function MessagesPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center">
         <div className="text-center">
           <div className="spinner mx-auto mb-4" />
-          <p className="text-[#8B949E]">로딩 중...</p>
+          <p className="text-[#64748B]">로딩 중...</p>
         </div>
       </div>
     );
@@ -172,17 +172,17 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D1117]">
+    <div className="min-h-screen bg-[#FAFBFC]">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-[#161B22] border-b border-[#30363D]">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-[#F8F9FA] border-b border-[#E2E8F0]">
         <div className="flex items-center gap-4 px-5 py-4">
           <button
             onClick={() => router.push('/network')}
-            className="p-2 rounded-xl hover:bg-[#30363D] transition-colors"
+            className="p-2 rounded-xl hover:bg-[#E2E8F0] transition-colors"
           >
-            <ArrowLeft size={22} className="text-[#8B949E]" />
+            <ArrowLeft size={22} className="text-[#64748B]" />
           </button>
-          <h1 className="text-lg font-bold text-white">메세지</h1>
+          <h1 className="text-lg font-bold text-[#1A1A2E]">메세지</h1>
         </div>
 
         {/* Tabs */}
@@ -192,15 +192,15 @@ export default function MessagesPage() {
             className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${activeTab === 'received'
-                ? 'bg-[#58A6FF] text-white'
-                : 'bg-[#1C2333] text-[#8B949E] hover:text-white'
+                ? 'bg-[#2563EB] text-white'
+                : 'bg-[#F1F3F5] text-[#64748B] hover:text-[#1A1A2E]'
               }
             `}
           >
             <Inbox size={16} />
             받은 메세지
             {unreadCount > 0 && (
-              <span className="w-5 h-5 bg-[#FF6B8A] text-white text-xs rounded-full flex items-center justify-center">
+              <span className="w-5 h-5 bg-[#EF4444] text-white text-xs rounded-full flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
@@ -210,8 +210,8 @@ export default function MessagesPage() {
             className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${activeTab === 'sent'
-                ? 'bg-[#58A6FF] text-white'
-                : 'bg-[#1C2333] text-[#8B949E] hover:text-white'
+                ? 'bg-[#2563EB] text-white'
+                : 'bg-[#F1F3F5] text-[#64748B] hover:text-[#1A1A2E]'
               }
             `}
           >
@@ -238,8 +238,8 @@ export default function MessagesPage() {
                   className={`
                     w-full flex items-start gap-3 p-4 rounded-xl text-left transition-all
                     ${!message.isRead && activeTab === 'received'
-                      ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
-                      : 'bg-[#1C2333] border border-[#30363D] hover:border-[#484F58]'
+                      ? 'bg-[#EFF6FF] border border-[#DBEAFE]'
+                      : 'bg-white border border-[#E2E8F0] hover:border-[#94A3B8]'
                     }
                   `}
                 >
@@ -250,32 +250,32 @@ export default function MessagesPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`font-medium ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#C9D1D9]'}`}>
+                      <span className={`font-medium ${!message.isRead && activeTab === 'received' ? 'text-[#1A1A2E]' : 'text-[#475569]'}`}>
                         {otherUser?.name || '알 수 없음'}
                       </span>
-                      <span className="text-sm text-[#484F58]">
+                      <span className="text-sm text-[#94A3B8]">
                         {formatMessageTime(message.createdAt)}
                       </span>
                     </div>
-                    <p className="text-base text-[#8B949E] truncate">
+                    <p className="text-base text-[#64748B] truncate">
                       {otherUser?.company} · {otherUser?.position}
                     </p>
-                    <p className={`text-base mt-1 truncate ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#8B949E]'}`}>
+                    <p className={`text-base mt-1 truncate ${!message.isRead && activeTab === 'received' ? 'text-[#1A1A2E]' : 'text-[#64748B]'}`}>
                       {message.content}
                     </p>
                   </div>
                   {activeTab === 'received' && (
                     <div className="flex-shrink-0">
                       {message.isRead ? (
-                        <CheckCheck size={16} className="text-[#58A6FF]" />
+                        <CheckCheck size={16} className="text-[#2563EB]" />
                       ) : (
-                        <div className="w-2 h-2 bg-[#58A6FF] rounded-full" />
+                        <div className="w-2 h-2 bg-[#EF4444] rounded-full" />
                       )}
                     </div>
                   )}
                   {activeTab === 'sent' && (
                     <div className="flex-shrink-0">
-                      <Check size={16} className="text-[#484F58]" />
+                      <Check size={16} className="text-[#94A3B8]" />
                     </div>
                   )}
                 </motion.button>
@@ -284,11 +284,11 @@ export default function MessagesPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <MessageCircle size={48} className="text-[#484F58] mx-auto mb-4" />
-            <p className="text-[#8B949E]">
+            <MessageCircle size={48} className="text-[#94A3B8] mx-auto mb-4" />
+            <p className="text-[#64748B]">
               {activeTab === 'received' ? '받은 메세지가 없습니다' : '보낸 메세지가 없습니다'}
             </p>
-            <p className="text-[#484F58] text-base mt-1">
+            <p className="text-[#94A3B8] text-base mt-1">
               인맥에게 메세지를 보내보세요
             </p>
           </div>
@@ -308,17 +308,17 @@ export default function MessagesPage() {
                 setShowReplyInput(false);
                 setReplyContent('');
               }}
-              className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm z-40"
             />
             <motion.div
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[#161B22] border-t border-[#30363D] rounded-t-2xl max-h-[70vh] overflow-y-auto"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E2E8F0] rounded-t-2xl max-h-[70vh] overflow-y-auto shadow-[0_-8px_24px_rgba(0,0,0,0.08)]"
             >
               <div className="p-6">
                 {/* Handle */}
-                <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
+                <div className="w-12 h-1 bg-[#CBD5E1] rounded-full mx-auto mb-6" />
 
                 {(() => {
                   const otherUserId = selectedMessage.toUserId === currentUserId
@@ -337,8 +337,8 @@ export default function MessagesPage() {
                           size="lg"
                         />
                         <div>
-                          <h3 className="font-bold text-white">{otherUser?.name}</h3>
-                          <p className="text-base text-[#8B949E]">
+                          <h3 className="font-bold text-[#1A1A2E]">{otherUser?.name}</h3>
+                          <p className="text-base text-[#64748B]">
                             {otherUser?.company} · {otherUser?.position}
                           </p>
                         </div>
@@ -347,22 +347,22 @@ export default function MessagesPage() {
                       {/* Direction */}
                       <div className="flex items-center gap-2 mb-4">
                         {isReceived ? (
-                          <span className="text-sm px-2 py-1 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
+                          <span className="text-sm px-2 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB]">
                             받은 메세지
                           </span>
                         ) : (
-                          <span className="text-sm px-2 py-1 rounded-full bg-[#1F6FEB]/20 text-[#1F6FEB]">
+                          <span className="text-sm px-2 py-1 rounded-full bg-[#EFF6FF] text-[#3B82F6]">
                             보낸 메세지
                           </span>
                         )}
-                        <span className="text-sm text-[#484F58]">
+                        <span className="text-sm text-[#94A3B8]">
                           {format(selectedMessage.createdAt, 'yyyy년 M월 d일 a h:mm', { locale: ko })}
                         </span>
                       </div>
 
                       {/* Message Content */}
-                      <div className="bg-[#1C2333] rounded-xl p-4 mb-6">
-                        <p className="text-white whitespace-pre-wrap">{selectedMessage.content}</p>
+                      <div className="bg-[#F1F3F5] rounded-xl p-4 mb-6">
+                        <p className="text-[#1A1A2E] whitespace-pre-wrap">{selectedMessage.content}</p>
                       </div>
 
                       {/* Actions */}
@@ -374,7 +374,7 @@ export default function MessagesPage() {
                                 value={replyContent}
                                 onChange={(e) => setReplyContent(e.target.value)}
                                 placeholder="답장 내용을 입력하세요..."
-                                className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-xl py-3 px-4 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
+                                className="w-full bg-[#F1F3F5] border border-[#E2E8F0] text-[#1A1A2E] rounded-xl py-3 px-4 text-base resize-none focus:outline-none focus:border-[#2563EB] placeholder:text-[#94A3B8]"
                                 rows={3}
                                 autoFocus
                               />
@@ -384,14 +384,14 @@ export default function MessagesPage() {
                                     setShowReplyInput(false);
                                     setReplyContent('');
                                   }}
-                                  className="flex-1 py-3 bg-[#1C2333] text-[#8B949E] font-medium rounded-xl border border-[#30363D]"
+                                  className="flex-1 py-3 bg-[#F1F3F5] text-[#64748B] font-medium rounded-xl border border-[#E2E8F0]"
                                 >
                                   취소
                                 </button>
                                 <button
                                   onClick={handleReply}
                                   disabled={!replyContent.trim() || isSending}
-                                  className="flex-1 py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                                  className="flex-1 py-3 bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white font-medium rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                   {isSending ? (
                                     <div className="spinner w-4 h-4" />
@@ -407,7 +407,7 @@ export default function MessagesPage() {
                           ) : (
                             <button
                               onClick={() => setShowReplyInput(true)}
-                              className="w-full py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium rounded-xl flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white font-medium rounded-xl flex items-center justify-center gap-2"
                             >
                               <Send size={16} />
                               답장하기

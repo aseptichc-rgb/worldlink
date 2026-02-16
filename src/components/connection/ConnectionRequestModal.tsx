@@ -101,12 +101,12 @@ export default function ConnectionRequestModal() {
               transition={{ duration: 0.5 }}
               className="inline-block mb-6"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-[#2563EB] flex items-center justify-center mx-auto">
                 <UserPlus size={32} className="text-white" />
               </div>
             </motion.div>
-            <h3 className="text-xl font-bold text-white mb-2">인맥 신청을 보냈습니다!</h3>
-            <p className="text-[#8B949E]">
+            <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">인맥 신청을 보냈습니다!</h3>
+            <p className="text-[#64748B]">
               {middleConnector?.name}님을 통해 {targetUser?.name}님께 전달됩니다
             </p>
           </motion.div>
@@ -127,14 +127,14 @@ export default function ConnectionRequestModal() {
                   size="xl"
                   className="mx-auto"
                 />
-                <span className="absolute -bottom-1 -right-1 text-xs px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800] font-medium">
+                <span className="absolute -bottom-1 -right-1 text-xs px-2 py-0.5 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] font-medium">
                   {connectionDegree}촌
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-1">
+              <h3 className="text-lg font-bold text-[#1A1A2E] mb-1">
                 {targetUser?.name}
               </h3>
-              <div className="flex items-center justify-center gap-2 text-base text-[#8B949E]">
+              <div className="flex items-center justify-center gap-2 text-base text-[#64748B]">
                 <Building size={14} />
                 <span>{targetUser?.company}</span>
                 <span>·</span>
@@ -145,8 +145,8 @@ export default function ConnectionRequestModal() {
 
             {/* Connection Path */}
             {connectionPath.length > 2 && (
-              <div className="mb-6 p-4 bg-[#1C2333] rounded-xl">
-                <p className="text-sm text-[#8B949E] mb-3">연결 경로</p>
+              <div className="mb-6 p-4 bg-[#F8F9FA] rounded-xl">
+                <p className="text-sm text-[#64748B] mb-3">연결 경로</p>
                 <div className="flex items-center justify-center gap-2">
                   {connectionPath.map((user, idx) => (
                     <div key={user.id} className="flex items-center gap-2">
@@ -157,12 +157,12 @@ export default function ConnectionRequestModal() {
                           size="sm"
                           hasGlow={idx === 0 || idx === connectionPath.length - 1}
                         />
-                        <span className="text-[10px] text-[#8B949E] mt-1">
+                        <span className="text-[10px] text-[#64748B] mt-1">
                           {idx === 0 ? '나' : user.name.slice(0, 3)}
                         </span>
                       </div>
                       {idx < connectionPath.length - 1 && (
-                        <ArrowRight size={14} className={idx === 0 ? 'text-[#58A6FF]' : 'text-[#1F6FEB]'} />
+                        <ArrowRight size={14} className={idx === 0 ? 'text-[#2563EB]' : 'text-[#3B82F6]'} />
                       )}
                     </div>
                   ))}
@@ -171,32 +171,32 @@ export default function ConnectionRequestModal() {
             )}
 
             {/* Info Box */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10 rounded-xl border border-[#58A6FF]/20">
-              <p className="text-base text-white mb-1">
-                <span className="text-[#58A6FF] font-medium">{middleConnector?.name}</span>님을 통해 연결됩니다
+            <div className="mb-6 p-4 bg-[#EFF6FF] rounded-xl border border-[#2563EB]/20">
+              <p className="text-base text-[#1A1A2E] mb-1">
+                <span className="text-[#2563EB] font-medium">{middleConnector?.name}</span>님을 통해 연결됩니다
               </p>
-              <p className="text-sm text-[#8B949E]">
+              <p className="text-sm text-[#64748B]">
                 {middleConnector?.name}님이 수락하면 {targetUser?.name}님과 1촌이 됩니다
               </p>
             </div>
 
             {/* Message */}
             <div className="mb-6">
-              <p className="text-base text-[#8B949E] mb-2">소개 메시지 (선택)</p>
+              <p className="text-base text-[#64748B] mb-2">소개 메시지 (선택)</p>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={`안녕하세요! ${targetUser?.name}님과 인맥을 맺고 싶습니다.`}
                 maxLength={200}
                 className="
-                  w-full bg-[#1C2333] border border-[#30363D] text-white
+                  w-full bg-[#F8F9FA] border border-[#E2E8F0] text-[#1A1A2E]
                   rounded-xl py-3 px-4 text-base resize-none
-                  focus:outline-none focus:border-[#58A6FF]
-                  placeholder:text-[#484F58]
+                  focus:outline-none focus:border-[#2563EB]
+                  placeholder:text-[#94A3B8]
                 "
                 rows={3}
               />
-              <p className="text-xs text-[#484F58] mt-1 text-right">
+              <p className="text-xs text-[#94A3B8] mt-1 text-right">
                 {message.length}/200
               </p>
             </div>
@@ -205,7 +205,7 @@ export default function ConnectionRequestModal() {
             <Button
               onClick={handleSubmit}
               isLoading={isLoading}
-              className="w-full bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]"
+              className="w-full bg-[#2563EB]"
               size="lg"
               leftIcon={<UserPlus size={18} />}
             >
