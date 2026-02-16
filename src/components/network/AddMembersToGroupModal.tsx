@@ -284,17 +284,17 @@ export default function AddMembersToGroupModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm"
+            className="absolute inset-0 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] overflow-hidden max-h-[80vh] flex flex-col"
+            className="relative w-full max-w-md bg-[rgba(22,27,34,0.98)] backdrop-blur-xl border border-[rgba(240,246,252,0.1)] rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.4)] overflow-hidden max-h-[80vh] flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(240,246,252,0.1)]">
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
@@ -303,24 +303,24 @@ export default function AddMembersToGroupModal() {
                   {group.icon}
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-[#1A1A2E]">인맥 추가</h2>
-                  <p className="text-sm text-[#64748B]">{group.name} 그룹에 추가</p>
+                  <h2 className="text-lg font-semibold text-[#F0F6FC]">인맥 추가</h2>
+                  <p className="text-sm text-[#8B949E]">{group.name} 그룹에 추가</p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className="p-1 text-[#64748B] hover:text-[#1A1A2E] transition-colors rounded-lg hover:bg-[#F1F3F5]"
+                className="p-1 text-[#8B949E] hover:text-[#F0F6FC] transition-colors rounded-lg hover:bg-[rgba(240,246,252,0.05)]"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Search */}
-            <div className="px-6 py-3 border-b border-[#E2E8F0]">
+            <div className="px-6 py-3 border-b border-[rgba(240,246,252,0.1)]">
               <div className="relative">
                 <Search
                   size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484F58]"
                 />
                 <input
                   type="text"
@@ -332,34 +332,34 @@ export default function AddMembersToGroupModal() {
                     }
                   }}
                   placeholder="AI에게 관련 업종 인맥 추천 요청..."
-                  className="w-full bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl pl-10 pr-12 py-2.5 text-base text-[#1A1A2E] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] transition-colors"
+                  className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl pl-10 pr-12 py-2.5 text-base text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors"
                 />
                 <button
                   onClick={() => searchQuery.trim() && triggerAiSearchWithQuery(searchQuery)}
                   disabled={!searchQuery.trim() || aiLoading}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-[#8B5CF6]/20 text-[#8B5CF6] hover:bg-[#8B5CF6]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-[#A78BFA]/20 text-[#A78BFA] hover:bg-[#A78BFA]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="AI 추천 검색"
                 >
                   <Sparkles size={14} />
                 </button>
               </div>
-              <p className="text-xs text-[#94A3B8] mt-1.5 px-1">
+              <p className="text-xs text-[#484F58] mt-1.5 px-1">
                 예: &quot;투자 관련 인맥&quot;, &quot;AI 전문가&quot;, &quot;마케팅 담당자&quot;
               </p>
             </div>
 
             {/* AI Recommendations */}
             {(aiLoading || aiRecommendations) && (
-              <div className="px-6 py-3 border-b border-[#E2E8F0] bg-[#8B5CF6]/5">
+              <div className="px-6 py-3 border-b border-[rgba(240,246,252,0.1)] bg-[#A78BFA]/5">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-[#8B5CF6] flex items-center gap-1.5 font-medium">
+                  <p className="text-sm text-[#A78BFA] flex items-center gap-1.5 font-medium">
                     <Sparkles size={14} />
                     AI 추천
                   </p>
                   {!aiLoading && aiRecommendations && (
                     <button
                       onClick={() => setAiRecommendations(null)}
-                      className="text-[#94A3B8] hover:text-[#8B5CF6] transition-colors p-0.5 rounded hover:bg-[#8B5CF6]/10"
+                      className="text-[#484F58] hover:text-[#A78BFA] transition-colors p-0.5 rounded hover:bg-[#A78BFA]/10"
                     >
                       <X size={14} />
                     </button>
@@ -367,13 +367,13 @@ export default function AddMembersToGroupModal() {
                 </div>
 
                 {aiLoading ? (
-                  <div className="flex items-center gap-2 py-3 text-[#64748B] text-sm">
-                    <Loader2 size={16} className="animate-spin text-[#8B5CF6]" />
+                  <div className="flex items-center gap-2 py-3 text-[#8B949E] text-sm">
+                    <Loader2 size={16} className="animate-spin text-[#A78BFA]" />
                     {searchQuery.trim() ? `"${searchQuery}" 관련 인맥을 찾고 있습니다...` : '관련 인맥을 분석하고 있습니다...'}
                   </div>
                 ) : aiRecommendations && (
                   <div>
-                    <p className="text-sm text-[#8B5CF6] mb-3 px-3 py-2 bg-[#8B5CF6]/10 rounded-lg">
+                    <p className="text-sm text-[#C4B5FD] mb-3 px-3 py-2 bg-[#A78BFA]/10 rounded-lg">
                       💡 {aiRecommendations.summary}
                     </p>
                     <div className="space-y-2 max-h-[250px] overflow-y-auto">
@@ -389,15 +389,15 @@ export default function AddMembersToGroupModal() {
                               onClick={() => handleToggleNode(result.memberId)}
                               className={`w-full flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                                 isSelected
-                                  ? 'bg-[#8B5CF6]/20 border border-[#8B5CF6]/40'
-                                  : 'hover:bg-[#F1F3F5] border border-transparent'
+                                  ? 'bg-[#A78BFA]/20 border border-[#A78BFA]/40'
+                                  : 'hover:bg-[#1C2333] border border-transparent'
                               }`}
                             >
                               <div
                                 className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all mt-0.5 ${
                                   isSelected
-                                    ? 'bg-[#8B5CF6] border-[#8B5CF6]'
-                                    : 'border-[#E2E8F0]'
+                                    ? 'bg-[#A78BFA] border-[#A78BFA]'
+                                    : 'border-[#30363D]'
                                 }`}
                               >
                                 {isSelected && <Check size={12} className="text-white" />}
@@ -405,25 +405,25 @@ export default function AddMembersToGroupModal() {
                               <Avatar src={node.profileImage} name={node.name} size="sm" />
                               <div className="flex-1 min-w-0 text-left">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm text-[#1A1A2E] truncate">{node.name}</p>
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#8B5CF6]/20 text-[#8B5CF6] flex-shrink-0">
+                                  <p className="text-sm text-white truncate">{node.name}</p>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#A78BFA]/20 text-[#A78BFA] flex-shrink-0">
                                     AI 추천
                                   </span>
                                   {isFirstDegree ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#2563EB]/20 text-[#2563EB] flex-shrink-0">
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF] flex-shrink-0">
                                       1촌
                                     </span>
                                   ) : (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F59E0B]/20 text-[#F59E0B] flex-shrink-0">
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800] flex-shrink-0">
                                       연결 필요
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-[#64748B]">
+                                <p className="text-xs text-[#8B949E]">
                                   {node.company} {node.position && `· ${node.position}`}
                                 </p>
-                                <div className="mt-1.5 p-2 bg-[#8B5CF6]/5 rounded-lg border border-[#8B5CF6]/10">
-                                  <p className="text-xs text-[#8B5CF6] leading-relaxed">
+                                <div className="mt-1.5 p-2 bg-[#A78BFA]/5 rounded-lg border border-[#A78BFA]/10">
+                                  <p className="text-xs text-[#C4B5FD] leading-relaxed">
                                     ✨ {result.reason}
                                   </p>
                                 </div>
@@ -432,7 +432,7 @@ export default function AddMembersToGroupModal() {
                           );
                         })
                       ) : (
-                        <p className="text-sm text-[#64748B] py-2 text-center">
+                        <p className="text-sm text-[#8B949E] py-2 text-center">
                           관련된 추천 인맥이 없습니다. 다른 키워드로 검색해보세요.
                         </p>
                       )}
@@ -444,16 +444,16 @@ export default function AddMembersToGroupModal() {
 
             {/* Select All */}
             {filteredNodes.length > 0 && (
-              <div className="px-6 py-2 border-b border-[#E2E8F0] flex items-center justify-between">
+              <div className="px-6 py-2 border-b border-[rgba(240,246,252,0.1)] flex items-center justify-between">
                 <button
                   onClick={handleSelectAll}
-                  className="flex items-center gap-2 text-sm text-[#2563EB] hover:text-[#2563EB]/80 transition-colors"
+                  className="flex items-center gap-2 text-sm text-[#58A6FF] hover:text-[#58A6FF]/80 transition-colors"
                 >
                   <div
                     className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                       selectedNodeIds.size === filteredNodes.length && filteredNodes.length > 0
-                        ? 'bg-[#2563EB] border-[#2563EB]'
-                        : 'border-[#E2E8F0]'
+                        ? 'bg-[#58A6FF] border-[#58A6FF]'
+                        : 'border-[#30363D]'
                     }`}
                   >
                     {selectedNodeIds.size === filteredNodes.length && filteredNodes.length > 0 && (
@@ -462,7 +462,7 @@ export default function AddMembersToGroupModal() {
                   </div>
                   전체 선택
                 </button>
-                <span className="text-sm text-[#94A3B8]">
+                <span className="text-sm text-[#484F58]">
                   {selectedNodeIds.size}명 선택됨
                 </span>
               </div>
@@ -473,7 +473,7 @@ export default function AddMembersToGroupModal() {
               {/* 1촌 인맥 */}
               {filteredNodes.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-xs text-[#2563EB] mb-2 px-1 flex items-center gap-1">
+                  <p className="text-xs text-[#58A6FF] mb-2 px-1 flex items-center gap-1">
                     <Users size={12} />
                     1촌 인맥
                   </p>
@@ -486,15 +486,15 @@ export default function AddMembersToGroupModal() {
                           onClick={() => handleToggleNode(node.id)}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
                             isSelected
-                              ? 'bg-[#2563EB]/10 border border-[#2563EB]/30'
-                              : 'hover:bg-[#F1F3F5] border border-transparent'
+                              ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
+                              : 'hover:bg-[#1C2333] border border-transparent'
                           }`}
                         >
                           <div
                             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                               isSelected
-                                ? 'bg-[#2563EB] border-[#2563EB]'
-                                : 'border-[#E2E8F0]'
+                                ? 'bg-[#58A6FF] border-[#58A6FF]'
+                                : 'border-[#30363D]'
                             }`}
                           >
                             {isSelected && <Check size={12} className="text-white" />}
@@ -502,12 +502,12 @@ export default function AddMembersToGroupModal() {
                           <Avatar src={node.profileImage} name={node.name} size="sm" />
                           <div className="flex-1 min-w-0 text-left">
                             <div className="flex items-center gap-2">
-                              <p className="text-base text-[#1A1A2E] truncate">{node.name}</p>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#2563EB]/20 text-[#2563EB] flex-shrink-0">
+                              <p className="text-base text-white truncate">{node.name}</p>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF] flex-shrink-0">
                                 1촌
                               </span>
                             </div>
-                            <p className="text-xs text-[#64748B] truncate">
+                            <p className="text-xs text-[#8B949E] truncate">
                               {node.company} {node.position && `· ${node.position}`}
                             </p>
                           </div>
@@ -535,14 +535,14 @@ export default function AddMembersToGroupModal() {
                           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
                             isSelected
                               ? 'bg-[#10B981]/10 border border-[#10B981]/30'
-                              : 'hover:bg-[#F1F3F5] border border-transparent'
+                              : 'hover:bg-[#1C2333] border border-transparent'
                           }`}
                         >
                           <div
                             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                               isSelected
                                 ? 'bg-[#10B981] border-[#10B981]'
-                                : 'border-[#E2E8F0]'
+                                : 'border-[#30363D]'
                             }`}
                           >
                             {isSelected && <Check size={12} className="text-white" />}
@@ -550,12 +550,12 @@ export default function AddMembersToGroupModal() {
                           <Avatar src={user.profileImage} name={user.name} size="sm" />
                           <div className="flex-1 min-w-0 text-left">
                             <div className="flex items-center gap-2">
-                              <p className="text-base text-[#1A1A2E] truncate">{user.name}</p>
+                              <p className="text-base text-white truncate">{user.name}</p>
                               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981] flex-shrink-0">
                                 검색 허용
                               </span>
                             </div>
-                            <p className="text-xs text-[#64748B] truncate">
+                            <p className="text-xs text-[#8B949E] truncate">
                               {user.company} {user.position && `· ${user.position}`}
                             </p>
                           </div>
@@ -571,14 +571,14 @@ export default function AddMembersToGroupModal() {
                 <div className="text-center py-8">
                   {searchQuery.trim() ? (
                     <>
-                      <p className="text-[#64748B] text-base mb-2">검색 결과가 없습니다</p>
-                      <p className="text-[#94A3B8] text-sm mb-4">
+                      <p className="text-[#8B949E] text-base mb-2">검색 결과가 없습니다</p>
+                      <p className="text-[#484F58] text-sm mb-4">
                         자연어로 검색해보세요
                       </p>
                       <button
                         onClick={() => triggerAiSearchWithQuery(searchQuery)}
                         disabled={aiLoading}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8B5CF6]/20 text-[#8B5CF6] hover:bg-[#8B5CF6]/30 transition-colors text-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#A78BFA]/20 text-[#A78BFA] hover:bg-[#A78BFA]/30 transition-colors text-sm"
                       >
                         <Sparkles size={14} />
                         AI로 &quot;{searchQuery}&quot; 검색하기
@@ -586,16 +586,16 @@ export default function AddMembersToGroupModal() {
                     </>
                   ) : availableNodes.length === 0 ? (
                     <>
-                      <div className="w-14 h-14 rounded-xl bg-[#F1F3F5] flex items-center justify-center mx-auto mb-4">
-                        <Users size={24} className="text-[#94A3B8]" />
+                      <div className="w-14 h-14 rounded-xl bg-[#1C2333] flex items-center justify-center mx-auto mb-4">
+                        <Users size={24} className="text-[#484F58]" />
                       </div>
-                      <p className="text-[#64748B] text-base mb-1">추가할 인맥이 없습니다</p>
-                      <p className="text-[#94A3B8] text-sm">
+                      <p className="text-[#8B949E] text-base mb-1">추가할 인맥이 없습니다</p>
+                      <p className="text-[#484F58] text-sm">
                         모든 1촌 인맥이 이미 그룹에 있습니다
                       </p>
                     </>
                   ) : (
-                    <p className="text-[#64748B] text-sm">
+                    <p className="text-[#8B949E] text-sm">
                       이름, 회사, 키워드로 검색하거나<br />
                       AI에게 추천을 요청해보세요
                     </p>
@@ -605,17 +605,17 @@ export default function AddMembersToGroupModal() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-[#E2E8F0] flex gap-3">
+            <div className="px-6 py-4 border-t border-[rgba(240,246,252,0.1)] flex gap-3">
               <button
                 onClick={handleClose}
-                className="flex-1 py-2.5 rounded-xl text-sm text-[#64748B] hover:bg-[#F1F3F5] transition-colors"
+                className="flex-1 py-2.5 rounded-xl text-sm text-[#8B949E] hover:bg-[#1C2333] transition-colors"
               >
                 취소
               </button>
               <button
                 onClick={handleAddMembers}
                 disabled={selectedNodeIds.size === 0}
-                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#2563EB] text-white hover:bg-[#2563EB]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {selectedNodeIds.size > 0
                   ? `${selectedNodeIds.size}명 추가하기`

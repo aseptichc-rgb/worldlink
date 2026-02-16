@@ -365,7 +365,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       const labelHeight = clusterFontSize + 10;
       const labelY = cluster.centerY - cluster.radius - 16;
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.fillStyle = 'rgba(16, 29, 51, 0.9)';
       ctx.beginPath();
       ctx.roundRect(cluster.centerX - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight, labelHeight / 2);
       ctx.fill();
@@ -415,7 +415,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
           ctx.quadraticCurveTo(ctrlX, ctrlY, conn.to.x, conn.to.y);
 
           if (isHighlighted) {
-            ctx.strokeStyle = '#F59E0B';
+            ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 2.5;
             ctx.setLineDash([]);
           } else {
@@ -554,7 +554,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
         nodeGradient.addColorStop(0, info.color + '40');
         nodeGradient.addColorStop(1, info.color + '20');
       } else if (isConnectedToHovered) {
-        nodeGradient.addColorStop(0, '#F59E0B');
+        nodeGradient.addColorStop(0, '#FFD700');
         nodeGradient.addColorStop(1, info.color);
       } else {
         nodeGradient.addColorStop(0, isHovered ? '#FFFFFF' : info.color);
@@ -565,7 +565,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
 
       // Border
       if (node.isHub && showHubs && !isDimmed) {
-        ctx.strokeStyle = '#F59E0B';
+        ctx.strokeStyle = '#FFD700';
         ctx.lineWidth = 2;
       } else {
         ctx.strokeStyle = isDimmed ? info.color + '30' : (isHovered ? '#FFFFFF' : info.color + '80');
@@ -583,15 +583,12 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
         const nameFontSize = adaptiveFontSize(isHovered ? 14 : 12);
         const textWidth = ctx.measureText(displayName).width;
         const namePillHeight = nameFontSize + 8;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
         ctx.beginPath();
         ctx.roundRect(node.x - textWidth / 2 - 8, labelY - namePillHeight / 2, textWidth + 16, namePillHeight, 5);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
 
-        ctx.fillStyle = isConnectedToHovered && !isHovered ? '#F59E0B' : '#1A1A2E';
+        ctx.fillStyle = isConnectedToHovered && !isHovered ? '#FFD700' : '#FFFFFF';
         ctx.fillText(displayName, node.x, labelY);
       }
     }
@@ -697,7 +694,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
   const connectionCount = companyConnectionsRef.current.length;
 
   return (
-    <div ref={containerRef} className="w-full h-full relative bg-[#FAFBFC]">
+    <div ref={containerRef} className="w-full h-full relative bg-[#161B22]">
       <canvas
         ref={canvasRef}
         width={dimensions.width}
@@ -722,23 +719,23 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
             className="absolute pointer-events-none z-50"
             style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
           >
-            <div className="bg-white/95 backdrop-blur-xl border border-[#E2E8F0] rounded-xl px-4 py-3 shadow-2xl min-w-[220px]">
+            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl min-w-[220px]">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-semibold text-[#1A1A2E]">{tooltip.node.name}</span>
+                <span className="text-base font-semibold text-white">{tooltip.node.name}</span>
                 {tooltip.node.isHub && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#F59E0B]/20 text-[#F59E0B] flex items-center gap-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] flex items-center gap-1">
                     <Star size={10} fill="currentColor" /> 허브
                   </span>
                 )}
               </div>
               {tooltip.node.company && (
-                <div className="text-sm text-[#64748B] mb-0.5 flex items-center gap-1">
+                <div className="text-sm text-[#8B949E] mb-0.5 flex items-center gap-1">
                   <Building2 size={12} />
                   {tooltip.node.company}
                 </div>
               )}
               {tooltip.node.position && (
-                <div className="text-sm text-[#94A3B8] line-clamp-2">{tooltip.node.position}</div>
+                <div className="text-sm text-[#484F58] line-clamp-2">{tooltip.node.position}</div>
               )}
 
               {/* Connected people from same company */}
@@ -748,8 +745,8 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                 );
                 if (sameCompanyConnections.length > 0) {
                   return (
-                    <div className="mt-2 pt-2 border-t border-[#E2E8F0]">
-                      <div className="text-[10px] text-[#F59E0B] mb-1 flex items-center gap-1">
+                    <div className="mt-2 pt-2 border-t border-[#30363D]">
+                      <div className="text-[10px] text-[#FFD700] mb-1 flex items-center gap-1">
                         <Link2 size={10} />
                         다른 분야 동료
                       </div>
@@ -757,17 +754,17 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                         {sameCompanyConnections.slice(0, 3).map((conn, i) => {
                           const other = conn.from.id === tooltip.node.id ? conn.to : conn.from;
                           return (
-                            <div key={i} className="text-sm text-[#64748B] flex items-center gap-1">
+                            <div key={i} className="text-sm text-[#8B949E] flex items-center gap-1">
                               <span style={{ color: CATEGORY_INFO[other.category].color }}>●</span>
                               {other.name}
-                              <span className="text-[10px] text-[#94A3B8]">
+                              <span className="text-[10px] text-[#484F58]">
                                 ({CATEGORY_INFO[other.category].name})
                               </span>
                             </div>
                           );
                         })}
                         {sameCompanyConnections.length > 3 && (
-                          <div className="text-[10px] text-[#94A3B8]">
+                          <div className="text-[10px] text-[#484F58]">
                             +{sameCompanyConnections.length - 3}명 더
                           </div>
                         )}
@@ -778,7 +775,7 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
                 return null;
               })()}
 
-              <div className="mt-2 pt-2 border-t border-[#E2E8F0]">
+              <div className="mt-2 pt-2 border-t border-[#30363D]">
                 <span
                   className="text-[10px] px-2 py-0.5 rounded-full"
                   style={{
@@ -798,19 +795,19 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-10">
         <button
           onClick={() => setTransform(prev => ({ ...prev, scale: Math.min(2.5, prev.scale * 1.3) }))}
-          className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:text-[#2563EB] hover:border-[#2563EB]/50 transition-all"
+          className="w-10 h-10 rounded-xl bg-[#1C2333]/90 backdrop-blur-sm border border-[#30363D] flex items-center justify-center text-[#8B949E] hover:text-[#58A6FF] hover:border-[#58A6FF]/50 transition-all"
         >
           <Plus size={20} />
         </button>
         <button
           onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(0.2, prev.scale * 0.7) }))}
-          className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:text-[#2563EB] hover:border-[#2563EB]/50 transition-all"
+          className="w-10 h-10 rounded-xl bg-[#1C2333]/90 backdrop-blur-sm border border-[#30363D] flex items-center justify-center text-[#8B949E] hover:text-[#58A6FF] hover:border-[#58A6FF]/50 transition-all"
         >
           <Minus size={20} />
         </button>
         <button
           onClick={() => setTransform({ x: 0, y: 0, scale: 0.65 })}
-          className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:text-[#2563EB] hover:border-[#2563EB]/50 transition-all"
+          className="w-10 h-10 rounded-xl bg-[#1C2333]/90 backdrop-blur-sm border border-[#30363D] flex items-center justify-center text-[#8B949E] hover:text-[#58A6FF] hover:border-[#58A6FF]/50 transition-all"
         >
           <RotateCcw size={18} />
         </button>
@@ -822,8 +819,8 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
           onClick={() => setShowCompanyLinks(!showCompanyLinks)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
             showCompanyLinks
-              ? 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40'
-              : 'bg-white/90 text-[#64748B] border border-[#E2E8F0]'
+              ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
+              : 'bg-[#1C2333]/90 text-[#8B949E] border border-[#30363D]'
           }`}
         >
           <Link2 size={14} />
@@ -833,8 +830,8 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
           onClick={() => setShowHubs(!showHubs)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
             showHubs
-              ? 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40'
-              : 'bg-white/90 text-[#64748B] border border-[#E2E8F0]'
+              ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
+              : 'bg-[#1C2333]/90 text-[#8B949E] border border-[#30363D]'
           }`}
         >
           <Star size={14} />
@@ -843,17 +840,17 @@ export default function ContactGraph({ contacts, onSelectContact }: ContactGraph
       </div>
 
       {/* Instructions */}
-      <div className="absolute top-4 left-4 text-sm text-[#94A3B8] bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-[#E2E8F0]">
-        <div className="text-[#64748B] font-medium mb-1">인사이트</div>
+      <div className="absolute top-4 left-4 text-sm text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-[#30363D]">
+        <div className="text-[#8B949E] font-medium mb-1">인사이트</div>
         <div>• 금색 테두리 = 여러 분야 연결 허브</div>
         <div>• 금색 선 = 같은 회사, 다른 분야</div>
-        <div className="mt-1 pt-1 border-t border-[#E2E8F0] text-[#94A3B8]">
+        <div className="mt-1 pt-1 border-t border-[#30363D] text-[#484F58]">
           드래그: 이동 | 스크롤: 확대/축소
         </div>
       </div>
 
       {/* Zoom Level */}
-      <div className="absolute bottom-6 left-6 text-xs text-[#94A3B8] bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#E2E8F0]">
+      <div className="absolute bottom-6 left-6 text-xs text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#30363D]">
         {Math.round(transform.scale * 100)}%
       </div>
     </div>

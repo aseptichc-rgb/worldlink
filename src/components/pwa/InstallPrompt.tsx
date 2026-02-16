@@ -100,20 +100,20 @@ export function InstallPrompt() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-50 p-4 safe-area-bottom"
           >
-            <div className="mx-auto max-w-md bg-white rounded-xl border border-[#2563EB]/20 shadow-lg shadow-[#2563EB]/10 overflow-hidden">
+            <div className="mx-auto max-w-md bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10 overflow-hidden">
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   {/* 아이콘 */}
-                  <div className="flex-shrink-0 w-12 h-12 bg-[#2563EB] rounded-xl flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-xl flex items-center justify-center">
                     <span className="text-white font-bold text-lg">N</span>
                   </div>
 
                   {/* 텍스트 */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[#1A1A2E] font-semibold text-base">
+                    <h3 className="text-white font-semibold text-base">
                       NODDED 앱 설치하기
                     </h3>
-                    <p className="text-[#94A3B8] text-base mt-0.5">
+                    <p className="text-gray-400 text-base mt-0.5">
                       홈 화면에 추가하면 더 빠르게 접속할 수 있어요
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export function InstallPrompt() {
                   {/* 닫기 버튼 */}
                   <button
                     onClick={handleDismiss}
-                    className="flex-shrink-0 p-1 text-[#64748B] hover:text-[#94A3B8] transition-colors"
+                    className="flex-shrink-0 p-1 text-gray-500 hover:text-gray-300 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -130,7 +130,7 @@ export function InstallPrompt() {
                 {/* 설치 버튼 */}
                 <button
                   onClick={handleInstallClick}
-                  className="w-full mt-3 py-2.5 bg-[#2563EB] hover:bg-[#3B82F6] text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full mt-3 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
                   {isIOS ? "설치 방법 보기" : "지금 설치하기"}
@@ -148,7 +148,7 @@ export function InstallPrompt() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(0,0,0,0.3)] backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
             onClick={handleDismiss}
           >
             <motion.div
@@ -156,16 +156,16 @@ export function InstallPrompt() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="w-full max-w-md bg-white rounded-t-2xl overflow-hidden"
+              className="w-full max-w-md bg-gray-900 rounded-t-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 핸들 */}
               <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 bg-[#CBD5E1] rounded-full" />
+                <div className="w-10 h-1 bg-gray-600 rounded-full" />
               </div>
 
               <div className="px-6 pb-8">
-                <h2 className="text-xl font-bold text-[#1A1A2E] text-center mb-6">
+                <h2 className="text-xl font-bold text-white text-center mb-6">
                   홈 화면에 추가하기
                 </h2>
 
@@ -173,14 +173,14 @@ export function InstallPrompt() {
                 <div className="space-y-4">
                   {/* Step 1 */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-[#2563EB] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       1
                     </div>
                     <div className="flex-1">
-                      <p className="text-[#1A1A2E] font-medium">
+                      <p className="text-white font-medium">
                         하단의 공유 버튼 탭하기
                       </p>
-                      <div className="mt-2 flex items-center gap-2 text-[#94A3B8]">
+                      <div className="mt-2 flex items-center gap-2 text-gray-400">
                         <Share className="w-5 h-5" />
                         <span className="text-base">공유 아이콘을 찾아주세요</span>
                       </div>
@@ -189,14 +189,14 @@ export function InstallPrompt() {
 
                   {/* Step 2 */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-[#2563EB] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       2
                     </div>
                     <div className="flex-1">
-                      <p className="text-[#1A1A2E] font-medium">
+                      <p className="text-white font-medium">
                         &quot;홈 화면에 추가&quot; 선택
                       </p>
-                      <div className="mt-2 flex items-center gap-2 text-[#94A3B8]">
+                      <div className="mt-2 flex items-center gap-2 text-gray-400">
                         <Plus className="w-5 h-5" />
                         <span className="text-base">
                           스크롤해서 찾아주세요
@@ -207,14 +207,14 @@ export function InstallPrompt() {
 
                   {/* Step 3 */}
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-[#2563EB] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                       3
                     </div>
                     <div className="flex-1">
-                      <p className="text-[#1A1A2E] font-medium">
+                      <p className="text-white font-medium">
                         &quot;추가&quot; 버튼 탭하기
                       </p>
-                      <p className="text-[#94A3B8] text-base mt-1">
+                      <p className="text-gray-400 text-base mt-1">
                         홈 화면에서 바로 NODDED를 실행할 수 있어요
                       </p>
                     </div>
@@ -224,7 +224,7 @@ export function InstallPrompt() {
                 {/* 확인 버튼 */}
                 <button
                   onClick={handleDismiss}
-                  className="w-full mt-6 py-3 bg-[#F8F9FA] hover:bg-[#F1F3F5] text-[#1A1A2E] font-semibold rounded-xl transition-colors"
+                  className="w-full mt-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-colors"
                 >
                   확인했어요
                 </button>

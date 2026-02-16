@@ -31,14 +31,14 @@ export default function Tag({
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className={`
-        inline-flex items-center gap-1.5 rounded-full font-medium
+        inline-flex items-center gap-1.5 rounded-lg font-medium
         transition-all duration-200 cursor-pointer whitespace-nowrap
         ${sizeStyles[size]}
         ${isActive
-          ? 'bg-[#EFF6FF] text-[#2563EB]'
+          ? 'bg-[#58A6FF]/10 text-[#58A6FF] border-none'
           : isHighlighted
-            ? 'bg-[#ECFDF5] text-[#10B981]'
-            : 'bg-[#F1F3F5] text-[#64748B] hover:text-[#2563EB] hover:bg-[#EFF6FF]'
+            ? 'bg-[#7EE0FF]/10 text-[#7EE0FF] border-none hover:bg-[rgba(126,224,255,0.15)]'
+            : 'bg-[#363636]/40 text-[#8B949E] border-none hover:text-[#58A6FF] hover:bg-[rgba(88,166,255,0.1)]'
         }
       `}
     >
@@ -50,7 +50,7 @@ export default function Tag({
             e.stopPropagation();
             onRemove();
           }}
-          className="ml-1 hover:text-[#1A1A2E] transition-colors"
+          className="ml-1 hover:text-white transition-colors"
         >
           <X size={14} />
         </button>

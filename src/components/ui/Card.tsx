@@ -21,11 +21,11 @@ export default function Card({
       whileTap={onClick ? { scale: 0.98 } : undefined}
       onClick={onClick}
       className={`
-        bg-white
-        border border-[#E2E8F0] rounded-[16px]
-        shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)]
-        transition-all duration-200
-        ${hoverable ? 'hover:shadow-[0_4px_6px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.03)] hover:border-[#CBD5E1] cursor-pointer' : ''}
+        bg-[#1E1E1E] backdrop-blur-[10px]
+        border border-[rgba(240,246,252,0.08)] rounded-[10px]
+        shadow-[0_4px_24px_rgba(0,0,0,0.2)]
+        transition-all duration-300
+        ${hoverable ? 'hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)] hover:border-[rgba(240,246,252,0.15)] cursor-pointer' : ''}
         ${className}
       `}
     >

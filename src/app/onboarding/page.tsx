@@ -254,7 +254,14 @@ function OnboardingContent() {
   const currentStepIndex = steps.findIndex(s => s.key === step);
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC] flex flex-col items-center justify-center px-8 py-10 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-8 py-10 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="stars-bg" />
+
+      {/* Gradient Orbs */}
+      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#007AFF]/10 rounded-full blur-[100px]" />
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#0055CC]/10 rounded-full blur-[100px]" />
+
       {/* Logo Section */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -264,12 +271,13 @@ function OnboardingContent() {
       >
         <div className="relative inline-block">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-[#2563EB] via-[#2563EB] to-[#1D4ED8] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#007AFF] via-[#007AFF] to-[#0055CC] bg-clip-text text-transparent">
               NODDED
             </span>
           </h1>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#007AFF]/20 to-[#0055CC]/20 blur-2xl -z-10" />
         </div>
-        <p className="text-[#94A3B8] mt-3 text-base md:text-lg font-medium tracking-wide">
+        <p className="text-[#484F58] mt-3 text-base md:text-lg font-medium tracking-wide">
           신뢰 기반 비즈니스 네트워크
         </p>
       </motion.div>
@@ -293,17 +301,17 @@ function OnboardingContent() {
                   flex items-center gap-2.5 px-4 py-2 rounded-full text-base font-medium
                   transition-all duration-300
                   ${isActive
-                    ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/50 shadow-[0_0_12px_rgba(37,99,235,0.15)]'
+                    ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/50 shadow-[0_0_12px_rgba(0,122,255,0.2)]'
                     : isCompleted
-                      ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30'
-                      : 'text-[#94A3B8] border border-transparent'}
+                      ? 'bg-[#3FB950]/20 text-[#3FB950] border border-[#3FB950]/30'
+                      : 'text-[#484F58] border border-transparent'}
                 `}
               >
                 <Icon size={16} />
                 <span className="hidden sm:inline">{s.label}</span>
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-10 h-0.5 mx-3 rounded-full ${isCompleted ? 'bg-[#10B981]' : 'bg-[#E2E8F0]'}`} />
+                <div className={`w-10 h-0.5 mx-3 rounded-full ${isCompleted ? 'bg-[#3FB950]' : 'bg-[#30363D]'}`} />
               )}
             </div>
           );
@@ -321,17 +329,17 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[400px]"
           >
-            <div className="bg-white border border-[#E2E8F0] rounded-[12px] px-6 pt-10 pb-8 shadow-[0_4px_6px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.03)]">
+            <div className="bg-[#1E1E1E] backdrop-blur-2xl border border-[#333333] rounded-[12px] px-6 pt-10 pb-8">
               {/* 초대자 정보 표시 */}
               {inviterInfo && (
-                <div className="mb-7 p-5 rounded-[12px] bg-[#2563EB]/5 border border-[#2563EB]/20">
+                <div className="mb-7 p-5 rounded-[12px] bg-[#007AFF]/5 border border-[#007AFF]/20">
                   <div className="flex items-center gap-3">
                     <Avatar src={inviterInfo.profileImage} name={inviterInfo.name} size="sm" />
                     <div>
-                      <p className="text-sm text-[#2563EB]">초대한 사람</p>
-                      <p className="text-base text-[#1A1A2E] font-medium">{inviterInfo.name}</p>
+                      <p className="text-sm text-[#007AFF]">초대한 사람</p>
+                      <p className="text-base text-white font-medium">{inviterInfo.name}</p>
                       {inviterInfo.company && (
-                        <p className="text-sm text-[#64748B]">{inviterInfo.company} {inviterInfo.position}</p>
+                        <p className="text-sm text-[#8B949E]">{inviterInfo.company} {inviterInfo.position}</p>
                       )}
                     </div>
                   </div>
@@ -339,10 +347,10 @@ function OnboardingContent() {
               )}
 
               <div className="text-center mb-10">
-                <h2 className="text-[20px] font-bold text-[#1A1A2E] tracking-tight">
+                <h2 className="text-[20px] font-bold text-white tracking-tight">
                   계정 생성
                 </h2>
-                <p className="text-[#94A3B8] text-sm mt-2">
+                <p className="text-[#999999] text-sm mt-2">
                   NODDED에 오신 것을 환영합니다
                 </p>
               </div>
@@ -401,7 +409,7 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[480px]"
           >
-            <div className="bg-white border border-[#E2E8F0] rounded-[12px] px-6 pt-10 pb-8 shadow-[0_4px_6px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.03)]">
+            <div className="bg-[#1E1E1E] backdrop-blur-2xl border border-[#333333] rounded-[12px] px-6 pt-10 pb-8">
               <ProfileSetup
                 onComplete={handleProfileComplete}
                 isLoading={isLoading}
@@ -411,7 +419,7 @@ function OnboardingContent() {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 text-[#EF4444] text-xs text-center"
+                  className="mt-4 text-[#FF4D4D] text-xs text-center"
                 >
                   {error}
                 </motion.p>
@@ -429,30 +437,30 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[440px]"
           >
-            <div className="bg-white border border-[#E2E8F0] rounded-[12px] px-6 pt-10 pb-8 shadow-[0_4px_6px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.03)]">
+            <div className="bg-[#1E1E1E] backdrop-blur-2xl border border-[#333333] rounded-[12px] px-6 pt-10 pb-8">
               <div className="text-center mb-8">
-                <h2 className="text-[20px] font-bold text-[#1A1A2E] tracking-tight">
+                <h2 className="text-[20px] font-bold text-white tracking-tight">
                   일촌 요청
                 </h2>
-                <p className="text-[#94A3B8] text-sm mt-2">
+                <p className="text-[#999999] text-sm mt-2">
                   아래 사람과 일촌을 맺으시겠습니까?
                 </p>
               </div>
 
               {/* 초대자 프로필 */}
-              <div className="flex flex-col items-center mb-7 p-7 rounded-xl bg-[#F1F3F5] border border-[#E2E8F0]">
+              <div className="flex flex-col items-center mb-7 p-7 rounded-xl bg-[#1C2333] border border-[#30363D]">
                 <Avatar src={inviterInfo.profileImage} name={inviterInfo.name} size="lg" hasGlow />
-                <h3 className="text-lg font-bold text-[#1A1A2E] mt-3">{inviterInfo.name}</h3>
+                <h3 className="text-lg font-bold text-white mt-3">{inviterInfo.name}</h3>
                 {inviterInfo.position && (
-                  <p className="text-base text-[#64748B] mt-1">{inviterInfo.position}</p>
+                  <p className="text-base text-[#8B949E] mt-1">{inviterInfo.position}</p>
                 )}
                 {inviterInfo.company && (
-                  <p className="text-base text-[#64748B]">{inviterInfo.company}</p>
+                  <p className="text-base text-[#8B949E]">{inviterInfo.company}</p>
                 )}
                 {inviterInfo.keywords && inviterInfo.keywords.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
                     {inviterInfo.keywords.slice(0, 5).map((kw, i) => (
-                      <span key={i} className="px-2 py-0.5 text-sm rounded-full bg-[#2563EB]/10 text-[#2563EB]">
+                      <span key={i} className="px-2 py-0.5 text-sm rounded-full bg-[#007AFF]/10 text-[#007AFF]">
                         {kw}
                       </span>
                     ))}
@@ -461,23 +469,23 @@ function OnboardingContent() {
               </div>
 
               {/* 내 정보 공개 설정 */}
-              <div className="mb-7 p-5 rounded-xl bg-[#F1F3F5] border border-[#E2E8F0]">
+              <div className="mb-7 p-5 rounded-xl bg-[#1C2333] border border-[#30363D]">
                 <div className="flex items-center gap-3 mb-5">
-                  <Shield size={16} className="text-[#2563EB]" />
-                  <h4 className="text-base font-medium text-[#1A1A2E]">내 정보 공개 범위</h4>
+                  <Shield size={16} className="text-[#007AFF]" />
+                  <h4 className="text-base font-medium text-white">내 정보 공개 범위</h4>
                 </div>
 
                 <div className="space-y-4">
                   {/* 이름 공개 */}
                   <div className="flex items-center justify-between">
-                    <span className="text-base text-[#64748B]">이름</span>
+                    <span className="text-base text-[#8B949E]">이름</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setPrivacyChoices(p => ({ ...p, nameDisplay: 'full' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
                           privacyChoices.nameDisplay === 'full'
-                            ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/40'
-                            : 'bg-[#E2E8F0] text-[#94A3B8]'
+                            ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
+                            : 'bg-[#30363D] text-[#484F58]'
                         }`}
                       >
                         전체 공개
@@ -486,8 +494,8 @@ function OnboardingContent() {
                         onClick={() => setPrivacyChoices(p => ({ ...p, nameDisplay: 'partial' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
                           privacyChoices.nameDisplay === 'partial'
-                            ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/40'
-                            : 'bg-[#E2E8F0] text-[#94A3B8]'
+                            ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
+                            : 'bg-[#30363D] text-[#484F58]'
                         }`}
                       >
                         성만 표시
@@ -497,14 +505,14 @@ function OnboardingContent() {
 
                   {/* 회사 공개 */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#64748B]">회사</span>
+                    <span className="text-sm text-[#8B949E]">회사</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setPrivacyChoices(p => ({ ...p, companyDisplay: 'full' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
                           privacyChoices.companyDisplay === 'full'
-                            ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/40'
-                            : 'bg-[#E2E8F0] text-[#94A3B8]'
+                            ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
+                            : 'bg-[#30363D] text-[#484F58]'
                         }`}
                       >
                         공개
@@ -513,8 +521,8 @@ function OnboardingContent() {
                         onClick={() => setPrivacyChoices(p => ({ ...p, companyDisplay: 'hidden' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
                           privacyChoices.companyDisplay === 'hidden'
-                            ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/40'
-                            : 'bg-[#E2E8F0] text-[#94A3B8]'
+                            ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
+                            : 'bg-[#30363D] text-[#484F58]'
                         }`}
                       >
                         비공개
@@ -524,14 +532,14 @@ function OnboardingContent() {
 
                   {/* 직책 공개 */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#64748B]">직책</span>
+                    <span className="text-sm text-[#8B949E]">직책</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setPrivacyChoices(p => ({ ...p, positionDisplay: 'full' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
                           privacyChoices.positionDisplay === 'full'
-                            ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/40'
-                            : 'bg-[#E2E8F0] text-[#94A3B8]'
+                            ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
+                            : 'bg-[#30363D] text-[#484F58]'
                         }`}
                       >
                         공개
@@ -540,8 +548,8 @@ function OnboardingContent() {
                         onClick={() => setPrivacyChoices(p => ({ ...p, positionDisplay: 'hidden' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
                           privacyChoices.positionDisplay === 'hidden'
-                            ? 'bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/40'
-                            : 'bg-[#E2E8F0] text-[#94A3B8]'
+                            ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
+                            : 'bg-[#30363D] text-[#484F58]'
                         }`}
                       >
                         비공개
@@ -556,7 +564,7 @@ function OnboardingContent() {
                 <button
                   onClick={handleRejectConnection}
                   disabled={connectionLoading}
-                  className="flex-1 py-4 rounded-lg bg-[#E2E8F0] text-[#64748B] font-medium flex items-center justify-center gap-2 hover:bg-[#CBD5E1] transition-colors"
+                  className="flex-1 py-4 rounded-lg bg-[#30363D] text-[#8B949E] font-medium flex items-center justify-center gap-2 hover:bg-[#253D5E] transition-colors"
                 >
                   <X size={18} />
                   거절
@@ -564,7 +572,7 @@ function OnboardingContent() {
                 <button
                   onClick={handleAcceptConnection}
                   disabled={connectionLoading}
-                  className="flex-1 py-4 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 py-4 rounded-lg bg-[#007AFF] hover:bg-[#0066DD] text-white font-semibold flex items-center justify-center gap-2 transition-colors"
                 >
                   {connectionLoading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -589,11 +597,11 @@ function OnboardingContent() {
           transition={{ delay: 0.5 }}
           className="mt-8 text-center"
         >
-          <p className="text-[#94A3B8] text-sm">
+          <p className="text-[#888888] text-sm">
             이미 계정이 있으신가요?{' '}
             <button
               onClick={() => router.push('/login')}
-              className="text-[#2563EB] underline hover:text-[#2563EB]/80 transition-colors font-medium"
+              className="text-[#007AFF] underline hover:text-[#007AFF]/80 transition-colors font-medium"
             >
               로그인하기
             </button>
@@ -606,10 +614,10 @@ function OnboardingContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center">
+    <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
       <div className="text-center">
         <div className="spinner mx-auto mb-4" />
-        <p className="text-[#94A3B8]">로딩 중...</p>
+        <p className="text-[#484F58]">로딩 중...</p>
       </div>
     </div>
   );

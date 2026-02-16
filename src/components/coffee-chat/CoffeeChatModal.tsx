@@ -101,10 +101,10 @@ export default function CoffeeChatModal() {
               transition={{ duration: 1, ease: 'easeOut' }}
               className="inline-block mb-6"
             >
-              <Send size={48} className="text-[#2563EB]" />
+              <Send size={48} className="text-[#58A6FF]" />
             </motion.div>
-            <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">메세지를 보냈습니다!</h3>
-            <p className="text-[#64748B]">
+            <h3 className="text-xl font-bold text-white mb-2">메세지를 보냈습니다!</h3>
+            <p className="text-[#8B949E]">
               {targetUser?.name}님이 확인하면 알림을 보내드릴게요
             </p>
           </motion.div>
@@ -124,11 +124,11 @@ export default function CoffeeChatModal() {
                 size="lg"
                 className="mx-auto mb-3"
               />
-              <h3 className="text-lg font-bold text-[#1A1A2E]">
+              <h3 className="text-lg font-bold text-white">
                 {targetUser?.name}님께 메세지 보내기
               </h3>
               {targetUser?.company && (
-                <p className="text-base text-[#64748B] mt-1">
+                <p className="text-base text-[#8B949E] mt-1">
                   {targetUser.company} · {targetUser.position}
                 </p>
               )}
@@ -142,14 +142,14 @@ export default function CoffeeChatModal() {
                 placeholder="메세지를 입력해주세요..."
                 maxLength={500}
                 className="
-                  w-full bg-[#F8F9FA] border border-[#E2E8F0] text-[#1A1A2E]
+                  w-full bg-[#1C2333] border border-[#30363D] text-white
                   rounded-xl py-3 px-4 text-base resize-none
-                  focus:outline-none focus:border-[#2563EB]
-                  placeholder:text-[#94A3B8]
+                  focus:outline-none focus:border-[#58A6FF]
+                  placeholder:text-[#484F58]
                 "
                 rows={4}
               />
-              <p className="text-xs text-[#94A3B8] mt-1 text-right">
+              <p className="text-xs text-[#484F58] mt-1 text-right">
                 {message.length}/500
               </p>
             </div>

@@ -147,7 +147,7 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#E2E8F0] safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[rgba(18,18,18,0.95)] backdrop-blur-xl border-t border-[rgba(240,246,252,0.05)] safe-area-bottom">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = item.isInvite ? showInviteModal : pathname === item.path;
@@ -164,19 +164,19 @@ export default function BottomNav() {
                   <UserRound
                     size={24}
                     strokeWidth={2.5}
-                    fill="#2563EB"
-                    className="text-[#2563EB] transition-colors duration-200"
+                    fill="#58A6FF"
+                    className="text-[#58A6FF] transition-colors duration-200"
                   />
                 ) : (
                   <Icon
                     size={24}
                     strokeWidth={isActive ? 2.5 : 2}
-                    className={`transition-colors duration-200 ${isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'}`}
+                    className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#6B7280]'}`}
                   />
                 )}
                 <span
                   className={`text-xs mt-0.5 transition-colors duration-200 ${
-                    isActive ? 'text-[#2563EB] font-medium' : 'text-[#94A3B8]'
+                    isActive ? 'text-[#58A6FF] font-medium' : 'text-[#6B7280]'
                   }`}
                 >
                   {item.label}
@@ -184,7 +184,7 @@ export default function BottomNav() {
                 {isActive && !item.isInvite && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute -bottom-0 w-6 h-0.5 rounded-full bg-[#2563EB]"
+                    className="absolute -bottom-0 w-6 h-0.5 rounded-full bg-[#58A6FF] shadow-[0_0_8px_rgba(88,166,255,0.5)]"
                   />
                 )}
               </button>
@@ -200,7 +200,7 @@ export default function BottomNav() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm flex items-end"
+            className="fixed inset-0 z-50 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm flex items-end"
             onClick={() => setShowAuthModal(false)}
           >
             <motion.div
@@ -209,25 +209,25 @@ export default function BottomNav() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-white backdrop-blur-xl rounded-t-[20px] border-t border-[#E2E8F0] px-8 py-6"
+              className="w-full bg-[rgba(30,30,30,0.95)] backdrop-blur-xl rounded-t-[16px] border-t border-[rgba(240,246,252,0.1)] px-8 py-6"
             >
               <button
                 onClick={() => setShowAuthModal(false)}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#64748B]" />
+                <X size={20} className="text-[#8B949E]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#E2E8F0] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#30363D] rounded-full mx-auto mb-6" />
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] flex items-center justify-center">
-                  <UserPlus size={28} className="text-[#2563EB]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.15)] to-[rgba(31,111,235,0.15)] flex items-center justify-center">
+                  <UserPlus size={28} className="text-[#58A6FF]" />
                 </div>
-                <h3 className="text-xl font-semibold text-[#1A1A2E] mb-2">
+                <h3 className="text-xl font-semibold text-[#F0F6FC] mb-2">
                   로그인이 필요해요
                 </h3>
-                <p className="text-base text-[#64748B]">
+                <p className="text-base text-[#8B949E]">
                   내 명함을 만들고 네트워크를 확장하려면<br />
                   간단한 가입이 필요해요
                 </p>
@@ -236,7 +236,7 @@ export default function BottomNav() {
               <div className="space-y-3">
                 <button
                   onClick={handleAuth}
-                  className="w-full py-4 bg-[#2563EB] text-white font-semibold rounded-[10px]"
+                  className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-[10px]"
                 >
                   30초만에 가입하기
                 </button>
@@ -245,7 +245,7 @@ export default function BottomNav() {
                     router.push('/login');
                     setShowAuthModal(false);
                   }}
-                  className="w-full py-4 bg-[#F8F9FA] text-[#1A1A2E] font-medium rounded-[10px] border border-[#E2E8F0]"
+                  className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-medium rounded-[10px] border border-[#363636]"
                 >
                   이미 계정이 있어요
                 </button>
@@ -262,7 +262,7 @@ export default function BottomNav() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm flex items-end"
+            className="fixed inset-0 z-50 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm flex items-end"
             onClick={resetInviteModal}
           >
             <motion.div
@@ -271,27 +271,27 @@ export default function BottomNav() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-white backdrop-blur-xl rounded-t-[20px] border-t border-[#E2E8F0] px-8 py-6 max-h-[80vh] overflow-y-auto"
+              className="w-full bg-[rgba(30,30,30,0.95)] backdrop-blur-xl rounded-t-[16px] border-t border-[rgba(240,246,252,0.1)] px-8 py-6 max-h-[80vh] overflow-y-auto"
             >
               <button
                 onClick={resetInviteModal}
                 className="absolute top-4 right-4 p-2"
               >
-                <X size={20} className="text-[#64748B]" />
+                <X size={20} className="text-[#8B949E]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#E2E8F0] rounded-full mx-auto mb-6" />
+              <div className="w-12 h-1 bg-[#30363D] rounded-full mx-auto mb-6" />
 
               {inviteStep === 'select' && (
                 <>
                   <div className="text-center mb-6">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] flex items-center justify-center">
-                      <UserPlus size={28} className="text-[#2563EB]" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.15)] to-[rgba(31,111,235,0.15)] flex items-center justify-center">
+                      <UserPlus size={28} className="text-[#58A6FF]" />
                     </div>
-                    <h3 className="text-xl font-semibold text-[#1A1A2E] mb-2">
+                    <h3 className="text-xl font-semibold text-[#F0F6FC] mb-2">
                       초대하기
                     </h3>
-                    <p className="text-base text-[#64748B]">
+                    <p className="text-base text-[#8B949E]">
                       새로운 인맥을 초대해보세요
                     </p>
                   </div>
@@ -299,19 +299,19 @@ export default function BottomNav() {
                   <div className="space-y-3">
                     <button
                       onClick={() => setInviteStep('personal')}
-                      className="w-full py-4 bg-[#2563EB] text-white font-semibold rounded-[10px] flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-[10px] flex items-center justify-center gap-3"
                     >
                       <User size={20} />
                       개인 초대하기
                     </button>
                     <button
                       onClick={() => setInviteStep('group')}
-                      className="w-full py-4 bg-[#F8F9FA] text-[#1A1A2E] font-medium rounded-[10px] border border-[#E2E8F0] flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-medium rounded-[10px] border border-[#363636] flex items-center justify-center gap-3"
                     >
                       <Users size={20} />
                       그룹으로 초대하기
                     </button>
-                    <p className="text-xs text-[#94A3B8] text-center pt-2">
+                    <p className="text-xs text-[#484F58] text-center pt-2">
                       그룹 초대 시 초대받은 분은 그룹원 전체와 자동으로 인맥이 됩니다
                     </p>
                   </div>
@@ -323,11 +323,11 @@ export default function BottomNav() {
                   <div className="flex items-center gap-3 mb-6">
                     <button
                       onClick={() => { setInviteStep('select'); setSelectedMethod(null); }}
-                      className="p-2 text-[#64748B] hover:text-[#1A1A2E]"
+                      className="p-2 text-[#8B949E] hover:text-white"
                     >
                       <X size={18} />
                     </button>
-                    <h3 className="text-lg font-semibold text-[#1A1A2E]">
+                    <h3 className="text-lg font-semibold text-[#F0F6FC]">
                       개인 초대하기
                     </h3>
                   </div>
@@ -345,24 +345,24 @@ export default function BottomNav() {
                       </button>
                       <button
                         onClick={() => setSelectedMethod('email')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#EFF6FF] border border-[#2563EB]/30 rounded-[10px]"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#58A6FF]/10 border border-[#58A6FF]/30 rounded-[10px]"
                       >
-                        <Mail size={24} className="text-[#2563EB]" />
-                        <span className="text-sm text-[#2563EB]">이메일</span>
+                        <Mail size={24} className="text-[#58A6FF]" />
+                        <span className="text-sm text-[#58A6FF]">이메일</span>
                       </button>
                       <button
                         onClick={() => setSelectedMethod('sms')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#ECFDF5] border border-[#10B981]/30 rounded-[10px]"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#3FB950]/10 border border-[#3FB950]/30 rounded-[10px]"
                       >
-                        <MessageCircle size={24} className="text-[#10B981]" />
-                        <span className="text-sm text-[#10B981]">문자</span>
+                        <MessageCircle size={24} className="text-[#3FB950]" />
+                        <span className="text-sm text-[#3FB950]">문자</span>
                       </button>
                       <button
                         onClick={() => setSelectedMethod('link')}
-                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#F5F3FF] border border-[#7C3AED]/30 rounded-[10px]"
+                        className="flex flex-col items-center justify-center gap-2 py-5 bg-[#A371F7]/10 border border-[#A371F7]/30 rounded-[10px]"
                       >
-                        <Link2 size={24} className="text-[#7C3AED]" />
-                        <span className="text-sm text-[#7C3AED]">링크 복사</span>
+                        <Link2 size={24} className="text-[#A371F7]" />
+                        <span className="text-sm text-[#A371F7]">링크 복사</span>
                       </button>
                     </div>
                   ) : (
@@ -374,12 +374,12 @@ export default function BottomNav() {
                             placeholder="friend@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-[#F8F9FA] border border-[#E2E8F0] rounded-[10px] text-[#1A1A2E] placeholder-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
+                            className="w-full px-4 py-3 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                           />
                           <button
                             onClick={handleSendPersonalInvite}
                             disabled={!email || isSending}
-                            className="w-full py-3 bg-[#2563EB] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#58A6FF] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             <Mail size={18} />
                             이메일로 초대하기
@@ -407,12 +407,12 @@ export default function BottomNav() {
                             placeholder="010-1234-5678"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className="w-full px-4 py-3 bg-[#F8F9FA] border border-[#E2E8F0] rounded-[10px] text-[#1A1A2E] placeholder-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
+                            className="w-full px-4 py-3 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                           />
                           <button
                             onClick={handleSendPersonalInvite}
                             disabled={!phone || isSending}
-                            className="w-full py-3 bg-[#10B981] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#3FB950] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             <MessageCircle size={18} />
                             문자로 초대하기
@@ -424,9 +424,9 @@ export default function BottomNav() {
                         <>
                           {generatedLink ? (
                             <div className="space-y-3">
-                              <div className="p-3 bg-[#F8F9FA] border border-[#E2E8F0] rounded-[10px]">
-                                <p className="text-xs text-[#94A3B8] mb-1">초대 링크</p>
-                                <p className="text-sm text-[#1A1A2E] break-all">{generatedLink}</p>
+                              <div className="p-3 bg-[#121212] border border-[#363636] rounded-[10px]">
+                                <p className="text-xs text-[#484F58] mb-1">초대 링크</p>
+                                <p className="text-sm text-white break-all">{generatedLink}</p>
                               </div>
                               <button
                                 onClick={async () => {
@@ -434,7 +434,7 @@ export default function BottomNav() {
                                   setCopied(true);
                                   setTimeout(() => setCopied(false), 2000);
                                 }}
-                                className="w-full py-3 bg-[#7C3AED] text-white font-medium rounded-[10px] flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-[#A371F7] text-white font-medium rounded-[10px] flex items-center justify-center gap-2"
                               >
                                 {copied ? <Check size={18} /> : <Copy size={18} />}
                                 {copied ? '복사됨!' : '다시 복사하기'}
@@ -444,7 +444,7 @@ export default function BottomNav() {
                             <button
                               onClick={handleSendPersonalInvite}
                               disabled={isSending}
-                              className="w-full py-3 bg-[#7C3AED] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-[#A371F7] text-white font-medium rounded-[10px] disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               <Link2 size={18} />
                               초대 링크 생성하기
@@ -455,7 +455,7 @@ export default function BottomNav() {
 
                       <button
                         onClick={() => { setSelectedMethod(null); setGeneratedLink(''); }}
-                        className="w-full py-2 text-[#64748B] text-sm"
+                        className="w-full py-2 text-[#8B949E] text-sm"
                       >
                         다른 방법으로 초대
                       </button>
@@ -469,21 +469,21 @@ export default function BottomNav() {
                   <div className="flex items-center gap-3 mb-6">
                     <button
                       onClick={() => setInviteStep('select')}
-                      className="p-2 text-[#64748B] hover:text-[#1A1A2E]"
+                      className="p-2 text-[#8B949E] hover:text-white"
                     >
                       <X size={18} />
                     </button>
-                    <h3 className="text-lg font-semibold text-[#1A1A2E]">
+                    <h3 className="text-lg font-semibold text-[#F0F6FC]">
                       그룹으로 초대하기
                     </h3>
                   </div>
 
-                  <div className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-[10px] p-4 mb-4">
+                  <div className="bg-[#58A6FF]/10 border border-[#58A6FF]/20 rounded-[10px] p-4 mb-4">
                     <div className="flex items-start gap-3">
-                      <UserPlus size={18} className="text-[#2563EB] mt-0.5" />
+                      <UserPlus size={18} className="text-[#58A6FF] mt-0.5" />
                       <div>
-                        <p className="text-sm text-[#2563EB] font-medium">자동 인맥 연결</p>
-                        <p className="text-xs text-[#64748B] mt-1">
+                        <p className="text-sm text-[#58A6FF] font-medium">자동 인맥 연결</p>
+                        <p className="text-xs text-[#8B949E] mt-1">
                           그룹으로 초대하면 초대받은 분이 그룹원 전체와 자동으로 서로 인맥이 됩니다
                         </p>
                       </div>
@@ -492,14 +492,14 @@ export default function BottomNav() {
 
                   {groups.length === 0 ? (
                     <div className="text-center py-8">
-                      <Users size={32} className="text-[#94A3B8] mx-auto mb-3" />
-                      <p className="text-[#64748B] mb-4">아직 그룹이 없습니다</p>
+                      <Users size={32} className="text-[#484F58] mx-auto mb-3" />
+                      <p className="text-[#8B949E] mb-4">아직 그룹이 없습니다</p>
                       <button
                         onClick={() => {
                           resetInviteModal();
                           router.push('/network');
                         }}
-                        className="px-4 py-2 bg-[#2563EB] text-white text-sm font-medium rounded-lg"
+                        className="px-4 py-2 bg-[#58A6FF] text-white text-sm font-medium rounded-lg"
                       >
                         그룹 만들러 가기
                       </button>
@@ -512,7 +512,7 @@ export default function BottomNav() {
                           <button
                             key={group.id}
                             onClick={() => handleSelectGroup(group.id)}
-                            className="w-full flex items-center gap-3 p-4 bg-[#F8F9FA] border border-[#E2E8F0] rounded-[10px] hover:border-[#2563EB] transition-colors"
+                            className="w-full flex items-center gap-3 p-4 bg-[#121212] border border-[#363636] rounded-[10px] hover:border-[#58A6FF] transition-colors"
                           >
                             <div
                               className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
@@ -521,12 +521,12 @@ export default function BottomNav() {
                               {group.icon}
                             </div>
                             <div className="flex-1 text-left">
-                              <p className="text-[#1A1A2E] font-medium">{group.name}</p>
-                              <p className="text-xs text-[#64748B]">
+                              <p className="text-white font-medium">{group.name}</p>
+                              <p className="text-xs text-[#8B949E]">
                                 {memberCount}명의 멤버
                               </p>
                             </div>
-                            <Share2 size={18} className="text-[#2563EB]" />
+                            <Share2 size={18} className="text-[#58A6FF]" />
                           </button>
                         );
                       })}

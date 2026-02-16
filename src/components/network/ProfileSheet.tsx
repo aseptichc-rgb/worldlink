@@ -303,27 +303,27 @@ export default function ProfileSheet() {
           className="fixed top-0 right-0 bottom-0 w-full max-w-[380px] z-30 pointer-events-auto"
         >
           {/* Panel Container */}
-          <div className="h-full bg-gradient-to-l from-white/98 via-white/95 to-transparent">
+          <div className="h-full bg-gradient-to-l from-[#121212]/98 via-[#1E1E1E]/95 to-transparent">
             {/* Content Area */}
-            <div className="h-full w-[340px] ml-auto bg-white border-l border-[#E2E8F0] shadow-[-4px_0_24px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
+            <div className="h-full w-[340px] ml-auto bg-[#1E1E1E]/98 backdrop-blur-2xl border-l border-[#363636]/60 overflow-hidden flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] bg-[#F8F9FA]">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#363636]/50 bg-[#121212]/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
-                  <span className="text-base font-medium text-[#64748B]">프로필</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] animate-pulse" />
+                  <span className="text-base font-medium text-[#8B949E]">프로필</span>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-2 rounded-lg hover:bg-[#E2E8F0] transition-all duration-200 group"
+                  className="p-2 rounded-lg hover:bg-[#363636] transition-all duration-200 group"
                 >
-                  <X size={18} className="text-[#64748B] group-hover:text-[#1A1A2E] transition-colors" />
+                  <X size={18} className="text-[#8B949E] group-hover:text-white transition-colors" />
                 </button>
               </div>
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto no-scrollbar">
                 {/* Profile Header Section */}
-                <div className="px-5 py-5 bg-gradient-to-b from-[#F8F9FA] to-transparent">
+                <div className="px-5 py-5 bg-gradient-to-b from-[#121212]/80 to-transparent">
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <Avatar
@@ -333,8 +333,8 @@ export default function ProfileSheet() {
                         hasGlow={selectedNode.degree === 1}
                       />
                       {selectedNode.degree === 1 && (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#2563EB] flex items-center justify-center">
-                          <Link2 size={12} className="text-white" />
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#58A6FF] flex items-center justify-center">
+                          <Link2 size={12} className="text-[#121212]" />
                         </div>
                       )}
                     </div>
@@ -353,23 +353,23 @@ export default function ProfileSheet() {
 
                         return (
                           <>
-                            <h2 className="text-xl font-bold text-[#1A1A2E] truncate tracking-tight">
+                            <h2 className="text-xl font-bold text-white truncate tracking-tight">
                               {displayInfo.name}
                             </h2>
                             {displayInfo.company && (
-                              <div className="flex items-center gap-2 mt-1.5 text-[#64748B] text-base">
-                                <Building size={14} className="text-[#2563EB] flex-shrink-0" />
+                              <div className="flex items-center gap-2 mt-1.5 text-[#8B949E] text-base">
+                                <Building size={14} className="text-[#58A6FF] flex-shrink-0" />
                                 <span className="truncate">{displayInfo.company}</span>
                               </div>
                             )}
                             {displayInfo.position && (
-                              <div className="flex items-center gap-2 mt-1 text-[#64748B] text-base">
-                                <Briefcase size={14} className="text-[#3B82F6] flex-shrink-0" />
+                              <div className="flex items-center gap-2 mt-1 text-[#8B949E] text-base">
+                                <Briefcase size={14} className="text-[#1F6FEB] flex-shrink-0" />
                                 <span className="truncate">{displayInfo.position}</span>
                               </div>
                             )}
                             {!displayInfo.company && !displayInfo.position && !isConnected && (
-                              <div className="flex items-center gap-2 mt-1.5 text-[#94A3B8] text-base">
+                              <div className="flex items-center gap-2 mt-1.5 text-[#484F58] text-base">
                                 <span className="text-sm">1촌 연결 시 상세 정보 확인 가능</span>
                               </div>
                             )}
@@ -395,18 +395,18 @@ export default function ProfileSheet() {
                             </>
                           ) : (
                             <>
-                              <span className="stat-badge-value text-[#F59E0B]">{connectionDegree}</span>
+                              <span className="stat-badge-value text-[#FFB800]">{connectionDegree}</span>
                               <span className="stat-badge-label">단계 거리</span>
                             </>
                           )}
                         </div>
                         <div className="stat-badge flex-1">
-                          <span className="stat-badge-value text-[#2563EB]">{selectedNode.connectionCount}</span>
+                          <span className="stat-badge-value text-[#58A6FF]">{selectedNode.connectionCount}</span>
                           <span className="stat-badge-label">연결된 인맥</span>
                         </div>
                         {mutualCount > 0 && (
                           <div className="stat-badge flex-1">
-                            <span className="stat-badge-value text-[#F59E0B]">{mutualCount}</span>
+                            <span className="stat-badge-value text-[#FFB800]">{mutualCount}</span>
                             <span className="stat-badge-label">공통 인맥</span>
                           </div>
                         )}
@@ -419,7 +419,7 @@ export default function ProfileSheet() {
                   {/* Contact Info - 1촌에게만 표시 */}
                   {selectedNode.degree === 1 && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
                     <section>
-                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-3">
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Mail size={12} />
                         연락처
                       </h3>
@@ -427,10 +427,10 @@ export default function ProfileSheet() {
                         {selectedUserData.email && (
                           <a
                             href={`mailto:${selectedUserData.email}`}
-                            className="flex items-center gap-3 text-base text-[#64748B] hover:text-[#2563EB] transition-colors group"
+                            className="flex items-center gap-3 text-base text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-[#E2E8F0] flex items-center justify-center group-hover:bg-[#2563EB]/10 transition-colors">
-                              <Mail size={14} className="text-[#2563EB]" />
+                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <Mail size={14} className="text-[#58A6FF]" />
                             </div>
                             <span className="truncate">{selectedUserData.email}</span>
                           </a>
@@ -438,10 +438,10 @@ export default function ProfileSheet() {
                         {selectedUserData.phone && (
                           <a
                             href={`tel:${selectedUserData.phone}`}
-                            className="flex items-center gap-3 text-base text-[#64748B] hover:text-[#2563EB] transition-colors group"
+                            className="flex items-center gap-3 text-base text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-[#E2E8F0] flex items-center justify-center group-hover:bg-[#2563EB]/10 transition-colors">
-                              <Phone size={14} className="text-[#2563EB]" />
+                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <Phone size={14} className="text-[#58A6FF]" />
                             </div>
                             <span>{selectedUserData.phone}</span>
                           </a>
@@ -452,19 +452,19 @@ export default function ProfileSheet() {
 
                   {/* Connection Path */}
                   <section>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-3">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                       <Link2 size={12} />
                       {connectionDegree >= 99 ? '프로필 공개 상태' : '연결 경로'}
                     </h3>
                     {connectionDegree >= 99 ? (
-                      <div className="info-card border border-[#10B981]/30 bg-[#ECFDF5]">
+                      <div className="info-card border border-[#10B981]/30 bg-[#10B981]/5">
                         <div className="flex items-center gap-3 py-2">
                           <div className="w-10 h-10 rounded-full bg-[#10B981]/20 flex items-center justify-center">
                             <Users size={20} className="text-[#10B981]" />
                           </div>
                           <div>
                             <p className="text-[#10B981] text-base font-medium">전체 공개 프로필</p>
-                            <p className="text-[#94A3B8] text-sm mt-0.5">인맥 신청을 통해 연결해보세요</p>
+                            <p className="text-[#484F58] text-sm mt-0.5">인맥 신청을 통해 연결해보세요</p>
                           </div>
                         </div>
                       </div>
@@ -486,19 +486,19 @@ export default function ProfileSheet() {
                                     hasGlow={idx === 0 || idx === connectionPath.length - 1}
                                   />
                                   {idx === 0 && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#2563EB] flex items-center justify-center text-[8px] font-bold text-white">
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#58A6FF] flex items-center justify-center text-[8px] font-bold text-[#121212]">
                                       나
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-[#64748B] mt-1.5 max-w-[48px] truncate text-center font-medium">
+                                <span className="text-[10px] text-[#8B949E] mt-1.5 max-w-[48px] truncate text-center font-medium">
                                   {idx === 0 ? '나' : user.name.slice(0, 4)}
                                 </span>
                               </div>
                               {idx < connectionPath.length - 1 && (
                                 <div className="flex items-center">
-                                  <div className={`w-6 h-0.5 ${idx === 0 ? 'bg-[#2563EB]' : 'bg-[#3B82F6]'}`} />
-                                  <ArrowRight size={14} className={`flex-shrink-0 -mx-1 ${idx === 0 ? 'text-[#2563EB]' : 'text-[#3B82F6]'}`} />
+                                  <div className={`w-6 h-0.5 ${idx === 0 ? 'bg-[#58A6FF]' : 'bg-[#1F6FEB]'}`} />
+                                  <ArrowRight size={14} className={`flex-shrink-0 -mx-1 ${idx === 0 ? 'text-[#58A6FF]' : 'text-[#1F6FEB]'}`} />
                                 </div>
                               )}
                             </div>
@@ -507,7 +507,7 @@ export default function ProfileSheet() {
                       </div>
                     ) : (
                       <div className="info-card">
-                        <p className="text-[#94A3B8] text-base text-center py-2">연결 경로를 찾을 수 없습니다</p>
+                        <p className="text-[#484F58] text-base text-center py-2">연결 경로를 찾을 수 없습니다</p>
                       </div>
                     )}
                   </section>
@@ -515,7 +515,7 @@ export default function ProfileSheet() {
                   {/* Keywords & Tags */}
                   {selectedNode.keywords.length > 0 && (
                     <section>
-                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-3">
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Hash size={12} />
                         {selectedNode.name}님은
                       </h3>
@@ -539,15 +539,15 @@ export default function ProfileSheet() {
                   {selectedNode.degree !== 0 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
                           <FolderOpen size={12} />
                           그룹
                         </h3>
                         <button
                           onClick={() => openGroupAssignModal(selectedNode.id)}
-                          className="p-1.5 rounded-lg hover:bg-[#E2E8F0] transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-[#363636] transition-colors"
                         >
-                          <Plus size={12} className="text-[#64748B]" />
+                          <Plus size={12} className="text-[#8B949E]" />
                         </button>
                       </div>
 
@@ -558,16 +558,16 @@ export default function ProfileSheet() {
                             {nodeGroups.map((group) => (
                               <span
                                 key={group.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#F8F9FA] border border-[#E2E8F0]"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#252525] border border-[#363636]"
                                 style={{ borderColor: group.color + '60' }}
                               >
                                 <span>{group.icon}</span>
                                 <span style={{ color: group.color }}>{group.name}</span>
                                 <button
                                   onClick={() => removeNodeFromGroup(selectedNode.id, group.id)}
-                                  className="ml-0.5 hover:text-[#EF4444] transition-colors"
+                                  className="ml-0.5 hover:text-[#F85149] transition-colors"
                                 >
-                                  <X size={10} className="text-[#94A3B8]" />
+                                  <X size={10} className="text-[#484F58]" />
                                 </button>
                               </span>
                             ))}
@@ -575,13 +575,13 @@ export default function ProfileSheet() {
                         ) : (
                           <button
                             onClick={() => openGroupAssignModal(selectedNode.id)}
-                            className="w-full info-card border-2 border-dashed border-[#E2E8F0] hover:border-[#2563EB]/50 transition-all duration-200 text-left group"
+                            className="w-full info-card border-2 border-dashed border-[#363636] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
                           >
                             <div className="flex items-center gap-3 py-1">
-                              <div className="w-8 h-8 rounded-lg bg-[#E2E8F0] flex items-center justify-center group-hover:bg-[#2563EB]/10 transition-colors">
-                                <FolderOpen size={14} className="text-[#94A3B8] group-hover:text-[#2563EB] transition-colors" />
+                              <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                                <FolderOpen size={14} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
                               </div>
-                              <span className="text-base text-[#94A3B8] group-hover:text-[#64748B] transition-colors">
+                              <span className="text-base text-[#484F58] group-hover:text-[#8B949E] transition-colors">
                                 그룹에 추가하기
                               </span>
                             </div>
@@ -595,7 +595,7 @@ export default function ProfileSheet() {
                   {selectedNode.degree === 1 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
                           <StickyNote size={12} />
                           나만의 메모
                         </h3>
@@ -606,15 +606,15 @@ export default function ProfileSheet() {
                                 setMemoText(currentMemo.content);
                                 setIsEditingMemo(true);
                               }}
-                              className="p-1.5 rounded-lg hover:bg-[#E2E8F0] transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-[#363636] transition-colors"
                             >
-                              <Pencil size={12} className="text-[#64748B]" />
+                              <Pencil size={12} className="text-[#8B949E]" />
                             </button>
                             <button
                               onClick={handleDeleteMemo}
-                              className="p-1.5 rounded-lg hover:bg-[#E2E8F0] transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-[#363636] transition-colors"
                             >
-                              <Trash2 size={12} className="text-[#EF4444]" />
+                              <Trash2 size={12} className="text-[#F85149]" />
                             </button>
                           </div>
                         )}
@@ -628,29 +628,29 @@ export default function ProfileSheet() {
                             placeholder="이 인물에 대한 메모를 남겨보세요..."
                             maxLength={200}
                             className="
-                              w-full bg-transparent text-[#1A1A2E] text-base
+                              w-full bg-transparent text-white text-base
                               resize-none focus:outline-none
-                              placeholder:text-[#94A3B8]
+                              placeholder:text-[#484F58]
                               min-h-[80px]
                             "
                             autoFocus
                           />
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#E2E8F0]">
-                            <span className="text-[10px] text-[#94A3B8]">{memoText.length}/200</span>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#363636]/50">
+                            <span className="text-[10px] text-[#484F58]">{memoText.length}/200</span>
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => {
                                   setIsEditingMemo(false);
                                   setMemoText(currentMemo?.content || '');
                                 }}
-                                className="text-sm text-[#64748B] hover:text-[#1A1A2E] transition-colors"
+                                className="text-sm text-[#8B949E] hover:text-white transition-colors"
                               >
                                 취소
                               </button>
                               <button
                                 onClick={handleSaveMemo}
                                 disabled={!memoText.trim()}
-                                className="flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:text-[#2563EB]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 text-sm font-medium text-[#58A6FF] hover:text-[#58A6FF]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Check size={12} />
                                 저장
@@ -660,21 +660,21 @@ export default function ProfileSheet() {
                         </div>
                       ) : currentMemo ? (
                         <div className="info-card">
-                          <p className="text-base text-[#1A1A2E] whitespace-pre-wrap leading-relaxed">{currentMemo.content}</p>
-                          <p className="text-[10px] text-[#94A3B8] mt-3 pt-2 border-t border-[#E2E8F0]">
+                          <p className="text-base text-white whitespace-pre-wrap leading-relaxed">{currentMemo.content}</p>
+                          <p className="text-[10px] text-[#484F58] mt-3 pt-2 border-t border-[#363636]/50">
                             {new Date(currentMemo.updatedAt).toLocaleDateString('ko-KR')} 수정됨
                           </p>
                         </div>
                       ) : (
                         <button
                           onClick={() => setIsEditingMemo(true)}
-                          className="w-full info-card border-2 border-dashed border-[#E2E8F0] hover:border-[#2563EB]/50 transition-all duration-200 text-left group"
+                          className="w-full info-card border-2 border-dashed border-[#363636] hover:border-[#58A6FF]/50 transition-all duration-200 text-left group"
                         >
                           <div className="flex items-center gap-3 py-1">
-                            <div className="w-8 h-8 rounded-lg bg-[#E2E8F0] flex items-center justify-center group-hover:bg-[#2563EB]/10 transition-colors">
-                              <StickyNote size={14} className="text-[#94A3B8] group-hover:text-[#2563EB] transition-colors" />
+                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
+                              <StickyNote size={14} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
                             </div>
-                            <span className="text-base text-[#94A3B8] group-hover:text-[#64748B] transition-colors">
+                            <span className="text-base text-[#484F58] group-hover:text-[#8B949E] transition-colors">
                               메모 추가하기
                             </span>
                           </div>
@@ -703,12 +703,12 @@ export default function ProfileSheet() {
 
                     return (
                       <section>
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-3">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                           <Users size={12} />
                           공통 인맥
-                          <span className="text-[#F59E0B]">({mutualUsers.length})</span>
+                          <span className="text-[#FFB800]">({mutualUsers.length})</span>
                         </h3>
-                        <div className="info-card border border-[#F59E0B]/20 bg-[#FFFBEB]">
+                        <div className="info-card border border-[#FFB800]/20 bg-[#FFB800]/5">
                           <div className="grid grid-cols-5 gap-3">
                             {mutualUsers.slice(0, 15).map((user) => (
                               <button
@@ -722,19 +722,19 @@ export default function ProfileSheet() {
                                     name={user.name}
                                     size="sm"
                                   />
-                                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#F59E0B] flex items-center justify-center">
-                                    <Users size={8} className="text-white" />
+                                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center">
+                                    <Users size={8} className="text-[#121212]" />
                                   </div>
-                                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#F59E0B]/50 transition-colors" />
+                                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#FFB800]/50 transition-colors" />
                                 </div>
-                                <span className="text-[10px] mt-1.5 max-w-[48px] truncate text-center text-[#F59E0B] font-medium">
+                                <span className="text-[10px] mt-1.5 max-w-[48px] truncate text-center text-[#FFB800] font-medium">
                                   {user.name?.slice(0, 4) || '?'}
                                 </span>
                               </button>
                             ))}
                           </div>
                           {mutualUsers.length > 15 && (
-                            <p className="text-[10px] text-[#94A3B8] text-center mt-3 pt-3 border-t border-[#E2E8F0]">
+                            <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#363636]/50">
                               +{mutualUsers.length - 15}명 더
                             </p>
                           )}
@@ -746,10 +746,10 @@ export default function ProfileSheet() {
                   {/* Their Network - 1촌에게만 분야별로 표시 */}
                   {theirConnections.length > 0 && (
                     <section>
-                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-2">
                         <Users size={12} />
                         {selectedNode.name}님의 인맥
-                        <span className="text-[#2563EB]">({theirConnections.length})</span>
+                        <span className="text-[#58A6FF]">({theirConnections.length})</span>
                       </h3>
                       {selectedNode.degree === 1 ? (
                         <div className="space-y-4">
@@ -774,11 +774,11 @@ export default function ProfileSheet() {
                             return sortedIndustries.map((industry) => (
                               <div key={industry} className="info-card">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                                  <span className="text-sm font-medium text-[#64748B]">
+                                  <div className="w-2 h-2 rounded-full bg-[#58A6FF]" />
+                                  <span className="text-sm font-medium text-[#8B949E]">
                                     {industry}
                                   </span>
-                                  <span className="text-[10px] text-[#94A3B8]">
+                                  <span className="text-[10px] text-[#484F58]">
                                     ({groupedByIndustry[industry].length}명)
                                   </span>
                                 </div>
@@ -798,13 +798,13 @@ export default function ProfileSheet() {
                                           size="sm"
                                         />
                                         {isMutualConnection && (
-                                          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#F59E0B] flex items-center justify-center" title="공통 인맥">
-                                            <Users size={8} className="text-white" />
+                                          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center" title="공통 인맥">
+                                            <Users size={8} className="text-[#121212]" />
                                           </div>
                                         )}
-                                        <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#2563EB]/50 transition-colors" />
+                                        <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#58A6FF]/50 transition-colors" />
                                       </div>
-                                      <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#F59E0B] font-medium' : 'text-[#64748B]'}`}>
+                                      <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#FFB800] font-medium' : 'text-[#8B949E]'}`}>
                                         {user.name?.slice(0, 4) || '?'}
                                       </span>
                                     </button>
@@ -812,7 +812,7 @@ export default function ProfileSheet() {
                                   })}
                                 </div>
                                 {groupedByIndustry[industry].length > 10 && (
-                                  <p className="text-[10px] text-[#94A3B8] text-center mt-3 pt-3 border-t border-[#E2E8F0]">
+                                  <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#363636]/50">
                                     +{groupedByIndustry[industry].length - 10}명 더
                                   </p>
                                 )}
@@ -826,19 +826,19 @@ export default function ProfileSheet() {
                           <div className="grid grid-cols-5 gap-3 opacity-20 blur-[2px]">
                             {Array.from({ length: Math.min(10, theirConnections.length) }).map((_, idx) => (
                               <div key={idx} className="flex flex-col items-center">
-                                <div className="w-8 h-8 rounded-full bg-[#94A3B8]" />
-                                <div className="w-10 h-2 mt-1.5 rounded bg-[#94A3B8]" />
+                                <div className="w-8 h-8 rounded-full bg-[#484F58]" />
+                                <div className="w-10 h-2 mt-1.5 rounded bg-[#484F58]" />
                               </div>
                             ))}
                           </div>
                           {/* 잠금 오버레이 */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F8F9FA]/70 backdrop-blur-[1px]">
-                            <div className="flex items-center gap-2 text-[#64748B] mb-2">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525]/70 backdrop-blur-[1px]">
+                            <div className="flex items-center gap-2 text-[#8B949E] mb-2">
                               <Users size={18} />
-                              <span className="text-xl font-bold text-[#1A1A2E]">{theirConnections.length}</span>
+                              <span className="text-xl font-bold text-white">{theirConnections.length}</span>
                               <span className="text-base">명</span>
                             </div>
-                            <p className="text-sm text-[#94A3B8]">
+                            <p className="text-sm text-[#484F58]">
                               1촌과 연결하면 볼 수 있어요
                             </p>
                           </div>
@@ -850,7 +850,7 @@ export default function ProfileSheet() {
               </div>
 
               {/* Action Buttons - 하단 고정 */}
-              <div className="px-5 py-4 border-t border-[#E2E8F0] bg-white/90 backdrop-blur-xl">
+              <div className="px-5 py-4 border-t border-[#363636]/50 bg-[#121212]/80 backdrop-blur-xl">
                 {selectedNode.degree === 1 ? (
                   <div className="flex gap-3">
                     <Button
@@ -871,7 +871,7 @@ export default function ProfileSheet() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     <Button
-                      className="w-full text-sm py-3 bg-gradient-to-r from-[#2563EB] to-[#3B82F6] hover:from-[#2563EB] hover:to-[#8B7EFF] transition-all duration-300"
+                      className="w-full text-sm py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
                       leftIcon={<UserPlus size={16} />}
                       onClick={handleConnectionRequestClick}
                     >
@@ -908,7 +908,7 @@ export default function ProfileSheet() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.3)] backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => {
             if (!isSendingMessage) {
               setShowMessageModal(false);
@@ -920,16 +920,16 @@ export default function ProfileSheet() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white border border-[#E2E8F0] rounded-[10px] p-5 max-w-sm w-full shadow-[-4px_0_24px_rgba(0,0,0,0.06)]"
+            className="bg-[#1E1E1E] border border-[#363636] rounded-[10px] p-5 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {messageSent ? (
               <div className="text-center py-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#2563EB]/20 flex items-center justify-center">
-                  <Check size={32} className="text-[#2563EB]" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#58A6FF]/20 flex items-center justify-center">
+                  <Check size={32} className="text-[#58A6FF]" />
                 </div>
-                <h3 className="text-lg font-bold text-[#1A1A2E] mb-2">메시지 전송 완료!</h3>
-                <p className="text-base text-[#64748B]">
+                <h3 className="text-lg font-bold text-white mb-2">메시지 전송 완료!</h3>
+                <p className="text-base text-[#8B949E]">
                   {selectedNode.name}님에게 메시지를 보냈습니다
                 </p>
               </div>
@@ -943,8 +943,8 @@ export default function ProfileSheet() {
                       size="md"
                     />
                     <div>
-                      <h3 className="font-bold text-[#1A1A2E]">{selectedNode.name}</h3>
-                      <p className="text-sm text-[#64748B]">
+                      <h3 className="font-bold text-white">{selectedNode.name}</h3>
+                      <p className="text-sm text-[#8B949E]">
                         {selectedNode.company} · {selectedNode.position}
                       </p>
                     </div>
@@ -954,9 +954,9 @@ export default function ProfileSheet() {
                       setShowMessageModal(false);
                       setMessageContent('');
                     }}
-                    className="p-2 rounded-lg hover:bg-[#E2E8F0] transition-colors"
+                    className="p-2 rounded-lg hover:bg-[#363636] transition-colors"
                   >
-                    <X size={18} className="text-[#64748B]" />
+                    <X size={18} className="text-[#8B949E]" />
                   </button>
                 </div>
 
@@ -965,12 +965,12 @@ export default function ProfileSheet() {
                     value={messageContent}
                     onChange={(e) => setMessageContent(e.target.value)}
                     placeholder={`${selectedNode.name}님에게 보낼 메시지를 작성하세요...`}
-                    className="w-full bg-[#F8F9FA] border border-[#E2E8F0] text-[#1A1A2E] rounded-[10px] py-3 px-4 text-base resize-none focus:outline-none focus:border-[#2563EB] placeholder:text-[#94A3B8] min-h-[120px]"
+                    className="w-full bg-[#121212] border border-[#363636] text-white rounded-[10px] py-3 px-4 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58] min-h-[120px]"
                     autoFocus
                     maxLength={500}
                   />
                   <div className="flex justify-end mt-2">
-                    <span className="text-xs text-[#94A3B8]">{messageContent.length}/500</span>
+                    <span className="text-xs text-[#484F58]">{messageContent.length}/500</span>
                   </div>
                 </div>
 

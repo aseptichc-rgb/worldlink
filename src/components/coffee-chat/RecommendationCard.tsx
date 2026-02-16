@@ -35,19 +35,19 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-[#1A1A2E] truncate">
+              <h3 className="font-semibold text-white truncate">
                 {displayInfo.name}
               </h3>
-              <span className="text-xs text-[#3B82F6] bg-[#3B82F6]/20 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-[#1F6FEB] bg-[#1F6FEB]/20 px-2 py-0.5 rounded-full">
                 {recommendation.connectionPath.length - 1}촌
               </span>
             </div>
-            <p className="text-base text-[#64748B] truncate">
+            <p className="text-base text-[#8B949E] truncate">
               {[displayInfo.company, displayInfo.position].filter(Boolean).join(' · ') || '정보 비공개'}
             </p>
 
             {/* Reason */}
-            <div className="flex items-center gap-1.5 mt-2 text-sm text-[#2563EB]">
+            <div className="flex items-center gap-1.5 mt-2 text-sm text-[#58A6FF]">
               <Sparkles size={12} />
               <span>{recommendation.reason}</span>
             </div>
@@ -65,20 +65,20 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
             </div>
 
             {/* Connection Path */}
-            <div className="mt-3 pt-3 border-t border-[#E2E8F0]">
-              <p className="text-sm text-[#94A3B8] mb-2">연결 경로</p>
+            <div className="mt-3 pt-3 border-t border-[#30363D]">
+              <p className="text-sm text-[#484F58] mb-2">연결 경로</p>
               <div className="flex items-center gap-1 text-sm">
                 {recommendation.connectionPath.map((userId, i) => (
                   <span key={userId} className="flex items-center">
                     {i === 0 ? (
-                      <span className="text-[#2563EB]">나</span>
+                      <span className="text-[#58A6FF]">나</span>
                     ) : i === recommendation.connectionPath.length - 1 ? (
-                      <span className="text-[#3B82F6]">{recommendation.user.name}</span>
+                      <span className="text-[#1F6FEB]">{recommendation.user.name}</span>
                     ) : (
-                      <span className="text-[#64748B]">연결</span>
+                      <span className="text-[#8B949E]">연결</span>
                     )}
                     {i < recommendation.connectionPath.length - 1 && (
-                      <ArrowRight size={12} className="mx-1 text-[#94A3B8]" />
+                      <ArrowRight size={12} className="mx-1 text-[#484F58]" />
                     )}
                   </span>
                 ))}
@@ -92,10 +92,10 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
           onClick={() => openRequestModal(recommendation.userId)}
           className="
             w-full mt-4 py-2.5
-            bg-[#EFF6FF]
-            border border-[#E2E8F0] rounded-xl
-            text-base font-medium text-[#1A1A2E]
-            hover:border-[#2563EB] transition-all
+            bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10
+            border border-[#30363D] rounded-xl
+            text-base font-medium text-white
+            hover:border-[#58A6FF] transition-all
           "
         >
           연결 요청하기
