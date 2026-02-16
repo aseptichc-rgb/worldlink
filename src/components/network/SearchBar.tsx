@@ -438,6 +438,12 @@ export default function SearchBar() {
                     <p className="text-sm text-[#C4B5FD] mb-2 px-1 bg-[#A78BFA]/10 rounded-lg py-2">
                       {aiResponse.summary}
                     </p>
+                    {aiResponse.results.length === 0 ? (
+                      <div className="p-3 text-center">
+                        <p className="text-sm text-[#8B949E]">네트워크에서 관련 인물을 찾지 못했습니다</p>
+                        <p className="text-xs text-[#484F58] mt-1">다른 키워드로 검색해보세요</p>
+                      </div>
+                    ) : (
                     <div className="space-y-1">
                       {aiResponse.results.map((aiResult, index) => {
                         const member = demoUsers.find(u => u.id === aiResult.memberId);
@@ -518,6 +524,7 @@ export default function SearchBar() {
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 )}
               </div>
