@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Play } from 'lucide-react';
-import { Input, Button } from '@/components/ui';
+import { ArrowRight, Sparkles, Play, Check } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { loginWithEmail, getUser } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
 import { User } from '@/types';
@@ -28,8 +28,9 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
-  // 저장된 로그인 정보 불러오기
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -54,13 +55,11 @@ function LoginContent() {
       const userData = await getUser(userCredential.user.uid);
 
       if (userData) {
-        // 로그인 정보 저장/삭제
         if (rememberMe) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, password }));
         } else {
           localStorage.removeItem(STORAGE_KEY);
         }
-
         setUser(userData);
         router.push('/network');
       } else {
@@ -80,7 +79,6 @@ function LoginContent() {
     }
   };
 
-  // 데모 모드로 진입
   const handleDemoMode = () => {
     const demoUser: User = {
       id: 'member_8',
@@ -103,125 +101,182 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-8 py-10 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="stars-bg" />
+    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Ambient background layers */}
+      <div className="absolute inset-0">
+        {/* Top gradient orb */}
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.12, 0.18, 0.12] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#58A6FF] rounded-full blur-[150px]"
+        />
+        {/* Bottom-left accent */}
+        <motion.div
+          animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.14, 0.08] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          className="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-[#7EE0FF] rounded-full blur-[130px]"
+        />
+        {/* Bottom-right accent */}
+        <motion.div
+          animate={{ scale: [1, 1.1, 1], opacity: [0.06, 0.1, 0.06] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
+          className="absolute -bottom-20 -right-20 w-[300px] h-[300px] bg-[#1F6FEB] rounded-full blur-[120px]"
+        />
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(88,166,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(88,166,255,0.3) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
+      </div>
 
-      {/* Gradient Orbs */}
-      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[#58A6FF]/10 rounded-full blur-[100px]" />
-      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-[#1F6FEB]/10 rounded-full blur-[100px]" />
-
-      {/* Logo Section */}
+      {/* Logo */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="mb-10 text-center"
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="relative mb-12 text-center z-10"
       >
-        <div className="relative inline-block">
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-[#58A6FF] via-[#58A6FF] to-[#1F6FEB] bg-clip-text text-transparent">
-              NODDED
-            </span>
-          </h1>
-          {/* Subtle glow effect - 절제된 방식 */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#58A6FF]/20 to-[#1F6FEB]/20 blur-2xl -z-10" />
-        </div>
-        <p className="text-[#484F58] mt-3 text-base md:text-lg font-medium tracking-wide">
+        <h1 className="text-5xl font-extrabold tracking-tight">
+          <span className="bg-gradient-to-b from-white via-[#58A6FF] to-[#1F6FEB] bg-clip-text text-transparent">
+            NODDED
+          </span>
+        </h1>
+        <p className="text-[#484F58] mt-2 text-sm font-medium tracking-[0.2em] uppercase">
           신뢰 기반 비즈니스 네트워크
         </p>
       </motion.div>
 
-      {/* Login Card */}
+      {/* Login Card - Glassmorphism */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-full max-w-[400px]"
+        transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-[380px] z-10"
       >
-        <div className="bg-[#161B22]/80 backdrop-blur-2xl border border-[#30363D]/60 rounded-xl px-10 py-12">
-          {/* Header */}
-          <div className="text-center mb-10">
-            <h2 className="text-xl font-bold text-white tracking-tight">
-              다시 만나서 반갑습니다
-            </h2>
-            <p className="text-[#484F58] text-base mt-2">
-              네트워크로 돌아가기
-            </p>
-          </div>
+        <div className="relative bg-[rgba(22,27,34,0.6)] backdrop-blur-2xl border border-[rgba(240,246,252,0.08)] rounded-2xl p-8 shadow-[0_16px_64px_rgba(0,0,0,0.4)]">
+          {/* Subtle card inner glow */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[rgba(88,166,255,0.04)] to-transparent pointer-events-none" />
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              type="email"
-              label="이메일"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <div className="relative">
+            {/* Title */}
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-semibold text-[#F0F6FC] mb-1">
+                다시 만나서 반갑습니다
+              </h2>
+              <p className="text-sm text-[#484F58]">
+                네트워크로 돌아가기
+              </p>
+            </div>
 
-            <Input
-              type="password"
-              label="비밀번호"
-              placeholder="비밀번호를 입력하세요"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={error || undefined}
-              required
-            />
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-medium text-[#8B949E] mb-2 uppercase tracking-wider">
+                  이메일
+                </label>
+                <div className={`relative rounded-lg transition-all duration-300 ${emailFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                    placeholder="email@example.com"
+                    required
+                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
+                  />
+                </div>
+              </div>
 
-            {/* 로그인 정보 저장 체크박스 */}
-            <label className="flex items-center gap-3 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-5 h-5 rounded border-[#30363D] bg-[#0D1117] text-[#58A6FF] focus:ring-[#58A6FF] focus:ring-offset-0 cursor-pointer"
-              />
-              <span className="text-base text-[#8B949E]">로그인 정보 저장</span>
-            </label>
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-medium text-[#8B949E] mb-2 uppercase tracking-wider">
+                  비밀번호
+                </label>
+                <div className={`relative rounded-lg transition-all duration-300 ${passwordFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
+                  />
+                </div>
+                {error && (
+                  <p className="mt-2 text-xs text-[#F85149]">{error}</p>
+                )}
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full mt-4 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
-              size="lg"
-              isLoading={isLoading}
-              rightIcon={!isLoading ? <ArrowRight size={18} /> : undefined}
-            >
-              로그인
-            </Button>
-          </form>
+              {/* Remember Me - custom checkbox */}
+              <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+                <div
+                  className={`w-[18px] h-[18px] rounded flex items-center justify-center border transition-all duration-200 ${
+                    rememberMe
+                      ? 'bg-[#58A6FF] border-[#58A6FF]'
+                      : 'bg-transparent border-[#30363D] group-hover:border-[#484F58]'
+                  }`}
+                  onClick={() => setRememberMe(!rememberMe)}
+                >
+                  {rememberMe && <Check size={12} className="text-white" strokeWidth={3} />}
+                </div>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="hidden"
+                />
+                <span className="text-sm text-[#8B949E] group-hover:text-[#F0F6FC] transition-colors">로그인 정보 저장</span>
+              </label>
 
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-[#30363D]" />
-            <span className="text-[#484F58] text-sm">또는</span>
-            <div className="flex-1 h-px bg-[#30363D]" />
-          </div>
+              {/* Login Button */}
+              <Button
+                type="submit"
+                className="w-full py-3.5 text-[15px] font-semibold"
+                size="lg"
+                isLoading={isLoading}
+                rightIcon={!isLoading ? <ArrowRight size={16} /> : undefined}
+              >
+                로그인
+              </Button>
+            </form>
 
-          {/* Demo Mode Button */}
-          <button
-            onClick={handleDemoMode}
-            className="w-full py-4 rounded-lg bg-[#1F6FEB]/20 border border-[#1F6FEB]/40 text-[#1F6FEB] font-medium flex items-center justify-center gap-2 hover:bg-[#1F6FEB]/30 transition-colors"
-          >
-            <Play size={18} />
-            데모로 체험하기
-          </button>
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
+              <span className="text-xs text-[#30363D] uppercase tracking-wider">또는</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
+            </div>
 
-          {/* Sign Up Link */}
-          <div className="text-center mt-8">
-            <p className="text-[#484F58] text-base">
-              아직 계정이 없으신가요?
-            </p>
+            {/* Demo Button */}
             <button
-              onClick={() => router.push('/onboarding')}
-              className="mt-2 inline-flex items-center gap-2 text-[#58A6FF] hover:text-[#58A6FF]/80 transition-colors text-base font-medium group"
+              onClick={handleDemoMode}
+              className="w-full py-3 rounded-lg bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
             >
-              <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
-              회원가입하기
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              <Play size={15} fill="currentColor" />
+              데모로 체험하기
             </button>
+
+            {/* Sign Up */}
+            <div className="text-center mt-6 pt-6 border-t border-[rgba(240,246,252,0.05)]">
+              <p className="text-xs text-[#30363D] mb-2.5">
+                아직 계정이 없으신가요?
+              </p>
+              <button
+                onClick={() => router.push('/onboarding')}
+                className="inline-flex items-center gap-1.5 text-[#7EE0FF] hover:text-white transition-colors text-sm font-medium group"
+              >
+                <Sparkles size={13} className="group-hover:rotate-12 transition-transform" />
+                회원가입하기
+                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -230,8 +285,8 @@ function LoginContent() {
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mt-8 text-[#484F58] text-sm text-center"
+        transition={{ delay: 0.5 }}
+        className="mt-8 text-[10px] text-[#30363D] text-center z-10 tracking-wide"
       >
         로그인 시 서비스 이용약관 및 개인정보처리방침에 동의합니다
       </motion.p>

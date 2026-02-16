@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { NodeGroup, GroupMembership, GroupConnection } from '@/types';
+import { saveUserGroups, loadUserGroups } from '@/lib/firebase-services';
 
 // 그룹 색상 팔레트
 export const GROUP_COLORS = [
@@ -21,6 +22,23 @@ export const GROUP_ICONS = [
   '🏷️', '⭐', '🎯', '💼', '🏌️', '🎓', '🚀', '💡', '🤝', '📌', '🔥', '💎',
 ];
 
+// Firebase 동기화를 위한 debounce 타이머
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let currentUserId: string | null = null;
+
+const syncToFirebase = (state: { groups: NodeGroup[]; memberships: GroupMembership[]; groupConnections: GroupConnection[] }) => {
+  if (!currentUserId) return;
+  if (syncTimer) clearTimeout(syncTimer);
+  const userId = currentUserId;
+  syncTimer = setTimeout(() => {
+    saveUserGroups(userId, {
+      groups: state.groups,
+      memberships: state.memberships,
+      groupConnections: state.groupConnections,
+    }).catch(err => console.error('그룹 동기화 실패:', err));
+  }, 1000);
+};
+
 interface GroupState {
   groups: NodeGroup[];
   memberships: GroupMembership[];
@@ -38,6 +56,10 @@ interface GroupState {
   // 그룹 초대 모달 상태
   isGroupInviteModalOpen: boolean;
   inviteGroupId: string | null;
+
+  // Firebase 동기화
+  loadFromFirebase: (userId: string) => Promise<void>;
+  clearGroups: () => void;
 
   createGroup: (name: string, color: string, icon: string) => NodeGroup;
   updateGroup: (groupId: string, updates: Partial<Pick<NodeGroup, 'name' | 'color' | 'icon'>>) => void;
@@ -84,6 +106,33 @@ export const useGroupStore = create<GroupState>()(
       isGroupInviteModalOpen: false,
       inviteGroupId: null,
 
+      loadFromFirebase: async (userId) => {
+        currentUserId = userId;
+        try {
+          const data = await loadUserGroups(userId);
+          if (data) {
+            set({
+              groups: data.groups,
+              memberships: data.memberships,
+              groupConnections: data.groupConnections,
+            });
+          }
+        } catch (err) {
+          console.error('그룹 불러오기 실패:', err);
+        }
+      },
+
+      clearGroups: () => {
+        currentUserId = null;
+        if (syncTimer) clearTimeout(syncTimer);
+        set({
+          groups: [],
+          memberships: [],
+          groupConnections: [],
+          activeGroupFilter: null,
+        });
+      },
+
       createGroup: (name, color, icon) => {
         const newGroup: NodeGroup = {
           id: `group-${Date.now()}`,
@@ -93,25 +142,37 @@ export const useGroupStore = create<GroupState>()(
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        set((state) => ({ groups: [...state.groups, newGroup] }));
+        set((state) => {
+          const newState = { groups: [...state.groups, newGroup] };
+          syncToFirebase({ ...state, ...newState });
+          return newState;
+        });
         return newGroup;
       },
 
       updateGroup: (groupId, updates) => {
-        set((state) => ({
-          groups: state.groups.map((g) =>
-            g.id === groupId ? { ...g, ...updates, updatedAt: new Date() } : g
-          ),
-        }));
+        set((state) => {
+          const newState = {
+            groups: state.groups.map((g) =>
+              g.id === groupId ? { ...g, ...updates, updatedAt: new Date() } : g
+            ),
+          };
+          syncToFirebase({ ...state, ...newState });
+          return newState;
+        });
       },
 
       deleteGroup: (groupId) => {
-        set((state) => ({
-          groups: state.groups.filter((g) => g.id !== groupId),
-          memberships: state.memberships.filter((m) => m.groupId !== groupId),
-          groupConnections: state.groupConnections.filter((c) => c.groupId !== groupId),
-          activeGroupFilter: state.activeGroupFilter === groupId ? null : state.activeGroupFilter,
-        }));
+        set((state) => {
+          const newState = {
+            groups: state.groups.filter((g) => g.id !== groupId),
+            memberships: state.memberships.filter((m) => m.groupId !== groupId),
+            groupConnections: state.groupConnections.filter((c) => c.groupId !== groupId),
+            activeGroupFilter: state.activeGroupFilter === groupId ? null : state.activeGroupFilter,
+          };
+          syncToFirebase(newState);
+          return newState;
+        });
       },
 
       addNodeToGroup: (nodeId, groupId) => {
@@ -127,10 +188,14 @@ export const useGroupStore = create<GroupState>()(
           createdAt: new Date(),
         }));
 
-        set((state) => ({
-          memberships: [...state.memberships, { groupId, nodeId, addedAt: new Date() }],
-          groupConnections: [...state.groupConnections, ...newConnections],
-        }));
+        set((state) => {
+          const newState = {
+            memberships: [...state.memberships, { groupId, nodeId, addedAt: new Date() }],
+            groupConnections: [...state.groupConnections, ...newConnections],
+          };
+          syncToFirebase({ ...state, ...newState });
+          return newState;
+        });
       },
 
       addNodesToGroup: (nodeIds, groupId) => {
@@ -152,7 +217,6 @@ export const useGroupStore = create<GroupState>()(
 
         // 기존 멤버들과 새 멤버들 간의 연결 생성
         const newConnections: GroupConnection[] = [];
-        const allMemberIds = [...Array.from(existingMemberIds), ...newNodeIds];
 
         // 새 노드들과 기존 멤버들 간의 연결
         for (const newNodeId of newNodeIds) {
@@ -178,22 +242,30 @@ export const useGroupStore = create<GroupState>()(
           }
         }
 
-        set((state) => ({
-          memberships: [...state.memberships, ...newMemberships],
-          groupConnections: [...state.groupConnections, ...newConnections],
-        }));
+        set((state) => {
+          const newState = {
+            memberships: [...state.memberships, ...newMemberships],
+            groupConnections: [...state.groupConnections, ...newConnections],
+          };
+          syncToFirebase({ ...state, ...newState });
+          return newState;
+        });
       },
 
       removeNodeFromGroup: (nodeId, groupId) => {
-        set((state) => ({
-          memberships: state.memberships.filter(
-            (m) => !(m.nodeId === nodeId && m.groupId === groupId)
-          ),
-          // 해당 노드와 관련된 그룹 연결도 제거
-          groupConnections: state.groupConnections.filter(
-            (c) => !(c.groupId === groupId && (c.sourceNodeId === nodeId || c.targetNodeId === nodeId))
-          ),
-        }));
+        set((state) => {
+          const newState = {
+            memberships: state.memberships.filter(
+              (m) => !(m.nodeId === nodeId && m.groupId === groupId)
+            ),
+            // 해당 노드와 관련된 그룹 연결도 제거
+            groupConnections: state.groupConnections.filter(
+              (c) => !(c.groupId === groupId && (c.sourceNodeId === nodeId || c.targetNodeId === nodeId))
+            ),
+          };
+          syncToFirebase({ ...state, ...newState });
+          return newState;
+        });
       },
 
       getGroupsForNode: (nodeId) => {

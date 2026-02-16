@@ -208,6 +208,9 @@ export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; 
     } else {
       currentUser = demoUsers[0]!;
     }
+  } else if (userData?.profileImage) {
+    // 데모 멤버와 매칭된 경우에도 실제 프로필 이미지 사용
+    currentUser = { ...currentUser, profileImage: userData.profileImage };
   }
   const userConnections = demoConnections[currentUser.id] || demoConnections[userId] || [];
 

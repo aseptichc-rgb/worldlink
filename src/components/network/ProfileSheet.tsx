@@ -666,31 +666,74 @@ export default function ProfileSheet() {
                     </section>
                   )}
 
+                  {/* 공통 인맥 - 모든 degree에서 표시 */}
+                  {selectedNode.degree !== 0 && (() => {
+                    const mutualIds = theirConnections
+                      .map(u => u.id)
+                      .filter(id => myConnectionIds.has(id));
+
+                    if (mutualIds.length === 0) return null;
+
+                    const mutualUsers = mutualIds
+                      .map(id => {
+                        const fromConnections = theirConnections.find(u => u.id === id && u.name);
+                        if (fromConnections) return fromConnections;
+                        return demoUsers.find(u => u.id === id) || null;
+                      })
+                      .filter((u): u is User => u !== null);
+
+                    if (mutualUsers.length === 0) return null;
+
+                    return (
+                      <section>
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
+                          <Users size={12} />
+                          공통 인맥
+                          <span className="text-[#FFB800]">({mutualUsers.length})</span>
+                        </h3>
+                        <div className="info-card border border-[#FFB800]/20 bg-[#FFB800]/5">
+                          <div className="grid grid-cols-5 gap-3">
+                            {mutualUsers.slice(0, 15).map((user) => (
+                              <button
+                                key={user.id}
+                                onClick={() => handleConnectionClick(user)}
+                                className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
+                              >
+                                <div className="relative">
+                                  <Avatar
+                                    src={user.profileImage}
+                                    name={user.name}
+                                    size="sm"
+                                  />
+                                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center">
+                                    <Users size={8} className="text-[#0D1117]" />
+                                  </div>
+                                  <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#FFB800]/50 transition-colors" />
+                                </div>
+                                <span className="text-[10px] mt-1.5 max-w-[48px] truncate text-center text-[#FFB800] font-medium">
+                                  {user.name?.slice(0, 4) || '?'}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          {mutualUsers.length > 15 && (
+                            <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#30363D]/50">
+                              +{mutualUsers.length - 15}명 더
+                            </p>
+                          )}
+                        </div>
+                      </section>
+                    );
+                  })()}
+
                   {/* Their Network - 1촌에게만 분야별로 표시 */}
                   {theirConnections.length > 0 && (
                     <section>
-                      {(() => {
-                        const mutualCount = theirConnections.filter(u => myConnectionIds.has(u.id)).length;
-                        return (
-                          <>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-2">
-                              <Users size={12} />
-                              {selectedNode.name}님의 인맥
-                              <span className="text-[#58A6FF]">({theirConnections.length})</span>
-                            </h3>
-                            {selectedNode.degree === 1 && mutualCount > 0 && (
-                              <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-[#FFB800]/10 border border-[#FFB800]/20">
-                                <div className="w-3 h-3 rounded-full bg-[#FFB800] flex items-center justify-center">
-                                  <Users size={7} className="text-[#0D1117]" />
-                                </div>
-                                <span className="text-[10px] text-[#FFB800]">
-                                  공통 인맥 {mutualCount}명
-                                </span>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-2">
+                        <Users size={12} />
+                        {selectedNode.name}님의 인맥
+                        <span className="text-[#58A6FF]">({theirConnections.length})</span>
+                      </h3>
                       {selectedNode.degree === 1 ? (
                         <div className="space-y-4">
                           {/* 분야별로 그룹화하여 표시 */}

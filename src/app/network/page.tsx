@@ -31,12 +31,19 @@ export default function NetworkPage() {
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading, logout } = useAuthStore();
   const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, setCenterUserId } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
-  const { groups, toggleGroupPanel } = useGroupStore();
+  const { groups, toggleGroupPanel, loadFromFirebase, clearGroups } = useGroupStore();
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [centerUserName, setCenterUserName] = useState<string | null>(null);
+
+  // 로그인 시 Firebase에서 그룹 불러오기
+  useEffect(() => {
+    if (user) {
+      loadFromFirebase(user.id);
+    }
+  }, [user, loadFromFirebase]);
 
   // 데모 메세지 생성 함수
   const generateDemoMessages = (currentUserId: string): Message[] => {
@@ -102,8 +109,9 @@ export default function NetworkPage() {
             position: user.position,
             keywords: user.keywords,
           });
+          const demoId = getDemoCompatibleId(user);
           const syncedNodes = fetchedNodes.map(node =>
-            node.id === user.id && user.profileImage
+            (node.id === user.id || node.id === demoId) && node.degree === 0 && user.profileImage
               ? { ...node, profileImage: user.profileImage }
               : node
           );
@@ -412,6 +420,7 @@ export default function NetworkPage() {
                   setShowMenu(false);
                   try {
                     await logoutUser();
+                    clearGroups();
                     logout();
                     router.push('/onboarding');
                   } catch (error) {

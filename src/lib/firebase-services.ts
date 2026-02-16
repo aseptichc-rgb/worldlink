@@ -909,6 +909,72 @@ export const incrementKeywordCount = async (tag: string): Promise<void> => {
 
 // ==================== GROUP INVITE SERVICES ====================
 
+// 사용자 그룹 데이터 저장 (전체 덮어쓰기)
+export const saveUserGroups = async (
+  userId: string,
+  data: {
+    groups: { id: string; name: string; color: string; icon: string; createdAt: Date; updatedAt: Date }[];
+    memberships: { groupId: string; nodeId: string; addedAt: Date }[];
+    groupConnections: { groupId: string; sourceNodeId: string; targetNodeId: string; createdAt: Date }[];
+  }
+): Promise<void> => {
+  const groupsRef = doc(db, 'userGroups', userId);
+  await setDoc(groupsRef, {
+    groups: data.groups.map(g => ({
+      ...g,
+      createdAt: g.createdAt instanceof Date ? Timestamp.fromDate(g.createdAt) : g.createdAt,
+      updatedAt: g.updatedAt instanceof Date ? Timestamp.fromDate(g.updatedAt) : g.updatedAt,
+    })),
+    memberships: data.memberships.map(m => ({
+      ...m,
+      addedAt: m.addedAt instanceof Date ? Timestamp.fromDate(m.addedAt) : m.addedAt,
+    })),
+    groupConnections: data.groupConnections.map(c => ({
+      ...c,
+      createdAt: c.createdAt instanceof Date ? Timestamp.fromDate(c.createdAt) : c.createdAt,
+    })),
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// 사용자 그룹 데이터 불러오기
+export const loadUserGroups = async (
+  userId: string
+): Promise<{
+  groups: { id: string; name: string; color: string; icon: string; createdAt: Date; updatedAt: Date }[];
+  memberships: { groupId: string; nodeId: string; addedAt: Date }[];
+  groupConnections: { groupId: string; sourceNodeId: string; targetNodeId: string; createdAt: Date }[];
+} | null> => {
+  const groupsRef = doc(db, 'userGroups', userId);
+  const groupsSnap = await getDoc(groupsRef);
+
+  if (!groupsSnap.exists()) return null;
+
+  const data = groupsSnap.data();
+
+  return {
+    groups: (data.groups || []).map((g: Record<string, unknown>) => ({
+      id: g.id as string,
+      name: g.name as string,
+      color: g.color as string,
+      icon: g.icon as string,
+      createdAt: (g.createdAt as Timestamp)?.toDate?.() || new Date(),
+      updatedAt: (g.updatedAt as Timestamp)?.toDate?.() || new Date(),
+    })),
+    memberships: (data.memberships || []).map((m: Record<string, unknown>) => ({
+      groupId: m.groupId as string,
+      nodeId: m.nodeId as string,
+      addedAt: (m.addedAt as Timestamp)?.toDate?.() || new Date(),
+    })),
+    groupConnections: (data.groupConnections || []).map((c: Record<string, unknown>) => ({
+      groupId: c.groupId as string,
+      sourceNodeId: c.sourceNodeId as string,
+      targetNodeId: c.targetNodeId as string,
+      createdAt: (c.createdAt as Timestamp)?.toDate?.() || new Date(),
+    })),
+  };
+};
+
 // 그룹 초대 정보 저장
 export const createGroupInvite = async (
   groupId: string,

@@ -29,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('nexus-cards');
           localStorage.removeItem('nodded-contacts');
           localStorage.removeItem('nodded-memos');
+          localStorage.removeItem('nodded-groups');
         } catch { /* ignore */ }
         set({ user: null, isAuthenticated: false, inviteCode: null });
       },

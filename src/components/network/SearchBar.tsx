@@ -18,6 +18,7 @@ const popularKeywords = [
 interface AiResult {
   memberId: string;
   reason: string;
+  traits: string[];
 }
 
 interface AiSearchResponse {
@@ -204,6 +205,16 @@ export default function SearchBar() {
     setAiLoading(true);
     setAiResponse(null);
 
+    const members = demoUsers.map(u => ({
+      id: u.id,
+      name: u.name,
+      company: u.company || '',
+      position: u.position || '',
+      bio: u.bio || '',
+      keywords: u.keywords,
+      category: u.category || '',
+    }));
+
     try {
       const idToken = await auth?.currentUser?.getIdToken();
       const res = await fetch('/api/ai-search', {
@@ -212,7 +223,7 @@ export default function SearchBar() {
           'Content-Type': 'application/json',
           ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}),
         },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({ query: searchQuery, members }),
         signal: controller.signal,
       });
       if (!res.ok) throw new Error('AI search failed');
@@ -432,7 +443,7 @@ export default function SearchBar() {
                           <button
                             key={aiResult.memberId}
                             onClick={() => handlePersonSelect(personResult)}
-                            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
+                            className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
                           >
                             <Avatar
                               src={member.profileImage}
@@ -454,9 +465,21 @@ export default function SearchBar() {
                                 <span className="mx-1">·</span>
                                 <span className="truncate">{member.position}</span>
                               </div>
-                              <div className="text-[10px] text-[#C4B5FD] mt-0.5 truncate">
+                              <p className="text-xs text-[#C4B5FD] mt-1.5 leading-relaxed">
                                 {aiResult.reason}
-                              </div>
+                              </p>
+                              {aiResult.traits && aiResult.traits.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {aiResult.traits.map((trait, i) => (
+                                    <span
+                                      key={i}
+                                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#A78BFA]/10 text-[#A78BFA]/80 border border-[#A78BFA]/20"
+                                    >
+                                      {trait}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </button>
                         );
