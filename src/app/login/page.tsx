@@ -175,7 +175,7 @@ function LoginContent() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-3 uppercase tracking-wider">
+                <label className="block text-xs font-medium text-[#8B949E] mb-3 pl-1 uppercase tracking-wider">
                   이메일
                 </label>
                 <div className={`relative rounded-lg transition-all duration-300 ${emailFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
@@ -194,7 +194,7 @@ function LoginContent() {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-3 uppercase tracking-wider">
+                <label className="block text-xs font-medium text-[#8B949E] mb-3 pl-1 uppercase tracking-wider">
                   비밀번호
                 </label>
                 <div className={`relative rounded-lg transition-all duration-300 ${passwordFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
@@ -210,7 +210,7 @@ function LoginContent() {
                   />
                 </div>
                 {error && (
-                  <p className="mt-3 text-xs text-[#F85149] px-1">{error}</p>
+                  <p className="mt-3 text-xs text-[#F85149] pl-1">{error}</p>
                 )}
               </div>
 
