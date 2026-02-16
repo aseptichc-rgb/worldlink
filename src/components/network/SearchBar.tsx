@@ -17,6 +17,7 @@ const popularKeywords = [
 
 interface AiResult {
   memberId: string;
+  relevanceScore: number;
   reason: string;
   traits: string[];
 }
@@ -438,7 +439,7 @@ export default function SearchBar() {
                       {aiResponse.summary}
                     </p>
                     <div className="space-y-1">
-                      {aiResponse.results.map((aiResult) => {
+                      {aiResponse.results.map((aiResult, index) => {
                         const member = demoUsers.find(u => u.id === aiResult.memberId);
                         if (!member) return null;
                         const personResult: PersonResult = {
@@ -451,12 +452,20 @@ export default function SearchBar() {
                           degree: 1,
                           path: [currentUserId, member.id],
                         };
+                        const score = aiResult.relevanceScore ?? 50;
+                        const scoreColor = score >= 80 ? '#A78BFA' : score >= 60 ? '#8B5CF6' : '#6D28D9';
                         return (
                           <button
                             key={aiResult.memberId}
                             onClick={() => handlePersonSelect(personResult)}
                             className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
                           >
+                            {/* 순위 번호 */}
+                            <div className="flex flex-col items-center gap-1 pt-0.5">
+                              <span className="text-[10px] font-bold text-[#A78BFA] bg-[#A78BFA]/15 w-5 h-5 rounded-full flex items-center justify-center">
+                                {index + 1}
+                              </span>
+                            </div>
                             <Avatar
                               src={member.profileImage}
                               name={member.name}
@@ -467,8 +476,12 @@ export default function SearchBar() {
                                 <span className="text-white font-medium truncate">
                                   {member.name}
                                 </span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#A78BFA]/20 text-[#A78BFA]">
-                                  AI 추천
+                                {/* 관련성 점수 */}
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                                  style={{ backgroundColor: `${scoreColor}20`, color: scoreColor }}
+                                >
+                                  관련도 {score}%
                                 </span>
                               </div>
                               <div className="flex items-center gap-1 text-sm text-[#8B949E]">
@@ -477,6 +490,14 @@ export default function SearchBar() {
                                 <span className="mx-1">·</span>
                                 <span className="truncate">{member.position}</span>
                               </div>
+                              {/* 관련성 바 */}
+                              <div className="w-full h-1 bg-[#21262D] rounded-full mt-1.5 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${score}%`, backgroundColor: scoreColor }}
+                                />
+                              </div>
+                              {/* 추천 이유 */}
                               <p className="text-xs text-[#C4B5FD] mt-1.5 leading-relaxed">
                                 {aiResult.reason}
                               </p>
