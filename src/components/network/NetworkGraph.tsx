@@ -22,34 +22,34 @@ interface GraphEdge {
   degree: number;
 }
 
-// 색상 상수 - 계층별 차별화
+// 색상 상수 - Premium Minimal Light Theme
 const COLORS = {
   // 노드 색상
-  nodeCore: '#58A6FF',           // 중앙 노드 - 밝은 청색
-  nodePrimary: '#4A90E2',        // 1차 연결 - 청색
-  nodeSecondary: '#1F6FEB',      // 2차 연결 - 보라색
-  nodeTertiary: '#9B8ED9',       // 3차 연결 - 연보라
+  nodeCore: '#2563EB',           // 중앙 노드 - 진한 청색
+  nodePrimary: '#3B82F6',        // 1차 연결 - 청색
+  nodeSecondary: '#60A5FA',      // 2차 연결 - 중간 청색
+  nodeTertiary: '#93C5FD',       // 3차 연결 - 연한 청색
 
   // 엣지 색상
-  edgePrimary: '#4A90E2',        // 1차 연결선
-  edgeSecondary: '#1F6FEB',      // 2차 연결선
-  edgeTertiary: '#9B8ED9',       // 3차 연결선
-  edgeHighlighted: '#FFB800',    // 강조된 연결선
+  edgePrimary: '#93C5FD',        // 1차 연결선
+  edgeSecondary: '#BFDBFE',      // 2차 연결선
+  edgeTertiary: '#DBEAFE',       // 3차 연결선
+  edgeHighlighted: '#F59E0B',    // 강조된 연결선
 
   // 상호작용 색상
-  hover: '#58A6FF',
-  selected: '#FFD700',
-  focused: '#FFB800',
-  mutual: '#00E5FF',           // 공통 인맥 표시
+  hover: '#2563EB',
+  selected: '#F59E0B',
+  focused: '#F59E0B',
+  mutual: '#10B981',           // 공통 인맥 표시
 
   // 배경 색상
-  nodeBg: '#1C2333',
-  nodeBgHover: '#2D3748',
+  nodeBg: '#FFFFFF',
+  nodeBgHover: '#F1F5F9',
 
   // 텍스트 색상
-  textPrimary: '#FFFFFF',
-  textSecondary: 'rgba(255, 255, 255, 0.7)',
-  textDimmed: 'rgba(139, 148, 158, 0.3)',
+  textPrimary: '#1A1A2E',
+  textSecondary: '#64748B',
+  textDimmed: 'rgba(148, 163, 184, 0.3)',
 };
 
 // 카테고리별 색상 매핑
@@ -605,7 +605,7 @@ export default function NetworkGraph() {
   // 노드 색상 계산 (카테고리 기반)
   const getNodeColor = useCallback((node: GraphNode, isDimmed: boolean): string => {
     if (node.degree === 0) {
-      return isDimmed ? 'rgba(0, 217, 255, 0.3)' : COLORS.nodeCore;
+      return isDimmed ? 'rgba(37, 99, 235, 0.3)' : COLORS.nodeCore;
     }
 
     const category = node.category || '기타';
@@ -646,23 +646,23 @@ export default function NetworkGraph() {
       const gradient = ctx.createRadialGradient(x, y, radius, x, y, glowRadius);
 
       if (isMutual) {
-        gradient.addColorStop(0, 'rgba(0, 229, 255, 0.7)');
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
       } else if (isFocused && node.degree !== 0) {
-        gradient.addColorStop(0, 'rgba(255, 184, 0, 0.6)');
+        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
       } else if (isConnected && !isFocused) {
-        gradient.addColorStop(0, 'rgba(255, 184, 0, 0.55)');
+        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.18)');
       } else if (node.degree === 0) {
-        gradient.addColorStop(0, 'rgba(0, 217, 255, 0.5)');
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.18)');
       } else if (isHighlighted) {
-        gradient.addColorStop(0, 'rgba(0, 229, 255, 0.5)');
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.18)');
       } else {
-        // Use category color for glow
+        // Use category color for subtle shadow
         const category = node.category || '기타';
         const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
         const r = parseInt(categoryColor.slice(1, 3), 16);
         const g = parseInt(categoryColor.slice(3, 5), 16);
         const b = parseInt(categoryColor.slice(5, 7), 16);
-        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.15)`);
       }
       gradient.addColorStop(1, 'transparent');
 
@@ -679,8 +679,8 @@ export default function NetworkGraph() {
     if (node.degree === 0) {
       // 중앙 노드: 그라디언트
       const gradient = ctx.createLinearGradient(x - radius, y - radius, x + radius, y + radius);
-      gradient.addColorStop(0, isDimmed ? 'rgba(0, 217, 255, 0.3)' : COLORS.nodeCore);
-      gradient.addColorStop(1, isDimmed ? 'rgba(123, 104, 238, 0.3)' : COLORS.nodeSecondary);
+      gradient.addColorStop(0, isDimmed ? 'rgba(37, 99, 235, 0.3)' : COLORS.nodeCore);
+      gradient.addColorStop(1, isDimmed ? 'rgba(96, 165, 250, 0.3)' : COLORS.nodeSecondary);
       ctx.fillStyle = gradient;
     } else if (isFocused) {
       ctx.fillStyle = COLORS.focused;
@@ -691,16 +691,16 @@ export default function NetworkGraph() {
       const cr = parseInt(catColor.slice(1, 3), 16);
       const cg = parseInt(catColor.slice(3, 5), 16);
       const cb = parseInt(catColor.slice(5, 7), 16);
-      ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.35)`;
+      ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.15)`;
     } else {
-      ctx.fillStyle = isDimmed ? 'rgba(22, 27, 34, 0.15)' : COLORS.nodeBg;
+      ctx.fillStyle = isDimmed ? 'rgba(226, 232, 240, 0.4)' : COLORS.nodeBg;
     }
     ctx.fill();
 
     // 3. Border (카테고리별 색상)
     ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : isMutual ? 3 : 2;
     if (isDimmed) {
-      ctx.strokeStyle = 'rgba(33, 38, 45, 0.15)';
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.5)';
     } else if (isMutual) {
       ctx.strokeStyle = COLORS.mutual;
     } else if (isFocused && node.degree !== 0) {
@@ -830,7 +830,7 @@ export default function NetworkGraph() {
     ctx.textBaseline = 'middle';
 
     if (!isDimmed) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
       ctx.beginPath();
       ctx.roundRect(labelX - labelHalfW, labelY - labelHalfH, labelHalfW * 2, labelHalfH * 2, 4);
       ctx.fill();
@@ -852,7 +852,7 @@ export default function NetworkGraph() {
       ctx.roundRect(badgeX - badgeWidth / 2, badgeY - 7, badgeWidth, 14, 7);
       ctx.fill();
 
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#FFFFFF';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(badgeText, badgeX, badgeY);
@@ -886,7 +886,7 @@ export default function NetworkGraph() {
         const detailHalfW = detailWidth / 2 + 5;
         const detailHalfH = 8;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.beginPath();
         ctx.roundRect(labelX - detailHalfW, detailY - detailHalfH, detailHalfW * 2, detailHalfH * 2, 3);
         ctx.fill();
@@ -920,7 +920,7 @@ export default function NetworkGraph() {
       // 배지 외곽 글로우
       ctx.beginPath();
       ctx.arc(badgeX, badgeY, badgeSize + 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#0D1117';
+      ctx.fillStyle = '#FFFFFF';
       ctx.fill();
 
       // 배지 본체
@@ -939,7 +939,7 @@ export default function NetworkGraph() {
       ctx.font = 'bold 8px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#8B949E';
+      ctx.fillStyle = '#94A3B8';
       ctx.fillText(`+${nodeGroups.length - 4}`, extraX, extraY);
     }
   }, [transform.scale]);
@@ -987,6 +987,9 @@ export default function NetworkGraph() {
       : null;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Light background
+    ctx.fillStyle = '#FAFBFC';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.scale, transform.scale);
@@ -1022,8 +1025,8 @@ export default function NetworkGraph() {
           centerX, centerY, rippleRadius
         );
         rippleGrad.addColorStop(0, 'transparent');
-        rippleGrad.addColorStop(0.4, `rgba(88, 166, 255, ${rippleOpacity})`);
-        rippleGrad.addColorStop(0.6, `rgba(88, 166, 255, ${rippleOpacity * 0.6})`);
+        rippleGrad.addColorStop(0.4, `rgba(37, 99, 235, ${rippleOpacity})`);
+        rippleGrad.addColorStop(0.6, `rgba(37, 99, 235, ${rippleOpacity * 0.6})`);
         rippleGrad.addColorStop(1, 'transparent');
 
         ctx.beginPath();
@@ -1082,7 +1085,7 @@ export default function NetworkGraph() {
 
         // 글로우
         const glowGrad = ctx.createRadialGradient(fx, fy, shrinkR, fx, fy, shrinkR * 2);
-        glowGrad.addColorStop(0, 'rgba(88, 166, 255, 0.3)');
+        glowGrad.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
         glowGrad.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(fx, fy, shrinkR * 2, 0, Math.PI * 2);
@@ -1094,7 +1097,7 @@ export default function NetworkGraph() {
         ctx.arc(fx, fy, shrinkR, 0, Math.PI * 2);
         ctx.fillStyle = COLORS.nodeBg;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(88, 166, 255, 0.4)';
+        ctx.strokeStyle = 'rgba(37, 99, 235, 0.4)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
@@ -1166,7 +1169,7 @@ export default function NetworkGraph() {
         ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#1A1A2E';
         ctx.fillText(labelText, cx, cy - 8);
 
         ctx.font = '16px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
@@ -1209,7 +1212,7 @@ export default function NetworkGraph() {
       ctx.textBaseline = 'middle';
 
       const textWidth = ctx.measureText(labelText).width;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
       ctx.beginPath();
       ctx.roundRect(labelX - textWidth / 2 - 8 * catFontScale, labelY - 11 * catFontScale, textWidth + 16 * catFontScale, 22 * catFontScale, 6);
       ctx.fill();
@@ -1238,11 +1241,11 @@ export default function NetworkGraph() {
         ctx.lineTo(target.x || 0, target.y || 0);
 
         if (edge.degree === 1) {
-          ctx.strokeStyle = isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.15)';
+          ctx.strokeStyle = isHighlighted ? COLORS.edgePrimary : 'rgba(147, 197, 253, 0.4)';
           ctx.lineWidth = isHighlighted ? 2 : 1;
           ctx.setLineDash([]);
         } else {
-          ctx.strokeStyle = isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.1)';
+          ctx.strokeStyle = isHighlighted ? COLORS.edgeSecondary : 'rgba(191, 219, 254, 0.5)';
           ctx.lineWidth = 0.5;
           ctx.setLineDash([4, 8]);
         }
@@ -1887,15 +1890,15 @@ export default function NetworkGraph() {
             className="absolute pointer-events-none z-50"
             style={{ left: tooltip.x, top: tooltip.y, transform: 'translateX(-50%)' }}
           >
-            <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl">
-              <div className="text-base font-semibold text-white mb-1">{tooltip.node.name}</div>
-              <div className="text-sm text-[#8B949E]">{tooltip.node.company}</div>
-              <div className="text-sm text-[#8B949E]">{tooltip.node.position}</div>
+            <div className="bg-white/95 backdrop-blur-xl border border-[#E2E8F0] rounded-xl px-4 py-3 shadow-lg">
+              <div className="text-base font-semibold text-[#1A1A2E] mb-1">{tooltip.node.name}</div>
+              <div className="text-sm text-[#64748B]">{tooltip.node.company}</div>
+              <div className="text-sm text-[#64748B]">{tooltip.node.position}</div>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800]">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F59E0B]/15 text-[#D97706]">
                   {tooltip.node.degree}단계
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2563EB]/10 text-[#2563EB]">
                   {tooltip.node.connectionCount}명 연결
                 </span>
               </div>
@@ -1911,28 +1914,28 @@ export default function NetworkGraph() {
           className="zoom-btn group"
           title="확대"
         >
-          <Plus size={20} className="group-hover:text-[#58A6FF] transition-colors" />
+          <Plus size={20} className="group-hover:text-[#2563EB] transition-colors" />
         </button>
         <button
           onClick={handleZoomOut}
           className="zoom-btn group"
           title="축소"
         >
-          <Minus size={20} className="group-hover:text-[#58A6FF] transition-colors" />
+          <Minus size={20} className="group-hover:text-[#2563EB] transition-colors" />
         </button>
         <button
           onClick={handleFitToScreen}
           className="zoom-btn group"
           title="전체 보기"
         >
-          <Maximize2 size={18} className="group-hover:text-[#58A6FF] transition-colors" />
+          <Maximize2 size={18} className="group-hover:text-[#2563EB] transition-colors" />
         </button>
         <button
           onClick={handleReset}
           className="zoom-btn group"
           title="초기화"
         >
-          <RotateCcw size={18} className="group-hover:text-[#58A6FF] transition-colors" />
+          <RotateCcw size={18} className="group-hover:text-[#2563EB] transition-colors" />
         </button>
       </div>
 
@@ -1946,12 +1949,12 @@ export default function NetworkGraph() {
             transition={{ duration: 0.25, ease: 'easeOut' }}
             onClick={() => setCenterUserId(null)}
             className="absolute bottom-16 left-6 z-20 flex items-center gap-2 px-4 py-2.5 rounded-full
-              bg-[#58A6FF]/15 backdrop-blur-xl border border-[#58A6FF]/40
-              hover:bg-[#58A6FF]/25 hover:border-[#58A6FF]/70 hover:scale-105
-              active:scale-95 transition-all duration-200 cursor-pointer group shadow-lg shadow-[#58A6FF]/10"
+              bg-[#2563EB]/10 backdrop-blur-xl border border-[#2563EB]/30
+              hover:bg-[#2563EB]/20 hover:border-[#2563EB]/50 hover:scale-105
+              active:scale-95 transition-all duration-200 cursor-pointer group shadow-md shadow-[#2563EB]/10"
           >
-            <Home size={16} className="text-[#58A6FF] group-hover:text-white transition-colors" />
-            <span className="text-sm font-medium text-[#58A6FF] group-hover:text-white transition-colors">
+            <Home size={16} className="text-[#2563EB] group-hover:text-[#1D4ED8] transition-colors" />
+            <span className="text-sm font-medium text-[#2563EB] group-hover:text-[#1D4ED8] transition-colors">
               나의 인맥으로
             </span>
           </motion.button>
@@ -1959,17 +1962,17 @@ export default function NetworkGraph() {
       </AnimatePresence>
 
       {/* Zoom Level Indicator */}
-      <div className="absolute bottom-6 left-6 text-sm text-[#484F58] bg-[#1C2333]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#30363D] flex items-center gap-2">
+      <div className="absolute bottom-6 left-6 text-sm text-[#64748B] bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#E2E8F0] flex items-center gap-2 shadow-sm">
         <span>{Math.round(transform.scale * 100)}%</span>
-        <span className="text-[#58A6FF]">
+        <span className="text-[#2563EB]">
           {transform.scale < ZOOM_CLUSTER_THRESHOLD ? '클러스터' :
            transform.scale >= ZOOM_DETAIL_THRESHOLD ? '상세' : '노드'}
         </span>
       </div>
 
       {/* Category Legend */}
-      <div className="absolute top-6 right-6 bg-[#151922]/90 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl max-w-xs">
-        <div className="text-sm font-semibold text-white mb-2">분야별 인맥</div>
+      <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-xl border border-[#E2E8F0] rounded-xl px-4 py-3 shadow-lg max-w-xs">
+        <div className="text-sm font-semibold text-[#1A1A2E] mb-2">분야별 인맥</div>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
             <div key={category} className="flex items-center gap-2">
@@ -1977,7 +1980,7 @@ export default function NetworkGraph() {
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-[11px] text-[#8B949E]">{category}</span>
+              <span className="text-[11px] text-[#64748B]">{category}</span>
             </div>
           ))}
         </div>

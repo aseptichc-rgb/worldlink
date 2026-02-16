@@ -144,12 +144,12 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
 
       const gradient = ctx.createLinearGradient(centerX, centerY, node.x, node.y);
       if (isHovered || isSelected) {
-        gradient.addColorStop(0, '#58A6FF');
-        gradient.addColorStop(1, '#1F6FEB');
+        gradient.addColorStop(0, '#2563EB');
+        gradient.addColorStop(1, '#3B82F6');
         ctx.lineWidth = 3;
       } else {
-        gradient.addColorStop(0, 'rgba(0, 229, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(124, 77, 255, 0.2)');
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
         ctx.lineWidth = 1.5;
       }
       ctx.strokeStyle = gradient;
@@ -163,7 +163,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
 
         ctx.beginPath();
         ctx.arc(animX, animY, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#2563EB';
         ctx.fill();
       }
     }
@@ -173,8 +173,8 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       centerX, centerY, 0,
       centerX, centerY, pulseSize * 2
     );
-    centerGlow.addColorStop(0, 'rgba(0, 229, 255, 0.3)');
-    centerGlow.addColorStop(0.5, 'rgba(124, 77, 255, 0.1)');
+    centerGlow.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
+    centerGlow.addColorStop(0.5, 'rgba(59, 130, 246, 0.1)');
     centerGlow.addColorStop(1, 'transparent');
     ctx.beginPath();
     ctx.arc(centerX, centerY, pulseSize * 2, 0, Math.PI * 2);
@@ -188,8 +188,8 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       centerX - 10, centerY - 10, 0,
       centerX, centerY, pulseSize
     );
-    centerGradient.addColorStop(0, '#58A6FF');
-    centerGradient.addColorStop(1, '#1F6FEB');
+    centerGradient.addColorStop(0, '#2563EB');
+    centerGradient.addColorStop(1, '#3B82F6');
     ctx.fillStyle = centerGradient;
     ctx.fill();
     ctx.strokeStyle = '#FFFFFF';
@@ -214,7 +214,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
           node.x, node.y, 0,
           node.x, node.y, displayRadius * 2.5
         );
-        glow.addColorStop(0, 'rgba(0, 229, 255, 0.4)');
+        glow.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
         glow.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(node.x, node.y, displayRadius * 2.5, 0, Math.PI * 2);
@@ -229,13 +229,13 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
         node.x - displayRadius * 0.3, node.y - displayRadius * 0.3, 0,
         node.x, node.y, displayRadius
       );
-      nodeGradient.addColorStop(0, '#2D333B');
-      nodeGradient.addColorStop(1, '#1C2333');
+      nodeGradient.addColorStop(0, '#FFFFFF');
+      nodeGradient.addColorStop(1, '#F8F9FA');
       ctx.fillStyle = nodeGradient;
       ctx.fill();
 
       // 노드 테두리
-      ctx.strokeStyle = isHovered || isSelected ? '#58A6FF' : '#30363D';
+      ctx.strokeStyle = isHovered || isSelected ? '#2563EB' : '#E2E8F0';
       ctx.lineWidth = isHovered || isSelected ? 2 : 1;
       ctx.stroke();
 
@@ -243,7 +243,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       ctx.font = `bold ${displayRadius * 0.7}px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = isHovered || isSelected ? '#58A6FF' : '#8B949E';
+      ctx.fillStyle = isHovered || isSelected ? '#2563EB' : '#64748B';
       ctx.fillText(node.user.name?.[0] || '?', node.x, node.y);
 
       // 이름 라벨 (hover/selected 시)
@@ -253,19 +253,19 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
         const labelText = node.user.name;
         const labelWidth = ctx.measureText(labelText).width + 16;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
         ctx.beginPath();
         ctx.roundRect(node.x - labelWidth / 2, labelY - 10, labelWidth, 20, 6);
         ctx.fill();
 
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#1A1A2E';
         ctx.fillText(labelText, node.x, labelY);
 
         // 회사 정보
         if (node.user.company) {
           ctx.font = '10px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif';
           const companyY = labelY + 18;
-          ctx.fillStyle = '#8B949E';
+          ctx.fillStyle = '#64748B';
           ctx.fillText(node.user.company, node.x, companyY);
         }
       }
@@ -338,18 +338,18 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
   if (connections.length === 0) {
     return (
       <div className="w-full py-12 flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 rounded-full bg-[#1C2333] border border-[#30363D] flex items-center justify-center mb-4">
-          <Users size={32} className="text-[#484F58]" />
+        <div className="w-20 h-20 rounded-full bg-[#F8F9FA] border border-[#E2E8F0] flex items-center justify-center mb-4">
+          <Users size={32} className="text-[#94A3B8]" />
         </div>
-        <h3 className="text-white font-semibold mb-2">아직 인맥이 없습니다</h3>
-        <p className="text-[#8B949E] text-base mb-6 max-w-xs">
+        <h3 className="text-[#1A1A2E] font-semibold mb-2">아직 인맥이 없습니다</h3>
+        <p className="text-[#64748B] text-base mb-6 max-w-xs">
           네트워크에서 새로운 사람들과 연결하거나<br />
           초대 링크를 통해 인맥을 만들어보세요
         </p>
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push('/network')}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] rounded-xl text-white font-medium"
+          className="flex items-center gap-2 px-6 py-3 bg-[#2563EB] rounded-xl text-white font-medium"
         >
           <UserPlus size={18} />
           인맥 찾아보기
@@ -363,16 +363,16 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-[#58A6FF]" />
-          <h3 className="text-white font-semibold">내 인맥 네트워크</h3>
+          <Sparkles size={18} className="text-[#2563EB]" />
+          <h3 className="text-[#1A1A2E] font-semibold">내 인맥 네트워크</h3>
         </div>
-        <span className="text-base text-[#8B949E]">{connections.length}명</span>
+        <span className="text-base text-[#64748B]">{connections.length}명</span>
       </div>
 
       {/* 그래프 컨테이너 */}
       <div
         ref={containerRef}
-        className="relative w-full h-64 bg-[#161B22] rounded-xl border border-[#30363D] overflow-hidden"
+        className="relative w-full h-64 bg-[#FAFBFC] rounded-xl border border-[#E2E8F0] overflow-hidden"
       >
         <canvas
           ref={canvasRef}
@@ -390,7 +390,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-4 left-4 right-4 bg-[#1C2333]/95 backdrop-blur-xl border border-[#30363D] rounded-xl p-4"
+              className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-xl border border-[#E2E8F0] rounded-xl p-4"
             >
               <div className="flex items-center gap-3">
                 <Avatar
@@ -399,14 +399,14 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
                   size="md"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-semibold">{selectedNode.user.name}</h4>
-                  <p className="text-[#8B949E] text-base truncate">
+                  <h4 className="text-[#1A1A2E] font-semibold">{selectedNode.user.name}</h4>
+                  <p className="text-[#64748B] text-base truncate">
                     {selectedNode.user.company} · {selectedNode.user.position}
                   </p>
                 </div>
                 <button
                   onClick={() => handleViewProfile(selectedNode.user.id)}
-                  className="flex items-center gap-1 px-3 py-2 bg-[#58A6FF]/10 text-[#58A6FF] rounded-lg text-sm hover:bg-[#58A6FF]/20 transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 bg-[#2563EB]/10 text-[#2563EB] rounded-lg text-sm hover:bg-[#2563EB]/20 transition-colors"
                 >
                   <ExternalLink size={14} />
                   <span>보기</span>
@@ -420,7 +420,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
       {/* 전체보기 버튼 */}
       <button
         onClick={() => router.push('/network')}
-        className="w-full mt-4 py-3 text-center text-[#58A6FF] text-base hover:bg-[#58A6FF]/5 rounded-xl transition-colors"
+        className="w-full mt-4 py-3 text-center text-[#2563EB] text-base hover:bg-[#2563EB]/5 rounded-xl transition-colors"
       >
         네트워크에서 더 많은 인맥 찾아보기 →
       </button>

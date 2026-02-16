@@ -77,17 +77,17 @@ export default function GroupInviteModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="absolute inset-0 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm"
+            className="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-md bg-[rgba(22,27,34,0.98)] backdrop-blur-xl border border-[rgba(240,246,252,0.1)] rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.4)] overflow-hidden"
+            className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(240,246,252,0.1)]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
@@ -96,28 +96,28 @@ export default function GroupInviteModal() {
                   {group.icon}
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-[#F0F6FC]">그룹 초대</h2>
-                  <p className="text-sm text-[#8B949E]">{group.name}</p>
+                  <h2 className="text-lg font-semibold text-[#1A1A2E]">그룹 초대</h2>
+                  <p className="text-sm text-[#64748B]">{group.name}</p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className="p-1 text-[#8B949E] hover:text-[#F0F6FC] transition-colors rounded-lg hover:bg-[rgba(240,246,252,0.05)]"
+                className="p-1 text-[#64748B] hover:text-[#1A1A2E] transition-colors rounded-lg hover:bg-[#F1F3F5]"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Info Banner */}
-            <div className="px-6 py-3 bg-[#58A6FF]/10 border-b border-[#58A6FF]/20">
+            <div className="px-6 py-3 bg-[#2563EB]/10 border-b border-[#2563EB]/20">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#58A6FF]/20 flex items-center justify-center flex-shrink-0">
-                  <UserPlus size={16} className="text-[#58A6FF]" />
+                <div className="w-8 h-8 rounded-lg bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0">
+                  <UserPlus size={16} className="text-[#2563EB]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#58A6FF] font-medium">자동 인맥 연결</p>
-                  <p className="text-xs text-[#8B949E] mt-0.5">
-                    이 그룹에 들어오면 <span className="text-white font-medium">{memberNodes.length}명</span>의 멤버와 자동으로 서로 인맥이 됩니다
+                  <p className="text-sm text-[#2563EB] font-medium">자동 인맥 연결</p>
+                  <p className="text-xs text-[#64748B] mt-0.5">
+                    이 그룹에 들어오면 <span className="text-[#1A1A2E] font-medium">{memberNodes.length}명</span>의 멤버와 자동으로 서로 인맥이 됩니다
                   </p>
                 </div>
               </div>
@@ -129,8 +129,8 @@ export default function GroupInviteModal() {
                 onClick={() => setActiveTab('link')}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'link'
-                    ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
-                    : 'text-[#8B949E] hover:bg-[#1C2333]'
+                    ? 'bg-[#2563EB]/20 text-[#2563EB]'
+                    : 'text-[#64748B] hover:bg-[#F1F3F5]'
                 }`}
               >
                 <Link2 size={14} className="inline mr-1.5" />
@@ -140,8 +140,8 @@ export default function GroupInviteModal() {
                 onClick={() => setActiveTab('members')}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'members'
-                    ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
-                    : 'text-[#8B949E] hover:bg-[#1C2333]'
+                    ? 'bg-[#2563EB]/20 text-[#2563EB]'
+                    : 'text-[#64748B] hover:bg-[#F1F3F5]'
                 }`}
               >
                 <Users size={14} className="inline mr-1.5" />
@@ -154,21 +154,21 @@ export default function GroupInviteModal() {
               {activeTab === 'link' ? (
                 <div className="space-y-4">
                   {/* Invite Link */}
-                  <div className="bg-[#0D1117] border border-[#30363D] rounded-xl p-4">
-                    <p className="text-xs text-[#484F58] mb-2">초대 링크</p>
+                  <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl p-4">
+                    <p className="text-xs text-[#94A3B8] mb-2">초대 링크</p>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         value={inviteLink}
                         readOnly
-                        className="flex-1 bg-transparent text-sm text-white truncate focus:outline-none"
+                        className="flex-1 bg-transparent text-sm text-[#1A1A2E] truncate focus:outline-none"
                       />
                       <button
                         onClick={handleCopyLink}
                         className={`p-2 rounded-lg transition-all ${
                           copied
-                            ? 'bg-[#3FB950]/20 text-[#3FB950]'
-                            : 'bg-[#30363D] text-[#8B949E] hover:text-white'
+                            ? 'bg-[#10B981]/20 text-[#10B981]'
+                            : 'bg-[#E2E8F0] text-[#64748B] hover:text-[#1A1A2E]'
                         }`}
                       >
                         {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -180,14 +180,14 @@ export default function GroupInviteModal() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={handleCopyLink}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1C2333] hover:bg-[#30363D] text-white text-sm font-medium transition-colors"
+                      className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#F1F3F5] hover:bg-[#E2E8F0] text-[#1A1A2E] text-sm font-medium transition-colors"
                     >
                       <Copy size={16} />
                       링크 복사
                     </button>
                     <button
                       onClick={handleShare}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#58A6FF] hover:bg-[#58A6FF]/80 text-white text-sm font-medium transition-colors"
+                      className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] hover:bg-[#2563EB]/80 text-white text-sm font-medium transition-colors"
                     >
                       <Share2 size={16} />
                       공유하기
@@ -196,7 +196,7 @@ export default function GroupInviteModal() {
 
                   {/* QR Code placeholder */}
                   <div className="text-center pt-2">
-                    <button className="inline-flex items-center gap-2 text-sm text-[#8B949E] hover:text-[#58A6FF] transition-colors">
+                    <button className="inline-flex items-center gap-2 text-sm text-[#64748B] hover:text-[#2563EB] transition-colors">
                       <QrCode size={14} />
                       QR 코드로 공유
                     </button>
@@ -206,23 +206,23 @@ export default function GroupInviteModal() {
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {memberNodes.length === 0 ? (
                     <div className="text-center py-8">
-                      <Users size={32} className="text-[#484F58] mx-auto mb-3" />
-                      <p className="text-[#8B949E]">아직 멤버가 없습니다</p>
+                      <Users size={32} className="text-[#94A3B8] mx-auto mb-3" />
+                      <p className="text-[#64748B]">아직 멤버가 없습니다</p>
                     </div>
                   ) : (
                     memberNodes.map((node) => (
                       <div
                         key={node.id}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#1C2333]/50"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#F1F3F5]/50"
                       >
                         <Avatar src={node.profileImage} name={node.name} size="sm" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{node.name}</p>
-                          <p className="text-xs text-[#8B949E] truncate">
+                          <p className="text-sm text-[#1A1A2E] truncate">{node.name}</p>
+                          <p className="text-xs text-[#64748B] truncate">
                             {node.company} {node.position && `· ${node.position}`}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-[#3FB950]">
+                        <div className="flex items-center gap-1 text-xs text-[#10B981]">
                           <Link2 size={10} />
                           연결됨
                         </div>
@@ -234,8 +234,8 @@ export default function GroupInviteModal() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-[rgba(240,246,252,0.1)] bg-[#0D1117]/50">
-              <p className="text-xs text-[#484F58] text-center">
+            <div className="px-6 py-4 border-t border-[#E2E8F0] bg-[#F8F9FA]/50">
+              <p className="text-xs text-[#94A3B8] text-center">
                 초대 링크를 받은 사람이 수락하면 그룹의 모든 멤버와 자동으로 1촌이 됩니다
               </p>
             </div>

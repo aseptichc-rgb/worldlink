@@ -44,7 +44,7 @@ export default function BottomSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-[rgba(1,4,9,0.75)] backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm"
           />
           <motion.div
             initial={{ y: '100%' }}
@@ -62,9 +62,9 @@ export default function BottomSheet({
             }}
             className={`
               fixed bottom-0 left-0 right-0 z-50
-              bg-[#161B22] border-t border-[rgba(240,246,252,0.1)]
+              bg-white border-t border-[#E2E8F0]
               rounded-t-2xl overflow-hidden
-              shadow-[0_-8px_32px_rgba(0,0,0,0.4)]
+              shadow-[0_-8px_24px_rgba(0,0,0,0.08)]
               ${heights[height]}
             `}
           >
@@ -72,7 +72,7 @@ export default function BottomSheet({
               onPointerDown={(e) => dragControls.start(e)}
               className="flex justify-center py-3 cursor-grab active:cursor-grabbing"
             >
-              <div className="w-10 h-1 rounded-full bg-[#30363D]" />
+              <div className="w-10 h-1 rounded-full bg-[#CBD5E1]" />
             </div>
             <div className="overflow-y-auto h-full pb-8 no-scrollbar">
               {children}

@@ -84,24 +84,24 @@ export default function GroupInvitePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
-        <Loader2 size={32} className="text-[#58A6FF] animate-spin" />
+      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center">
+        <Loader2 size={32} className="text-[#2563EB] animate-spin" />
       </div>
     );
   }
 
   if (!group) {
     return (
-      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center px-6">
         <div className="text-center">
-          <Users size={48} className="text-[#484F58] mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-white mb-2">그룹을 찾을 수 없습니다</h1>
-          <p className="text-[#8B949E] mb-6">
+          <Users size={48} className="text-[#94A3B8] mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-[#1A1A2E] mb-2">그룹을 찾을 수 없습니다</h1>
+          <p className="text-[#64748B] mb-6">
             유효하지 않은 초대 링크이거나, 그룹이 삭제되었을 수 있습니다.
           </p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-[#58A6FF] text-white font-medium rounded-xl"
+            className="px-6 py-3 bg-[#2563EB] text-white font-medium rounded-xl"
           >
             홈으로 가기
           </button>
@@ -112,7 +112,7 @@ export default function GroupInvitePage() {
 
   if (accepted) {
     return (
-      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center px-6">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -122,26 +122,26 @@ export default function GroupInvitePage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#3FB950]/20 flex items-center justify-center"
+            className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#10B981]/20 flex items-center justify-center"
           >
-            <Check size={40} className="text-[#3FB950]" />
+            <Check size={40} className="text-[#10B981]" />
           </motion.div>
-          <h1 className="text-2xl font-bold text-white mb-2">환영합니다!</h1>
-          <p className="text-[#8B949E] mb-2">
-            <span className="text-white font-medium">{group.name}</span> 그룹에 합류했습니다
+          <h1 className="text-2xl font-bold text-[#1A1A2E] mb-2">환영합니다!</h1>
+          <p className="text-[#64748B] mb-2">
+            <span className="text-[#1A1A2E] font-medium">{group.name}</span> 그룹에 합류했습니다
           </p>
-          <p className="text-[#58A6FF] mb-6">
+          <p className="text-[#2563EB] mb-6">
             {memberNodeIds.length}명의 멤버와 인맥이 되었습니다
           </p>
-          <Loader2 size={20} className="text-[#484F58] mx-auto animate-spin" />
-          <p className="text-sm text-[#484F58] mt-2">잠시 후 네트워크로 이동합니다...</p>
+          <Loader2 size={20} className="text-[#94A3B8] mx-auto animate-spin" />
+          <p className="text-sm text-[#94A3B8] mt-2">잠시 후 네트워크로 이동합니다...</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D1117] px-6 py-12">
+    <div className="min-h-screen bg-[#FAFBFC] px-6 py-12">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -151,50 +151,50 @@ export default function GroupInvitePage() {
           >
             {group.icon}
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">{group.name}</h1>
+          <h1 className="text-2xl font-bold text-[#1A1A2E] mb-2">{group.name}</h1>
           {inviter && (
-            <p className="text-[#8B949E]">
-              <span className="text-white">{inviter.name}</span>님이 초대했습니다
+            <p className="text-[#64748B]">
+              <span className="text-[#1A1A2E]">{inviter.name}</span>님이 초대했습니다
             </p>
           )}
         </div>
 
         {/* Info Banner */}
-        <div className="bg-[#58A6FF]/10 border border-[#58A6FF]/20 rounded-xl p-4 mb-6">
+        <div className="bg-[#2563EB]/10 border border-[#2563EB]/20 rounded-xl p-4 mb-6">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#58A6FF]/20 flex items-center justify-center flex-shrink-0">
-              <UserPlus size={20} className="text-[#58A6FF]" />
+            <div className="w-10 h-10 rounded-lg bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0">
+              <UserPlus size={20} className="text-[#2563EB]" />
             </div>
             <div>
-              <p className="text-sm text-[#58A6FF] font-medium">자동 인맥 연결</p>
-              <p className="text-sm text-[#8B949E] mt-1">
-                이 그룹에 들어오면 <span className="text-white font-medium">{memberNodeIds.length}명</span>의 멤버 전체와 자동으로 서로 인맥이 됩니다
+              <p className="text-sm text-[#2563EB] font-medium">자동 인맥 연결</p>
+              <p className="text-sm text-[#64748B] mt-1">
+                이 그룹에 들어오면 <span className="text-[#1A1A2E] font-medium">{memberNodeIds.length}명</span>의 멤버 전체와 자동으로 서로 인맥이 됩니다
               </p>
             </div>
           </div>
         </div>
 
         {/* Member Preview */}
-        <div className="bg-[#161B22] border border-[#30363D] rounded-xl p-5 mb-6">
-          <h3 className="text-sm text-[#8B949E] mb-3">그룹 멤버 ({memberNodeIds.length}명)</h3>
+        <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl p-5 mb-6">
+          <h3 className="text-sm text-[#64748B] mb-3">그룹 멤버 ({memberNodeIds.length}명)</h3>
           {memberNodeIds.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {memberNodeIds.slice(0, 8).map((_, idx) => (
                 <div
                   key={idx}
-                  className="w-10 h-10 rounded-full bg-[#30363D] flex items-center justify-center"
+                  className="w-10 h-10 rounded-full bg-[#E2E8F0] flex items-center justify-center"
                 >
-                  <Users size={16} className="text-[#484F58]" />
+                  <Users size={16} className="text-[#94A3B8]" />
                 </div>
               ))}
               {memberNodeIds.length > 8 && (
-                <div className="w-10 h-10 rounded-full bg-[#30363D] flex items-center justify-center text-xs text-[#8B949E]">
+                <div className="w-10 h-10 rounded-full bg-[#E2E8F0] flex items-center justify-center text-xs text-[#64748B]">
                   +{memberNodeIds.length - 8}
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-sm text-[#484F58]">아직 멤버가 없습니다</p>
+            <p className="text-sm text-[#94A3B8]">아직 멤버가 없습니다</p>
           )}
         </div>
 
@@ -203,7 +203,7 @@ export default function GroupInvitePage() {
           <button
             onClick={handleAcceptInvite}
             disabled={isAccepting}
-            className="w-full py-4 bg-[#58A6FF] hover:bg-[#58A6FF]/90 text-white font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+            className="w-full py-4 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
           >
             {isAccepting ? (
               <Loader2 size={20} className="animate-spin" />
@@ -218,14 +218,14 @@ export default function GroupInvitePage() {
           <div className="space-y-3">
             <button
               onClick={handleLoginFirst}
-              className="w-full py-4 bg-[#58A6FF] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#2563EB] text-white font-semibold rounded-xl flex items-center justify-center gap-2"
             >
               가입하고 그룹 참여하기
               <ArrowRight size={18} />
             </button>
             <button
               onClick={() => router.push('/login')}
-              className="w-full py-3 bg-[#21262D] text-[#F0F6FC] font-medium rounded-xl border border-[#30363D]"
+              className="w-full py-3 bg-[#E2E8F0] text-[#1A1A2E] font-medium rounded-xl border border-[#E2E8F0]"
             >
               이미 계정이 있어요
             </button>
@@ -233,7 +233,7 @@ export default function GroupInvitePage() {
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-[#484F58] mt-6">
+        <p className="text-center text-xs text-[#94A3B8] mt-6">
           그룹에 참여하면 멤버들과 서로의 프로필을 볼 수 있습니다
         </p>
       </div>

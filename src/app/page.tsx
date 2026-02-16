@@ -28,10 +28,7 @@ export default function Home() {
   }, [router, setUser, setLoading]);
 
   return (
-    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Stars Background */}
-      <div className="stars-bg" />
-
+    <div className="min-h-screen bg-[#FAFBFC] flex flex-col items-center justify-center relative overflow-hidden">
       {/* Animated Logo */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -39,25 +36,15 @@ export default function Home() {
         transition={{ duration: 0.8, ease: 'easeOut' }}
         className="text-center"
       >
-        {/* Glow Effect */}
         <motion.div
-          animate={{
-            boxShadow: [
-              '0 0 60px rgba(0, 229, 255, 0.3)',
-              '0 0 100px rgba(124, 77, 255, 0.3)',
-              '0 0 60px rgba(0, 229, 255, 0.3)',
-            ],
-          }}
-          transition={{ duration: 3, repeat: Infinity }}
           className="inline-block rounded-full p-8 mb-8"
         >
           <motion.h1
             animate={{
               opacity: [0.7, 1, 0.7],
-              filter: ['brightness(1)', 'brightness(1.3)', 'brightness(1)'],
             }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="text-6xl md:text-8xl font-bold gradient-text"
+            className="text-6xl md:text-8xl font-bold text-[#2563EB]"
           >
             NODDED
           </motion.h1>
@@ -67,7 +54,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="text-[#8B949E] text-lg md:text-xl mb-4"
+          className="text-[#64748B] text-lg md:text-xl mb-4"
         >
           신뢰 기반 비즈니스 네트워크
         </motion.p>
@@ -76,7 +63,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-[#484F58] text-base"
+          className="text-[#94A3B8] text-base"
         >
           단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다
         </motion.p>
@@ -88,30 +75,9 @@ export default function Home() {
           transition={{ delay: 1.5 }}
           className="mt-12"
         >
-          <div className="w-8 h-8 border-2 border-[#30363D] border-t-[#58A6FF] rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 border-2 border-[#E2E8F0] border-t-[#2563EB] rounded-full animate-spin mx-auto" />
         </motion.div>
       </motion.div>
-
-      {/* Decorative Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Floating orbs */}
-        <motion.div
-          animate={{
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#58A6FF]/5 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -40, 0],
-            y: [0, 40, 0],
-          }}
-          transition={{ duration: 10, repeat: Infinity }}
-          className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-[#1F6FEB]/5 rounded-full blur-3xl"
-        />
-      </div>
     </div>
   );
 }

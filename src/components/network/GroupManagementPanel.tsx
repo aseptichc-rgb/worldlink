@@ -66,38 +66,38 @@ export default function GroupManagementPanel() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setGroupPanelOpen(false)}
-            className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm z-40"
           />
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25 }}
-            className="fixed top-0 left-0 bottom-0 w-80 bg-[#161B22] border-r border-[#30363D] z-50 flex flex-col"
+            className="fixed top-0 left-0 bottom-0 w-80 bg-white border-r border-[#E2E8F0] z-50 flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 pb-4">
-              <h2 className="text-lg font-semibold text-white">그룹 관리</h2>
+              <h2 className="text-lg font-semibold text-[#1A1A2E]">그룹 관리</h2>
               <button
                 onClick={() => setGroupPanelOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
+                className="p-1.5 rounded-lg hover:bg-[#F1F3F5] transition-colors"
               >
-                <X size={18} className="text-[#8B949E]" />
+                <X size={18} className="text-[#64748B]" />
               </button>
             </div>
 
             {/* Active Filter Indicator */}
             {activeGroupFilter && (
-              <div className="mx-6 mb-3 px-3 py-2 rounded-xl bg-[#58A6FF]/10 border border-[#58A6FF]/30 flex items-center justify-between">
+              <div className="mx-6 mb-3 px-3 py-2 rounded-xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Filter size={12} className="text-[#58A6FF]" />
-                  <span className="text-sm text-[#58A6FF]">
+                  <Filter size={12} className="text-[#2563EB]" />
+                  <span className="text-sm text-[#2563EB]">
                     {groups.find(g => g.id === activeGroupFilter)?.name} 필터 적용 중
                   </span>
                 </div>
                 <button
                   onClick={() => setActiveGroupFilter(null)}
-                  className="text-sm text-[#8B949E] hover:text-white transition-colors"
+                  className="text-sm text-[#64748B] hover:text-[#1A1A2E] transition-colors"
                 >
                   해제
                 </button>
@@ -108,14 +108,14 @@ export default function GroupManagementPanel() {
             <div className="flex-1 overflow-y-auto px-6">
               {groups.length === 0 && !showCreateForm ? (
                 <div className="text-center py-12">
-                  <div className="w-14 h-14 rounded-xl bg-[#1C2333] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-[#F1F3F5] flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">🏷️</span>
                   </div>
-                  <p className="text-[#8B949E] text-base mb-1">아직 그룹이 없습니다</p>
-                  <p className="text-[#484F58] text-sm mb-4">인맥을 그룹으로 분류해보세요</p>
+                  <p className="text-[#64748B] text-base mb-1">아직 그룹이 없습니다</p>
+                  <p className="text-[#94A3B8] text-sm mb-4">인맥을 그룹으로 분류해보세요</p>
                   <button
                     onClick={() => setShowCreateForm(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#58A6FF]/10 text-[#58A6FF] text-sm font-medium hover:bg-[#58A6FF]/20 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB]/10 text-[#2563EB] text-sm font-medium hover:bg-[#2563EB]/20 transition-colors"
                   >
                     <Plus size={14} />
                     첫 그룹 만들기
@@ -129,13 +129,13 @@ export default function GroupManagementPanel() {
 
                     if (editingGroupId === group.id) {
                       return (
-                        <div key={group.id} className="p-3 rounded-xl bg-[#1C2333] border border-[#30363D] space-y-3">
+                        <div key={group.id} className="p-3 rounded-xl bg-[#F1F3F5] border border-[#E2E8F0] space-y-3">
                           <input
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             maxLength={20}
-                            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#58A6FF] transition-colors"
+                            className="w-full bg-[#F8F9FA] border border-[#E2E8F0] rounded-lg px-3 py-2 text-base text-[#1A1A2E] focus:outline-none focus:border-[#2563EB] transition-colors"
                             autoFocus
                           />
                           <div className="flex flex-wrap gap-1.5">
@@ -144,7 +144,7 @@ export default function GroupManagementPanel() {
                                 key={color}
                                 onClick={() => setEditColor(color)}
                                 className={`w-6 h-6 rounded-full transition-all ${
-                                  editColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-[#1C2333]' : ''
+                                  editColor === color ? 'ring-2 ring-[#1A1A2E] ring-offset-1 ring-offset-white' : ''
                                 }`}
                                 style={{ backgroundColor: color }}
                               />
@@ -156,7 +156,7 @@ export default function GroupManagementPanel() {
                                 key={icon}
                                 onClick={() => setEditIcon(icon)}
                                 className={`w-8 h-8 rounded-lg flex items-center justify-center text-base ${
-                                  editIcon === icon ? 'bg-[#58A6FF]/20 ring-1 ring-[#58A6FF]' : 'hover:bg-[#30363D]'
+                                  editIcon === icon ? 'bg-[#2563EB]/20 ring-1 ring-[#2563EB]' : 'hover:bg-[#F1F3F5]'
                                 }`}
                               >
                                 {icon}
@@ -166,14 +166,14 @@ export default function GroupManagementPanel() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => setEditingGroupId(null)}
-                              className="flex-1 py-2 rounded-lg text-sm text-[#8B949E] hover:bg-[#30363D] transition-colors"
+                              className="flex-1 py-2 rounded-lg text-sm text-[#64748B] hover:bg-[#F1F3F5] transition-colors"
                             >
                               취소
                             </button>
                             <button
                               onClick={handleSaveEdit}
                               disabled={!editName.trim()}
-                              className="flex-1 py-2 rounded-lg text-sm font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 transition-colors"
+                              className="flex-1 py-2 rounded-lg text-sm font-medium bg-[#2563EB] text-white hover:bg-[#2563EB]/80 disabled:opacity-50 transition-colors"
                             >
                               저장
                             </button>
@@ -187,8 +187,8 @@ export default function GroupManagementPanel() {
                         key={group.id}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group/item ${
                           isActive
-                            ? 'bg-[#58A6FF]/10 border border-[#58A6FF]/30'
-                            : 'hover:bg-[#1C2333] border border-transparent'
+                            ? 'bg-[#2563EB]/10 border border-[#2563EB]/30'
+                            : 'hover:bg-[#F1F3F5] border border-transparent'
                         }`}
                         onClick={() => openGroupDetailPanel(group.id)}
                       >
@@ -198,14 +198,14 @@ export default function GroupManagementPanel() {
                           style={{ backgroundColor: group.color }}
                         />
                         <div className="flex-1 min-w-0">
-                          <span className="text-base text-white block truncate">{group.name}</span>
+                          <span className="text-base text-[#1A1A2E] block truncate">{group.name}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-[#484F58]">
+                            <span className="text-[10px] text-[#94A3B8]">
                               <Users size={10} className="inline mr-0.5" />
                               {memberCount}명
                             </span>
                             {isActive && (
-                              <span className="text-[10px] text-[#58A6FF] flex items-center gap-0.5">
+                              <span className="text-[10px] text-[#2563EB] flex items-center gap-0.5">
                                 <Filter size={8} />
                                 필터 적용 중
                               </span>
@@ -220,14 +220,14 @@ export default function GroupManagementPanel() {
                             }}
                             className={`p-1.5 rounded-lg transition-colors ${
                               isActive
-                                ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
-                                : 'hover:bg-[#30363D] text-[#8B949E]'
+                                ? 'bg-[#2563EB]/20 text-[#2563EB]'
+                                : 'hover:bg-[#F1F3F5] text-[#64748B]'
                             }`}
                             title={isActive ? '필터 해제' : '이 그룹만 보기'}
                           >
                             <Filter size={12} />
                           </button>
-                          <ChevronRight size={14} className="text-[#484F58]" />
+                          <ChevronRight size={14} className="text-[#94A3B8]" />
                         </div>
                       </div>
                     );
@@ -237,23 +237,23 @@ export default function GroupManagementPanel() {
             </div>
 
             {/* Create Group Form / Button */}
-            <div className="p-6 pt-4 border-t border-[#30363D]">
+            <div className="p-6 pt-4 border-t border-[#E2E8F0]">
               {showCreateForm ? (
                 <div className="space-y-5">
                   <div>
-                    <p className="text-base text-[#8B949E] mb-2.5">그룹 이름</p>
+                    <p className="text-base text-[#64748B] mb-2.5">그룹 이름</p>
                     <input
                       type="text"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder="그룹 이름을 입력하세요"
                       maxLength={20}
-                      className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-4 py-3.5 text-base text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF] transition-colors"
+                      className="w-full bg-[#F8F9FA] border border-[#E2E8F0] rounded-lg px-4 py-3.5 text-base text-[#1A1A2E] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] transition-colors"
                       autoFocus
                     />
                   </div>
                   <div>
-                    <p className="text-base text-[#8B949E] mb-3">색상</p>
+                    <p className="text-base text-[#64748B] mb-3">색상</p>
                     <div className="flex flex-wrap gap-3">
                       {GROUP_COLORS.map((color) => (
                         <button
@@ -261,7 +261,7 @@ export default function GroupManagementPanel() {
                           onClick={() => setSelectedColor(color)}
                           className={`w-8 h-8 rounded-full transition-all ${
                             selectedColor === color
-                              ? 'ring-2 ring-white ring-offset-2 ring-offset-[#161B22] scale-110'
+                              ? 'ring-2 ring-[#1A1A2E] ring-offset-2 ring-offset-white scale-110'
                               : 'hover:scale-110'
                           }`}
                           style={{ backgroundColor: color }}
@@ -270,7 +270,7 @@ export default function GroupManagementPanel() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-base text-[#8B949E] mb-3">아이콘</p>
+                    <p className="text-base text-[#64748B] mb-3">아이콘</p>
                     <div className="flex flex-wrap gap-2">
                       {GROUP_ICONS.map((icon) => (
                         <button
@@ -278,8 +278,8 @@ export default function GroupManagementPanel() {
                           onClick={() => setSelectedIcon(icon)}
                           className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
                             selectedIcon === icon
-                              ? 'bg-[#58A6FF]/20 ring-1 ring-[#58A6FF]'
-                              : 'hover:bg-[#1C2333]'
+                              ? 'bg-[#2563EB]/20 ring-1 ring-[#2563EB]'
+                              : 'hover:bg-[#F1F3F5]'
                           }`}
                         >
                           {icon}
@@ -293,14 +293,14 @@ export default function GroupManagementPanel() {
                         setShowCreateForm(false);
                         setNewName('');
                       }}
-                      className="flex-1 py-3 rounded-lg text-base text-[#8B949E] hover:bg-[#1C2333] transition-colors"
+                      className="flex-1 py-3 rounded-lg text-base text-[#64748B] hover:bg-[#F1F3F5] transition-colors"
                     >
                       취소
                     </button>
                     <button
                       onClick={handleCreateGroup}
                       disabled={!newName.trim()}
-                      className="flex-1 py-3 rounded-lg text-base font-medium bg-[#58A6FF] text-white hover:bg-[#58A6FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex-1 py-3 rounded-lg text-base font-medium bg-[#2563EB] text-white hover:bg-[#2563EB]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       만들기
                     </button>
@@ -309,7 +309,7 @@ export default function GroupManagementPanel() {
               ) : (
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-[#58A6FF] bg-[#58A6FF]/10 hover:bg-[#58A6FF]/20 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-[#2563EB] bg-[#2563EB]/10 hover:bg-[#2563EB]/20 transition-colors"
                 >
                   <Plus size={16} />
                   새 그룹 만들기

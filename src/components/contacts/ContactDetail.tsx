@@ -40,32 +40,32 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
     if (!value) return null;
 
     return (
-      <div className="flex items-start gap-3 py-3 border-b border-[#30363D] last:border-0">
-        <div className="w-8 h-8 rounded-lg bg-[#30363D] flex items-center justify-center shrink-0">
-          <Icon size={16} className="text-[#8B949E]" />
+      <div className="flex items-start gap-3 py-3 border-b border-[#E2E8F0] last:border-0">
+        <div className="w-8 h-8 rounded-lg bg-[#E2E8F0] flex items-center justify-center shrink-0">
+          <Icon size={16} className="text-[#64748B]" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm text-[#8B949E] mb-0.5">{label}</div>
-          <div className="text-base text-white break-words">{value}</div>
+          <div className="text-sm text-[#64748B] mb-0.5">{label}</div>
+          <div className="text-base text-[#1A1A2E] break-words">{value}</div>
         </div>
         {copyable && (
           <button
             onClick={() => copyToClipboard(value, label)}
-            className="p-2 rounded-lg hover:bg-[#30363D] transition-colors"
+            className="p-2 rounded-lg hover:bg-[#E2E8F0] transition-colors"
           >
             {copied === label ? (
               <span className="text-xs text-[#10B981]">복사됨!</span>
             ) : (
-              <Copy size={16} className="text-[#484F58]" />
+              <Copy size={16} className="text-[#94A3B8]" />
             )}
           </button>
         )}
         {action && (
           <button
             onClick={action}
-            className="p-2 rounded-lg hover:bg-[#30363D] transition-colors"
+            className="p-2 rounded-lg hover:bg-[#E2E8F0] transition-colors"
           >
-            <ExternalLink size={16} className="text-[#484F58]" />
+            <ExternalLink size={16} className="text-[#94A3B8]" />
           </button>
         )}
       </div>
@@ -90,7 +90,7 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
 
         {/* Profile Card */}
         <div className="px-4 -mt-16">
-          <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-5">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5">
             <div className="flex items-start gap-4">
               {/* Avatar */}
               <div
@@ -106,9 +106,9 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
 
               {/* Basic Info */}
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-white mb-1">{contact.name}</h2>
+                <h2 className="text-xl font-bold text-[#1A1A2E] mb-1">{contact.name}</h2>
                 {contact.position && (
-                  <p className="text-base text-[#8B949E] mb-2 line-clamp-2">{contact.position}</p>
+                  <p className="text-base text-[#64748B] mb-2 line-clamp-2">{contact.position}</p>
                 )}
                 <div
                   className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full"
@@ -128,7 +128,7 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
               {contact.phone && (
                 <a
                   href={`tel:${contact.phone}`}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#58A6FF]/10 text-[#58A6FF] rounded-xl hover:bg-[#58A6FF]/20 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#2563EB]/10 text-[#2563EB] rounded-xl hover:bg-[#2563EB]/20 transition-colors"
                 >
                   <Phone size={18} />
                   <span className="text-base font-medium">전화</span>
@@ -156,9 +156,9 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
 
       {/* Contact Information */}
       <div className="px-4 mt-4">
-        <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-4">
-          <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-            <span className="w-1 h-4 rounded-full bg-[#58A6FF]" />
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4">
+          <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2">
+            <span className="w-1 h-4 rounded-full bg-[#2563EB]" />
             연락처 정보
           </h3>
 
@@ -174,8 +174,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
       {/* Company Information */}
       {(contact.company || contact.department) && (
         <div className="px-4 mt-4">
-          <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-4">
-            <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-4">
+            <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2">
               <span className="w-1 h-4 rounded-full bg-[#8B5CF6]" />
               회사 정보
             </h3>
@@ -191,8 +191,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
       {/* Additional Info */}
       {(contact.registeredDate || contact.memo) && (
         <div className="px-4 mt-4">
-          <div className="bg-[#1C2333] border border-[#30363D] rounded-xl p-4">
-            <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-4">
+            <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2">
               <span className="w-1 h-4 rounded-full bg-[#F59E0B]" />
               추가 정보
             </h3>
@@ -200,8 +200,8 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
             <InfoRow icon={Calendar} label="등록일" value={contact.registeredDate} />
             {contact.memo && (
               <div className="py-3">
-                <div className="text-sm text-[#8B949E] mb-1">메모</div>
-                <div className="text-base text-white bg-[#30363D] rounded-lg p-3">
+                <div className="text-sm text-[#64748B] mb-1">메모</div>
+                <div className="text-base text-[#1A1A2E] bg-[#E2E8F0] rounded-lg p-3">
                   {contact.memo}
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function ContactDetail({ contact }: ContactDetailProps) {
           <div className="text-base font-medium" style={{ color: info.color }}>
             {info.name} 분야
           </div>
-          <div className="text-sm text-[#8B949E] mt-1">
+          <div className="text-sm text-[#64748B] mt-1">
             자동 분류된 카테고리입니다
           </div>
         </div>
