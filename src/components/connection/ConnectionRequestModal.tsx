@@ -105,8 +105,8 @@ export default function ConnectionRequestModal() {
                 <UserPlus size={32} className="text-white" />
               </div>
             </motion.div>
-            <h3 className="text-xl font-bold text-white mb-2">인맥 신청을 보냈습니다!</h3>
-            <p className="text-[#8B949E]">
+            <h3 className="text-xl font-bold text-white mb-3">인맥 신청을 보냈습니다!</h3>
+            <p className="text-[#8B949E] py-1">
               {middleConnector?.name}님을 통해 {targetUser?.name}님께 전달됩니다
             </p>
           </motion.div>
@@ -127,11 +127,11 @@ export default function ConnectionRequestModal() {
                   size="xl"
                   className="mx-auto"
                 />
-                <span className="absolute -bottom-1 -right-1 text-xs px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800] font-medium">
+                <span className="absolute -bottom-1 -right-1 text-xs px-2.5 py-1 rounded-full bg-[#FFB800]/20 text-[#FFB800] font-medium">
                   {connectionDegree}촌
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-1">
+              <h3 className="text-lg font-bold text-white mb-2">
                 {targetUser?.name}
               </h3>
               <div className="flex items-center justify-center gap-2 text-base text-[#8B949E]">
@@ -146,7 +146,7 @@ export default function ConnectionRequestModal() {
             {/* Connection Path */}
             {connectionPath.length > 2 && (
               <div className="mb-6 p-4 bg-[#1C2333] rounded-xl">
-                <p className="text-sm text-[#8B949E] mb-3">연결 경로</p>
+                <p className="text-sm text-[#8B949E] mb-4">연결 경로</p>
                 <div className="flex items-center justify-center gap-2">
                   {connectionPath.map((user, idx) => (
                     <div key={user.id} className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export default function ConnectionRequestModal() {
                           size="sm"
                           hasGlow={idx === 0 || idx === connectionPath.length - 1}
                         />
-                        <span className="text-[10px] text-[#8B949E] mt-1">
+                        <span className="text-[10px] text-[#8B949E] mt-1.5">
                           {idx === 0 ? '나' : user.name.slice(0, 3)}
                         </span>
                       </div>
@@ -172,7 +172,7 @@ export default function ConnectionRequestModal() {
 
             {/* Info Box */}
             <div className="mb-6 p-4 bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10 rounded-xl border border-[#58A6FF]/20">
-              <p className="text-base text-white mb-1">
+              <p className="text-base text-white mb-2">
                 <span className="text-[#58A6FF] font-medium">{middleConnector?.name}</span>님을 통해 연결됩니다
               </p>
               <p className="text-sm text-[#8B949E]">
@@ -182,7 +182,7 @@ export default function ConnectionRequestModal() {
 
             {/* Message */}
             <div className="mb-6">
-              <p className="text-base text-[#8B949E] mb-2">소개 메시지 (선택)</p>
+              <p className="text-base text-[#8B949E] mb-3">소개 메시지 (선택)</p>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -190,7 +190,7 @@ export default function ConnectionRequestModal() {
                 maxLength={200}
                 className="
                   w-full bg-[#1C2333] border border-[#30363D] text-white
-                  rounded-xl py-3 px-4 text-base resize-none
+                  rounded-xl py-4 px-5 text-base resize-none
                   focus:outline-none focus:border-[#58A6FF]
                   placeholder:text-[#484F58]
                 "

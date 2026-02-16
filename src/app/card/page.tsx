@@ -210,9 +210,9 @@ export default function MyCardPage() {
                 hasGlow
               />
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl font-bold text-white mb-1">{myCard.name}</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">{myCard.name}</h2>
                 {myCard.position && (
-                  <div className="flex items-center gap-2 text-[#8B949E] mb-1">
+                  <div className="flex items-center gap-2 text-[#8B949E] mb-1.5">
                     <Briefcase size={14} />
                     <span className="text-base">{myCard.position}</span>
                   </div>
@@ -232,7 +232,7 @@ export default function MyCardPage() {
                 {myCard.keywords.slice(0, 5).map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3.5 py-1.5 text-sm font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
+                    className="px-4 py-2 text-sm font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
                   >
                     {keyword}
                   </span>
@@ -255,7 +255,7 @@ export default function MyCardPage() {
                   <QrCode size={48} className="text-[#484F58]" />
                 </div>
               )}
-              <p className="mt-4 text-base text-[#8B949E]">
+              <p className="mt-5 text-base text-[#8B949E]">
                 QR 코드를 스캔하면 명함을 저장할 수 있어요
               </p>
             </div>

@@ -163,7 +163,7 @@ function LoginContent() {
           <div className="relative">
             {/* Title */}
             <div className="text-center mb-8">
-              <h2 className="text-xl font-semibold text-[#F0F6FC] mb-1">
+              <h2 className="text-xl font-semibold text-[#F0F6FC] mb-2">
                 다시 만나서 반갑습니다
               </h2>
               <p className="text-sm text-[#484F58]">
@@ -175,7 +175,7 @@ function LoginContent() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-medium text-[#8B949E] mb-3 uppercase tracking-wider">
                   이메일
                 </label>
                 <div className={`relative rounded-lg transition-all duration-300 ${emailFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
@@ -187,14 +187,14 @@ function LoginContent() {
                     onBlur={() => setEmailFocused(false)}
                     placeholder="email@example.com"
                     required
-                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
+                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-4 px-5 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-medium text-[#8B949E] mb-3 uppercase tracking-wider">
                   비밀번호
                 </label>
                 <div className={`relative rounded-lg transition-all duration-300 ${passwordFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
@@ -206,11 +206,11 @@ function LoginContent() {
                     onBlur={() => setPasswordFocused(false)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-3.5 px-4 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
+                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-4 px-5 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
                   />
                 </div>
                 {error && (
-                  <p className="mt-2 text-xs text-[#F85149]">{error}</p>
+                  <p className="mt-3 text-xs text-[#F85149] px-1">{error}</p>
                 )}
               </div>
 
@@ -257,7 +257,7 @@ function LoginContent() {
             {/* Demo Button */}
             <button
               onClick={handleDemoMode}
-              className="w-full py-3 rounded-lg bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
+              className="w-full py-3.5 rounded-lg bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
             >
               <Play size={15} fill="currentColor" />
               데모로 체험하기

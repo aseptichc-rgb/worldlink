@@ -174,7 +174,7 @@ export default function CardsPage() {
                     </button>
 
                     {(saved.card.position || saved.card.company) && (
-                      <div className="flex items-center gap-2 text-base text-[#8B949E] mt-0.5">
+                      <div className="flex items-center gap-2 text-base text-[#8B949E] mt-1">
                         {saved.card.position && (
                           <span>{saved.card.position}</span>
                         )}
@@ -193,13 +193,13 @@ export default function CardsPage() {
                         {saved.card.keywords.slice(0, 3).map((keyword, idx) => (
                           <span
                             key={idx}
-                            className="px-2.5 py-1 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
+                            className="px-3 py-1.5 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
                           >
                             {keyword}
                           </span>
                         ))}
                         {saved.card.keywords.length > 3 && (
-                          <span className="px-2 py-0.5 text-sm text-[#484F58]">
+                          <span className="px-2.5 py-1 text-sm text-[#484F58]">
                             +{saved.card.keywords.length - 3}
                           </span>
                         )}
@@ -208,7 +208,7 @@ export default function CardsPage() {
 
                     {/* 메모 */}
                     {saved.memo && (
-                      <div className="mt-3 p-3 rounded-lg bg-[#161B22] border border-[#30363D]">
+                      <div className="mt-3 p-4 rounded-lg bg-[#161B22] border border-[#30363D]">
                         <p className="text-sm text-[#8B949E] line-clamp-2">{saved.memo}</p>
                       </div>
                     )}

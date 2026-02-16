@@ -224,10 +224,10 @@ export default function BottomNav() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.15)] to-[rgba(31,111,235,0.15)] flex items-center justify-center">
                   <UserPlus size={28} className="text-[#58A6FF]" />
                 </div>
-                <h3 className="text-xl font-semibold text-[#F0F6FC] mb-2">
+                <h3 className="text-xl font-semibold text-[#F0F6FC] mb-3">
                   로그인이 필요해요
                 </h3>
-                <p className="text-base text-[#8B949E]">
+                <p className="text-base text-[#8B949E] py-1">
                   내 명함을 만들고 네트워크를 확장하려면<br />
                   간단한 가입이 필요해요
                 </p>
@@ -288,10 +288,10 @@ export default function BottomNav() {
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.15)] to-[rgba(31,111,235,0.15)] flex items-center justify-center">
                       <UserPlus size={28} className="text-[#58A6FF]" />
                     </div>
-                    <h3 className="text-xl font-semibold text-[#F0F6FC] mb-2">
+                    <h3 className="text-xl font-semibold text-[#F0F6FC] mb-3">
                       초대하기
                     </h3>
-                    <p className="text-base text-[#8B949E]">
+                    <p className="text-base text-[#8B949E] py-1">
                       새로운 인맥을 초대해보세요
                     </p>
                   </div>
@@ -311,7 +311,7 @@ export default function BottomNav() {
                       <Users size={20} />
                       그룹으로 초대하기
                     </button>
-                    <p className="text-xs text-[#484F58] text-center pt-2">
+                    <p className="text-xs text-[#484F58] text-center pt-3 py-1">
                       그룹 초대 시 초대받은 분은 그룹원 전체와 자동으로 인맥이 됩니다
                     </p>
                   </div>
@@ -374,7 +374,7 @@ export default function BottomNav() {
                             placeholder="friend@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
+                            className="w-full px-5 py-3.5 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                           />
                           <button
                             onClick={handleSendPersonalInvite}
@@ -407,7 +407,7 @@ export default function BottomNav() {
                             placeholder="010-1234-5678"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className="w-full px-4 py-3 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
+                            className="w-full px-5 py-3.5 bg-[#121212] border border-[#363636] rounded-[10px] text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                           />
                           <button
                             onClick={handleSendPersonalInvite}

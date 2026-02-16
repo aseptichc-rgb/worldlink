@@ -354,7 +354,7 @@ export default function SearchBar() {
           placeholder="AI에게 인맥 추천을 요청해보세요"
           className="
             flex-1 bg-transparent text-white
-            py-3 pr-4
+            py-3.5 pr-4
             text-base font-medium
             placeholder:text-[#484F58]
             focus:outline-none
@@ -409,8 +409,8 @@ export default function SearchBar() {
           >
             {/* AI Search Results */}
             {(aiLoading || aiResponse) && (
-              <div className="p-3 border-b border-[#30363D]">
-                <div className="flex items-center justify-between mb-2 px-1">
+              <div className="p-4 border-b border-[#30363D]">
+                <div className="flex items-center justify-between mb-3 px-1">
                 <p className="text-sm text-[#A78BFA] flex items-center gap-1">
                   <Sparkles size={12} />
                   AI 추천
@@ -429,19 +429,19 @@ export default function SearchBar() {
                 )}
               </div>
                 {aiLoading ? (
-                  <div className="flex items-center gap-2 p-3 text-[#8B949E] text-base">
+                  <div className="flex items-center gap-2 p-4 text-[#8B949E] text-base">
                     <Loader2 size={16} className="animate-spin text-[#A78BFA]" />
                     인맥을 분석하고 있습니다...
                   </div>
                 ) : aiResponse && (
                   <div>
-                    <p className="text-sm text-[#C4B5FD] mb-2 px-1 bg-[#A78BFA]/10 rounded-lg py-2">
+                    <p className="text-sm text-[#C4B5FD] mb-3 px-2 bg-[#A78BFA]/10 rounded-lg py-2.5">
                       {aiResponse.summary}
                     </p>
                     {aiResponse.results.length === 0 ? (
                       <div className="p-3 text-center">
                         <p className="text-sm text-[#8B949E]">네트워크에서 관련 인물을 찾지 못했습니다</p>
-                        <p className="text-xs text-[#484F58] mt-1">다른 키워드로 검색해보세요</p>
+                        <p className="text-xs text-[#484F58] mt-2">다른 키워드로 검색해보세요</p>
                       </div>
                     ) : (
                     <div className="space-y-2">
@@ -464,7 +464,7 @@ export default function SearchBar() {
                           <button
                             key={aiResult.memberId}
                             onClick={() => handlePersonSelect(personResult)}
-                            className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
+                            className="w-full flex items-start gap-3 p-3.5 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
                           >
                             {/* 순위 번호 */}
                             <div className="flex flex-col items-center gap-1 pt-0.5">
@@ -484,7 +484,7 @@ export default function SearchBar() {
                                 </span>
                                 {/* 관련성 점수 */}
                                 <span
-                                  className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                                  className="text-[10px] px-2 py-1 rounded-full font-medium"
                                   style={{ backgroundColor: `${scoreColor}20`, color: scoreColor }}
                                 >
                                   관련도 {score}%
@@ -497,7 +497,7 @@ export default function SearchBar() {
                                 <span className="truncate">{member.position}</span>
                               </div>
                               {/* 추천 이유 박스 */}
-                              <div className="mt-2 p-2 bg-[#A78BFA]/5 border border-[#A78BFA]/15 rounded-lg">
+                              <div className="mt-2.5 p-2.5 bg-[#A78BFA]/5 border border-[#A78BFA]/15 rounded-lg">
                                 <p className="text-xs font-medium text-[#A78BFA] mb-1 flex items-center gap-1">
                                   <Sparkles size={10} />
                                   추천 이유
@@ -511,7 +511,7 @@ export default function SearchBar() {
                                   {aiResult.traits.map((trait, i) => (
                                     <span
                                       key={i}
-                                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#A78BFA]/10 text-[#A78BFA]/80 border border-[#A78BFA]/20"
+                                      className="text-[10px] px-2 py-1 rounded-full bg-[#A78BFA]/10 text-[#A78BFA]/80 border border-[#A78BFA]/20"
                                     >
                                       {trait}
                                     </span>
@@ -531,8 +531,8 @@ export default function SearchBar() {
 
             {/* Person Results */}
             {personResults.length > 0 && (
-              <div className="p-3 border-b border-[#30363D]">
-                <p className="text-sm text-[#8B949E] mb-2 px-1 flex items-center gap-1">
+              <div className="p-4 border-b border-[#30363D]">
+                <p className="text-sm text-[#8B949E] mb-3 px-1 flex items-center gap-1">
                   <User size={12} />
                   인물 검색 결과
                 </p>
@@ -541,7 +541,7 @@ export default function SearchBar() {
                     <button
                       key={person.id}
                       onClick={() => handlePersonSelect(person)}
-                      className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#1C2333] transition-colors text-left"
                     >
                       <Avatar
                         src={person.degree === -1 ? undefined : person.profileImage}
@@ -554,11 +554,11 @@ export default function SearchBar() {
                             {person.degree === -1 ? `${person.name[0]}*님` : person.name}
                           </span>
                           {person.degree === -1 ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981]">
+                            <span className="text-[10px] px-2 py-1 rounded-full bg-[#10B981]/20 text-[#10B981]">
                               전체 공개
                             </span>
                           ) : (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                            <span className={`text-[10px] px-2 py-1 rounded-full ${
                               person.degree === 1
                                 ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
                                 : person.degree === 2
@@ -576,18 +576,18 @@ export default function SearchBar() {
                           <span className="truncate">{person.position}</span>
                         </div>
                         {person.degree > 1 && person.path.length > 2 && (
-                          <div className="flex items-center gap-1 text-[10px] text-[#484F58] mt-0.5">
+                          <div className="flex items-center gap-1 text-[10px] text-[#484F58] mt-1">
                             <ArrowRight size={10} />
                             <span>{getPathString(person.path)} 통해 연결</span>
                           </div>
                         )}
                         {person.degree === -1 && (
-                          <div className="flex items-center gap-1 text-[10px] text-[#10B981] mt-0.5">
+                          <div className="flex items-center gap-1 text-[10px] text-[#10B981] mt-1">
                             <span>키워드 매칭으로 검색됨</span>
                           </div>
                         )}
                         {person.memoMatch && (
-                          <div className="flex items-center gap-1 text-[10px] text-[#1F6FEB] mt-0.5">
+                          <div className="flex items-center gap-1 text-[10px] text-[#1F6FEB] mt-1">
                             <StickyNote size={10} />
                             <span className="truncate">메모: {person.memoMatch.slice(0, 30)}{person.memoMatch.length > 30 ? '...' : ''}</span>
                           </div>
@@ -601,8 +601,8 @@ export default function SearchBar() {
 
             {/* Keyword Suggestions */}
             {keywordSuggestions.length > 0 ? (
-              <div className="p-3">
-                <p className="text-sm text-[#8B949E] mb-2 px-1 flex items-center gap-1">
+              <div className="p-4">
+                <p className="text-sm text-[#8B949E] mb-3 px-1 flex items-center gap-1">
                   <Hash size={12} />
                   키워드
                 </p>
@@ -620,8 +620,8 @@ export default function SearchBar() {
                 </div>
               </div>
             ) : !query ? (
-              <div className="p-3">
-                <p className="text-sm text-[#8B949E] mb-2 px-1">인기 키워드</p>
+              <div className="p-4">
+                <p className="text-sm text-[#8B949E] mb-3 px-1">인기 키워드</p>
                 <div className="flex flex-wrap gap-2">
                   {popularKeywords.map((keyword) => (
                     <button
@@ -636,14 +636,14 @@ export default function SearchBar() {
                 </div>
               </div>
             ) : personResults.length === 0 && !aiLoading && !aiResponse && (
-              <div className="p-4 text-center">
+              <div className="p-5 text-center">
                 <p className="text-[#8B949E] text-base">검색 결과가 없습니다</p>
-                <p className="text-[#484F58] text-sm mt-1">
+                <p className="text-[#484F58] text-sm mt-2">
                   이름, 회사, 키워드 또는 메모 내용으로 검색해보세요
                 </p>
                 <button
                   onClick={() => triggerAiSearch(query)}
-                  className="mt-3 px-4 py-2 rounded-lg bg-[#A78BFA]/20 text-[#A78BFA] text-sm hover:bg-[#A78BFA]/30 transition-colors inline-flex items-center gap-1.5"
+                  className="mt-4 px-5 py-2.5 rounded-lg bg-[#A78BFA]/20 text-[#A78BFA] text-sm hover:bg-[#A78BFA]/30 transition-colors inline-flex items-center gap-1.5"
                 >
                   <Sparkles size={14} />
                   AI에게 추천 요청하기

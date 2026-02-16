@@ -26,7 +26,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
     >
-      <Card hoverable className="p-4">
+      <Card hoverable className="p-5">
         <div className="flex items-start gap-3">
           <Avatar
             src={undefined} // 비식별화를 위해 프로필 이미지 숨김
@@ -38,7 +38,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
               <h3 className="font-semibold text-white truncate">
                 {displayInfo.name}
               </h3>
-              <span className="text-xs text-[#1F6FEB] bg-[#1F6FEB]/20 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-[#1F6FEB] bg-[#1F6FEB]/20 px-2.5 py-1 rounded-full">
                 {recommendation.connectionPath.length - 1}촌
               </span>
             </div>
@@ -47,7 +47,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
             </p>
 
             {/* Reason */}
-            <div className="flex items-center gap-1.5 mt-2 text-sm text-[#58A6FF]">
+            <div className="flex items-center gap-1.5 mt-3 text-sm text-[#58A6FF]">
               <Sparkles size={12} />
               <span>{recommendation.reason}</span>
             </div>
@@ -66,7 +66,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
 
             {/* Connection Path */}
             <div className="mt-3 pt-3 border-t border-[#30363D]">
-              <p className="text-sm text-[#484F58] mb-2">연결 경로</p>
+              <p className="text-sm text-[#484F58] mb-3">연결 경로</p>
               <div className="flex items-center gap-1 text-sm">
                 {recommendation.connectionPath.map((userId, i) => (
                   <span key={userId} className="flex items-center">
@@ -91,7 +91,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
         <button
           onClick={() => openRequestModal(recommendation.userId)}
           className="
-            w-full mt-4 py-2.5
+            w-full mt-5 py-3
             bg-gradient-to-r from-[#58A6FF]/10 to-[#1F6FEB]/10
             border border-[#30363D] rounded-xl
             text-base font-medium text-white
