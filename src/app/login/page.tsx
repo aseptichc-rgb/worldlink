@@ -3,11 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Play, Check } from 'lucide-react';
+import { ArrowRight, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { loginWithEmail, getUser } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
-import { User } from '@/types';
 
 const STORAGE_KEY = 'nodded_saved_credentials';
 
@@ -77,27 +76,6 @@ function LoginContent() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoMode = () => {
-    const demoUser: User = {
-      id: 'member_8',
-      name: '김재영',
-      email: 'kjykjj04@naver.com',
-      phone: '010-8286-0906',
-      company: '아셉틱 /오크우드봄의원',
-      position: '심사역 /내과 원장',
-      bio: '"ASEPTIC GROUP"은 바이오-헬스케어 분야를 주력으로 투자하는 Startup Studio입니다.',
-      keywords: ['투자', '디지털헬스', '내과', 'AI'],
-      profileImage: '/faces/김재영.jpg',
-      inviteCode: 'INV-008',
-      invitesRemaining: 999,
-      coffeeStatus: 'available',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setUser(demoUser);
-    router.push('/network');
   };
 
   return (
@@ -176,9 +154,9 @@ function LoginContent() {
                   이메일
                 </label>
                 {/* 외부 컨테이너 */}
-                <div className="relative bg-[#161B22] rounded-2xl p-2 transition-all duration-300 ease-out">
+                <div className="relative bg-[#161B22] rounded-2xl p-2.5 transition-all duration-300 ease-out">
                   {/* 내부 입력창 */}
-                  <div className={`bg-[#21262D] rounded-xl h-[48px] px-5 flex items-center transition-all duration-300 ${emailFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
+                  <div className={`bg-[#21262D] rounded-xl h-[48px] pl-5 pr-4 flex items-center transition-all duration-300 ${emailFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
                     <input
                       type="email"
                       value={email}
@@ -187,7 +165,7 @@ function LoginContent() {
                       onBlur={() => setEmailFocused(false)}
                       placeholder="email@example.com"
                       required
-                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58]"
+                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58] pl-2"
                     />
                   </div>
                 </div>
@@ -199,9 +177,9 @@ function LoginContent() {
                   비밀번호
                 </label>
                 {/* 외부 컨테이너 */}
-                <div className="relative bg-[#161B22] rounded-2xl p-2 transition-all duration-300 ease-out">
+                <div className="relative bg-[#161B22] rounded-2xl p-2.5 transition-all duration-300 ease-out">
                   {/* 내부 입력창 */}
-                  <div className={`bg-[#21262D] rounded-xl h-[48px] px-5 flex items-center transition-all duration-300 ${passwordFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
+                  <div className={`bg-[#21262D] rounded-xl h-[48px] pl-5 pr-4 flex items-center transition-all duration-300 ${passwordFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
                     <input
                       type="password"
                       value={password}
@@ -210,7 +188,7 @@ function LoginContent() {
                       onBlur={() => setPasswordFocused(false)}
                       placeholder="••••••••"
                       required
-                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58]"
+                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58] pl-2"
                     />
                   </div>
                 </div>
@@ -253,22 +231,6 @@ function LoginContent() {
                 </Button>
               </div>
             </form>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4 my-10">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
-              <span className="text-sm text-[#30363D] uppercase tracking-wider">또는</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
-            </div>
-
-            {/* Demo Button */}
-            <button
-              onClick={handleDemoMode}
-              className="w-full py-4 rounded-xl bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-base font-medium flex items-center justify-center gap-3 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
-            >
-              <Play size={18} fill="currentColor" />
-              데모로 체험하기
-            </button>
 
             {/* Sign Up */}
             <div className="text-center mt-10 pt-10 border-t border-[rgba(240,246,252,0.05)]">
