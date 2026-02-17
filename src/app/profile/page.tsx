@@ -122,24 +122,66 @@ export default function ProfilePage() {
     }
   };
 
-  const addKeyword = () => {
-    if (!editedUser || !newKeyword.trim() || editedUser.keywords.length >= 5) return;
+  const addKeyword = async () => {
+    if (!editedUser || !user || !newKeyword.trim() || editedUser.keywords.length >= 5) return;
     const keyword = newKeyword.trim().replace(/^#/, '');
     if (!editedUser.keywords.includes(keyword)) {
+      const newKeywords = [...editedUser.keywords, keyword];
       setEditedUser({
         ...editedUser,
-        keywords: [...editedUser.keywords, keyword],
+        keywords: newKeywords,
       });
+      setNewKeyword('');
+
+      // 즉시 Firebase에 저장
+      try {
+        await updateUser(user.id, { keywords: newKeywords });
+        await savePublicCard({
+          id: user.id,
+          name: editedUser.name,
+          company: editedUser.company,
+          position: editedUser.position,
+          email: editedUser.email,
+          phone: editedUser.phone,
+          bio: editedUser.bio,
+          profileImage: editedUser.profileImage,
+          keywords: newKeywords,
+        });
+        setUser({ ...user, keywords: newKeywords });
+      } catch (error) {
+        console.error('Error saving keyword:', error);
+      }
+    } else {
+      setNewKeyword('');
     }
-    setNewKeyword('');
   };
 
-  const removeKeyword = (keyword: string) => {
-    if (!editedUser) return;
+  const removeKeyword = async (keyword: string) => {
+    if (!editedUser || !user) return;
+    const newKeywords = editedUser.keywords.filter(k => k !== keyword);
     setEditedUser({
       ...editedUser,
-      keywords: editedUser.keywords.filter(k => k !== keyword),
+      keywords: newKeywords,
     });
+
+    // 즉시 Firebase에 저장
+    try {
+      await updateUser(user.id, { keywords: newKeywords });
+      await savePublicCard({
+        id: user.id,
+        name: editedUser.name,
+        company: editedUser.company,
+        position: editedUser.position,
+        email: editedUser.email,
+        phone: editedUser.phone,
+        bio: editedUser.bio,
+        profileImage: editedUser.profileImage,
+        keywords: newKeywords,
+      });
+      setUser({ ...user, keywords: newKeywords });
+    } catch (error) {
+      console.error('Error removing keyword:', error);
+    }
   };
 
   const handleLogout = async () => {
@@ -188,20 +230,20 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="pt-20 px-5">
+      <div className="pt-16 px-5">
         {/* Profile Card - 통합된 프로필 카드 */}
-        <Card className="px-6 py-6 mb-4">
+        <Card className="px-6 py-8 mb-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
             {/* 프로필 사진 */}
-            <div className="relative inline-block mb-3">
+            <div className="relative inline-block mb-5">
               <Avatar
                 src={editedUser.profileImage}
                 name={editedUser.name}
-                size="xl"
+                size="2xl"
                 hasGlow
               />
               {isEditing && (
@@ -217,42 +259,42 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* 이름 및 직책 - 간격 축소 */}
+            {/* 이름 및 직책 */}
             {isEditing ? (
               <Input
                 value={editedUser.name}
                 onChange={(e) => setEditedUser({ ...editedUser, name: e.target.value })}
-                className="text-center text-xl font-bold mb-1"
+                className="text-center text-2xl font-bold mb-2"
               />
             ) : (
-              <h2 className="text-xl font-bold text-white mb-0.5">{editedUser.name}</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">{editedUser.name}</h2>
             )}
 
             {isEditing ? (
-              <div className="flex gap-2 justify-center mb-4">
+              <div className="flex gap-3 justify-center mb-6">
                 <Input
                   value={editedUser.company}
                   onChange={(e) => setEditedUser({ ...editedUser, company: e.target.value })}
                   placeholder="회사"
-                  className="w-1/2 text-center text-sm"
+                  className="w-1/2 text-center"
                 />
                 <Input
                   value={editedUser.position}
                   onChange={(e) => setEditedUser({ ...editedUser, position: e.target.value })}
                   placeholder="직함"
-                  className="w-1/2 text-center text-sm"
+                  className="w-1/2 text-center"
                 />
               </div>
             ) : (
-              <p className="text-sm text-[#8B949E] mb-4">
+              <p className="text-base text-[#8B949E] mb-6">
                 {editedUser.company} · {editedUser.position}
               </p>
             )}
           </motion.div>
 
           {/* 한 줄 소개 */}
-          <div className="border-t border-[rgba(255,255,255,0.06)] pt-4 mb-4">
-            <h3 className="text-sm font-medium text-[#8B949E] mb-2">한 줄 소개</h3>
+          <div className="border-t border-[rgba(255,255,255,0.06)] pt-6 mb-6 px-2">
+            <h3 className="text-base font-medium text-[#8B949E] mb-3 pl-1">한 줄 소개</h3>
             {isEditing ? (
               <textarea
                 value={editedUser.bio}
@@ -261,40 +303,40 @@ export default function ProfilePage() {
                 maxLength={100}
                 className="
                   w-full bg-[#252525] border border-[#363636] text-white
-                  rounded-lg py-3 px-4 text-base resize-none leading-relaxed
+                  rounded-xl py-4 px-5 text-base resize-none leading-relaxed
                   focus:outline-none focus:border-[#58A6FF]
                   placeholder:text-[#484F58]
                 "
-                rows={2}
+                rows={3}
               />
             ) : (
-              <p className="text-white text-base leading-relaxed">
+              <p className="text-white text-lg leading-relaxed pl-1">
                 {editedUser.bio || '아직 소개가 없습니다'}
               </p>
             )}
           </div>
 
-          {/* 관심 키워드 - 파란색 테두리 Outline 스타일 */}
-          <div className="border-t border-[rgba(255,255,255,0.06)] pt-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-[#8B949E]">관심 키워드</h3>
-              <span className="text-xs text-[#484F58]">{editedUser.keywords.length}/5</span>
+          {/* 관심 키워드 - 항상 편집 가능 */}
+          <div className="border-t border-[rgba(255,255,255,0.06)] pt-6 mb-6 px-2">
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h3 className="text-base font-medium text-[#8B949E]">관심 키워드</h3>
+              <span className="text-sm text-[#484F58]">{editedUser.keywords.length}/5</span>
             </div>
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-3 mb-4 px-1">
               {editedUser.keywords.map((keyword) => (
                 <Tag
                   key={keyword}
                   label={keyword}
                   isActive
-                  onRemove={isEditing ? () => removeKeyword(keyword) : undefined}
+                  onRemove={() => removeKeyword(keyword)}
                 />
               ))}
-              {editedUser.keywords.length === 0 && !isEditing && (
-                <p className="text-[#484F58] text-sm">아직 등록된 키워드가 없습니다</p>
+              {editedUser.keywords.length === 0 && (
+                <p className="text-[#484F58] text-base">키워드를 추가해보세요</p>
               )}
             </div>
-            {isEditing && editedUser.keywords.length < 5 && (
-              <div className="flex items-center gap-2">
+            {editedUser.keywords.length < 5 && (
+              <div className="flex items-center gap-3">
                 <input
                   type="text"
                   value={newKeyword}
@@ -303,8 +345,8 @@ export default function ProfilePage() {
                   placeholder="키워드 입력 (예: AI, 스타트업)"
                   maxLength={20}
                   className="
-                    flex-1 bg-[#252525] text-white text-sm
-                    border border-[#363636] rounded-lg py-2.5 px-3
+                    flex-1 bg-[#252525] text-white text-base
+                    border border-[#363636] rounded-xl py-3.5 px-4
                     focus:outline-none focus:border-[#58A6FF]
                     placeholder:text-[#484F58]
                   "
@@ -313,7 +355,7 @@ export default function ProfilePage() {
                   onClick={addKeyword}
                   disabled={!newKeyword.trim()}
                   className="
-                    px-4 py-2.5 rounded-lg text-sm font-medium
+                    px-5 py-3.5 rounded-xl text-base font-medium
                     bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]
                     text-white disabled:opacity-50 disabled:cursor-not-allowed
                     hover:opacity-90 transition-opacity
@@ -326,29 +368,31 @@ export default function ProfilePage() {
           </div>
 
           {/* 개인정보 공개 설정 - 카드 내부 리스트 아이템 형태 */}
-          <div className="border-t border-[rgba(255,255,255,0.06)] pt-4">
+          <div className="border-t border-[rgba(255,255,255,0.06)] pt-6 px-2">
             <button
               onClick={() => setShowPrivacySettings(true)}
-              className="w-full flex items-center justify-between py-1"
+              className="w-full flex items-center justify-between py-3 px-3 bg-[#252525] rounded-xl hover:bg-[#2a2a2a] transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Shield size={18} className="text-[#1F6FEB]" />
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-[#1F6FEB]/20 rounded-lg">
+                  <Shield size={22} className="text-[#1F6FEB]" />
+                </div>
                 <div className="text-left">
-                  <h3 className="text-white text-sm font-medium">개인정보 공개 설정</h3>
-                  <p className="text-[#8B949E] text-xs mt-0.5">
+                  <h3 className="text-white text-base font-medium">개인정보 공개 설정</h3>
+                  <p className="text-[#8B949E] text-sm mt-1">
                     {user.privacySettings?.allowProfileDiscovery
                       ? (user.privacySettings?.allowGlobalSearch ? '검색 허용 · 네트워크 공개' : '검색 비허용 · 네트워크 공개')
                       : '비공개 모드'}
                   </p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-[#484F58]" />
+              <ChevronRight size={22} className="text-[#484F58]" />
             </button>
           </div>
         </Card>
 
         {/* Invite Manager */}
-        <div className="mb-6">
+        <div className="mb-8">
           <InviteManager
             userId={user.id}
             invitesRemaining={user.invitesRemaining}
@@ -367,9 +411,9 @@ export default function ProfilePage() {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-4 text-[#FF6B8A] hover:bg-[#FF6B8A]/10 rounded-[10px] transition-colors"
+          className="w-full flex items-center justify-center gap-3 py-5 text-[#FF6B8A] text-lg font-medium hover:bg-[#FF6B8A]/10 rounded-xl transition-colors"
         >
-          <LogOut size={18} />
+          <LogOut size={22} />
           <span>로그아웃</span>
         </button>
       </div>

@@ -16,6 +16,7 @@ import GroupAssignModal from '@/components/network/GroupAssignModal';
 import GroupDetailPanel from '@/components/network/GroupDetailPanel';
 import AddMembersToGroupModal from '@/components/network/AddMembersToGroupModal';
 import GroupInviteModal from '@/components/network/GroupInviteModal';
+import GroupSidePanel from '@/components/network/GroupSidePanel';
 import { Avatar, Button } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { useAuthStore } from '@/store/authStore';
@@ -331,6 +332,9 @@ export default function NetworkPage() {
           )}
         </motion.button>
       )}
+
+      {/* Group Side Panel - 좌측에 그룹 퀵 액세스 */}
+      <GroupSidePanel />
 
       {/* Network Stats */}
       <div className="fixed bottom-4 left-4 z-20">

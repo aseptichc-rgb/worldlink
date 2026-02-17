@@ -301,10 +301,10 @@ function OnboardingContent() {
                   flex items-center gap-2.5 px-4 py-2 rounded-full text-base font-medium
                   transition-all duration-300
                   ${isActive
-                    ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/50 shadow-[0_0_12px_rgba(0,122,255,0.2)]'
+                    ? 'bg-[#007AFF]/15 text-[#007AFF]'
                     : isCompleted
-                      ? 'bg-[#3FB950]/20 text-[#3FB950] border border-[#3FB950]/30'
-                      : 'text-[#484F58] border border-transparent'}
+                      ? 'bg-[#3FB950]/15 text-[#3FB950]'
+                      : 'text-[#484F58]'}
                 `}
               >
                 <Icon size={16} />
@@ -327,9 +327,9 @@ function OnboardingContent() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-[400px]"
+            className="w-full max-w-[440px] px-12"
           >
-            <div className="bg-[#1E1E1E] backdrop-blur-2xl border border-[#333333] rounded-[12px] px-6 pt-10 pb-8">
+            <div>
               {/* 초대자 정보 표시 */}
               {inviterInfo && (
                 <div className="mb-7 p-5 rounded-[12px] bg-[#007AFF]/5 border border-[#007AFF]/20">
@@ -362,7 +362,6 @@ function OnboardingContent() {
                   placeholder="email@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  leftIcon={<Mail size={20} />}
                   required
                 />
 
@@ -372,7 +371,6 @@ function OnboardingContent() {
                   placeholder="최소 6자 이상"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  leftIcon={<Lock size={20} />}
                   required
                 />
 
@@ -382,7 +380,6 @@ function OnboardingContent() {
                   placeholder="비밀번호를 다시 입력해주세요"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  leftIcon={<Lock size={20} />}
                   error={error || undefined}
                   required
                 />
@@ -409,7 +406,7 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[480px]"
           >
-            <div className="bg-[#1E1E1E] backdrop-blur-2xl border border-[#333333] rounded-[12px] px-6 pt-10 pb-8">
+            <div className="bg-[#1E1E1E] backdrop-blur-2xl rounded-[12px] px-10 pt-10 pb-8">
               <ProfileSetup
                 onComplete={handleProfileComplete}
                 isLoading={isLoading}
@@ -437,7 +434,7 @@ function OnboardingContent() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-[440px]"
           >
-            <div className="bg-[#1E1E1E] backdrop-blur-2xl border border-[#333333] rounded-[12px] px-6 pt-10 pb-8">
+            <div className="bg-[#1E1E1E] backdrop-blur-2xl rounded-[12px] px-10 pt-10 pb-8">
               <div className="text-center mb-8">
                 <h2 className="text-[20px] font-bold text-white tracking-tight">
                   일촌 요청

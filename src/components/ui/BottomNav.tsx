@@ -9,6 +9,7 @@ import { useGroupStore } from '@/store/groupStore';
 import { Avatar } from '@/components/ui';
 import { createInvitation, generateInviteLink } from '@/lib/firebase-services';
 import { loadKakaoSDK, sendKakaoInvite } from '@/lib/kakao-sdk';
+import GroupInviteModal from '@/components/network/GroupInviteModal';
 
 interface NavItem {
   path: string;
@@ -538,6 +539,9 @@ export default function BottomNav() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Group Invite Modal - 모든 페이지에서 접근 가능 */}
+      <GroupInviteModal />
     </>
   );
 }

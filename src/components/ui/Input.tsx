@@ -30,59 +30,65 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-[13px] font-medium text-[#CCCCCC] mb-2 tracking-wide">
+          <label className="block text-[13px] font-medium text-[#8B949E] mb-3 pl-1 tracking-wide">
             {label}
           </label>
         )}
-        <div className="relative">
-          {leftIcon && (
-            <div className={`
-              absolute left-4 top-1/2 -translate-y-1/2
-              transition-colors duration-200
-              ${isFocused ? 'text-[#007AFF]' : 'text-[#484F58]'}
-            `}>
-              {leftIcon}
-            </div>
-          )}
-          <input
-            ref={ref}
-            type={isPassword && showPassword ? 'text' : type}
-            className={`
-              w-full bg-[#252525] border border-[#333333] text-[#FFFFFF]
-              rounded-lg h-[52px] px-5 text-base font-medium
-              transition-all duration-300 ease-out
-              focus:outline-none focus:border-[#007AFF] focus:shadow-[0_0_0_3px_rgba(0,122,255,0.15)]
-              placeholder:text-[#484F58]
-              hover:border-[rgba(240,246,252,0.2)]
-              ${leftIcon ? 'pl-12' : ''}
-              ${rightIcon || isPassword ? 'pr-12' : ''}
-              ${error ? 'border-[#FF4D4D]/60 focus:border-[#FF4D4D] focus:shadow-[0_0_0_3px_rgba(255,77,77,0.15)]' : ''}
-              ${className}
-            `}
-            onFocus={(e) => {
-              setIsFocused(true);
-              props.onFocus?.(e);
-            }}
-            onBlur={(e) => {
-              setIsFocused(false);
-              props.onBlur?.(e);
-            }}
-            {...props}
-          />
-          {isPassword && (
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58] hover:text-[#F0F6FC] transition-colors"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          )}
-          {rightIcon && !isPassword && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#484F58]">
-              {rightIcon}
-            </div>
-          )}
+        {/* 외부 컨테이너 */}
+        <div className={`
+          relative bg-[#161B22] rounded-2xl p-2
+          transition-all duration-300 ease-out
+          ${error ? 'ring-1 ring-[#FF4D4D]/60' : ''}
+        `}>
+          {/* 내부 입력창 */}
+          <div className={`
+            bg-[#21262D] rounded-xl h-[48px] px-5 flex items-center
+            transition-all duration-300
+            ${isFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}
+          `}>
+            {leftIcon && (
+              <div className={`
+                mr-3 transition-colors duration-200
+                ${isFocused ? 'text-[#007AFF]' : 'text-[#484F58]'}
+              `}>
+                {leftIcon}
+              </div>
+            )}
+            <input
+              ref={ref}
+              type={isPassword && showPassword ? 'text' : type}
+              className={`
+                flex-1 bg-transparent border-0 text-[#FFFFFF]
+                h-full text-base font-medium
+                focus:outline-none
+                placeholder:text-[#484F58]
+                ${className}
+              `}
+              onFocus={(e) => {
+                setIsFocused(true);
+                props.onFocus?.(e);
+              }}
+              onBlur={(e) => {
+                setIsFocused(false);
+                props.onBlur?.(e);
+              }}
+              {...props}
+            />
+            {isPassword && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="ml-3 text-[#484F58] hover:text-[#F0F6FC] transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            )}
+            {rightIcon && !isPassword && (
+              <div className="ml-3 text-[#484F58]">
+                {rightIcon}
+              </div>
+            )}
+          </div>
         </div>
         {error && (
           <p className="mt-2 text-xs text-[#FF4D4D]">

@@ -6,7 +6,7 @@ import { User } from 'lucide-react';
 interface AvatarProps {
   src?: string | null;
   name?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   hasGlow?: boolean;
   status?: 'available' | 'busy' | 'pending';
   className?: string;
@@ -26,6 +26,7 @@ export default function Avatar({
     md: 'w-12 h-12',
     lg: 'w-16 h-16',
     xl: 'w-24 h-24',
+    '2xl': 'w-32 h-32',
   };
 
   const statusSizes = {
@@ -34,6 +35,7 @@ export default function Avatar({
     md: 'w-3 h-3',
     lg: 'w-4 h-4',
     xl: 'w-5 h-5',
+    '2xl': 'w-6 h-6',
   };
 
   const statusColors = {
@@ -71,7 +73,7 @@ export default function Avatar({
             {initials}
           </span>
         ) : (
-          <User className="text-[#484F58]" size={size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'md' ? 20 : size === 'lg' ? 28 : 36} />
+          <User className="text-[#484F58]" size={size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'md' ? 20 : size === 'lg' ? 28 : size === 'xl' ? 36 : 48} />
         )}
       </div>
       {status && (

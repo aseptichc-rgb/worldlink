@@ -13,9 +13,16 @@ interface MemberInput {
 }
 
 export async function POST(req: NextRequest) {
-  const uid = await verifyAuthToken(req);
-  if (!uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // 개발 환경에서는 인증을 선택적으로 처리 (Firebase Admin 설정이 없을 수 있음)
+  const hasAdminConfig = process.env.FIREBASE_ADMIN_PROJECT_ID &&
+                         process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
+                         process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+
+  if (hasAdminConfig) {
+    const uid = await verifyAuthToken(req);
+    if (!uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -110,7 +117,11 @@ ${membersContext}
       results: sortedResults,
     });
   } catch (err) {
-    console.error('AI Search error:', err);
-    return NextResponse.json({ error: 'AI search failed' }, { status: 500 });
+    const error = err as Error;
+    console.error('AI Search error:', error.message, error.stack);
+    return NextResponse.json({
+      error: 'AI search failed',
+      details: error.message
+    }, { status: 500 });
   }
 }

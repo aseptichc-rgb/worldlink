@@ -257,27 +257,27 @@ export function InviteManager({
 
   return (
     <>
-      <Card className="px-5 py-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-[#8B949E] flex items-center gap-2">
-            <Users size={16} />
+      <Card className="px-6 py-8">
+        <div className="flex items-center justify-between mb-6 px-1">
+          <h3 className="text-base font-medium text-[#8B949E] flex items-center gap-3 pl-1">
+            <Users size={20} />
             친구 초대하기
           </h3>
-          <span className="text-xs px-2.5 py-1 rounded-md text-[#58A6FF] bg-[#58A6FF]/10">
+          <span className="text-sm px-3 py-1.5 rounded-lg text-[#58A6FF] bg-[#58A6FF]/10 font-medium">
             무제한 초대 가능
           </span>
         </div>
 
         {/* 초대 방법 선택 버튼들 - 2x2 균일 그리드, 동일 위계 */}
-        <div className="grid grid-cols-2 gap-2.5 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-6 px-1">
           <button
             onClick={() => {
               setSelectedMethod("kakao");
               setShowInviteModal(true);
             }}
-            className="flex items-center justify-center gap-2 py-3 bg-[#252525] border border-[#363636] rounded-[10px] text-sm font-medium text-[#F0F6FC] hover:border-[#58A6FF] transition-colors"
+            className="flex items-center justify-center gap-3 py-5 bg-[#252525] border border-[#363636] rounded-xl text-base font-medium text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[#2a2a2a] transition-all"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#58A6FF">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#58A6FF">
               <path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.82 5.32 4.55 6.73-.15.54-.82 2.93-.86 3.15 0 0-.02.14.07.19.09.06.2.03.2.03.26-.04 3.04-1.99 3.52-2.32.83.12 1.68.18 2.52.18 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
             </svg>
             카카오톡
@@ -288,9 +288,9 @@ export function InviteManager({
               setSelectedMethod("email");
               setShowInviteModal(true);
             }}
-            className="flex items-center justify-center gap-2 py-3 bg-[#252525] border border-[#363636] rounded-[10px] text-sm font-medium text-[#F0F6FC] hover:border-[#58A6FF] transition-colors"
+            className="flex items-center justify-center gap-3 py-5 bg-[#252525] border border-[#363636] rounded-xl text-base font-medium text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[#2a2a2a] transition-all"
           >
-            <Mail size={16} className="text-[#58A6FF]" />
+            <Mail size={22} className="text-[#58A6FF]" />
             이메일
           </button>
 
@@ -299,9 +299,9 @@ export function InviteManager({
               setSelectedMethod("sms");
               setShowInviteModal(true);
             }}
-            className="flex items-center justify-center gap-2 py-3 bg-[#252525] border border-[#363636] rounded-[10px] text-sm font-medium text-[#F0F6FC] hover:border-[#58A6FF] transition-colors"
+            className="flex items-center justify-center gap-3 py-5 bg-[#252525] border border-[#363636] rounded-xl text-base font-medium text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[#2a2a2a] transition-all"
           >
-            <MessageCircle size={16} className="text-[#58A6FF]" />
+            <MessageCircle size={22} className="text-[#58A6FF]" />
             문자메시지
           </button>
 
@@ -310,41 +310,41 @@ export function InviteManager({
               setSelectedMethod("link");
               setShowInviteModal(true);
             }}
-            className="flex items-center justify-center gap-2 py-3 bg-[#252525] border border-[#363636] rounded-[10px] text-sm font-medium text-[#F0F6FC] hover:border-[#58A6FF] transition-colors"
+            className="flex items-center justify-center gap-3 py-5 bg-[#252525] border border-[#363636] rounded-xl text-base font-medium text-[#F0F6FC] hover:border-[#58A6FF] hover:bg-[#2a2a2a] transition-all"
           >
-            <Copy size={16} className="text-[#58A6FF]" />
+            <Copy size={22} className="text-[#58A6FF]" />
             링크 복사
           </button>
         </div>
 
         {/* 발송한 초대 목록 - 고도화 */}
         {invitations.length > 0 && (
-          <div className="border-t border-[rgba(255,255,255,0.06)] pt-4 mt-1">
-            <h4 className="text-sm text-[#8B949E] mb-3">보낸 초대</h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="border-t border-[rgba(255,255,255,0.06)] pt-6 mt-2 px-1">
+            <h4 className="text-base text-[#8B949E] mb-4 pl-1">보낸 초대</h4>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex items-center justify-between p-3 bg-[#252525] rounded-[8px]"
+                  className="flex items-center justify-between p-4 bg-[#252525] rounded-xl"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#1E1E1E] rounded-[8px] text-[#58A6FF]">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-[#1E1E1E] rounded-lg text-[#58A6FF]">
                       {getMethodIcon(invitation.method)}
                     </div>
                     <div>
-                      <p className="text-sm text-white">
+                      <p className="text-base text-white">
                         {invitation.recipientEmail ||
                           invitation.recipientPhone ||
                           "링크 공유"}
                       </p>
-                      <p className="text-xs text-[#484F58] mt-0.5">
+                      <p className="text-sm text-[#484F58] mt-1">
                         {invitation.sentAt.toLocaleDateString("ko-KR")}
                       </p>
                     </div>
                   </div>
-                  {/* 상태 칩 - 6px 라운드, 눈에 띄는 배경 */}
+                  {/* 상태 칩 - 8px 라운드, 눈에 띄는 배경 */}
                   <span className={`
-                    inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-xs font-medium
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                     ${invitation.status === 'pending' || invitation.status === 'sent'
                       ? 'bg-[#D29922]/20 text-[#D29922]'
                       : invitation.status === 'accepted'

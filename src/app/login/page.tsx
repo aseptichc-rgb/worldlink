@@ -154,12 +154,9 @@ function LoginContent() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-[380px] z-10"
+        className="w-full max-w-[440px] px-12 z-10"
       >
-        <div className="relative bg-[rgba(22,27,34,0.6)] backdrop-blur-2xl border border-[rgba(240,246,252,0.08)] rounded-2xl px-9 py-10 shadow-[0_16px_64px_rgba(0,0,0,0.4)]">
-          {/* Subtle card inner glow */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[rgba(88,166,255,0.04)] to-transparent pointer-events-none" />
-
+        <div>
           <div className="relative">
             {/* Title */}
             <div className="text-center mb-10">
@@ -172,59 +169,67 @@ function LoginContent() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-7">
               {/* Email */}
               <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-3 pl-1 uppercase tracking-wider">
+                <label className="block text-[13px] font-medium text-[#8B949E] mb-3 pl-1 tracking-wide">
                   이메일
                 </label>
-                <div className={`relative rounded-lg transition-all duration-300 ${emailFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setEmailFocused(true)}
-                    onBlur={() => setEmailFocused(false)}
-                    placeholder="email@example.com"
-                    required
-                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-4 px-5 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
-                  />
+                {/* 외부 컨테이너 */}
+                <div className="relative bg-[#161B22] rounded-2xl p-2 transition-all duration-300 ease-out">
+                  {/* 내부 입력창 */}
+                  <div className={`bg-[#21262D] rounded-xl h-[48px] px-5 flex items-center transition-all duration-300 ${emailFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onFocus={() => setEmailFocused(true)}
+                      onBlur={() => setEmailFocused(false)}
+                      placeholder="email@example.com"
+                      required
+                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58]"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Password */}
-              <div>
-                <label className="block text-xs font-medium text-[#8B949E] mb-3 pl-1 uppercase tracking-wider">
+              <div className="pt-10">
+                <label className="block text-[13px] font-medium text-[#8B949E] mb-3 pl-1 tracking-wide">
                   비밀번호
                 </label>
-                <div className={`relative rounded-lg transition-all duration-300 ${passwordFocused ? 'shadow-[0_0_0_2px_rgba(88,166,255,0.3)]' : ''}`}>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
-                    placeholder="••••••••"
-                    required
-                    className="w-full bg-[rgba(13,17,23,0.8)] border border-[rgba(240,246,252,0.08)] text-[#F0F6FC] rounded-lg py-4 px-5 text-[15px] transition-all duration-300 focus:outline-none focus:border-[rgba(88,166,255,0.4)] placeholder:text-[#30363D] hover:border-[rgba(240,246,252,0.15)]"
-                  />
+                {/* 외부 컨테이너 */}
+                <div className="relative bg-[#161B22] rounded-2xl p-2 transition-all duration-300 ease-out">
+                  {/* 내부 입력창 */}
+                  <div className={`bg-[#21262D] rounded-xl h-[48px] px-5 flex items-center transition-all duration-300 ${passwordFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
+                      placeholder="••••••••"
+                      required
+                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58]"
+                    />
+                  </div>
                 </div>
                 {error && (
-                  <p className="mt-3 text-xs text-[#F85149] pl-1">{error}</p>
+                  <p className="mt-3 text-sm text-[#F85149] pl-1">{error}</p>
                 )}
               </div>
 
               {/* Remember Me - custom checkbox */}
-              <label className="flex items-center gap-2.5 py-1 cursor-pointer select-none group">
+              <label className="flex items-center gap-3 py-3 mt-2 cursor-pointer select-none group">
                 <div
-                  className={`w-[18px] h-[18px] rounded flex items-center justify-center border transition-all duration-200 ${
+                  className={`w-5 h-5 rounded flex items-center justify-center border transition-all duration-200 ${
                     rememberMe
                       ? 'bg-[#58A6FF] border-[#58A6FF]'
                       : 'bg-transparent border-[#30363D] group-hover:border-[#484F58]'
                   }`}
                   onClick={() => setRememberMe(!rememberMe)}
                 >
-                  {rememberMe && <Check size={12} className="text-white" strokeWidth={3} />}
+                  {rememberMe && <Check size={14} className="text-white" strokeWidth={3} />}
                 </div>
                 <input
                   type="checkbox"
@@ -232,49 +237,51 @@ function LoginContent() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="hidden"
                 />
-                <span className="text-sm text-[#8B949E] group-hover:text-[#F0F6FC] transition-colors">로그인 정보 저장</span>
+                <span className="text-base text-[#8B949E] group-hover:text-[#F0F6FC] transition-colors">로그인 정보 저장</span>
               </label>
 
               {/* Login Button */}
-              <Button
-                type="submit"
-                className="w-full py-3.5 text-[15px] font-semibold"
-                size="lg"
-                isLoading={isLoading}
-                rightIcon={!isLoading ? <ArrowRight size={16} /> : undefined}
-              >
-                로그인
-              </Button>
+              <div className="pt-4">
+                <Button
+                  type="submit"
+                  className="w-full py-4 text-base font-semibold"
+                  size="lg"
+                  isLoading={isLoading}
+                  rightIcon={!isLoading ? <ArrowRight size={18} /> : undefined}
+                >
+                  로그인
+                </Button>
+              </div>
             </form>
 
             {/* Divider */}
-            <div className="flex items-center gap-4 my-8">
+            <div className="flex items-center gap-4 my-10">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
-              <span className="text-xs text-[#30363D] uppercase tracking-wider">또는</span>
+              <span className="text-sm text-[#30363D] uppercase tracking-wider">또는</span>
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[rgba(240,246,252,0.08)] to-transparent" />
             </div>
 
             {/* Demo Button */}
             <button
               onClick={handleDemoMode}
-              className="w-full py-3.5 rounded-lg bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-sm font-medium flex items-center justify-center gap-2 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
+              className="w-full py-4 rounded-xl bg-[rgba(88,166,255,0.06)] border border-[rgba(88,166,255,0.15)] text-[#58A6FF] text-base font-medium flex items-center justify-center gap-3 hover:bg-[rgba(88,166,255,0.12)] hover:border-[rgba(88,166,255,0.3)] transition-all duration-300"
             >
-              <Play size={15} fill="currentColor" />
+              <Play size={18} fill="currentColor" />
               데모로 체험하기
             </button>
 
             {/* Sign Up */}
-            <div className="text-center mt-8 pt-8 border-t border-[rgba(240,246,252,0.05)]">
-              <p className="text-xs text-[#30363D] mb-3">
+            <div className="text-center mt-10 pt-10 border-t border-[rgba(240,246,252,0.05)]">
+              <p className="text-sm text-[#30363D] mb-4">
                 아직 계정이 없으신가요?
               </p>
               <button
                 onClick={() => router.push('/onboarding')}
-                className="inline-flex items-center gap-1.5 text-[#7EE0FF] hover:text-white transition-colors text-sm font-medium group"
+                className="inline-flex items-center gap-2 text-[#7EE0FF] hover:text-white transition-colors text-base font-medium group"
               >
-                <Sparkles size={13} className="group-hover:rotate-12 transition-transform" />
+                <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
                 회원가입하기
-                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
           </div>
