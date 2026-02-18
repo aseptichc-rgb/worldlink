@@ -22,6 +22,7 @@ import BottomNav from '@/components/ui/BottomNav';
 import { InviteManager } from '@/components/invite/InviteManager';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
+import { flushGroupSync } from '@/store/groupStore';
 import {
   updateUser,
   uploadProfileImage,
@@ -186,6 +187,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
+      await flushGroupSync(); // 대기 중인 그룹 데이터를 Firebase에 즉시 저장
       await logoutUser();
       logout();
       router.push('/onboarding');

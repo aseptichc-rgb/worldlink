@@ -25,7 +25,8 @@
       "Bash(dir:*)",
       "Bash(npx next build:*)",
       "Bash(python3:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(git revert:*)"
     ]
   }
 }

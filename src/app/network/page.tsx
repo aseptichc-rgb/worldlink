@@ -16,12 +16,12 @@ import GroupAssignModal from '@/components/network/GroupAssignModal';
 import GroupDetailPanel from '@/components/network/GroupDetailPanel';
 import AddMembersToGroupModal from '@/components/network/AddMembersToGroupModal';
 import GroupInviteModal from '@/components/network/GroupInviteModal';
-import GroupSidePanel from '@/components/network/GroupSidePanel';
+
 import { Avatar, Button } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
-import { useGroupStore } from '@/store/groupStore';
+import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
@@ -333,9 +333,6 @@ export default function NetworkPage() {
         </motion.button>
       )}
 
-      {/* Group Side Panel - 좌측에 그룹 퀵 액세스 */}
-      <GroupSidePanel />
-
       {/* Network Stats */}
       <div className="fixed bottom-4 left-4 z-20">
         <div className="glass-light rounded-xl px-4 py-3 flex items-center gap-4">
@@ -423,6 +420,7 @@ export default function NetworkPage() {
                 onClick={async () => {
                   setShowMenu(false);
                   try {
+                    await flushGroupSync(); // 대기 중인 그룹 데이터를 Firebase에 즉시 저장
                     await logoutUser();
                     clearGroups();
                     logout();

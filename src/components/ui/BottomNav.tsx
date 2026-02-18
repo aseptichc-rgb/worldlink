@@ -263,16 +263,16 @@ export default function BottomNav() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm flex items-end"
+            className="fixed inset-0 z-50 bg-[rgba(1,4,9,0.85)] backdrop-blur-sm flex items-center justify-center px-6"
             onClick={resetInviteModal}
           >
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[rgba(30,30,30,0.95)] backdrop-blur-xl rounded-t-[16px] border-t border-[rgba(240,246,252,0.1)] px-8 py-6 max-h-[80vh] overflow-y-auto"
+              className="w-full max-w-sm bg-[rgba(30,30,30,0.95)] backdrop-blur-xl rounded-[20px] border border-[rgba(240,246,252,0.1)] px-8 py-8 max-h-[80vh] overflow-y-auto relative"
             >
               <button
                 onClick={resetInviteModal}
@@ -281,18 +281,16 @@ export default function BottomNav() {
                 <X size={20} className="text-[#8B949E]" />
               </button>
 
-              <div className="w-12 h-1 bg-[#30363D] rounded-full mx-auto mb-6" />
-
               {inviteStep === 'select' && (
                 <>
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.15)] to-[rgba(31,111,235,0.15)] flex items-center justify-center">
-                      <UserPlus size={28} className="text-[#58A6FF]" />
+                  <div className="text-center mb-8">
+                    <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-[rgba(88,166,255,0.2)] to-[rgba(31,111,235,0.2)] flex items-center justify-center">
+                      <UserPlus size={34} className="text-[#58A6FF]" />
                     </div>
-                    <h3 className="text-xl font-semibold text-[#F0F6FC] mb-3">
+                    <h3 className="text-2xl font-bold text-[#F0F6FC] mb-2">
                       초대하기
                     </h3>
-                    <p className="text-base text-[#8B949E] py-1">
+                    <p className="text-base text-[#8B949E]">
                       새로운 인맥을 초대해보세요
                     </p>
                   </div>
@@ -300,16 +298,16 @@ export default function BottomNav() {
                   <div className="space-y-3">
                     <button
                       onClick={() => setInviteStep('personal')}
-                      className="w-full py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-[10px] flex items-center justify-center gap-3"
+                      className="w-full py-5 bg-[#58A6FF] text-[#0D1117] font-bold text-lg rounded-2xl flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
                     >
-                      <User size={20} />
+                      <User size={22} />
                       개인 초대하기
                     </button>
                     <button
                       onClick={() => setInviteStep('group')}
-                      className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-medium rounded-[10px] border border-[#363636] flex items-center justify-center gap-3"
+                      className="w-full py-5 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-semibold text-lg rounded-2xl border border-[#363636] flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
                     >
-                      <Users size={20} />
+                      <Users size={22} />
                       그룹으로 초대하기
                     </button>
                     <p className="text-xs text-[#484F58] text-center pt-3 py-1">
