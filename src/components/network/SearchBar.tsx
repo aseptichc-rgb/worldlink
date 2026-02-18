@@ -494,6 +494,8 @@ export default function SearchBar() {
                       {aiResponse.results.map((aiResult, index) => {
                         const member = demoUsers.find(u => u.id === aiResult.memberId);
                         if (!member) return null;
+                        const connectionPath = findDemoConnectionPath(currentUserId, member.id);
+                        const connectionDegree = connectionPath.length > 1 ? connectionPath.length - 1 : -1;
                         const personResult: PersonResult = {
                           id: member.id,
                           name: member.name,
@@ -501,8 +503,8 @@ export default function SearchBar() {
                           position: member.position ?? '',
                           profileImage: member.profileImage,
                           keywords: member.keywords,
-                          degree: 1,
-                          path: [currentUserId, member.id],
+                          degree: connectionDegree,
+                          path: connectionPath,
                         };
                         const score = aiResult.relevanceScore ?? 50;
                         const scoreColor = score >= 80 ? '#A78BFA' : score >= 60 ? '#8B5CF6' : '#6D28D9';
@@ -528,6 +530,22 @@ export default function SearchBar() {
                                 <span className="text-lg text-white font-medium truncate">
                                   {member.name}
                                 </span>
+                                {/* 연결 단계 표시 */}
+                                {connectionDegree >= 1 && connectionDegree <= 3 ? (
+                                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                                    connectionDegree === 1
+                                      ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
+                                      : connectionDegree === 2
+                                        ? 'bg-[#1F6FEB]/20 text-[#1F6FEB]'
+                                        : 'bg-[#FFB800]/20 text-[#FFB800]'
+                                  }`}>
+                                    {connectionDegree}촌
+                                  </span>
+                                ) : (
+                                  <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-[#484F58]/20 text-[#484F58]">
+                                    미연결
+                                  </span>
+                                )}
                                 {/* 관련성 점수 */}
                                 <span
                                   className="text-xs px-2.5 py-1 rounded-full font-medium"
@@ -542,6 +560,18 @@ export default function SearchBar() {
                                 <span className="mx-1">·</span>
                                 <span className="truncate">{member.position}</span>
                               </div>
+                              {/* 연결 경로 표시 */}
+                              {connectionDegree > 1 && connectionPath.length > 2 && (
+                                <div className="flex items-center gap-1.5 text-sm text-[#484F58] mt-1.5">
+                                  <ArrowRight size={14} />
+                                  <span>{getPathString(connectionPath)} 통해 연결</span>
+                                </div>
+                              )}
+                              {connectionDegree === -1 && (
+                                <div className="flex items-center gap-1.5 text-sm text-[#484F58] mt-1.5">
+                                  <span>내 인맥에 없는 인물입니다</span>
+                                </div>
+                              )}
                               {/* 추천 이유 박스 - 눈에 띄게 */}
                               <div className="mt-4 p-4 bg-gradient-to-r from-[#A78BFA]/10 to-[#8B5CF6]/5 border-l-3 border-[#A78BFA] rounded-r-xl">
                                 <p className="text-sm font-semibold text-[#A78BFA] mb-2 flex items-center gap-2">
