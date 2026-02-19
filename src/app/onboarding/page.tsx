@@ -21,9 +21,9 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
 import { User as UserType, Invitation } from '@/types';
-import { Mail, Lock, ArrowRight, User, Users, Check, X, Shield, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, User, Users, Check, X, Shield, Eye, EyeOff, Sparkles, Handshake } from 'lucide-react';
 
-type OnboardingStep = 'auth' | 'profile' | 'connection';
+type OnboardingStep = 'welcome' | 'auth' | 'profile' | 'connection';
 
 function OnboardingContent() {
   const router = useRouter();
@@ -32,6 +32,7 @@ function OnboardingContent() {
   const { groups, getNodesInGroup, addNodeToGroup } = useGroupStore();
 
   const [step, setStep] = useState<OnboardingStep>('auth');
+  const [initialStepSet, setInitialStepSet] = useState(false);
   const [pendingGroupInvite, setPendingGroupInvite] = useState<{ groupId: string; fromUserId: string } | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,6 +58,11 @@ function OnboardingContent() {
     const code = searchParams.get('code');
     if (code) {
       setInviteCode(code);
+      // 초대 코드가 있으면 환영 화면부터 시작
+      if (!initialStepSet) {
+        setStep('welcome');
+        setInitialStepSet(true);
+      }
       // 초대자 정보 미리 로드
       loadInviterInfo(code);
     }
@@ -246,6 +252,7 @@ function OnboardingContent() {
   // Step indicator
   const hasInviteCode = !!inviteCode;
   const steps = [
+    ...(hasInviteCode ? [{ key: 'welcome', label: '초대', icon: Sparkles }] : []),
     { key: 'auth', label: '계정 생성', icon: Mail },
     { key: 'profile', label: '프로필 설정', icon: User },
     ...(hasInviteCode ? [{ key: 'connection', label: '일촌 수락', icon: Users }] : []),
@@ -320,6 +327,111 @@ function OnboardingContent() {
 
       {/* Content */}
       <AnimatePresence mode="wait">
+        {step === 'welcome' && inviterInfo && (
+          <motion.div
+            key="welcome"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="w-full max-w-[440px] px-6"
+          >
+            <div className="relative rounded-2xl bg-gradient-to-b from-[#1C2333] to-[#161B22] border border-[#30363D] overflow-hidden">
+              {/* 상단 장식 그라데이션 */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#007AFF] via-[#3B82F6] to-[#0055CC]" />
+
+              <div className="px-8 pt-10 pb-8">
+                {/* 초대자 프로필 */}
+                <div className="flex flex-col items-center mb-8">
+                  <div className="relative">
+                    <Avatar src={inviterInfo.profileImage} name={inviterInfo.name} size="lg" hasGlow />
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#007AFF] rounded-full flex items-center justify-center border-2 border-[#1C2333]">
+                      <Handshake size={14} className="text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mt-4">{inviterInfo.name}</h3>
+                  {(inviterInfo.company || inviterInfo.position) && (
+                    <p className="text-[#8B949E] text-sm mt-1">
+                      {inviterInfo.company}{inviterInfo.company && inviterInfo.position ? ' · ' : ''}{inviterInfo.position}
+                    </p>
+                  )}
+                </div>
+
+                {/* 초대 메시지 */}
+                <div className="text-center mb-8 space-y-3">
+                  <p className="text-[#C9D1D9] text-base leading-relaxed">
+                    <span className="text-white font-semibold">{inviterInfo.name}</span>님이
+                    <br />
+                    당신을 소중한 비즈니스 인맥으로
+                    <br />
+                    <span className="text-[#007AFF] font-semibold">NODDED</span>에 초대했습니다.
+                  </p>
+                </div>
+
+                {/* 가치 제안 */}
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#0D1117]/60">
+                    <div className="w-8 h-8 rounded-lg bg-[#007AFF]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Users size={16} className="text-[#007AFF]" />
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-medium">신뢰 기반 네트워킹</p>
+                      <p className="text-[#8B949E] text-xs mt-0.5">
+                        초대를 통해서만 연결되는 검증된 비즈니스 네트워크
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#0D1117]/60">
+                    <div className="w-8 h-8 rounded-lg bg-[#007AFF]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Sparkles size={16} className="text-[#007AFF]" />
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-medium">네트워킹 기회 확장</p>
+                      <p className="text-[#8B949E] text-xs mt-0.5">
+                        {inviterInfo.name}님의 인맥을 시작으로 비즈니스 기회를 넓혀보세요
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA 버튼 */}
+                <Button
+                  onClick={() => setStep('auth')}
+                  className="w-full relative"
+                  size="lg"
+                >
+                  <span className="text-[16px]">NODDED 시작하기</span>
+                  <ArrowRight size={18} className="absolute right-6" />
+                </Button>
+
+                {/* 이미 계정이 있는 경우 */}
+                <p className="text-[#888888] text-sm text-center mt-5">
+                  이미 계정이 있으신가요?{' '}
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="text-[#007AFF] underline hover:text-[#007AFF]/80 transition-colors font-medium"
+                  >
+                    로그인하기
+                  </button>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'welcome' && !inviterInfo && inviteCode && (
+          <motion.div
+            key="welcome-loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full max-w-[440px] px-6 flex flex-col items-center"
+          >
+            <div className="w-10 h-10 border-2 border-[#007AFF]/30 border-t-[#007AFF] rounded-full animate-spin mb-4" />
+            <p className="text-[#8B949E] text-sm">초대 정보를 불러오는 중...</p>
+          </motion.div>
+        )}
+
         {step === 'auth' && (
           <motion.div
             key="auth"

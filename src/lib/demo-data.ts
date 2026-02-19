@@ -54,18 +54,6 @@ const memberData = [
   { id: 'member_48', name: '허기나', company: '로완', position: '영업마케팅 본부장', bio: '디지털 인지 훈련 솔루션인 디지털 치료기기를 전문 개발·유통합니다.', keywords: ['디지털치료기기', '인지훈련', '솔루션', '개발'], specialRole: null, category: '의료기기' },
   { id: 'member_49', name: '홍석원', company: '재단법인 대성재단', position: '이사장', bio: '종합병원 운영과 함께 노인 요양 등 복합 의료 서비스를 제공합니다.', keywords: ['재단', '종합병원', '노인요양', '복합의료'], specialRole: null, category: '의료기관' },
   { id: 'member_50', name: '황은경', company: '창헬스케어', position: '부사장', bio: '맞춤형 건강 검진 및 질병 예방을 위한 헬스케어 대행사입니다.', keywords: ['건강검진', '예방의학', '헬스케어', '대행'], specialRole: '고문', category: '비즈니스' },
-  // [가상] 고상원 인맥 + 김재영 공통 인맥
-  { id: 'member_51', name: '박지훈', company: '테크브릿지벤처스', position: '대표이사 / CEO', bio: '[가상] IT 벤처 투자 및 스타트업 육성 전문 기업입니다.', keywords: ['투자', 'IT', '스타트업', '벤처'], specialRole: null, category: '투자', networkOwners: ['고상원', '김재영'] },
-  { id: 'member_52', name: '이서연', company: '블루오션캐피탈', position: '파트너 / 상무', bio: '[가상] 헬스케어 및 바이오 분야 전문 투자사입니다.', keywords: ['투자', 'VC', '헬스케어', '바이오'], specialRole: null, category: '투자', networkOwners: ['고상원', '김재영'] },
-  { id: 'member_53', name: '정민수', company: '법무법인 정의', position: '변호사', bio: '[가상] 기업 자문 및 M&A 전문 법률 서비스를 제공합니다.', keywords: ['법률', '기업자문', 'M&A', '변호사'], specialRole: null, category: '법률', networkOwners: ['고상원', '김재영'] },
-  // [가상] 고상원 인맥만
-  { id: 'member_54', name: '김동현', company: '디지털마케팅랩', position: '이사', bio: '[가상] 헬스케어 분야 디지털 마케팅 전문 기업입니다.', keywords: ['마케팅', '디지털', '헬스케어', '브랜딩'], specialRole: null, category: '솔루션', networkOwners: ['고상원'] },
-  { id: 'member_55', name: '최유진', company: '헬스케어플러스', position: '대표이사', bio: '[가상] 헬스케어 스타트업 액셀러레이터입니다.', keywords: ['헬스케어', '스타트업', '액셀러레이터'], specialRole: null, category: '솔루션', networkOwners: ['고상원'] },
-  { id: 'member_56', name: '송현우', company: '미래병원', position: '원장 / 정형외과 전문의', bio: '[가상] 첨단 정형외과 수술 및 재활 전문 병원입니다.', keywords: ['정형외과', '병원', '재활', '수술'], specialRole: null, category: '의료기관', networkOwners: ['고상원'] },
-  { id: 'member_57', name: '한지민', company: '글로벌컨설팅그룹', position: '시니어 컨설턴트', bio: '[가상] 헬스케어 산업 전략 컨설팅 전문입니다.', keywords: ['컨설팅', '전략', '헬스케어', '경영'], specialRole: null, category: '비즈니스', networkOwners: ['고상원'] },
-  { id: 'member_58', name: '오준혁', company: '서울대학교', position: '부교수', bio: '[가상] 의료경영 및 헬스케어 정책 연구를 수행합니다.', keywords: ['연구', '의료경영', '정책', '대학'], specialRole: null, category: '의료기관', networkOwners: ['고상원'] },
-  { id: 'member_59', name: '윤서희', company: '크리에이티브스튜디오', position: '대표 / 크리에이티브 디렉터', bio: '[가상] 의료 브랜딩 및 UX 디자인 전문 에이전시입니다.', keywords: ['디자인', '브랜딩', 'UX', '크리에이티브'], specialRole: null, category: '솔루션', networkOwners: ['고상원'] },
-  { id: 'member_60', name: '장원석', company: '코리아텍', position: '상무이사', bio: '[가상] 의료기기 부품 제조 전문 기업입니다.', keywords: ['제조', '의료기기', '부품', '생산'], specialRole: null, category: '의료기기', networkOwners: ['고상원'] },
 ];
 
 // 이름으로 카테고리 조회 (Firebase 데이터에 category가 없을 때 fallback용)
@@ -120,33 +108,11 @@ const allMemberIds = memberData.map(m => m.id);
 // 이름으로 멤버 ID 찾기
 const nameToIdMap = new Map(memberData.map(m => [m.name, m.id]));
 
-// 연결 관계 생성
-// - 기존 멤버(member_1 ~ member_50): 서로 완전 연결
-// - 가상 멤버(member_51+): networkOwners에 지정된 사람과만 연결
+// 연결 관계 생성: 모든 멤버는 서로 완전 연결
 export const demoConnections: Record<string, string[]> = {};
 
-const originalMemberIds = memberData.filter(m => !m.networkOwners).map(m => m.id);
-const virtualMembers = memberData.filter(m => m.networkOwners);
-
-// 기존 멤버들은 서로 완전 연결
-for (const id of originalMemberIds) {
-  demoConnections[id] = originalMemberIds.filter(otherId => otherId !== id);
-}
-
-// 가상 멤버는 networkOwners와만 연결
-for (const virtual of virtualMembers) {
-  const ownerIds = (virtual.networkOwners || [])
-    .map(name => nameToIdMap.get(name))
-    .filter((id): id is string => !!id);
-
-  demoConnections[virtual.id] = ownerIds;
-
-  // 양방향 연결
-  for (const ownerId of ownerIds) {
-    if (demoConnections[ownerId] && !demoConnections[ownerId].includes(virtual.id)) {
-      demoConnections[ownerId].push(virtual.id);
-    }
-  }
+for (const id of allMemberIds) {
+  demoConnections[id] = allMemberIds.filter(otherId => otherId !== id);
 }
 
 // 실제 사용자를 데모 멤버에 매핑 (ID 또는 이름으로 매칭)

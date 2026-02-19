@@ -58,10 +58,20 @@ export default function ScanPage() {
     const el = document.getElementById(qrReaderId);
     if (!el) return;
 
-    try {
-      const html5QrCode = new Html5Qrcode(qrReaderId);
-      scannerRef.current = html5QrCode;
+    const onSuccess = (decodedText: string) => {
+      setQrDetected(true);
+      handleQrScan(decodedText);
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current = null;
+      }
+    };
 
+    const html5QrCode = new Html5Qrcode(qrReaderId);
+    scannerRef.current = html5QrCode;
+
+    // 1차 시도: 고해상도 + focusMode (Android 최적화)
+    try {
       await html5QrCode.start(
         { facingMode: 'environment' },
         {
@@ -71,22 +81,62 @@ export default function ScanPage() {
             facingMode: 'environment',
             width: { ideal: 1920 },
             height: { ideal: 1080 },
-            // @ts-ignore - focusMode is valid on mobile browsers
+            // @ts-ignore - focusMode is valid on Android mobile browsers
             focusMode: { ideal: 'continuous' },
           },
         },
-        (decodedText) => {
-          setQrDetected(true);
-          handleQrScan(decodedText);
-          html5QrCode.stop().catch(() => {});
-          scannerRef.current = null;
-        },
+        onSuccess,
         () => {}
       );
+      return;
     } catch (err) {
-      console.error('Camera error:', err);
-      setError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
+      console.warn('Camera attempt 1 failed (full constraints):', err);
+      // scanner 인스턴스 정리 후 재시도
+      try { await html5QrCode.stop(); } catch {}
     }
+
+    // 2차 시도: focusMode 제거 (iPad/iOS Safari 호환)
+    try {
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          videoConstraints: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
+        onSuccess,
+        () => {}
+      );
+      return;
+    } catch (err) {
+      console.warn('Camera attempt 2 failed (no focusMode):', err);
+      try { await html5QrCode.stop(); } catch {}
+    }
+
+    // 3차 시도: 최소 제약 조건 (facingMode만)
+    try {
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 200, height: 200 },
+        },
+        onSuccess,
+        () => {}
+      );
+      return;
+    } catch (err) {
+      console.warn('Camera attempt 3 failed (minimal constraints):', err);
+      try { await html5QrCode.stop(); } catch {}
+    }
+
+    // 모든 시도 실패
+    scannerRef.current = null;
+    setError('카메라에 접근할 수 없습니다. 카메라 권한을 확인하거나, Safari 설정에서 카메라 접근을 허용해주세요.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qrReaderId]);
 

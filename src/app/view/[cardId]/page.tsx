@@ -299,13 +299,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => loadCard()}
-                  className="px-6 py-3 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl"
+                  className="px-10 py-3 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl"
                 >
                   다시 시도
                 </button>
                 <button
                   onClick={() => router.push('/')}
-                  className="px-6 py-3 bg-[#1C2333] text-white font-semibold rounded-xl border border-[#30363D]"
+                  className="px-10 py-3 bg-[#1C2333] text-white font-semibold rounded-xl border border-[#30363D]"
                 >
                   홈으로 이동
                 </button>
@@ -409,13 +409,14 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
 
             {/* 키워드 태그 */}
             {card.keywords && card.keywords.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3 px-1">
                 {card.keywords.slice(0, 6).map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 text-sm font-medium rounded-full bg-transparent text-[#7EE0FF] border border-[#7EE0FF]"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium rounded-lg bg-[#58A6FF]/10 text-[#58A6FF]"
                   >
-                    {keyword}
+                    <span>#</span>
+                    <span>{keyword}</span>
                   </span>
                 ))}
               </div>

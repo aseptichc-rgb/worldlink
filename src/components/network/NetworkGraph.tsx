@@ -168,6 +168,7 @@ export default function NetworkGraph() {
     setFocusedNodeId,
     setCenterUserId,
     centerUserId,
+    centerUserOriginalDegree,
   } = useNetworkStore();
 
   const {
@@ -1678,11 +1679,16 @@ export default function NetworkGraph() {
               } else if (node.degree !== 0) {
                 // degree 0이 아닌 노드 터치 → 해당 인물 중심으로 그래프 재로드
                 setExpandedNodeIds(new Set());
-                setCenterUserId(node.id);
+                setCenterUserId(node.id, node.degree);
               } else {
                 // 중앙 노드 터치
                 focusOnNode(node);
-                setSelectedNode(node);
+                // 다른 인물의 네트워크를 보고 있을 때는 원래 촌수로 프로필 표시
+                if (centerUserId && centerUserOriginalDegree != null) {
+                  setSelectedNode({ ...node, degree: centerUserOriginalDegree });
+                } else {
+                  setSelectedNode(node);
+                }
                 setExpandedNodeIds(new Set());
               }
             } else {
@@ -1799,13 +1805,18 @@ export default function NetworkGraph() {
       // degree 0이 아닌 노드 클릭 시 → 해당 인물 중심으로 그래프 재로드
       if (node.degree !== 0) {
         setExpandedNodeIds(new Set());
-        setCenterUserId(node.id);
+        setCenterUserId(node.id, node.degree);
         return;
       }
 
-      // 중앙 노드(나) 클릭 시 모든 확장 해제
+      // 중앙 노드 클릭 시 모든 확장 해제
       focusOnNode(node);
-      setSelectedNode(node);
+      // 다른 인물의 네트워크를 보고 있을 때는 원래 촌수로 프로필 표시
+      if (centerUserId && centerUserOriginalDegree != null) {
+        setSelectedNode({ ...node, degree: centerUserOriginalDegree });
+      } else {
+        setSelectedNode(node);
+      }
       setExpandedNodeIds(new Set());
     } else {
       setFocusedNodeId(null);

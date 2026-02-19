@@ -227,9 +227,7 @@ export default function ProfileSheet() {
 
   // 메시지 버튼 클릭 (1촌용)
   const handleMessageClick = () => {
-    if (selectedNode?.degree === 1) {
-      setShowMessageModal(true);
-    }
+    setShowMessageModal(true);
   };
 
   const handleConnectionRequestClick = () => {
@@ -330,9 +328,9 @@ export default function ProfileSheet() {
                         src={selectedNode.profileImage}
                         name={selectedNode.name}
                         size="xl"
-                        hasGlow={selectedNode.degree === 1}
+                        hasGlow={connectionDegree === 1}
                       />
-                      {selectedNode.degree === 1 && (
+                      {connectionDegree === 1 && (
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#58A6FF] flex items-center justify-center">
                           <Link2 size={12} className="text-[#121212]" />
                         </div>
@@ -341,7 +339,7 @@ export default function ProfileSheet() {
                     <div className="flex-1 min-w-0 pt-1">
                       {/* 1촌이면 전체 정보, 아니면 비식별화된 정보 표시 */}
                       {(() => {
-                        const isConnected = selectedNode.degree === 1;
+                        const isConnected = connectionDegree === 1;
                         const displayInfo = selectedUserData
                           ? getDisplayInfo(selectedUserData, isConnected)
                           : {
@@ -417,7 +415,7 @@ export default function ProfileSheet() {
 
                 <div className="px-5 pb-5 space-y-5">
                   {/* Contact Info - 1촌에게만 표시 */}
-                  {selectedNode.degree === 1 && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
+                  {connectionDegree === 1 && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Mail size={12} />
@@ -536,7 +534,7 @@ export default function ProfileSheet() {
                   )}
 
                   {/* Groups Section */}
-                  {selectedNode.degree !== 0 && (
+                  {connectionDegree !== 0 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
@@ -592,7 +590,7 @@ export default function ProfileSheet() {
                   )}
 
                   {/* Memo - 1촌에게만 메모 남기기 가능 */}
-                  {selectedNode.degree === 1 && (
+                  {connectionDegree === 1 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
@@ -684,7 +682,7 @@ export default function ProfileSheet() {
                   )}
 
                   {/* 공통 인맥 - 모든 degree에서 표시 */}
-                  {selectedNode.degree !== 0 && (() => {
+                  {connectionDegree !== 0 && (() => {
                     const mutualIds = theirConnections
                       .map(u => u.id)
                       .filter(id => myConnectionIds.has(id));
@@ -744,14 +742,14 @@ export default function ProfileSheet() {
                   })()}
 
                   {/* Their Network - 1촌에게만 분야별로 표시 */}
-                  {theirConnections.length > 0 && (
+                  {theirConnections.length > 0 && connectionDegree !== 0 && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-2">
                         <Users size={12} />
                         {selectedNode.name}님의 인맥
                         <span className="text-[#58A6FF]">({theirConnections.length})</span>
                       </h3>
-                      {selectedNode.degree === 1 ? (
+                      {connectionDegree === 1 ? (
                         <div className="space-y-4">
                           {/* 분야별로 그룹화하여 표시 */}
                           {(() => {
@@ -851,7 +849,7 @@ export default function ProfileSheet() {
 
               {/* Action Buttons - 하단 고정 */}
               <div className="px-5 py-4 border-t border-[#363636]/50 bg-[#121212]/80 backdrop-blur-xl">
-                {selectedNode.degree === 1 ? (
+                {connectionDegree === 1 ? (
                   <div className="flex gap-3">
                     <Button
                       variant="secondary"

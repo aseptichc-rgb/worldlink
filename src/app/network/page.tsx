@@ -30,7 +30,7 @@ import { Recommendation } from '@/types';
 export default function NetworkPage() {
   const router = useRouter();
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading, logout } = useAuthStore();
-  const { setNodes, setEdges, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, setCenterUserId } = useNetworkStore();
+  const { setNodes, setEdges, setSelectedNode, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, centerUserOriginalDegree, setCenterUserId } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
   const { groups, toggleGroupPanel, loadFromFirebase, clearGroups } = useGroupStore();
 
@@ -124,9 +124,14 @@ export default function NetworkPage() {
           const { nodes: fetchedNodes, edges } = await getNetworkGraph(targetUserId);
           setNodes(fetchedNodes);
           setEdges(edges);
-          // 중심 인물 이름 저장
+          // 중심 인물 이름 저장 및 프로필 시트 자동 표시
           const centerNode = fetchedNodes.find(n => n.degree === 0);
           setCenterUserName(centerNode?.name || null);
+          // 중심 인물의 프로필을 오른쪽에 자동으로 표시 (원래 촌수 유지)
+          if (centerNode) {
+            const degree = centerUserOriginalDegree ?? 1;
+            setSelectedNode({ ...centerNode, degree });
+          }
         }
 
         // Load recommendations (내 네트워크일 때만)
@@ -142,7 +147,7 @@ export default function NetworkPage() {
     };
 
     loadNetworkData();
-  }, [user, centerUserId, setNodes, setEdges, setNetworkLoading]);
+  }, [user, centerUserId, centerUserOriginalDegree, setNodes, setEdges, setSelectedNode, setNetworkLoading]);
 
   // Load demo messages
   useEffect(() => {
