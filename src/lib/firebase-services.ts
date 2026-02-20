@@ -1108,7 +1108,7 @@ export const createManagedGroup = async (
   const group: ManagedGroup = {
     id: groupRef.id,
     name: data.name,
-    description: data.description,
+    description: data.description || '',
     color: data.color,
     icon: data.icon,
     ownerId,
@@ -1123,15 +1123,28 @@ export const createManagedGroup = async (
     updatedAt: now,
   };
 
-  await setDoc(groupRef, {
-    ...group,
+  // Firestore는 undefined 값을 허용하지 않으므로 제거
+  const firestoreData: Record<string, any> = {
+    id: group.id,
+    name: group.name,
+    color: group.color,
+    icon: group.icon,
+    ownerId: group.ownerId,
+    memberUserIds: group.memberUserIds,
+    settings: group.settings,
     members: group.members.map(m => ({
-      ...m,
+      userId: m.userId,
+      role: m.role,
       joinedAt: Timestamp.fromDate(m.joinedAt),
     })),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+  if (group.description) {
+    firestoreData.description = group.description;
+  }
+
+  await setDoc(groupRef, firestoreData);
 
   return group;
 };

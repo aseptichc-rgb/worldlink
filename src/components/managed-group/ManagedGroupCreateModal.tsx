@@ -9,7 +9,7 @@ import { useManagedGroupStore } from '@/store/managedGroupStore';
 
 export default function ManagedGroupCreateModal() {
   const { user } = useAuthStore();
-  const { isCreateModalOpen, closeCreateModal, createGroup, isLoading } = useManagedGroupStore();
+  const { isCreateModalOpen, closeCreateModal, createGroup, isLoading, error, clearError } = useManagedGroupStore();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -17,6 +17,7 @@ export default function ManagedGroupCreateModal() {
   const [selectedIcon, setSelectedIcon] = useState(GROUP_ICONS[0]);
   const [autoConnect, setAutoConnect] = useState(true);
   const [allowMemberInvite, setAllowMemberInvite] = useState(false);
+  const [localError, setLocalError] = useState('');
 
   const resetForm = () => {
     setName('');
@@ -25,6 +26,8 @@ export default function ManagedGroupCreateModal() {
     setSelectedIcon(GROUP_ICONS[0]);
     setAutoConnect(true);
     setAllowMemberInvite(false);
+    setLocalError('');
+    clearError();
   };
 
   const handleClose = () => {
@@ -33,18 +36,23 @@ export default function ManagedGroupCreateModal() {
   };
 
   const handleCreate = async () => {
-    if (!name.trim() || !user) return;
+    if (!name.trim()) return;
+    if (!user) {
+      setLocalError('로그인이 필요합니다');
+      return;
+    }
+    setLocalError('');
     try {
       await createGroup(user.id, {
         name: name.trim(),
-        description: description.trim() || undefined,
+        description: description.trim() || '',
         color: selectedColor,
         icon: selectedIcon,
         settings: { autoConnect, allowMemberInvite },
       });
       resetForm();
-    } catch {
-      // error is handled in store
+    } catch (err) {
+      setLocalError((err as Error).message || '그룹 생성에 실패했습니다');
     }
   };
 
@@ -194,6 +202,13 @@ export default function ManagedGroupCreateModal() {
                 </label>
               </div>
             </div>
+
+            {/* Error */}
+            {(localError || error) && (
+              <div className="mt-4 p-3 bg-[#F85149]/10 border border-[#F85149]/20 rounded-xl">
+                <p className="text-xs text-[#F85149]">{localError || error}</p>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 mt-6">
