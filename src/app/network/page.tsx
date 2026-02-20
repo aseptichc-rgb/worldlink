@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users, FolderOpen } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users, FolderOpen, Shield } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
@@ -266,8 +266,8 @@ export default function NetworkPage() {
 
       {/* Group Filter Bar */}
       {groups.length > 0 && (
-        <div className="fixed top-[88px] left-0 right-0 z-25 px-5">
-          <div className="bg-[#161B22]/60 backdrop-blur-xl rounded-xl px-3 py-1.5">
+        <div className="fixed top-[88px] left-5 z-25 max-w-[calc(100%-40px)]">
+          <div className="bg-[#161B22]/60 backdrop-blur-xl rounded-xl px-3 py-1.5 w-fit max-w-full">
             <GroupFilterBar />
           </div>
         </div>
@@ -421,6 +421,18 @@ export default function NetworkPage() {
                   <span className="ml-auto text-sm text-[#484F58]">{groups.length}</span>
                 )}
               </button>
+              {user.email === 'kjykjj04@naver.com' && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    router.push('/admin');
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#A371F7] hover:bg-[#A371F7]/10 transition-colors"
+                >
+                  <Shield size={20} />
+                  <span>어드민</span>
+                </button>
+              )}
               <button
                 onClick={async () => {
                   setShowMenu(false);

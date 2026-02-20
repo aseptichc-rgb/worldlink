@@ -6,14 +6,16 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { User, Connection, Invitation } from '@/types';
+import { demoUsers, demoConnections } from './demo-data';
 
 // ==================== USER STATS ====================
 
 export const getAllUsers = async (): Promise<User[]> => {
+  // Firestore에서 실제 사용자 가져오기
   const usersRef = collection(db, 'users');
   const q = query(usersRef, orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => {
+  const firestoreUsers = snapshot.docs.map(doc => {
     const data = doc.data();
     return {
       ...data,
@@ -22,6 +24,18 @@ export const getAllUsers = async (): Promise<User[]> => {
       updatedAt: data.updatedAt?.toDate?.() || new Date(),
     } as User;
   });
+
+  // Firestore 사용자 ID와 이름 Set
+  const firestoreIds = new Set(firestoreUsers.map(u => u.id));
+  const firestoreNames = new Set(firestoreUsers.map(u => u.name));
+
+  // 데모 멤버 중 Firestore에 없는 멤버만 추가 (중복 방지)
+  const uniqueDemoUsers = demoUsers.filter(
+    du => !firestoreIds.has(du.id) && !firestoreNames.has(du.name)
+  );
+
+  // Firestore 사용자를 앞에, 데모 멤버를 뒤에 배치
+  return [...firestoreUsers, ...uniqueDemoUsers];
 };
 
 // ==================== CONNECTION STATS ====================
@@ -32,18 +46,26 @@ export const getConnectionStats = async (): Promise<{
   pending: number;
   rejected: number;
 }> => {
+  // Firestore 연결 데이터
   const connectionsRef = collection(db, 'connections');
   const snapshot = await getDocs(connectionsRef);
 
-  let accepted = 0, pending = 0, rejected = 0;
+  let firestoreAccepted = 0, pending = 0, rejected = 0;
   snapshot.docs.forEach(doc => {
     const status = doc.data().status;
-    if (status === 'accepted') accepted++;
+    if (status === 'accepted') firestoreAccepted++;
     else if (status === 'pending') pending++;
     else if (status === 'rejected') rejected++;
   });
 
-  return { total: snapshot.size, accepted, pending, rejected };
+  // 데모 연결 수 계산 (완전 연결 그래프: n*(n-1)/2)
+  const demoMemberCount = demoUsers.length;
+  const demoConnectionCount = (demoMemberCount * (demoMemberCount - 1)) / 2;
+
+  const accepted = firestoreAccepted + demoConnectionCount;
+  const total = accepted + pending + rejected;
+
+  return { total, accepted, pending, rejected };
 };
 
 // ==================== INVITATION STATS ====================

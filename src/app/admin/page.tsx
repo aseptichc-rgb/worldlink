@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Users, Link2, UserPlus, TrendingUp, Search, RefreshCw,
-  ArrowLeft, Tag, BarChart3, Shield, Mail, MessageCircle, Loader2,
+  ArrowLeft, Tag, BarChart3, Shield, Mail, MessageCircle, Loader2, ShieldX,
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { Avatar } from '@/components/ui';
 import StatCard from '@/components/admin/StatCard';
 import TrendChart from '@/components/admin/TrendChart';
+import { useAuthStore } from '@/store/authStore';
 import { useAdminStore } from '@/store/adminStore';
+
+const ADMIN_EMAIL = 'kjykjj04@naver.com';
 import {
   getAllUsers,
   getConnectionStats,
@@ -64,12 +67,15 @@ function formatRelativeDate(date: Date): string {
 
 export default function AdminPage() {
   const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const {
     users, totalUserCount, connectionStats, invitationStats,
     isLoading, searchQuery, trendRange,
     setUsers, setTotalUserCount, setConnectionStats, setInvitationStats,
     setLoading, setSearchQuery, setTrendRange,
   } = useAdminStore();
+
+  const isAdmin = isAuthenticated && user?.email === ADMIN_EMAIL;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -91,8 +97,54 @@ export default function AdminPage() {
   }, [setUsers, setTotalUserCount, setConnectionStats, setInvitationStats, setLoading]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isAdmin) {
+      loadData();
+    }
+  }, [isAdmin, loadData]);
+
+  // 인증 로딩 중
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <Loader2 size={36} className="text-[#58A6FF] animate-spin" />
+          <p className="text-[#8B949E] text-sm">인증 확인 중...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // 권한 없음
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-sm"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#F85149]/10 flex items-center justify-center">
+            <ShieldX size={36} className="text-[#F85149]" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">접근 권한이 없습니다</h2>
+          <p className="text-[#8B949E] text-sm mb-6">
+            이 페이지는 관리자만 접근할 수 있습니다.
+            {!isAuthenticated && ' 먼저 로그인해 주세요.'}
+          </p>
+          <button
+            onClick={() => router.push(isAuthenticated ? '/network' : '/login')}
+            className="px-6 py-3 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl transition-all hover:brightness-110"
+          >
+            {isAuthenticated ? '홈으로 돌아가기' : '로그인하기'}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   // Computed data
   const acceptanceRate = useMemo(() => {
@@ -364,7 +416,11 @@ export default function AdminPage() {
                   }`}
                 >
                   {kw}
-                  <span className={`text-[10px] ${i < 5 ? 'text-[#58A6FF]/70' : 'text-[#484F58]'}`}>
+                  <span className={`text-[10px] min-w-[18px] h-[18px] inline-flex items-center justify-center rounded-full font-medium ${
+                    i < 5
+                      ? 'bg-[#58A6FF]/20 text-[#58A6FF]'
+                      : 'bg-[#484F58]/30 text-[#8B949E]'
+                  }`}>
                     {count}
                   </span>
                 </span>
