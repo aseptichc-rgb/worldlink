@@ -10,6 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "https://nodded.app")
+  ),
   title: "Nodded - 신뢰 기반 비즈니스 네트워크",
   description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다. 초대 기반 폐쇄형 비즈니스 인맥 플랫폼",
   keywords: ["비즈니스 네트워크", "인맥 관리", "커피챗", "네트워킹", "스타트업"],
@@ -29,16 +35,26 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Nodded - 신뢰 기반 비즈니스 네트워크",
+    title: "Nodded - 비즈니스 네트워킹의 새로운 방법",
     description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다",
     type: "website",
     locale: "ko_KR",
     siteName: "Nodded",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Nodded - 비즈니스 네트워킹의 새로운 방법",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nodded - 신뢰 기반 비즈니스 네트워크",
+    title: "Nodded - 비즈니스 네트워킹의 새로운 방법",
     description: "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다",
+    images: ["/og-image.png"],
   },
   manifest: "/manifest.json",
   icons: {
