@@ -27,7 +27,7 @@ import {
 } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage } from './firebase';
-import { User, Connection, InviteCode, Invitation, TimeSlot, CoffeeChatRequest, NetworkNode, NetworkEdge, Recommendation } from '@/types';
+import { User, Connection, InviteCode, Invitation, TimeSlot, CoffeeChatRequest, NetworkNode, NetworkEdge, Recommendation, ManagedGroup, ManagedGroupMember, ManagedGroupRole, ManagedGroupSettings, ManagedGroupInvite } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // ==================== AUTH SERVICES ====================
@@ -1071,4 +1071,309 @@ export const acceptGroupInvite = async (
   });
 
   await batch.commit();
+};
+
+// ==================== MANAGED GROUP SERVICES (관리형 그룹) ====================
+
+// Helper: Firestore 문서 → ManagedGroup 변환
+const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
+  const data = docSnap.data();
+  return {
+    id: docSnap.id,
+    name: data.name,
+    description: data.description,
+    color: data.color,
+    icon: data.icon,
+    ownerId: data.ownerId,
+    members: (data.members || []).map((m: any) => ({
+      userId: m.userId,
+      role: m.role,
+      joinedAt: m.joinedAt?.toDate?.() || new Date(),
+    })),
+    memberUserIds: data.memberUserIds || [],
+    settings: data.settings || { autoConnect: true, allowMemberInvite: false },
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  };
+};
+
+// 관리형 그룹 생성
+export const createManagedGroup = async (
+  ownerId: string,
+  data: { name: string; description?: string; color: string; icon: string; settings?: Partial<ManagedGroupSettings> }
+): Promise<ManagedGroup> => {
+  const groupRef = doc(collection(db, 'managedGroups'));
+
+  const now = new Date();
+  const group: ManagedGroup = {
+    id: groupRef.id,
+    name: data.name,
+    description: data.description,
+    color: data.color,
+    icon: data.icon,
+    ownerId,
+    members: [{ userId: ownerId, role: 'admin', joinedAt: now }],
+    memberUserIds: [ownerId],
+    settings: {
+      autoConnect: true,
+      allowMemberInvite: false,
+      ...data.settings,
+    },
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await setDoc(groupRef, {
+    ...group,
+    members: group.members.map(m => ({
+      ...m,
+      joinedAt: Timestamp.fromDate(m.joinedAt),
+    })),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return group;
+};
+
+// 관리형 그룹 단건 조회
+export const getManagedGroup = async (groupId: string): Promise<ManagedGroup | null> => {
+  const groupRef = doc(db, 'managedGroups', groupId);
+  const groupSnap = await getDoc(groupRef);
+  if (!groupSnap.exists()) return null;
+  return parseManagedGroupDoc(groupSnap);
+};
+
+// 사용자가 속한 모든 관리형 그룹 조회
+export const getUserManagedGroups = async (userId: string): Promise<ManagedGroup[]> => {
+  const groupsRef = collection(db, 'managedGroups');
+
+  // ownerId 또는 memberUserIds에 포함된 그룹 조회
+  const ownerQuery = query(groupsRef, where('ownerId', '==', userId));
+  const memberQuery = query(groupsRef, where('memberUserIds', 'array-contains', userId));
+
+  const [ownerSnap, memberSnap] = await Promise.all([
+    getDocs(ownerQuery),
+    getDocs(memberQuery),
+  ]);
+
+  const groupMap = new Map<string, ManagedGroup>();
+  ownerSnap.docs.forEach(d => groupMap.set(d.id, parseManagedGroupDoc(d)));
+  memberSnap.docs.forEach(d => {
+    if (!groupMap.has(d.id)) groupMap.set(d.id, parseManagedGroupDoc(d));
+  });
+
+  return Array.from(groupMap.values()).sort(
+    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+  );
+};
+
+// 관리형 그룹 정보 수정
+export const updateManagedGroup = async (
+  groupId: string,
+  updates: Partial<Pick<ManagedGroup, 'name' | 'description' | 'color' | 'icon' | 'settings'>>
+): Promise<void> => {
+  const groupRef = doc(db, 'managedGroups', groupId);
+  const cleanedUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  );
+  await updateDoc(groupRef, {
+    ...cleanedUpdates,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// 관리형 그룹 삭제
+export const deleteManagedGroup = async (groupId: string): Promise<void> => {
+  // 관련 초대 링크도 삭제
+  const invitesRef = collection(db, 'managedGroupInvites');
+  const inviteQuery = query(invitesRef, where('groupId', '==', groupId));
+  const inviteSnap = await getDocs(inviteQuery);
+
+  const batch = writeBatch(db);
+  inviteSnap.docs.forEach(d => batch.delete(d.ref));
+  batch.delete(doc(db, 'managedGroups', groupId));
+  await batch.commit();
+};
+
+// 관리형 그룹에 멤버 추가 + 자동 연결
+export const addMemberToManagedGroup = async (
+  groupId: string,
+  userId: string,
+  role: ManagedGroupRole = 'member'
+): Promise<void> => {
+  const group = await getManagedGroup(groupId);
+  if (!group) throw new Error('그룹을 찾을 수 없습니다');
+
+  if (group.members.some(m => m.userId === userId)) {
+    throw new Error('이미 그룹 멤버입니다');
+  }
+
+  const batch = writeBatch(db);
+  const groupRef = doc(db, 'managedGroups', groupId);
+
+  const newMember = {
+    userId,
+    role,
+    joinedAt: Timestamp.fromDate(new Date()),
+  };
+
+  const updatedMembers = [
+    ...group.members.map(m => ({ ...m, joinedAt: Timestamp.fromDate(m.joinedAt) })),
+    newMember,
+  ];
+  const updatedMemberUserIds = [...group.memberUserIds, userId];
+
+  batch.update(groupRef, {
+    members: updatedMembers,
+    memberUserIds: updatedMemberUserIds,
+    updatedAt: serverTimestamp(),
+  });
+
+  // autoConnect 설정 시 기존 멤버 전원과 자동 연결
+  if (group.settings.autoConnect) {
+    for (const existingMember of group.members) {
+      if (existingMember.userId !== userId) {
+        const connRef = doc(collection(db, 'connections'));
+        batch.set(connRef, {
+          id: connRef.id,
+          fromUserId: userId,
+          toUserId: existingMember.userId,
+          status: 'accepted',
+          method: 'managed_group',
+          createdAt: serverTimestamp(),
+          acceptedAt: serverTimestamp(),
+        });
+      }
+    }
+  }
+
+  await batch.commit();
+};
+
+// 관리형 그룹에서 멤버 제거
+export const removeMemberFromManagedGroup = async (
+  groupId: string,
+  userId: string
+): Promise<void> => {
+  const group = await getManagedGroup(groupId);
+  if (!group) throw new Error('그룹을 찾을 수 없습니다');
+  if (group.ownerId === userId) throw new Error('그룹장은 제거할 수 없습니다');
+
+  const updatedMembers = group.members
+    .filter(m => m.userId !== userId)
+    .map(m => ({ ...m, joinedAt: Timestamp.fromDate(m.joinedAt) }));
+  const updatedMemberUserIds = updatedMembers.map(m => m.userId);
+
+  const groupRef = doc(db, 'managedGroups', groupId);
+  await updateDoc(groupRef, {
+    members: updatedMembers,
+    memberUserIds: updatedMemberUserIds,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// 멤버 자발적 탈퇴
+export const leaveManagedGroup = async (
+  groupId: string,
+  userId: string
+): Promise<void> => {
+  const group = await getManagedGroup(groupId);
+  if (!group) throw new Error('그룹을 찾을 수 없습니다');
+  if (group.ownerId === userId) throw new Error('그룹장은 그룹을 나갈 수 없습니다. 그룹을 삭제해주세요.');
+  await removeMemberFromManagedGroup(groupId, userId);
+};
+
+// 관리형 그룹 초대 링크 생성
+export const createManagedGroupInviteLink = async (
+  groupId: string,
+  inviterId: string,
+  options?: { maxUses?: number; expiresInHours?: number }
+): Promise<ManagedGroupInvite> => {
+  const group = await getManagedGroup(groupId);
+  if (!group) throw new Error('그룹을 찾을 수 없습니다');
+
+  const inviteRef = doc(collection(db, 'managedGroupInvites'));
+  const now = new Date();
+
+  const invite: ManagedGroupInvite = {
+    id: inviteRef.id,
+    groupId,
+    groupName: group.name,
+    inviterId,
+    status: 'active',
+    maxUses: options?.maxUses,
+    useCount: 0,
+    createdAt: now,
+    expiresAt: options?.expiresInHours
+      ? new Date(Date.now() + options.expiresInHours * 60 * 60 * 1000)
+      : undefined,
+  };
+
+  const firestoreData: Record<string, unknown> = {
+    ...invite,
+    createdAt: serverTimestamp(),
+  };
+  if (invite.expiresAt) {
+    firestoreData.expiresAt = Timestamp.fromDate(invite.expiresAt);
+  }
+  Object.keys(firestoreData).forEach(k => {
+    if (firestoreData[k] === undefined) delete firestoreData[k];
+  });
+
+  await setDoc(inviteRef, firestoreData);
+  return invite;
+};
+
+// 초대 조회 + 유효성 검증
+export const getManagedGroupInvite = async (inviteId: string): Promise<ManagedGroupInvite | null> => {
+  const inviteRef = doc(db, 'managedGroupInvites', inviteId);
+  const inviteSnap = await getDoc(inviteRef);
+  if (!inviteSnap.exists()) return null;
+
+  const data = inviteSnap.data();
+  const invite: ManagedGroupInvite = {
+    id: inviteSnap.id,
+    groupId: data.groupId,
+    groupName: data.groupName,
+    inviterId: data.inviterId,
+    status: data.status,
+    maxUses: data.maxUses,
+    useCount: data.useCount || 0,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    expiresAt: data.expiresAt?.toDate?.(),
+  };
+
+  if (invite.expiresAt && invite.expiresAt < new Date()) return null;
+  if (invite.maxUses && invite.useCount >= invite.maxUses) return null;
+  if (invite.status !== 'active') return null;
+
+  return invite;
+};
+
+// 관리형 그룹 초대 수락
+export const acceptManagedGroupInvite = async (
+  inviteId: string,
+  userId: string
+): Promise<ManagedGroup> => {
+  const invite = await getManagedGroupInvite(inviteId);
+  if (!invite) throw new Error('유효하지 않은 초대입니다');
+
+  await addMemberToManagedGroup(invite.groupId, userId);
+
+  // 사용 횟수 증가
+  const inviteRef = doc(db, 'managedGroupInvites', inviteId);
+  await updateDoc(inviteRef, { useCount: increment(1) });
+
+  const group = await getManagedGroup(invite.groupId);
+  if (!group) throw new Error('그룹을 찾을 수 없습니다');
+  return group;
+};
+
+// 초대 URL 생성
+export const generateManagedGroupInviteUrl = (inviteId: string): string => {
+  const baseUrl = typeof window !== 'undefined'
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_APP_URL || '';
+  return `${baseUrl}/invite/managed-group/${inviteId}`;
 };

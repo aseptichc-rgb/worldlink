@@ -268,3 +268,44 @@ export interface IntroductionRequest {
   respondedAt?: Date;
   completedAt?: Date;
 }
+
+// ==================== 관리형 그룹 (Managed Group) ====================
+
+export type ManagedGroupRole = 'admin' | 'member';
+
+export interface ManagedGroupMember {
+  userId: string;
+  role: ManagedGroupRole;
+  joinedAt: Date;
+}
+
+export interface ManagedGroupSettings {
+  autoConnect: boolean;       // 가입 시 기존 멤버와 자동 인맥 연결
+  allowMemberInvite: boolean; // 멤버도 초대 가능 여부
+}
+
+export interface ManagedGroup {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  icon: string;
+  ownerId: string;           // 그룹장 userId
+  members: ManagedGroupMember[];
+  memberUserIds: string[];   // Firestore array-contains 쿼리용 비정규화 필드
+  settings: ManagedGroupSettings;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ManagedGroupInvite {
+  id: string;
+  groupId: string;
+  groupName: string;
+  inviterId: string;
+  status: 'active' | 'expired';
+  maxUses?: number;
+  useCount: number;
+  createdAt: Date;
+  expiresAt?: Date;
+}

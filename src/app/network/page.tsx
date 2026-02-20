@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users, FolderOpen, Shield } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users, FolderOpen, Shield, Crown } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
@@ -420,6 +420,16 @@ export default function NetworkPage() {
                 {groups.length > 0 && (
                   <span className="ml-auto text-sm text-[#484F58]">{groups.length}</span>
                 )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  router.push('/managed-groups');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#FFA657] hover:bg-[#FFA657]/10 transition-colors"
+              >
+                <Crown size={20} />
+                <span>관리형 그룹</span>
               </button>
               {user.email === 'kjykjj04@naver.com' && (
                 <button

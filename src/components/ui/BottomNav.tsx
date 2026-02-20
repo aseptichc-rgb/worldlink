@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, User, Network, X, UserPlus, Users, Share2, Mail, Copy, Check, MessageCircle, Link2, UserRound } from 'lucide-react';
+import { QrCode, User, Network, X, UserPlus, Users, Share2, Mail, Copy, Check, MessageCircle, Link2, UserRound, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
 import { Avatar } from '@/components/ui';
@@ -309,6 +309,16 @@ export default function BottomNav() {
                     >
                       <Users size={22} />
                       그룹으로 초대하기
+                    </button>
+                    <button
+                      onClick={() => {
+                        resetInviteModal();
+                        router.push('/managed-groups');
+                      }}
+                      className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#FFA657] font-semibold text-base rounded-2xl border border-[#FFA657]/30 flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
+                    >
+                      <Crown size={20} />
+                      관리형 그룹
                     </button>
                     <p className="text-xs text-[#484F58] text-center pt-3 py-1">
                       그룹 초대 시 초대받은 분은 그룹원 전체와 자동으로 인맥이 됩니다
