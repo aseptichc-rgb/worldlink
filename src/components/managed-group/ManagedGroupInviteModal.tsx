@@ -73,6 +73,7 @@ export default function ManagedGroupInviteModal() {
       sendKakaoInvite({
         senderName: user.name,
         inviteLink,
+        groupName: selectedGroup.name,
       });
     } catch {
       await copyToClipboard(`${user.name}님이 "${selectedGroup.name}" 그룹에 초대했습니다!\n\n${inviteLink}`);

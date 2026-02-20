@@ -51,16 +51,27 @@ export function sendKakaoInvite(params: {
   senderName: string;
   recipientName?: string;
   inviteLink: string;
+  groupName?: string;
 }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+  const title = params.groupName
+    ? `${params.senderName}님이 "${params.groupName}" 그룹에 초대했습니다`
+    : `${params.senderName}님이 NODDED 일촌을 신청했습니다`;
+
+  const description = params.groupName
+    ? '그룹에 참여하고 멤버들과 비즈니스 네트워크를 만들어보세요.'
+    : params.recipientName
+      ? `${params.recipientName}님, 비즈니스 네트워킹의 새로운 방법을 경험해보세요.`
+      : '비즈니스 네트워킹의 새로운 방법을 경험해보세요.';
+
+  const buttonTitle = params.groupName ? '그룹 참여하기' : '초대 수락하기';
 
   window.Kakao.Share.sendDefault({
     objectType: 'feed',
     content: {
-      title: `${params.senderName}님이 NODDED 일촌을 신청했습니다`,
-      description: params.recipientName
-        ? `${params.recipientName}님, 비즈니스 네트워킹의 새로운 방법을 경험해보세요.`
-        : '비즈니스 네트워킹의 새로운 방법을 경험해보세요.',
+      title,
+      description,
       imageUrl: `${origin}/og-image.png`,
       link: {
         mobileWebUrl: params.inviteLink,
@@ -69,7 +80,7 @@ export function sendKakaoInvite(params: {
     },
     buttons: [
       {
-        title: '초대 수락하기',
+        title: buttonTitle,
         link: {
           mobileWebUrl: params.inviteLink,
           webUrl: params.inviteLink,

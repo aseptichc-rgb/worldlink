@@ -42,7 +42,7 @@ export default function ManagedGroupsPage() {
     <div className="min-h-screen bg-[#0D1117] pb-24">
       {/* Top Bar */}
       <div className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[rgba(240,246,252,0.05)]">
-        <div className="flex items-center justify-between px-4 h-14 max-w-lg mx-auto">
+        <div className="flex items-center justify-between px-5 h-14 max-w-lg mx-auto">
           <button
             onClick={() => router.back()}
             className="p-2 -ml-2 text-[#8B949E] hover:text-white"
@@ -52,10 +52,10 @@ export default function ManagedGroupsPage() {
           <h1 className="text-base font-bold text-[#F0F6FC]">관리형 그룹</h1>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#58A6FF] text-[#0D1117] text-sm font-bold rounded-lg"
+            className="flex-shrink-0 flex items-center gap-1.5 px-6 py-2 bg-[#58A6FF] text-[#0D1117] text-sm font-bold rounded-lg whitespace-nowrap"
           >
             <Plus size={16} />
-            만들기
+            &nbsp;&nbsp;만들기&nbsp;&nbsp;
           </button>
         </div>
       </div>
@@ -84,9 +84,9 @@ export default function ManagedGroupsPage() {
             </p>
             <button
               onClick={openCreateModal}
-              className="px-6 py-3 bg-[#58A6FF] text-[#0D1117] font-bold rounded-xl text-sm"
+              className="inline-block px-10 py-3 bg-[#58A6FF] text-[#0D1117] font-bold rounded-xl text-sm whitespace-nowrap"
             >
-              그룹 만들기
+              &nbsp;&nbsp;그룹 만들기&nbsp;&nbsp;
             </button>
           </motion.div>
         ) : (

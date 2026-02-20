@@ -201,7 +201,14 @@ function OnboardingContent() {
       if (inviteCode && inviterInfo) {
         setStep('connection');
       } else {
-        router.push('/network');
+        // 관리형 그룹 초대 등 리디렉션 경로가 있으면 해당 경로로 이동
+        const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          router.push(redirectPath);
+        } else {
+          router.push('/network');
+        }
       }
     } catch (err: any) {
       console.error('Registration error:', err);

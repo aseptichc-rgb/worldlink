@@ -10,6 +10,7 @@ import {
   leaveManagedGroup as fbLeaveManagedGroup,
   createManagedGroupInviteLink,
   generateManagedGroupInviteUrl,
+  addMemberToManagedGroup,
 } from '@/lib/firebase-services';
 import { ManagedGroupSettings } from '@/types';
 
@@ -23,6 +24,7 @@ interface ManagedGroupState {
   // UI State
   isCreateModalOpen: boolean;
   isInviteModalOpen: boolean;
+  isAddMemberModalOpen: boolean;
   inviteLink: string | null;
 
   // Actions
@@ -40,12 +42,15 @@ interface ManagedGroupState {
   removeMember: (groupId: string, userId: string) => Promise<void>;
   leaveGroup: (groupId: string, userId: string) => Promise<void>;
   generateInviteLink: (groupId: string, inviterId: string) => Promise<string>;
+  addMembersFromConnections: (groupId: string, userIds: string[]) => Promise<void>;
 
   // UI Actions
   openCreateModal: () => void;
   closeCreateModal: () => void;
   openInviteModal: () => void;
   closeInviteModal: () => void;
+  openAddMemberModal: () => void;
+  closeAddMemberModal: () => void;
   setSelectedGroup: (group: ManagedGroup | null) => void;
   clearError: () => void;
   reset: () => void;
@@ -58,6 +63,7 @@ export const useManagedGroupStore = create<ManagedGroupState>((set, get) => ({
   error: null,
   isCreateModalOpen: false,
   isInviteModalOpen: false,
+  isAddMemberModalOpen: false,
   inviteLink: null,
 
   fetchMyGroups: async (userId) => {
@@ -169,10 +175,31 @@ export const useManagedGroupStore = create<ManagedGroupState>((set, get) => ({
     }
   },
 
+  addMembersFromConnections: async (groupId, userIds) => {
+    set({ isLoading: true, error: null });
+    try {
+      for (const userId of userIds) {
+        await addMemberToManagedGroup(groupId, userId);
+      }
+      const group = await getManagedGroup(groupId);
+      set((state) => ({
+        selectedGroup: group,
+        groups: state.groups.map(g => g.id === groupId && group ? group : g),
+        isLoading: false,
+        isAddMemberModalOpen: false,
+      }));
+    } catch (err) {
+      console.error('Failed to add members from connections:', err);
+      set({ error: (err as Error).message, isLoading: false });
+    }
+  },
+
   openCreateModal: () => set({ isCreateModalOpen: true }),
   closeCreateModal: () => set({ isCreateModalOpen: false }),
   openInviteModal: () => set({ isInviteModalOpen: true, inviteLink: null }),
   closeInviteModal: () => set({ isInviteModalOpen: false, inviteLink: null }),
+  openAddMemberModal: () => set({ isAddMemberModalOpen: true }),
+  closeAddMemberModal: () => set({ isAddMemberModalOpen: false }),
   setSelectedGroup: (group) => set({ selectedGroup: group }),
   clearError: () => set({ error: null }),
   reset: () => set({
@@ -182,6 +209,7 @@ export const useManagedGroupStore = create<ManagedGroupState>((set, get) => ({
     error: null,
     isCreateModalOpen: false,
     isInviteModalOpen: false,
+    isAddMemberModalOpen: false,
     inviteLink: null,
   }),
 }));

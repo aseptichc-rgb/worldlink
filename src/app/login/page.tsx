@@ -60,7 +60,15 @@ function LoginContent() {
           localStorage.removeItem(STORAGE_KEY);
         }
         setUser(userData);
-        router.push('/network');
+
+        // 초대 링크 등에서 리디렉션 경로가 있으면 해당 경로로 이동
+        const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          router.push(redirectPath);
+        } else {
+          router.push('/network');
+        }
       } else {
         setError('사용자 정보를 찾을 수 없습니다');
       }

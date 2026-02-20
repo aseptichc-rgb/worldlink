@@ -9,6 +9,7 @@ import { useManagedGroupStore } from '@/store/managedGroupStore';
 import { GROUP_COLORS, GROUP_ICONS } from '@/store/groupStore';
 import ManagedGroupMemberList from '@/components/managed-group/ManagedGroupMemberList';
 import ManagedGroupInviteModal from '@/components/managed-group/ManagedGroupInviteModal';
+import ManagedGroupAddMemberModal from '@/components/managed-group/ManagedGroupAddMemberModal';
 import BottomNav from '@/components/ui/BottomNav';
 
 export default function ManagedGroupDetailPage() {
@@ -26,6 +27,7 @@ export default function ManagedGroupDetailPage() {
     removeMember,
     leaveGroup,
     openInviteModal,
+    openAddMemberModal,
     setSelectedGroup,
   } = useManagedGroupStore();
 
@@ -344,15 +346,26 @@ export default function ManagedGroupDetailPage() {
             <h3 className="text-sm font-semibold text-[#F0F6FC]">
               멤버 ({selectedGroup.members.length})
             </h3>
-            {canInvite && (
-              <button
-                onClick={openInviteModal}
-                className="flex items-center gap-1 text-xs text-[#58A6FF] font-medium"
-              >
-                <UserPlus size={14} />
-                초대
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {isOwner && (
+                <button
+                  onClick={openAddMemberModal}
+                  className="flex items-center gap-1 text-xs text-[#3FB950] font-medium"
+                >
+                  <Users size={14} />
+                  인맥 추가
+                </button>
+              )}
+              {canInvite && (
+                <button
+                  onClick={openInviteModal}
+                  className="flex items-center gap-1 text-xs text-[#58A6FF] font-medium"
+                >
+                  <UserPlus size={14} />
+                  초대
+                </button>
+              )}
+            </div>
           </div>
           <ManagedGroupMemberList
             members={selectedGroup.members}
@@ -437,6 +450,7 @@ export default function ManagedGroupDetailPage() {
       </div>
 
       <ManagedGroupInviteModal />
+      <ManagedGroupAddMemberModal />
       <BottomNav />
     </div>
   );
