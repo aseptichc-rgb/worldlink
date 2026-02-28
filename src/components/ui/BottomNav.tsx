@@ -318,7 +318,7 @@ export default function BottomNav() {
                       className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#FFA657] font-semibold text-base rounded-2xl border border-[#FFA657]/30 flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
                     >
                       <Crown size={20} />
-                      관리형 그룹
+                      나의 모임
                     </button>
                     <p className="text-xs text-[#484F58] text-center pt-3 py-1">
                       그룹 초대 시 초대받은 분은 그룹원 전체와 자동으로 인맥이 됩니다

@@ -1,27 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Crown, X, Loader2 } from 'lucide-react';
+import { Crown, Shield, X, Loader2 } from 'lucide-react';
 import { ManagedGroupMember } from '@/types';
 import { getUser } from '@/lib/firebase-services';
 import { User } from '@/types';
+
+export interface MemberInfo extends ManagedGroupMember {
+  user?: User;
+}
 
 interface ManagedGroupMemberListProps {
   members: ManagedGroupMember[];
   ownerId: string;
   currentUserId: string;
   onRemoveMember: (userId: string) => void;
+  onMemberTap?: (member: MemberInfo) => void;
 }
 
-interface MemberInfo extends ManagedGroupMember {
-  user?: User;
-}
+const ROLE_PRIORITY: Record<string, number> = {
+  president: 0,
+  admin: 1,
+  executive: 2,
+  member: 3,
+};
 
 export default function ManagedGroupMemberList({
   members,
   ownerId,
   currentUserId,
   onRemoveMember,
+  onMemberTap,
 }: ManagedGroupMemberListProps) {
   const [memberInfos, setMemberInfos] = useState<MemberInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,11 +51,13 @@ export default function ManagedGroupMemberList({
           }
         })
       );
-      // 그룹장을 맨 위로
+      // 역할 기반 정렬: 회장 → 그룹장 → 회장단 → 일반 멤버
       infos.sort((a, b) => {
-        if (a.userId === ownerId) return -1;
-        if (b.userId === ownerId) return 1;
-        return 0;
+        if (a.userId === ownerId && a.role !== 'president') return -1;
+        if (b.userId === ownerId && b.role !== 'president') return 1;
+        const aPriority = ROLE_PRIORITY[a.role] ?? 3;
+        const bPriority = ROLE_PRIORITY[b.role] ?? 3;
+        return aPriority - bPriority;
       });
       setMemberInfos(infos);
       setIsLoading(false);
@@ -80,10 +91,19 @@ export default function ManagedGroupMemberList({
         const name = info.user?.name || '알 수 없음';
         const initials = name.charAt(0);
 
+        const avatarColor =
+          info.role === 'president' ? '#FFD700' :
+          isMemberOwner ? '#FFA657' :
+          info.role === 'executive' ? '#58A6FF' :
+          '#58A6FF';
+
         return (
           <div
             key={info.userId}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#161B22] transition-colors"
+            onClick={() => onMemberTap?.(info)}
+            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
+              onMemberTap ? 'cursor-pointer hover:bg-[#1C2333]' : 'hover:bg-[#161B22]'
+            }`}
           >
             {/* Avatar */}
             {info.user?.profileImage ? (
@@ -91,11 +111,12 @@ export default function ManagedGroupMemberList({
                 src={info.user.profileImage}
                 alt={name}
                 className="w-10 h-10 rounded-full object-cover shrink-0"
+                style={info.role === 'president' ? { border: '2px solid #FFD700' } : undefined}
               />
             ) : (
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-                style={{ backgroundColor: isMemberOwner ? '#FFA657' : '#58A6FF' }}
+                style={{ backgroundColor: avatarColor }}
               >
                 {initials}
               </div>
@@ -103,15 +124,27 @@ export default function ManagedGroupMemberList({
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-sm text-[#F0F6FC] font-medium truncate">{name}</p>
-                {isMemberOwner && (
+                {info.role === 'president' && (
+                  <span className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-[#FFD700]/15 text-[#FFD700] text-[10px] font-medium rounded-full">
+                    <Crown size={9} />
+                    {info.title || '회장'}
+                  </span>
+                )}
+                {info.role === 'executive' && (
+                  <span className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-[#58A6FF]/15 text-[#58A6FF] text-[10px] font-medium rounded-full">
+                    <Shield size={9} />
+                    {info.title || '회장단'}
+                  </span>
+                )}
+                {isMemberOwner && info.role !== 'president' && (
                   <span className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-[#FFA657]/15 text-[#FFA657] text-[10px] font-medium rounded-full">
                     <Crown size={9} />
                     그룹장
                   </span>
                 )}
-                {isSelf && !isMemberOwner && (
+                {isSelf && !isMemberOwner && info.role === 'member' && (
                   <span className="shrink-0 text-[10px] text-[#484F58]">나</span>
                 )}
               </div>
@@ -123,7 +156,10 @@ export default function ManagedGroupMemberList({
             {/* Remove Button (owner only, not for self/owner) */}
             {isOwner && !isMemberOwner && !isSelf && (
               <button
-                onClick={() => handleRemove(info.userId)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove(info.userId);
+                }}
                 className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   confirmRemoveId === info.userId
                     ? 'bg-[#F85149]/20 text-[#F85149] border border-[#F85149]/30'

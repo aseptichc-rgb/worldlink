@@ -408,6 +408,7 @@ export default function NetworkPage() {
                 <MessageCircle size={20} />
                 <span>메세지</span>
               </button>
+              {/* 그룹 관리 - 비활성화
               <button
                 onClick={() => {
                   setShowMenu(false);
@@ -421,6 +422,7 @@ export default function NetworkPage() {
                   <span className="ml-auto text-sm text-[#484F58]">{groups.length}</span>
                 )}
               </button>
+              */}
               <button
                 onClick={() => {
                   setShowMenu(false);
@@ -429,7 +431,7 @@ export default function NetworkPage() {
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#FFA657] hover:bg-[#FFA657]/10 transition-colors"
               >
                 <Crown size={20} />
-                <span>관리형 그룹</span>
+                <span>나의 모임</span>
               </button>
               {user.email === 'kjykjj04@naver.com' && (
                 <button
@@ -485,8 +487,8 @@ export default function NetworkPage() {
       {/* Connection Request Modal */}
       <ConnectionRequestModal />
 
-      {/* Group Management Panel */}
-      <GroupManagementPanel />
+      {/* Group Management Panel - 비활성화 */}
+      {/* <GroupManagementPanel /> */}
 
       {/* Group Assign Modal */}
       <GroupAssignModal />

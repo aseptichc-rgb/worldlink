@@ -76,7 +76,7 @@ export default function ManagedGroupCreateModal() {
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-[#F0F6FC]">관리형 그룹 만들기</h3>
+              <h3 className="text-lg font-bold text-[#F0F6FC]">나의 모임 만들기</h3>
               <button onClick={handleClose} className="p-1.5 text-[#8B949E] hover:text-white">
                 <X size={20} />
               </button>
@@ -97,7 +97,7 @@ export default function ManagedGroupCreateModal() {
             </div>
 
             {/* Form */}
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Name */}
               <div>
                 <label className="block text-sm text-[#8B949E] mb-1.5">그룹 이름 *</label>
@@ -124,15 +124,18 @@ export default function ManagedGroupCreateModal() {
                 <p className="text-xs text-[#484F58] mt-1 text-right">{description.length}/200</p>
               </div>
 
+              {/* Divider */}
+              <div className="border-t border-[#30363D]/50" />
+
               {/* Color Picker */}
               <div>
-                <label className="block text-sm text-[#8B949E] mb-2">색상</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-sm text-[#8B949E] mb-3">색상</label>
+                <div className="flex flex-wrap gap-3">
                   {GROUP_COLORS.map((color) => (
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`w-8 h-8 rounded-full transition-all ${
+                      className={`w-9 h-9 rounded-full transition-all ${
                         selectedColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1C2333] scale-110' : ''
                       }`}
                       style={{ backgroundColor: color }}
@@ -143,13 +146,13 @@ export default function ManagedGroupCreateModal() {
 
               {/* Icon Picker */}
               <div>
-                <label className="block text-sm text-[#8B949E] mb-2">아이콘</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-sm text-[#8B949E] mb-3">아이콘</label>
+                <div className="flex flex-wrap gap-2.5">
                   {GROUP_ICONS.map((icon) => (
                     <button
                       key={icon}
                       onClick={() => setSelectedIcon(icon)}
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
+                      className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all ${
                         selectedIcon === icon
                           ? 'bg-[#58A6FF]/20 ring-2 ring-[#58A6FF]'
                           : 'bg-[#0D1117] hover:bg-[#161B22]'
@@ -161,8 +164,11 @@ export default function ManagedGroupCreateModal() {
                 </div>
               </div>
 
+              {/* Divider */}
+              <div className="border-t border-[#30363D]/50" />
+
               {/* Settings */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3">
                 <label className="block text-sm text-[#8B949E] mb-1">설정</label>
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>

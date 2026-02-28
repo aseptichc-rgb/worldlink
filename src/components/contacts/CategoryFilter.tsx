@@ -46,7 +46,7 @@ export default function CategoryFilter({
       <button
         ref={selectedCategory === 'all' ? selectedRef : null}
         onClick={() => onSelectCategory('all')}
-        className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+        className={`shrink-0 flex items-center gap-2.5 px-5 py-2 rounded-full font-medium transition-all ${
           selectedCategory === 'all'
             ? 'bg-white text-black'
             : 'bg-[#30363D] text-[#8B949E] hover:bg-[#30363D] hover:text-white'
@@ -54,7 +54,7 @@ export default function CategoryFilter({
       >
         <span className="text-base">전체</span>
         <span
-          className={`text-xs px-1.5 py-0.5 rounded-full ${
+          className={`text-xs px-2 py-0.5 rounded-full ${
             selectedCategory === 'all' ? 'bg-black/10' : 'bg-[#30363D]'
           }`}
         >
@@ -72,7 +72,7 @@ export default function CategoryFilter({
             key={stat.category}
             ref={isSelected ? selectedRef : null}
             onClick={() => onSelectCategory(stat.category)}
-            className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full transition-all`}
+            className={`shrink-0 flex items-center gap-2.5 px-5 py-2 rounded-full font-medium transition-all`}
             style={{
               backgroundColor: isSelected ? info.color : '#30363D',
               color: isSelected ? 'white' : info.color,
@@ -81,7 +81,7 @@ export default function CategoryFilter({
             <span className="text-base">{info.icon}</span>
             <span className="text-base whitespace-nowrap">{info.name}</span>
             <span
-              className="text-xs px-1.5 py-0.5 rounded-full"
+              className="text-xs px-2 py-0.5 rounded-full"
               style={{
                 backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : info.bgColor,
               }}

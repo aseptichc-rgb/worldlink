@@ -26,7 +26,14 @@
       "Bash(npx next build:*)",
       "Bash(python3:*)",
       "Bash(git pull:*)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(npx next lint:*)",
+      "Bash(node -e:*)",
+      "Bash(npm run build:*)",
+      "Bash(git status:*)",
+      "Bash(find:*)"
     ]
   }
 }

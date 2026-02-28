@@ -55,7 +55,7 @@ export default function ManagedGroupInviteModal() {
       try {
         await navigator.share({
           title: `${selectedGroup.name} 그룹 초대`,
-          text: `${user.name}님이 "${selectedGroup.name}" 관리형 그룹에 초대했습니다.`,
+          text: `${user.name}님이 "${selectedGroup.name}" 나의 모임에 초대했습니다.`,
           url: inviteLink,
         });
       } catch {
@@ -95,7 +95,7 @@ export default function ManagedGroupInviteModal() {
     if (!inviteLink) return;
     const subject = encodeURIComponent(`${user.name}님이 "${selectedGroup.name}" 그룹에 초대했습니다`);
     const body = encodeURIComponent(
-      `안녕하세요!\n\n${user.name}님이 NODDED의 "${selectedGroup.name}" 관리형 그룹에 초대했습니다.\n\n아래 링크를 통해 참여해주세요:\n\n${inviteLink}`
+      `안녕하세요!\n\n${user.name}님이 NODDED의 "${selectedGroup.name}" 나의 모임에 초대했습니다.\n\n아래 링크를 통해 참여해주세요:\n\n${inviteLink}`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };

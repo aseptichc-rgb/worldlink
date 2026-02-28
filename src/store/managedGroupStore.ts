@@ -11,8 +11,9 @@ import {
   createManagedGroupInviteLink,
   generateManagedGroupInviteUrl,
   addMemberToManagedGroup,
+  updateMemberRole as fbUpdateMemberRole,
 } from '@/lib/firebase-services';
-import { ManagedGroupSettings } from '@/types';
+import { ManagedGroupRole, ManagedGroupSettings } from '@/types';
 
 interface ManagedGroupState {
   // Data
@@ -43,6 +44,7 @@ interface ManagedGroupState {
   leaveGroup: (groupId: string, userId: string) => Promise<void>;
   generateInviteLink: (groupId: string, inviterId: string) => Promise<string>;
   addMembersFromConnections: (groupId: string, userIds: string[]) => Promise<void>;
+  updateMemberRole: (groupId: string, userId: string, role: ManagedGroupRole, title?: string) => Promise<void>;
 
   // UI Actions
   openCreateModal: () => void;
@@ -191,6 +193,20 @@ export const useManagedGroupStore = create<ManagedGroupState>((set, get) => ({
     } catch (err) {
       console.error('Failed to add members from connections:', err);
       set({ error: (err as Error).message, isLoading: false });
+    }
+  },
+
+  updateMemberRole: async (groupId, userId, role, title) => {
+    try {
+      await fbUpdateMemberRole(groupId, userId, role, title);
+      const group = await getManagedGroup(groupId);
+      set((state) => ({
+        selectedGroup: group,
+        groups: state.groups.map(g => g.id === groupId && group ? group : g),
+      }));
+    } catch (err) {
+      console.error('Failed to update member role:', err);
+      set({ error: (err as Error).message });
     }
   },
 

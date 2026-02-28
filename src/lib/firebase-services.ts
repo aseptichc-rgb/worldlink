@@ -1073,7 +1073,7 @@ export const acceptGroupInvite = async (
   await batch.commit();
 };
 
-// ==================== MANAGED GROUP SERVICES (관리형 그룹) ====================
+// ==================== MANAGED GROUP SERVICES (나의 모임) ====================
 
 // Helper: Firestore 문서 → ManagedGroup 변환
 const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
@@ -1088,6 +1088,7 @@ const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
     members: (data.members || []).map((m: any) => ({
       userId: m.userId,
       role: m.role,
+      ...(m.title ? { title: m.title } : {}),
       joinedAt: m.joinedAt?.toDate?.() || new Date(),
     })),
     memberUserIds: data.memberUserIds || [],
@@ -1097,7 +1098,7 @@ const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
   };
 };
 
-// 관리형 그룹 생성
+// 나의 모임 생성
 export const createManagedGroup = async (
   ownerId: string,
   data: { name: string; description?: string; color: string; icon: string; settings?: Partial<ManagedGroupSettings> }
@@ -1149,7 +1150,7 @@ export const createManagedGroup = async (
   return group;
 };
 
-// 관리형 그룹 단건 조회
+// 나의 모임 단건 조회
 export const getManagedGroup = async (groupId: string): Promise<ManagedGroup | null> => {
   const groupRef = doc(db, 'managedGroups', groupId);
   const groupSnap = await getDoc(groupRef);
@@ -1157,7 +1158,7 @@ export const getManagedGroup = async (groupId: string): Promise<ManagedGroup | n
   return parseManagedGroupDoc(groupSnap);
 };
 
-// 사용자가 속한 모든 관리형 그룹 조회
+// 사용자가 속한 모든 나의 모임 조회
 export const getUserManagedGroups = async (userId: string): Promise<ManagedGroup[]> => {
   const groupsRef = collection(db, 'managedGroups');
 
@@ -1181,7 +1182,7 @@ export const getUserManagedGroups = async (userId: string): Promise<ManagedGroup
   );
 };
 
-// 관리형 그룹 정보 수정
+// 나의 모임 정보 수정
 export const updateManagedGroup = async (
   groupId: string,
   updates: Partial<Pick<ManagedGroup, 'name' | 'description' | 'color' | 'icon' | 'settings'>>
@@ -1196,7 +1197,7 @@ export const updateManagedGroup = async (
   });
 };
 
-// 관리형 그룹 삭제
+// 나의 모임 삭제
 export const deleteManagedGroup = async (groupId: string): Promise<void> => {
   // 관련 초대 링크도 삭제
   const invitesRef = collection(db, 'managedGroupInvites');
@@ -1209,7 +1210,7 @@ export const deleteManagedGroup = async (groupId: string): Promise<void> => {
   await batch.commit();
 };
 
-// 관리형 그룹에 멤버 추가 + 자동 연결
+// 나의 모임에 멤버 추가 + 자동 연결
 export const addMemberToManagedGroup = async (
   groupId: string,
   userId: string,
@@ -1264,7 +1265,7 @@ export const addMemberToManagedGroup = async (
   await batch.commit();
 };
 
-// 관리형 그룹에서 멤버 제거
+// 나의 모임에서 멤버 제거
 export const removeMemberFromManagedGroup = async (
   groupId: string,
   userId: string
@@ -1297,7 +1298,51 @@ export const leaveManagedGroup = async (
   await removeMemberFromManagedGroup(groupId, userId);
 };
 
-// 관리형 그룹 초대 링크 생성
+// 나의 모임 멤버 역할 변경
+export const updateMemberRole = async (
+  groupId: string,
+  targetUserId: string,
+  newRole: ManagedGroupRole,
+  title?: string
+): Promise<void> => {
+  const group = await getManagedGroup(groupId);
+  if (!group) throw new Error('그룹을 찾을 수 없습니다');
+
+  if (!group.members.some(m => m.userId === targetUserId)) {
+    throw new Error('해당 멤버를 찾을 수 없습니다');
+  }
+
+  const updatedMembers = group.members.map(m => {
+    const base: Record<string, unknown> = {
+      userId: m.userId,
+      role: m.role,
+      joinedAt: Timestamp.fromDate(m.joinedAt),
+    };
+    if (m.title) base.title = m.title;
+
+    if (m.userId === targetUserId) {
+      base.role = newRole;
+      if (title) {
+        base.title = title;
+      } else if (newRole === 'member') {
+        delete base.title;
+      }
+    } else if (newRole === 'president' && m.role === 'president') {
+      // 기존 회장은 회장단으로 변경 (회장은 1명만 가능)
+      base.role = 'executive';
+    }
+
+    return base;
+  });
+
+  const groupRef = doc(db, 'managedGroups', groupId);
+  await updateDoc(groupRef, {
+    members: updatedMembers,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// 나의 모임 초대 링크 생성
 export const createManagedGroupInviteLink = async (
   groupId: string,
   inviterId: string,
@@ -1364,7 +1409,7 @@ export const getManagedGroupInvite = async (inviteId: string): Promise<ManagedGr
   return invite;
 };
 
-// 관리형 그룹 초대 수락
+// 나의 모임 초대 수락
 export const acceptManagedGroupInvite = async (
   inviteId: string,
   userId: string

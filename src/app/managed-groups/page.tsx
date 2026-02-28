@@ -49,7 +49,7 @@ export default function ManagedGroupsPage() {
           >
             <ArrowLeft size={22} />
           </button>
-          <h1 className="text-base font-bold text-[#F0F6FC]">관리형 그룹</h1>
+          <h1 className="text-base font-bold text-[#F0F6FC]">나의 모임</h1>
           <button
             onClick={openCreateModal}
             className="flex-shrink-0 flex items-center gap-1.5 px-6 py-2 bg-[#58A6FF] text-[#0D1117] text-sm font-bold rounded-lg whitespace-nowrap"
@@ -76,7 +76,7 @@ export default function ManagedGroupsPage() {
               <Users size={36} className="text-[#58A6FF]" />
             </div>
             <h2 className="text-xl font-bold text-[#F0F6FC] mb-3">
-              첫 관리형 그룹을 만들어보세요
+              첫 나의 모임을 만들어보세요
             </h2>
             <p className="text-sm text-[#8B949E] mb-6 leading-relaxed">
               그룹을 만들고 멤버를 초대하면<br />

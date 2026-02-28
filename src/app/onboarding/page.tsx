@@ -201,7 +201,7 @@ function OnboardingContent() {
       if (inviteCode && inviterInfo) {
         setStep('connection');
       } else {
-        // 관리형 그룹 초대 등 리디렉션 경로가 있으면 해당 경로로 이동
+        // 나의 모임 초대 등 리디렉션 경로가 있으면 해당 경로로 이동
         const redirectPath = sessionStorage.getItem('redirectAfterAuth');
         if (redirectPath) {
           sessionStorage.removeItem('redirectAfterAuth');

@@ -269,13 +269,14 @@ export interface IntroductionRequest {
   completedAt?: Date;
 }
 
-// ==================== 관리형 그룹 (Managed Group) ====================
+// ==================== 나의 모임 (Managed Group) ====================
 
-export type ManagedGroupRole = 'admin' | 'member';
+export type ManagedGroupRole = 'admin' | 'president' | 'executive' | 'member';
 
 export interface ManagedGroupMember {
   userId: string;
   role: ManagedGroupRole;
+  title?: string;            // 커스텀 직책 (예: 부회장, 감사, 총무, 재무부회장)
   joinedAt: Date;
 }
 
