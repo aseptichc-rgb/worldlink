@@ -3,13 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, Sparkles, X, MessageCircle, Mail, LogOut, ArrowLeft, Users, FolderOpen, Shield, Crown } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
 import CoffeeChatModal from '@/components/coffee-chat/CoffeeChatModal';
 import ConnectionRequestModal from '@/components/connection/ConnectionRequestModal';
-import RecommendationCard from '@/components/coffee-chat/RecommendationCard';
 import GroupManagementPanel from '@/components/network/GroupManagementPanel';
 import GroupFilterBar from '@/components/network/GroupFilterBar';
 import GroupAssignModal from '@/components/network/GroupAssignModal';
@@ -24,8 +23,7 @@ import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
-import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
-import { Recommendation } from '@/types';
+import { getNetworkGraph, onAuthChange, getUser, logoutUser, connectWithAllUsers } from '@/lib/firebase-services';
 
 export default function NetworkPage() {
   const router = useRouter();
@@ -34,8 +32,6 @@ export default function NetworkPage() {
   const { messages, setMessages } = useMessageStore();
   const { groups, toggleGroupPanel, loadFromFirebase, clearGroups } = useGroupStore();
 
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [showRecommendations, setShowRecommendations] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [centerUserName, setCenterUserName] = useState<string | null>(null);
 
@@ -101,6 +97,18 @@ export default function NetworkPage() {
 
       setNetworkLoading(true);
       try {
+        // 내 네트워크인 경우, 모든 사용자와 자동 연결 (한 번만 실행)
+        if (isMyNetwork) {
+          const connectKey = `connected_all_users_${user.id}`;
+          if (!sessionStorage.getItem(connectKey)) {
+            const newConnections = await connectWithAllUsers(user.id);
+            if (newConnections > 0) {
+              console.log(`[NetworkPage] Auto-connected with ${newConnections} users`);
+            }
+            sessionStorage.setItem(connectKey, 'true');
+          }
+        }
+
         if (isMyNetwork) {
           // 내 네트워크
           const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, {
@@ -132,12 +140,6 @@ export default function NetworkPage() {
             const degree = centerUserOriginalDegree ?? 1;
             setSelectedNode({ ...centerNode, degree });
           }
-        }
-
-        // Load recommendations (내 네트워크일 때만)
-        if (isMyNetwork) {
-          const recs = await getRecommendations(user.id, 3);
-          setRecommendations(recs);
         }
       } catch (error) {
         console.error('Error loading network data:', error);
@@ -273,70 +275,6 @@ export default function NetworkPage() {
         </div>
       )}
 
-      {/* Recommendations Panel - ProfileSheet보다 낮은 z-index */}
-      <motion.div
-        initial={false}
-        animate={{
-          x: showRecommendations ? 0 : '100%',
-        }}
-        transition={{ type: 'spring', damping: 25 }}
-        className="fixed top-20 right-0 bottom-0 w-full max-w-sm z-20"
-      >
-        <div className="h-full bg-[#161B22]/95 backdrop-blur-xl border-l border-[#30363D] p-4 overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-[#58A6FF]" />
-              <h2 className="font-semibold text-white">오늘의 추천</h2>
-            </div>
-            <button
-              onClick={() => setShowRecommendations(false)}
-              className="p-1.5 rounded-lg hover:bg-[#30363D] transition-colors"
-            >
-              <X size={18} className="text-[#8B949E]" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {recommendations.length > 0 ? (
-              recommendations.map((rec, i) => (
-                <RecommendationCard key={rec.userId} recommendation={rec} index={i} />
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <Sparkles size={32} className="text-[#484F58] mx-auto mb-3" />
-                <p className="text-[#8B949E]">추천할 인맥이 없습니다</p>
-                <p className="text-[#484F58] text-base mt-1">
-                  더 많은 사람들과 연결해보세요
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Recommendations Toggle Button */}
-      {!showRecommendations && (
-        <motion.button
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => setShowRecommendations(true)}
-          className="
-            fixed right-4 top-1/2 -translate-y-1/2 z-20
-            flex items-center gap-2 px-4 py-3
-            bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB]
-            rounded-l-2xl shadow-lg
-            text-white font-medium text-base
-          "
-        >
-          <Sparkles size={18} />
-          <span className="hidden sm:inline">추천</span>
-          {recommendations.length > 0 && (
-            <span className="w-5 h-5 bg-[#0D1117]/20 rounded-full flex items-center justify-center text-xs">
-              {recommendations.length}
-            </span>
-          )}
-        </motion.button>
-      )}
 
       {/* Network Stats */}
       <div className="fixed bottom-4 left-4 z-20">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Crown, Shield, X, Loader2 } from 'lucide-react';
+import { Crown, Shield, X, Loader2, Edit3 } from 'lucide-react';
 import { ManagedGroupMember } from '@/types';
 import { getUser } from '@/lib/firebase-services';
 import { User } from '@/types';
@@ -16,6 +16,8 @@ interface ManagedGroupMemberListProps {
   currentUserId: string;
   onRemoveMember: (userId: string) => void;
   onMemberTap?: (member: MemberInfo) => void;
+  onMemberClick?: (member: MemberInfo) => void;
+  onRoleEdit?: (member: MemberInfo) => void;
 }
 
 const ROLE_PRIORITY: Record<string, number> = {
@@ -31,6 +33,8 @@ export default function ManagedGroupMemberList({
   currentUserId,
   onRemoveMember,
   onMemberTap,
+  onMemberClick,
+  onRoleEdit,
 }: ManagedGroupMemberListProps) {
   const [memberInfos, setMemberInfos] = useState<MemberInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,12 +101,22 @@ export default function ManagedGroupMemberList({
           info.role === 'executive' ? '#58A6FF' :
           '#58A6FF';
 
+        const handleClick = () => {
+          if (onMemberClick) {
+            onMemberClick(info);
+          } else if (onMemberTap) {
+            onMemberTap(info);
+          }
+        };
+
+        const isClickable = onMemberClick || onMemberTap;
+
         return (
           <div
             key={info.userId}
-            onClick={() => onMemberTap?.(info)}
+            onClick={handleClick}
             className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
-              onMemberTap ? 'cursor-pointer hover:bg-[#1C2333]' : 'hover:bg-[#161B22]'
+              isClickable ? 'cursor-pointer hover:bg-[#1C2333]' : 'hover:bg-[#161B22]'
             }`}
           >
             {/* Avatar */}
@@ -152,6 +166,20 @@ export default function ManagedGroupMemberList({
                 {[info.user?.company, info.user?.position].filter(Boolean).join(' · ') || '정보 없음'}
               </p>
             </div>
+
+            {/* Role Edit Button (for president, not for self) */}
+            {onRoleEdit && !isSelf && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRoleEdit(info);
+                }}
+                className="shrink-0 p-1.5 text-[#484F58] hover:text-[#58A6FF] hover:bg-[#58A6FF]/10 rounded-lg transition-all"
+                title="역할 편집"
+              >
+                <Edit3 size={14} />
+              </button>
+            )}
 
             {/* Remove Button (owner only, not for self/owner) */}
             {isOwner && !isMemberOwner && !isSelf && (

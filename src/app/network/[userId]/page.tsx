@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
-import { BusinessCard, IntroductionRequest } from '@/types';
+import { getUser, getUserConnectionsWithDetails } from '@/lib/firebase-services';
+import { BusinessCard, IntroductionRequest, User } from '@/types';
 import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
 import { v4 as uuidv4 } from 'uuid';
@@ -56,19 +57,72 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
   const [introSent, setIntroSent] = useState(false);
 
   useEffect(() => {
-    // 저장된 명함에서 사용자 찾기
-    const savedCard = savedCards.find(c => c.cardId === userId);
-    if (savedCard) {
-      setTargetUser(savedCard.card);
-      // 인맥 공개 설정 확인
-      if (savedCard.card.networkVisibility === 'private') {
-        setIsLocked(true);
-      } else {
-        // 데모 인맥 데이터 로드
-        setConnections(generateDemoConnections(userId));
+    const loadUserData = async () => {
+      // 저장된 명함에서 사용자 찾기
+      const savedCard = savedCards.find(c => c.cardId === userId);
+      if (savedCard) {
+        setTargetUser(savedCard.card);
+        // 인맥 공개 설정 확인
+        if (savedCard.card.networkVisibility === 'private') {
+          setIsLocked(true);
+        } else {
+          // 데모 인맥 데이터 로드
+          setConnections(generateDemoConnections(userId));
+        }
+        return;
       }
-    } else {
-      // 데모 사용자 생성
+
+      // getUser로 사용자 정보 가져오기 (demo data 포함)
+      try {
+        const userData = await getUser(userId);
+        if (userData) {
+          // User 데이터를 BusinessCard 형식으로 변환
+          setTargetUser({
+            id: userData.id,
+            userId: userData.id,
+            name: userData.name || '사용자',
+            company: userData.company || '',
+            position: userData.position || '',
+            keywords: userData.keywords || [],
+            profileImage: userData.profileImage,
+            networkVisibility: 'connections_only',
+            qrCode: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+
+          // 사용자의 실제 인맥 가져오기
+          try {
+            const userConnections = await getUserConnectionsWithDetails(userId);
+            if (userConnections.length > 0) {
+              // User 데이터를 BusinessCard 형식으로 변환
+              const connectionCards: BusinessCard[] = userConnections.map(conn => ({
+                id: conn.id,
+                userId: conn.id,
+                name: conn.name || '알 수 없음',
+                company: conn.company || '',
+                position: conn.position || '',
+                keywords: conn.keywords || [],
+                profileImage: conn.profileImage,
+                networkVisibility: 'connections_only',
+                qrCode: '',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              }));
+              setConnections(connectionCards);
+            } else {
+              setConnections(generateDemoConnections(userId));
+            }
+          } catch {
+            setConnections(generateDemoConnections(userId));
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      }
+
+      // 사용자를 찾지 못한 경우 데모 데이터 사용
       setTargetUser({
         id: userId,
         userId: userId,
@@ -82,7 +136,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
         updatedAt: new Date(),
       });
       setConnections(generateDemoConnections(userId));
-    }
+    };
+
+    loadUserData();
   }, [userId, savedCards]);
 
   const handleRequestIntro = (connection: BusinessCard) => {

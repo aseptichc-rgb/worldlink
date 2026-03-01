@@ -1268,8 +1268,8 @@ export default function NetworkGraph() {
 
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
-      const isGroupDimmed = !!(filteredGroupNodeIds && node.degree !== 0 && !filteredGroupNodeIds.has(node.id));
-      const isDimmed = !!(highlightedKeyword && !isHighlighted) || isGroupDimmed;
+      // 모든 노드를 밝게 표시 (isDimmed 비활성화)
+      const isDimmed = false;
 
       // 새로 나타나는 노드: 페이드인
       const isNewNode = isTransitioning && !transition.prevPositions.has(node.id);
@@ -1300,23 +1300,22 @@ export default function NetworkGraph() {
         const isFocused = focusedNodeId === node.id;
         const isHovered = hoveredNode?.id === node.id;
 
-        const isGroupDimmedConn = !!(filteredGroupNodeIds && node.degree !== 0 && !filteredGroupNodeIds.has(node.id));
+        // 모든 노드를 밝게 표시
         drawNode(ctx, node, {
           isHovered,
-          isFocused: isGroupDimmedConn ? false : isFocused,
-          isConnected: isGroupDimmedConn ? false : true,
-          isDimmed: isGroupDimmedConn,
+          isFocused,
+          isConnected: true,
+          isDimmed: false,
           isHighlighted: false,
-          isMutual: isGroupDimmedConn ? false : mutualNodeIds.has(node.id),
+          isMutual: mutualNodeIds.has(node.id),
         });
       }
     }
 
     // ===== Draw Labels (separate pass - always on top of all nodes) =====
     for (const node of nodes) {
-      const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
-      const isGroupDimmedLabel = !!(filteredGroupNodeIds && node.degree !== 0 && !filteredGroupNodeIds.has(node.id));
-      const isDimmed = !!(highlightedKeyword && !isHighlighted) || isGroupDimmedLabel;
+      // 모든 노드 라벨을 밝게 표시
+      const isDimmed = false;
       const isFocused = focusedNodeId === node.id;
 
       drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes, isMutual: mutualNodeIds.has(node.id) });
@@ -1978,21 +1977,6 @@ export default function NetworkGraph() {
         </span>
       </div>
 
-      {/* Category Legend */}
-      <div className="absolute top-6 right-6 bg-[#151922]/90 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl max-w-xs">
-        <div className="text-sm font-semibold text-white mb-2">분야별 인맥</div>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
-            <div key={category} className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: color }}
-              />
-              <span className="text-[11px] text-[#8B949E]">{category}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

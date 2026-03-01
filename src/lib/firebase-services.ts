@@ -87,7 +87,12 @@ export const getUser = async (userId: string): Promise<User | null> => {
     userSnap = await getDoc(userRef);
   }
 
-  if (!userSnap.exists()) return null;
+  if (!userSnap.exists()) {
+    // Firebase에 없으면 데모 데이터에서 찾기
+    const { demoUsers } = await import('./demo-data');
+    const demoUser = demoUsers.find(u => u.id === userId);
+    return demoUser || null;
+  }
 
   const data = userSnap.data();
   return {
@@ -121,6 +126,65 @@ export const searchUsersByKeyword = async (keywords: string[]): Promise<User[]> 
     createdAt: doc.data().createdAt?.toDate() || new Date(),
     updatedAt: doc.data().updatedAt?.toDate() || new Date(),
   })) as User[];
+};
+
+// 모든 사용자 조회
+export const getAllUsers = async (): Promise<User[]> => {
+  const usersRef = collection(db, 'users');
+  const snapshot = await getDocs(usersRef);
+  return snapshot.docs.map(doc => ({
+    ...doc.data(),
+    id: doc.id,
+    createdAt: doc.data().createdAt?.toDate() || new Date(),
+    updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+  })) as User[];
+};
+
+// 현재 사용자와 모든 다른 사용자 사이에 connection 생성 (이미 있는 연결은 건너뜀)
+export const connectWithAllUsers = async (currentUserId: string): Promise<number> => {
+  const allUsers = await getAllUsers();
+  const existingConnections = await getDirectConnections(currentUserId);
+
+  // 이미 연결된 사용자 ID 목록
+  const connectedUserIds = new Set(
+    existingConnections.map(conn =>
+      conn.fromUserId === currentUserId ? conn.toUserId : conn.fromUserId
+    )
+  );
+
+  let newConnectionsCount = 0;
+  const batch = writeBatch(db);
+
+  for (const user of allUsers) {
+    // 자기 자신이거나 이미 연결된 경우 건너뜀
+    if (user.id === currentUserId || connectedUserIds.has(user.id)) {
+      continue;
+    }
+
+    const connRef = doc(collection(db, 'connections'));
+    batch.set(connRef, {
+      id: connRef.id,
+      fromUserId: currentUserId,
+      toUserId: user.id,
+      status: 'accepted',
+      method: 'auto',
+      createdAt: serverTimestamp(),
+      acceptedAt: serverTimestamp(),
+    });
+    newConnectionsCount++;
+
+    // Firestore batch는 500개 제한이 있으므로 나눠서 처리
+    if (newConnectionsCount % 450 === 0) {
+      await batch.commit();
+    }
+  }
+
+  if (newConnectionsCount % 450 !== 0) {
+    await batch.commit();
+  }
+
+  console.log(`[connectWithAllUsers] Created ${newConnectionsCount} new connections`);
+  return newConnectionsCount;
 };
 
 // ==================== INVITE CODE SERVICES ====================
@@ -381,6 +445,7 @@ export const rejectConnection = async (connectionId: string): Promise<void> => {
 };
 
 export const getDirectConnections = async (userId: string): Promise<Connection[]> => {
+  console.log('[getDirectConnections] Querying for userId:', userId);
   const connectionsRef = collection(db, 'connections');
 
   // Get connections where user is either sender or receiver
@@ -402,25 +467,36 @@ export const getDirectConnections = async (userId: string): Promise<Connection[]
   ]);
 
   const connections: Connection[] = [];
+  const seenPairs = new Set<string>();  // 중복 연결 방지를 위한 Set
 
   sentSnap.docs.forEach(doc => {
     const data = doc.data();
-    connections.push({
-      ...data,
-      id: doc.id,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      acceptedAt: data.acceptedAt?.toDate(),
-    } as Connection);
+    // 연결 쌍 키 생성 (순서 정렬하여 양방향 중복 방지)
+    const pairKey = [userId, data.toUserId].sort().join('-');
+    if (!seenPairs.has(pairKey)) {
+      seenPairs.add(pairKey);
+      connections.push({
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        acceptedAt: data.acceptedAt?.toDate(),
+      } as Connection);
+    }
   });
 
   receivedSnap.docs.forEach(doc => {
     const data = doc.data();
-    connections.push({
-      ...data,
-      id: doc.id,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      acceptedAt: data.acceptedAt?.toDate(),
-    } as Connection);
+    // 연결 쌍 키 생성 (순서 정렬하여 양방향 중복 방지)
+    const pairKey = [userId, data.fromUserId].sort().join('-');
+    if (!seenPairs.has(pairKey)) {
+      seenPairs.add(pairKey);
+      connections.push({
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        acceptedAt: data.acceptedAt?.toDate(),
+      } as Connection);
+    }
   });
 
   return connections;
@@ -456,10 +532,12 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
     return demoUsers.filter(user => demoConnectionIds.includes(user.id));
   }
 
-  // 연결된 사용자 ID 추출
-  const connectedUserIds = connections.map(conn =>
-    conn.fromUserId === userId ? conn.toUserId : conn.fromUserId
-  );
+  // 연결된 사용자 ID 추출 (중복 제거)
+  const connectedUserIds = [...new Set(
+    connections.map(conn =>
+      conn.fromUserId === userId ? conn.toUserId : conn.fromUserId
+    )
+  )];
 
   // 각 사용자 정보 병렬로 가져오기
   const userResults = await Promise.all(
@@ -521,6 +599,9 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   // 먼저 Firebase에서 실제 연결 데이터 확인
   const directConnections = await getDirectConnections(userId);
 
+  console.log('[getNetworkGraph] userId:', userId);
+  console.log('[getNetworkGraph] directConnections:', directConnections.length, directConnections);
+
   // 실제 연결이 없으면 데모 데이터 사용
   if (directConnections.length === 0) {
     // 실제 사용자를 데모 멤버에 매핑 시도
@@ -553,19 +634,19 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   });
   userMap.set(currentUser.id, currentUser);
 
-  // Get 1st degree connections (parallel fetch)
+  // Get 1st degree connections (parallel fetch) - 중복 제거
   const firstDegreeIds = new Set<string>();
-  const firstDegreeUserIds = directConnections.map(conn =>
-    conn.fromUserId === userId ? conn.toUserId : conn.fromUserId
-  );
-  firstDegreeUserIds.forEach(id => firstDegreeIds.add(id));
+  directConnections.forEach(conn => {
+    const connectedId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
+    firstDegreeIds.add(connectedId);
+  });
 
   const firstDegreeUsers = await Promise.all(
-    firstDegreeUserIds.map(id => getUser(id))
+    [...firstDegreeIds].map(id => getUser(id))
   );
 
   for (const connectedUser of firstDegreeUsers) {
-    if (connectedUser) {
+    if (connectedUser && !userMap.has(connectedUser.id)) {
       userMap.set(connectedUser.id, connectedUser);
       nodes.push({
         id: connectedUser.id,
@@ -640,9 +721,36 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     }
   }
 
+  // 이름 기반 중복 제거 - 같은 이름의 노드가 여러 개 있으면 가장 가까운 것(degree가 낮은 것)만 유지
+  const nameToNode = new Map<string, NetworkNode>();
+  const duplicateIds = new Set<string>();
+
+  for (const node of nodes) {
+    const existingNode = nameToNode.get(node.name);
+    if (existingNode) {
+      // 기존 노드보다 더 가까우면(degree가 낮으면) 교체
+      if (node.degree < existingNode.degree) {
+        duplicateIds.add(existingNode.id);
+        nameToNode.set(node.name, node);
+      } else {
+        duplicateIds.add(node.id);
+      }
+    } else {
+      nameToNode.set(node.name, node);
+    }
+  }
+
+  // 중복 노드 제거
+  const filteredNodes = nodes.filter(node => !duplicateIds.has(node.id));
+
+  // 중복 노드와 연결된 엣지도 제거
+  const filteredEdges = edges.filter(
+    edge => !duplicateIds.has(edge.source) && !duplicateIds.has(edge.target)
+  );
+
   // Update connection counts and ensure category
-  nodes.forEach(node => {
-    node.connectionCount = edges.filter(
+  filteredNodes.forEach(node => {
+    node.connectionCount = filteredEdges.filter(
       edge => edge.source === node.id || edge.target === node.id
     ).length;
     // category fallback: Firestore에 category가 없으면 이름으로 매핑
@@ -651,7 +759,9 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     }
   });
 
-  return { nodes, edges };
+  console.log('[getNetworkGraph] Removed duplicates:', duplicateIds.size, 'nodes');
+
+  return { nodes: filteredNodes, edges: filteredEdges };
 };
 
 export const findConnectionPath = async (fromUserId: string, toUserId: string): Promise<string[]> => {
@@ -1113,7 +1223,7 @@ export const createManagedGroup = async (
     color: data.color,
     icon: data.icon,
     ownerId,
-    members: [{ userId: ownerId, role: 'admin', joinedAt: now }],
+    members: [{ userId: ownerId, role: 'president', joinedAt: now }],
     memberUserIds: [ownerId],
     settings: {
       autoConnect: true,
@@ -1434,4 +1544,41 @@ export const generateManagedGroupInviteUrl = (inviteId: string): string => {
     ? window.location.origin
     : process.env.NEXT_PUBLIC_APP_URL || '';
   return `${baseUrl}/invite/managed-group/${inviteId}`;
+};
+
+// ==================== GROUP MEMBER CONNECTIONS ====================
+
+// 그룹 멤버들 간의 인맥 연결 관계를 가져오는 함수
+export interface MemberConnection {
+  fromUserId: string;
+  toUserId: string;
+}
+
+export const getGroupMemberConnections = async (memberUserIds: string[]): Promise<MemberConnection[]> => {
+  if (memberUserIds.length < 2) return [];
+
+  const connections: MemberConnection[] = [];
+  const memberSet = new Set(memberUserIds);
+
+  // 각 멤버의 연결 확인 (Firebase 쿼리 최적화를 위해 배치로 처리)
+  for (const userId of memberUserIds) {
+    const userConnections = await getDirectConnections(userId);
+
+    for (const conn of userConnections) {
+      const otherUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
+
+      // 상대방이 같은 그룹 멤버인 경우에만 추가
+      if (memberSet.has(otherUserId)) {
+        // 중복 방지 (A-B와 B-A 중 하나만)
+        const existsReverse = connections.some(
+          c => c.fromUserId === otherUserId && c.toUserId === userId
+        );
+        if (!existsReverse) {
+          connections.push({ fromUserId: userId, toUserId: otherUserId });
+        }
+      }
+    }
+  }
+
+  return connections;
 };

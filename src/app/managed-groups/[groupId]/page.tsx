@@ -13,7 +13,7 @@ import ManagedGroupAddMemberModal from '@/components/managed-group/ManagedGroupA
 import MemberRoleSheet from '@/components/managed-group/MemberRoleSheet';
 import GroupNetworkGraph from '@/components/managed-group/GroupNetworkGraph';
 import BottomNav from '@/components/ui/BottomNav';
-import { getUser } from '@/lib/firebase-services';
+import { getUser, getGroupMemberConnections, MemberConnection } from '@/lib/firebase-services';
 import { ManagedGroupMember, User } from '@/types';
 
 export default function ManagedGroupDetailPage() {
@@ -45,9 +45,11 @@ export default function ManagedGroupDetailPage() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [autoConnect, setAutoConnect] = useState(true);
   const [allowMemberInvite, setAllowMemberInvite] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'network'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'network'>('network');
   const [roleSheetMember, setRoleSheetMember] = useState<MemberInfo | null>(null);
   const [membersWithUser, setMembersWithUser] = useState<(ManagedGroupMember & { user?: User })[]>([]);
+  const [memberConnections, setMemberConnections] = useState<MemberConnection[]>([]);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -92,6 +94,32 @@ export default function ManagedGroupDetailPage() {
     loadMembersData();
   }, [selectedGroup?.members]);
 
+  // Load member connections for network graph
+  useEffect(() => {
+    if (!selectedGroup?.memberUserIds || selectedGroup.memberUserIds.length < 2) {
+      setMemberConnections([]);
+      return;
+    }
+
+    const loadConnections = async () => {
+      setIsLoadingConnections(true);
+      try {
+        const connections = await getGroupMemberConnections(selectedGroup.memberUserIds);
+        setMemberConnections(connections);
+      } catch (error) {
+        console.error('Failed to load member connections:', error);
+        setMemberConnections([]);
+      } finally {
+        setIsLoadingConnections(false);
+      }
+    };
+
+    // 네트워크 뷰에서만 로드 (최적화)
+    if (viewMode === 'network') {
+      loadConnections();
+    }
+  }, [selectedGroup?.memberUserIds, viewMode]);
+
   if (authLoading || isLoading || !selectedGroup) {
     return (
       <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
@@ -101,6 +129,10 @@ export default function ManagedGroupDetailPage() {
   }
 
   const isOwner = user?.id === selectedGroup.ownerId;
+  // 현재 사용자가 회장(president) 역할인지 확인
+  const isPresident = selectedGroup.members.some(
+    m => m.userId === user?.id && m.role === 'president'
+  );
   const canInvite = isOwner || selectedGroup.settings.allowMemberInvite;
 
   const handleSaveEdit = async () => {
@@ -137,9 +169,20 @@ export default function ManagedGroupDetailPage() {
   };
 
   const handleMemberTap = (member: MemberInfo | (ManagedGroupMember & { user?: User })) => {
-    if (isOwner) {
+    // 회장만 역할 변경 가능 (목록 뷰에서만)
+    if (isPresident) {
       setRoleSheetMember(member as MemberInfo);
     }
+  };
+
+  // 목록에서 멤버 클릭 시 프로필 페이지로 이동
+  const handleMemberClick = (member: MemberInfo) => {
+    router.push(`/network/${member.userId}`);
+  };
+
+  // 네트워크 그래프에서 노드 클릭 시 프로필 페이지로 이동
+  const handleNodeClick = (member: ManagedGroupMember & { user?: User }) => {
+    router.push(`/network/${member.userId}`);
   };
 
   return (
@@ -182,7 +225,9 @@ export default function ManagedGroupDetailPage() {
             members={membersWithUser}
             ownerId={selectedGroup.ownerId}
             groupColor={selectedGroup.color}
-            onMemberTap={isOwner ? handleMemberTap : undefined}
+            connections={memberConnections}
+            isLoadingConnections={isLoadingConnections}
+            onMemberTap={handleNodeClick}
           />
           {/* View Toggle overlay */}
           <div className="absolute top-3 left-3 flex items-center gap-1 bg-[#161B22]/90 backdrop-blur-sm border border-[#30363D] rounded-xl p-1">
@@ -444,10 +489,10 @@ export default function ManagedGroupDetailPage() {
               </div>
             </div>
 
-            {/* Tip for owner */}
-            {isOwner && viewMode === 'list' && (
+            {/* Tip for president */}
+            {isPresident && viewMode === 'list' && (
               <p className="text-[10px] text-[#484F58] mb-3">
-                멤버를 탭하면 회장/회장단 역할을 지정할 수 있습니다
+                멤버를 탭하면 프로필로 이동합니다. 연필 아이콘으로 역할을 편집할 수 있습니다.
               </p>
             )}
 
@@ -456,7 +501,8 @@ export default function ManagedGroupDetailPage() {
               ownerId={selectedGroup.ownerId}
               currentUserId={user!.id}
               onRemoveMember={handleRemoveMember}
-              onMemberTap={isOwner ? handleMemberTap : undefined}
+              onMemberClick={handleMemberClick}
+              onRoleEdit={isPresident ? handleMemberTap : undefined}
             />
           </motion.div>
 

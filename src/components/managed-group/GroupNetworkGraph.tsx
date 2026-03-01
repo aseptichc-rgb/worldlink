@@ -2,56 +2,99 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ManagedGroupMember, User } from '@/types';
-import { Plus, Minus, Maximize2 } from 'lucide-react';
+import { Plus, Minus, Maximize2, Loader2 } from 'lucide-react';
+import { MemberConnection } from '@/lib/firebase-services';
 
 interface MemberNode extends ManagedGroupMember {
   user?: User;
   x: number;
   y: number;
+  vx: number;
+  vy: number;
   ring: number; // 0=president, 1=executive/admin, 2=member
   radius: number;
+  category?: string;
 }
 
 interface GroupNetworkGraphProps {
   members: (ManagedGroupMember & { user?: User })[];
   ownerId: string;
   groupColor: string;
+  connections?: MemberConnection[];
+  isLoadingConnections?: boolean;
   onMemberTap?: (member: ManagedGroupMember & { user?: User }) => void;
 }
 
-// Node sizes by ring
+// Category colors - 스크린샷과 유사하게
+const CATEGORY_COLORS: Record<string, string> = {
+  '의료기기': '#58A6FF',
+  '솔루션': '#79C0FF',
+  '투자': '#F85149',
+  '법률': '#FFA657',
+  '특허': '#A5854E',
+  '바이오': '#3FB950',
+  '의료기관': '#56D364',
+  '비즈니스': '#DB8B00',
+  '제약': '#A371F7',
+  'default': '#8B949E',
+};
+
+// Node sizes by ring - 회장/회장단 강조
 const NODE_SIZES = {
-  0: 42, // President
-  1: 32, // Executive / Admin
-  2: 26, // Regular member
+  0: 48, // President
+  1: 38, // Executive / Admin
+  2: 28, // Regular member
 } as const;
 
 // Font sizes
 const FONT_SIZES = {
-  0: 16,
-  1: 13,
+  0: 14,
+  1: 12,
   2: 11,
+} as const;
+
+// Glow intensity by role
+const GLOW_MULTIPLIERS = {
+  0: 2.8, // President - 강한 글로우
+  1: 2.2, // Executive
+  2: 1.6, // Member
 } as const;
 
 // Image cache
 const imageCache = new Map<string, HTMLImageElement>();
 const imageLoadingSet = new Set<string>();
+const failedImageSet = new Set<string>();
+let imageLoadCallback: (() => void) | null = null;
+
+function setImageLoadCallback(callback: (() => void) | null) {
+  imageLoadCallback = callback;
+}
 
 function getProfileImage(src: string): HTMLImageElement | null {
   if (imageCache.has(src)) return imageCache.get(src)!;
   if (imageLoadingSet.has(src)) return null;
+  if (failedImageSet.has(src)) return null;
 
   imageLoadingSet.add(src);
   const img = new Image();
-  img.crossOrigin = 'anonymous';
   img.onload = () => {
     imageCache.set(src, img);
     imageLoadingSet.delete(src);
+    if (imageLoadCallback) imageLoadCallback();
   };
   img.onerror = () => {
     imageLoadingSet.delete(src);
+    failedImageSet.add(src);
+    if (imageLoadCallback) imageLoadCallback();
   };
   img.src = src;
+  return null;
+}
+
+// 프로필 이미지 URL 결정 (profileImage 없으면 /faces/{name}.jpg 폴백)
+function resolveProfileImageUrl(user?: User): string | null {
+  if (user?.profileImage) return user.profileImage;
+  if (user?.name) return `/faces/${user.name}.jpg`;
   return null;
 }
 
@@ -66,6 +109,8 @@ export default function GroupNetworkGraph({
   members,
   ownerId,
   groupColor,
+  connections = [],
+  isLoadingConnections = false,
   onMemberTap,
 }: GroupNetworkGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,8 +122,29 @@ export default function GroupNetworkGraph({
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredNode, setHoveredNode] = useState<MemberNode | null>(null);
+  const [imageLoadCount, setImageLoadCount] = useState(0);
 
   const lastPosRef = useRef({ x: 0, y: 0 });
+
+  // 이미지 프리로딩 및 로드 완료 시 리렌더링
+  useEffect(() => {
+    // 이미지 로드 완료 콜백 등록 - 즉시 리렌더링 트리거
+    setImageLoadCallback(() => {
+      setImageLoadCount(c => c + 1);
+    });
+
+    // 모든 멤버의 프로필 이미지 프리로딩 시작
+    members.forEach(member => {
+      const imgUrl = resolveProfileImageUrl(member.user);
+      if (imgUrl) {
+        getProfileImage(imgUrl);
+      }
+    });
+
+    return () => {
+      setImageLoadCallback(null);
+    };
+  }, [members]);
   const lastPinchDistRef = useRef<number>(0);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -97,7 +163,7 @@ export default function GroupNetworkGraph({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Layout nodes in concentric rings
+  // Layout nodes - 스크린샷처럼 정렬된 레이아웃
   useEffect(() => {
     if (members.length === 0 || dimensions.width === 0) return;
 
@@ -115,7 +181,6 @@ export default function GroupNetworkGraph({
       return true;
     });
 
-    // If no president, the admin/owner goes to center
     const centerMember = president || members.find(m => m.userId === ownerId);
     const innerRing = president
       ? executives.concat(
@@ -126,43 +191,70 @@ export default function GroupNetworkGraph({
       ? regulars.filter(m => m.userId !== president.userId && !innerRing.some(e => e.userId === m.userId))
       : regulars.filter(m => m.userId !== centerMember?.userId && !innerRing.some(e => e.userId === m.userId));
 
+    // 카테고리별 그룹핑
+    const categoryGroups = new Map<string, typeof outerRing>();
+    outerRing.forEach(m => {
+      const cat = (m.user as any)?.category || 'default';
+      if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
+      categoryGroups.get(cat)!.push(m);
+    });
+
     const nodes: MemberNode[] = [];
 
-    // Center node
+    // 1. 회장 - 정중앙
     if (centerMember) {
       nodes.push({
         ...centerMember,
         x: centerX,
         y: centerY,
+        vx: 0,
+        vy: 0,
         ring: 0,
         radius: NODE_SIZES[0],
+        category: (centerMember.user as any)?.category,
       });
     }
 
-    // Inner ring (executives)
-    const minDim = Math.min(dimensions.width, dimensions.height);
-    const innerRadius = Math.max(120, minDim * 0.2);
+    // 2. 회장단 - 회장 주변 원형 배치 (겹치지 않게 넓게)
+    const executiveRadius = 140;
+    const execCount = innerRing.length;
     innerRing.forEach((member, i) => {
-      const angle = (i / Math.max(innerRing.length, 1)) * Math.PI * 2 - Math.PI / 2;
+      // 첫 번째는 우측 상단부터 시작, 균등 분배 (세로 겹침 방지)
+      const startAngle = -Math.PI / 3; // -60도에서 시작
+      const angleSpan = Math.PI * 1.5; // 270도 범위로 분산
+      const angle = execCount === 1
+        ? 0 // 1명이면 오른쪽
+        : startAngle + (i / (execCount - 1 || 1)) * angleSpan;
+
       nodes.push({
         ...member,
-        x: centerX + Math.cos(angle) * innerRadius,
-        y: centerY + Math.sin(angle) * innerRadius,
+        x: centerX + Math.cos(angle) * executiveRadius,
+        y: centerY + Math.sin(angle) * executiveRadius,
+        vx: 0,
+        vy: 0,
         ring: 1,
         radius: NODE_SIZES[1],
+        category: (member.user as any)?.category,
       });
     });
 
-    // Outer ring (regular members)
-    const outerRadius = Math.max(220, minDim * 0.36);
+    // 3. 일반 멤버 - 회장/회장단 외곽에 원형으로 균등 배치
+    const outerRadius = 280; // 외곽 반경
+    const totalOuterMembers = outerRing.length;
+
     outerRing.forEach((member, i) => {
-      const angle = (i / Math.max(outerRing.length, 1)) * Math.PI * 2 - Math.PI / 2;
+      // 360도 전체에 균등 분배
+      const angle = (i / Math.max(totalOuterMembers, 1)) * Math.PI * 2 - Math.PI / 2;
+
       nodes.push({
         ...member,
         x: centerX + Math.cos(angle) * outerRadius,
         y: centerY + Math.sin(angle) * outerRadius,
+        vx: 0,
+        vy: 0,
         ring: 2,
         radius: NODE_SIZES[2],
+        category: (member.user as any)?.category || 'default',
       });
     });
 
@@ -324,61 +416,52 @@ export default function GroupNetworkGraph({
         });
       }
 
-      // Draw edges
+      // Draw edges - 실제 인맥 연결 관계
+      const nodeMap = new Map(nodes.map(n => [n.userId, n]));
+
+      // 1. 회장 → 회장단 연결 (골드/그룹색 강조)
       if (centerNode) {
         nodes.forEach(node => {
-          if (node.ring === 0) return;
-
-          const sourceNode = node.ring === 1 ? centerNode : null;
-          if (!sourceNode) return;
+          if (node.ring !== 1) return; // 회장단만
 
           ctx.beginPath();
-          ctx.moveTo(sourceNode.x, sourceNode.y);
+          ctx.moveTo(centerNode.x, centerNode.y);
           ctx.lineTo(node.x, node.y);
-          ctx.strokeStyle = node.ring === 1
-            ? hexToRgba('#FFD700', 0.25)
-            : hexToRgba(groupColor, 0.12);
-          ctx.lineWidth = node.ring === 1 ? 1.5 : 1;
-          if (node.ring === 2) ctx.setLineDash([3, 6]);
+          ctx.strokeStyle = hexToRgba('#FFD700', 0.35);
+          ctx.lineWidth = 2.5;
           ctx.stroke();
-          ctx.setLineDash([]);
-        });
-
-        // Edges from executives to nearby outer members
-        const executives = nodes.filter(n => n.ring === 1);
-        const outerMembers = nodes.filter(n => n.ring === 2);
-        executives.forEach(exec => {
-          outerMembers.forEach(member => {
-            const dx = exec.x - member.x;
-            const dy = exec.y - member.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const threshold = Math.min(dimensions.width, dimensions.height) * 0.3;
-            if (dist < threshold) {
-              ctx.beginPath();
-              ctx.moveTo(exec.x, exec.y);
-              ctx.lineTo(member.x, member.y);
-              ctx.strokeStyle = hexToRgba(groupColor, 0.08);
-              ctx.lineWidth = 0.5;
-              ctx.setLineDash([2, 6]);
-              ctx.stroke();
-              ctx.setLineDash([]);
-            }
-          });
         });
       }
 
-      // Draw nodes
-      nodes.forEach(node => {
+      // Draw nodes - 회장/회장단을 마지막에 그려서 위에 표시
+      const sortedNodes = [...nodes].sort((a, b) => b.ring - a.ring);
+
+      sortedNodes.forEach(node => {
         const isHovered = hoveredNode?.userId === node.userId;
         const { x, y, radius } = node;
-        const effectiveRadius = isHovered ? radius + 4 : radius;
+        const effectiveRadius = isHovered ? radius + 5 : radius;
 
-        // Glow
-        if (node.ring === 0 || isHovered) {
-          const glowRadius = effectiveRadius * (node.ring === 0 ? 2.8 : 2.2);
-          const glowGrad = ctx.createRadialGradient(x, y, effectiveRadius * 0.5, x, y, glowRadius);
-          const glowColor = node.ring === 0 ? '#FFD700' : groupColor;
-          glowGrad.addColorStop(0, hexToRgba(glowColor, node.ring === 0 ? 0.35 : 0.25));
+        // Glow - 회장/회장단에게 항상 글로우 적용
+        if (node.ring <= 1 || isHovered) {
+          const glowMult = GLOW_MULTIPLIERS[node.ring as keyof typeof GLOW_MULTIPLIERS] || 1.8;
+          const glowRadius = effectiveRadius * glowMult;
+          const glowGrad = ctx.createRadialGradient(x, y, effectiveRadius * 0.3, x, y, glowRadius);
+
+          let glowColor: string;
+          let glowAlpha: number;
+          if (node.ring === 0) {
+            glowColor = '#FFD700';
+            glowAlpha = 0.45;
+          } else if (node.ring === 1) {
+            glowColor = groupColor;
+            glowAlpha = 0.25;
+          } else {
+            glowColor = groupColor;
+            glowAlpha = 0.15;
+          }
+
+          glowGrad.addColorStop(0, hexToRgba(glowColor, glowAlpha));
+          glowGrad.addColorStop(0.6, hexToRgba(glowColor, glowAlpha * 0.3));
           glowGrad.addColorStop(1, 'transparent');
           ctx.beginPath();
           ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
@@ -386,52 +469,67 @@ export default function GroupNetworkGraph({
           ctx.fill();
         }
 
+        // Border color - 회장/회장단은 역할 색상, 일반 멤버는 카테고리 색상
+        let borderColor: string;
+        if (node.ring === 0) {
+          borderColor = '#FFD700'; // 회장 - 골드
+        } else if (node.ring === 1) {
+          borderColor = '#FFA657'; // 회장단 - 오렌지
+        } else {
+          borderColor = CATEGORY_COLORS[node.category || 'default'] || CATEGORY_COLORS['default'];
+        }
+        const borderWidth = node.ring === 0 ? 4 : node.ring === 1 ? 3.5 : isHovered ? 3 : 2.5;
+
         // Node circle background
         ctx.beginPath();
         ctx.arc(x, y, effectiveRadius, 0, Math.PI * 2);
-        ctx.fillStyle = '#161B22';
+        ctx.fillStyle = node.ring === 0 ? '#1C1F26' : '#161B22';
         ctx.fill();
 
-        // Border
-        const borderColor = node.ring === 0 ? '#FFD700' :
-          node.role === 'executive' ? groupColor :
-          node.userId === ownerId ? '#FFA657' :
-          hexToRgba(groupColor, 0.6);
-        ctx.lineWidth = node.ring === 0 ? 3.5 : isHovered ? 3 : 2;
-        ctx.strokeStyle = borderColor;
-        ctx.stroke();
+        // Profile image (profileImage 또는 /faces/{name}.jpg 폴백)
+        const imgUrl = resolveProfileImageUrl(node.user);
+        let imageDrawn = false;
 
-        // Profile image
-        const imgUrl = node.user?.profileImage;
-        if (imgUrl && transform.scale >= 0.5) {
+        if (imgUrl) {
           const img = getProfileImage(imgUrl);
           if (img) {
+            const clipRadius = effectiveRadius - borderWidth;
+
             ctx.save();
             ctx.beginPath();
-            ctx.arc(x, y, effectiveRadius - 2, 0, Math.PI * 2);
+            ctx.arc(x, y, clipRadius, 0, Math.PI * 2);
             ctx.clip();
-            const imgSize = (effectiveRadius - 2) * 2;
-            ctx.drawImage(img, x - effectiveRadius + 2, y - effectiveRadius + 2, imgSize, imgSize);
+            const imgSize = clipRadius * 2;
+            ctx.drawImage(img, x - clipRadius, y - clipRadius, imgSize, imgSize);
             ctx.restore();
-
-            // Re-draw border
-            ctx.beginPath();
-            ctx.arc(x, y, effectiveRadius, 0, Math.PI * 2);
-            ctx.lineWidth = node.ring === 0 ? 3.5 : isHovered ? 3 : 2;
-            ctx.strokeStyle = borderColor;
-            ctx.stroke();
-          } else {
-            // Draw initials while image loads
-            drawInitials(ctx, node, effectiveRadius);
+            imageDrawn = true;
           }
-        } else if (!imgUrl) {
+        }
+
+        // 이미지가 없거나 로딩 중이면 이니셜 표시
+        if (!imageDrawn) {
           drawInitials(ctx, node, effectiveRadius);
         }
 
+        // White inner ring (이미지와 테두리 사이 흰색 링)
+        if (imageDrawn) {
+          ctx.beginPath();
+          ctx.arc(x, y, effectiveRadius - borderWidth + 1, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        // Colored outer border
+        ctx.beginPath();
+        ctx.arc(x, y, effectiveRadius, 0, Math.PI * 2);
+        ctx.lineWidth = borderWidth;
+        ctx.strokeStyle = borderColor;
+        ctx.stroke();
+
         // Name label
         const fontSize = FONT_SIZES[node.ring as keyof typeof FONT_SIZES] || 11;
-        const scaledFontSize = fontSize / Math.max(transform.scale, 0.5);
-        ctx.font = `600 ${Math.min(fontSize, scaledFontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
         ctx.textAlign = 'center';
 
         const name = node.user?.name || '알 수 없음';
@@ -446,7 +544,7 @@ export default function GroupNetworkGraph({
         ctx.fillStyle = '#F0F6FC';
         ctx.fillText(name, x, labelY);
 
-        // Title/role badge
+        // Title/role badge - 이름 아래에 표시 (참조 이미지 스타일)
         const displayTitle = node.role === 'president'
           ? (node.title || '회장')
           : node.role === 'executive'
@@ -456,25 +554,32 @@ export default function GroupNetworkGraph({
               : null;
 
         if (displayTitle && transform.scale >= 0.6) {
-          const badgeFontSize = Math.max(9, fontSize - 3);
+          const badgeFontSize = Math.max(9, fontSize - 2);
           ctx.font = `700 ${badgeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-          const badgeWidth = ctx.measureText(displayTitle).width;
-          const badgeY = y - effectiveRadius - badgeFontSize - 2;
 
           const badgeColor = node.role === 'president' ? '#FFD700' :
             node.role === 'executive' ? groupColor : '#FFA657';
 
+          // Badge below name
+          const badgeY = labelY + badgeFontSize + 3;
+          const badgeTextWidth = ctx.measureText(displayTitle).width;
+
           // Badge background
           ctx.fillStyle = hexToRgba(badgeColor, 0.2);
           const badgePadH = 6;
-          const badgePadV = 3;
-          const bx = x - badgeWidth / 2 - badgePadH;
+          const badgePadV = 2;
+          const bx = x - badgeTextWidth / 2 - badgePadH;
           const by = badgeY - badgeFontSize + 1 - badgePadV;
-          const bw = badgeWidth + badgePadH * 2;
+          const bw = badgeTextWidth + badgePadH * 2;
           const bh = badgeFontSize + badgePadV * 2 + 2;
           ctx.beginPath();
           ctx.roundRect(bx, by, bw, bh, 4);
           ctx.fill();
+
+          // Badge border
+          ctx.strokeStyle = hexToRgba(badgeColor, 0.4);
+          ctx.lineWidth = 1;
+          ctx.stroke();
 
           // Badge text
           ctx.fillStyle = badgeColor;
@@ -492,7 +597,7 @@ export default function GroupNetworkGraph({
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [dimensions, transform, hoveredNode, groupColor, ownerId, members]);
+  }, [dimensions, transform, hoveredNode, groupColor, ownerId, members, connections, imageLoadCount]);
 
   const resetView = () => setTransform({ x: 0, y: 0, scale: 1 });
   const zoomIn = () => setTransform(prev => ({ ...prev, scale: Math.min(3, prev.scale * 1.2) }));
@@ -514,23 +619,13 @@ export default function GroupNetworkGraph({
         className="touch-none"
       />
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-[#161B22]/90 backdrop-blur-sm border border-[#30363D] rounded-xl px-3 py-2 text-[10px]">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#FFD700' }} />
-            <span className="text-[#8B949E]">회장</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: groupColor }} />
-            <span className="text-[#8B949E]">회장단</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: hexToRgba(groupColor, 0.5) }} />
-            <span className="text-[#8B949E]">멤버</span>
-          </span>
+      {/* Loading indicator */}
+      {isLoadingConnections && (
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#161B22]/90 backdrop-blur-sm border border-[#30363D] rounded-lg px-2 py-1">
+          <Loader2 size={12} className="animate-spin text-[#58A6FF]" />
+          <span className="text-[10px] text-[#8B949E]">인맥 연결 로딩...</span>
         </div>
-      </div>
+      )}
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-1">

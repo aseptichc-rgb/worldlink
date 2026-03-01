@@ -133,13 +133,12 @@ export const useGroupStore = create<GroupState>()(
         currentUserId = userId;
         try {
           const data = await loadUserGroups(userId);
-          if (data) {
-            set({
-              groups: data.groups,
-              memberships: data.memberships,
-              groupConnections: data.groupConnections,
-            });
-          }
+          // Firebase 데이터로 완전히 덮어쓰기 (없으면 빈 배열로 초기화)
+          set({
+            groups: data?.groups || [],
+            memberships: data?.memberships || [],
+            groupConnections: data?.groupConnections || [],
+          });
         } catch (err) {
           console.error('그룹 불러오기 실패:', err);
         }

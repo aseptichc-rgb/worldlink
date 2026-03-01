@@ -91,13 +91,13 @@ export default function ManagedGroupsPage() {
           </motion.div>
         ) : (
           <div className="space-y-6">
-            {/* 내가 만든 그룹 */}
+            {/* 나의 모임들 */}
             {myGroups.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-3">
                   <Crown size={16} className="text-[#FFA657]" />
                   <h2 className="text-sm font-semibold text-[#FFA657]">
-                    내가 만든 그룹 ({myGroups.length})
+                    나의 모임들 ({myGroups.length})
                   </h2>
                 </div>
                 <div className="space-y-2">

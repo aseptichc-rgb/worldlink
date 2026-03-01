@@ -22,6 +22,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/card', icon: QrCode, label: '내 명함', requiresAuth: true },
   { path: '/network', icon: Network, label: '인맥', requiresAuth: true },
+  { path: '/managed-groups', icon: Crown, label: '나의 모임', requiresAuth: true },
   { path: '/invite', icon: UserPlus, label: '초대하기', requiresAuth: true, isInvite: true },
   { path: '/profile', icon: User, label: '프로필', requiresAuth: true },
 ];
@@ -301,27 +302,17 @@ export default function BottomNav() {
                       className="w-full py-5 bg-[#58A6FF] text-[#0D1117] font-bold text-lg rounded-2xl flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
                     >
                       <User size={22} />
-                      개인 초대하기
+                      개인 인맥으로 초대하기
                     </button>
                     <button
                       onClick={() => setInviteStep('group')}
                       className="w-full py-5 bg-[rgba(37,37,37,0.7)] text-[#F0F6FC] font-semibold text-lg rounded-2xl border border-[#363636] flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
                     >
                       <Users size={22} />
-                      그룹으로 초대하기
-                    </button>
-                    <button
-                      onClick={() => {
-                        resetInviteModal();
-                        router.push('/managed-groups');
-                      }}
-                      className="w-full py-4 bg-[rgba(37,37,37,0.7)] text-[#FFA657] font-semibold text-base rounded-2xl border border-[#FFA657]/30 flex items-center justify-center gap-3 active:scale-[0.97] transition-transform"
-                    >
-                      <Crown size={20} />
-                      나의 모임
+                      나의 모임으로 초대하기
                     </button>
                     <p className="text-xs text-[#484F58] text-center pt-3 py-1">
-                      그룹 초대 시 초대받은 분은 그룹원 전체와 자동으로 인맥이 됩니다
+                      나의 모임으로 초대 시 초대받은 분은 모임 멤버 전체와 자동으로 인맥이 됩니다
                     </p>
                   </div>
                 </>
@@ -337,7 +328,7 @@ export default function BottomNav() {
                       <X size={18} />
                     </button>
                     <h3 className="text-lg font-semibold text-[#F0F6FC]">
-                      개인 초대하기
+                      개인 인맥으로 초대하기
                     </h3>
                   </div>
 
@@ -483,7 +474,7 @@ export default function BottomNav() {
                       <X size={18} />
                     </button>
                     <h3 className="text-lg font-semibold text-[#F0F6FC]">
-                      그룹으로 초대하기
+                      나의 모임으로 초대하기
                     </h3>
                   </div>
 
@@ -493,7 +484,7 @@ export default function BottomNav() {
                       <div>
                         <p className="text-sm text-[#58A6FF] font-medium">자동 인맥 연결</p>
                         <p className="text-xs text-[#8B949E] mt-1">
-                          그룹으로 초대하면 초대받은 분이 그룹원 전체와 자동으로 서로 인맥이 됩니다
+                          나의 모임으로 초대하면 초대받은 분이 모임 멤버 전체와 자동으로 서로 인맥이 됩니다
                         </p>
                       </div>
                     </div>
@@ -502,7 +493,7 @@ export default function BottomNav() {
                   {groups.length === 0 ? (
                     <div className="text-center py-8">
                       <Users size={32} className="text-[#484F58] mx-auto mb-3" />
-                      <p className="text-[#8B949E] mb-4">아직 그룹이 없습니다</p>
+                      <p className="text-[#8B949E] mb-4">아직 모임이 없습니다</p>
                       <button
                         onClick={() => {
                           resetInviteModal();
@@ -510,7 +501,7 @@ export default function BottomNav() {
                         }}
                         className="px-4 py-2 bg-[#58A6FF] text-white text-sm font-medium rounded-lg"
                       >
-                        그룹 만들러 가기
+                        모임 만들러 가기
                       </button>
                     </div>
                   ) : (
