@@ -7,6 +7,7 @@ import { ArrowRight, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { loginWithEmail, getUser } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
+import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX } from '@/lib/demo-seed-data';
 
 const STORAGE_KEY = 'nodded_saved_credentials';
 
@@ -44,10 +45,49 @@ function LoginContent() {
     }
   }, []);
 
+  const handleDemoLogin = () => {
+    const demo = DEMO_MEMBERS[DEMO_ACCOUNT_INDEX];
+    const demoUser = {
+      id: demo.id,
+      name: demo.name,
+      email: demo.email,
+      phone: demo.phone,
+      company: demo.company,
+      position: demo.position,
+      bio: demo.bio,
+      keywords: demo.keywords,
+      category: demo.category,
+      profileImage: `/faces/${demo.name}.jpg`,
+      inviteCode: 'DEMO-001',
+      invitesRemaining: 999,
+      coffeeStatus: 'available' as const,
+      privacySettings: {
+        allowProfileDiscovery: true,
+        displaySettings: {
+          nameDisplay: 'full' as const,
+          companyDisplay: 'full' as const,
+          positionDisplay: 'full' as const,
+        },
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setUser(demoUser);
+    localStorage.setItem('nodded_demo_mode', 'true');
+    router.push('/network');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    // 데모 계정 로그인: Firebase 없이 로컬 데모 데이터 사용
+    if (email === 'demo@nodded.app' && password === 'demo1234') {
+      handleDemoLogin();
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const userCredential = await loginWithEmail(email, password);
@@ -213,7 +253,6 @@ function LoginContent() {
                       ? 'bg-[#58A6FF] border-[#58A6FF]'
                       : 'bg-transparent border-[#30363D] group-hover:border-[#484F58]'
                   }`}
-                  onClick={() => setRememberMe(!rememberMe)}
                 >
                   {rememberMe && <Check size={14} className="text-white" strokeWidth={3} />}
                 </div>
@@ -239,6 +278,17 @@ function LoginContent() {
                 </Button>
               </div>
             </form>
+
+            {/* Demo Login */}
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="w-full py-3 rounded-xl border border-[#30363D] bg-[#161B22] text-[#8B949E] hover:text-[#F0F6FC] hover:border-[#58A6FF]/50 hover:bg-[#1C2128] transition-all text-sm font-medium"
+              >
+                데모 계정으로 체험하기
+              </button>
+            </div>
 
             {/* Sign Up */}
             <div className="text-center mt-10 pt-10 border-t border-[rgba(240,246,252,0.05)]">

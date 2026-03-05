@@ -577,22 +577,11 @@ export const isFirstDegreeConnection = async (currentUserId: string, targetUserI
 // ==================== NETWORK GRAPH SERVICES ====================
 
 import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs, getDemoCompatibleId, ensureUserInDemoNetwork } from './demo-data';
+import { DEMO_NAME_CATEGORY_MAP } from './demo-seed-data';
 
 // 이름 → 카테고리 매핑 (Firestore에 category가 없는 기존 데이터 호환용)
 const NAME_CATEGORY_MAP: Record<string, string> = {
-  '강대원': '의료기기', '고상원': '솔루션', '권인호': '투자', '김국배': '의료기기',
-  '김선욱': '법률', '김성포': '바이오', '김소은': '제약', '김재영': '솔루션',
-  '김재형': '의료기기', '김학준': '의료기관', '김홍주': '제약', '나해란': '의료기관',
-  '박재은': '솔루션', '변희병': '제약', '선경훈': '의료기관', '송재준': '의료기관',
-  '송진규': '바이오', '신현주': '비즈니스', '양성용': '솔루션', '양정희': '의료기관',
-  '오가나': '의료기관', '윤동욱': '법률', '윤여혜': '제약', '윤정로': '의료기관',
-  '이민우': '의료기관', '이석구': '비즈니스', '이성현': '의료기관', '이승아': '의료기기',
-  '이승표': '의료기관', '이영환': '솔루션', '이예하': '솔루션', '이종근': '특허',
-  '이태규': '투자', '임환': '비즈니스', '장강호': '투자', '장우석': '의료기관',
-  '정경진': '바이오', '정성관': '의료기관', '조경희': '의료기관', '주이신': '의료기관',
-  '주형로': '의료기관', '최승현': '바이오', '최종일': '의료기관', '최준': '의료기관',
-  '태범식': '의료기관', '한예성': '솔루션', '한성희': '의료기관', '허기나': '의료기기',
-  '홍석원': '의료기관', '황은경': '비즈니스',
+  ...DEMO_NAME_CATEGORY_MAP,
 };
 
 export const getNetworkGraph = async (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {

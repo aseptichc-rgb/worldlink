@@ -27,8 +27,13 @@ let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let currentUserId: string | null = null;
 let pendingSyncData: { groups: NodeGroup[]; memberships: GroupMembership[]; groupConnections: GroupConnection[] } | null = null;
 
+function isDemoMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('nodded_demo_mode') === 'true';
+}
+
 const syncToFirebase = (state: { groups: NodeGroup[]; memberships: GroupMembership[]; groupConnections: GroupConnection[] }) => {
-  if (!currentUserId) return;
+  if (!currentUserId || isDemoMode()) return;
   if (syncTimer) clearTimeout(syncTimer);
   pendingSyncData = state;
   const userId = currentUserId;
@@ -131,14 +136,26 @@ export const useGroupStore = create<GroupState>()(
 
       loadFromFirebase: async (userId) => {
         currentUserId = userId;
+        // 데모 모드에서는 Firebase 호출 건너뜀
+        if (isDemoMode()) return;
         try {
           const data = await loadUserGroups(userId);
-          // Firebase 데이터로 완전히 덮어쓰기 (없으면 빈 배열로 초기화)
-          set({
-            groups: data?.groups || [],
-            memberships: data?.memberships || [],
-            groupConnections: data?.groupConnections || [],
-          });
+          if (data) {
+            // Firebase 데이터로 완전히 덮어쓰기
+            set({
+              groups: data.groups,
+              memberships: data.memberships,
+              groupConnections: data.groupConnections,
+            });
+          } else {
+            // Firestore에 그룹 데이터가 없으면 로컬 상태도 초기화
+            set({
+              groups: [],
+              memberships: [],
+              groupConnections: [],
+              activeGroupFilter: null,
+            });
+          }
         } catch (err) {
           console.error('그룹 불러오기 실패:', err);
         }
@@ -343,6 +360,10 @@ export const useGroupStore = create<GroupState>()(
     }),
     {
       name: 'nodded-groups',
+      partialize: (state) => ({
+        // groups, memberships, groupConnections는 Firebase가 source of truth이므로 localStorage에 저장하지 않음
+        activeGroupFilter: state.activeGroupFilter,
+      }),
     }
   )
 );

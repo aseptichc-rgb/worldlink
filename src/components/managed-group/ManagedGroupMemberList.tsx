@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Crown, Shield, X, Loader2, Edit3 } from 'lucide-react';
 import { ManagedGroupMember } from '@/types';
 import { getUser } from '@/lib/firebase-services';
+import { demoUsers } from '@/lib/demo-data';
 import { User } from '@/types';
 
 export interface MemberInfo extends ManagedGroupMember {
@@ -49,9 +50,14 @@ export default function ManagedGroupMemberList({
   useEffect(() => {
     const loadMembers = async () => {
       setIsLoading(true);
+      const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
       const infos = await Promise.all(
         members.map(async (member) => {
           try {
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return { ...member, user: demoUser || undefined };
+            }
             const user = await getUser(member.userId);
             return { ...member, user: user || undefined };
           } catch {

@@ -91,18 +91,21 @@ export default function MyCardPage() {
   // Firebase에 공개 명함 데이터 저장 + QR 코드 생성
   useEffect(() => {
     if (myCard && typeof window !== 'undefined') {
-      // Firebase에 공개 명함 저장
-      savePublicCard({
-        id: myCard.id,
-        name: myCard.name,
-        company: myCard.company,
-        position: myCard.position,
-        email: myCard.email,
-        phone: myCard.phone,
-        bio: myCard.bio,
-        profileImage: myCard.profileImage,
-        keywords: myCard.keywords,
-      }).catch(console.error);
+      // 데모 모드가 아닐 때만 Firebase에 공개 명함 저장
+      const isDemoMode = localStorage.getItem('nodded_demo_mode') === 'true';
+      if (!isDemoMode) {
+        savePublicCard({
+          id: myCard.id,
+          name: myCard.name,
+          company: myCard.company,
+          position: myCard.position,
+          email: myCard.email,
+          phone: myCard.phone,
+          bio: myCard.bio,
+          profileImage: myCard.profileImage,
+          keywords: myCard.keywords,
+        }).catch(console.error);
+      }
 
       // QR 코드에는 간결한 URL만 포함 (데이터는 Firebase에서 fetch)
       const qrUrl = `${window.location.origin}/view/${myCard.id}`;

@@ -14,6 +14,46 @@ import {
   updateMemberRole as fbUpdateMemberRole,
 } from '@/lib/firebase-services';
 import { ManagedGroupRole, ManagedGroupSettings } from '@/types';
+import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX, DEMO_GROUPS } from '@/lib/demo-seed-data';
+import { demoUsers } from '@/lib/demo-data';
+
+// 데모 모드 체크
+function isDemoMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('nodded_demo_mode') === 'true';
+}
+
+// 데모 그룹 데이터 생성
+function generateDemoGroups(userId: string): ManagedGroup[] {
+  return DEMO_GROUPS
+    .filter(g => g.memberIndices.includes(DEMO_ACCOUNT_INDEX) || g.ownerIndex === DEMO_ACCOUNT_INDEX)
+    .map((g, idx) => {
+      const members = g.memberIndices.map(mIdx => {
+        const member = DEMO_MEMBERS[mIdx];
+        const roleInfo = g.roles[mIdx];
+        return {
+          userId: member.id,
+          role: (roleInfo?.role || 'member') as ManagedGroupRole,
+          ...(roleInfo?.title ? { title: roleInfo.title } : {}),
+          joinedAt: new Date(),
+        };
+      });
+
+      return {
+        id: `demo_group_${idx + 1}`,
+        name: g.name,
+        description: g.description,
+        color: g.color,
+        icon: g.icon,
+        ownerId: DEMO_MEMBERS[g.ownerIndex].id,
+        members,
+        memberUserIds: g.memberIndices.map(i => DEMO_MEMBERS[i].id),
+        settings: { autoConnect: true, allowMemberInvite: true },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as ManagedGroup;
+    });
+}
 
 interface ManagedGroupState {
   // Data
@@ -71,17 +111,40 @@ export const useManagedGroupStore = create<ManagedGroupState>((set, get) => ({
   fetchMyGroups: async (userId) => {
     set({ isLoading: true, error: null });
     try {
+      // 데모 모드: 로컬 데모 그룹 사용
+      if (isDemoMode()) {
+        const demoGroups = generateDemoGroups(userId);
+        set({ groups: demoGroups, isLoading: false });
+        return;
+      }
       const groups = await getUserManagedGroups(userId);
       set({ groups, isLoading: false });
     } catch (err) {
       console.error('Failed to fetch managed groups:', err);
-      set({ error: (err as Error).message, isLoading: false });
+      // Firebase 에러 시 데모 데이터 fallback
+      if (isDemoMode()) {
+        const demoGroups = generateDemoGroups(userId);
+        set({ groups: demoGroups, isLoading: false });
+      } else {
+        set({ error: (err as Error).message, isLoading: false });
+      }
     }
   },
 
   fetchGroupDetail: async (groupId) => {
     set({ isLoading: true, error: null });
     try {
+      // 데모 모드: 로컬에서 그룹 찾기
+      if (isDemoMode()) {
+        const { groups } = get();
+        let group = groups.find(g => g.id === groupId);
+        if (!group) {
+          const allDemoGroups = generateDemoGroups(DEMO_MEMBERS[DEMO_ACCOUNT_INDEX].id);
+          group = allDemoGroups.find(g => g.id === groupId);
+        }
+        set({ selectedGroup: group || null, isLoading: false });
+        return;
+      }
       const group = await getManagedGroup(groupId);
       set({ selectedGroup: group, isLoading: false });
     } catch (err) {

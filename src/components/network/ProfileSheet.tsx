@@ -770,9 +770,9 @@ export default function ProfileSheet() {
                         </h3>
                         <div className="info-card border border-[#FFB800]/20 bg-[#FFB800]/5">
                           <div className="grid grid-cols-5 gap-3">
-                            {mutualUsers.slice(0, 15).map((user) => (
+                            {mutualUsers.slice(0, 15).map((user, idx) => (
                               <button
-                                key={user.id}
+                                key={`${user.id}-${idx}`}
                                 onClick={() => handleConnectionClick(user)}
                                 className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
                               >
@@ -843,11 +843,11 @@ export default function ProfileSheet() {
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-5 gap-3">
-                                  {groupedByIndustry[industry].slice(0, 10).map((user) => {
+                                  {groupedByIndustry[industry].slice(0, 10).map((user, idx) => {
                                     const isMutualConnection = myConnectionIds.has(user.id);
                                     return (
                                     <button
-                                      key={user.id}
+                                      key={`${user.id}-${idx}`}
                                       onClick={() => handleConnectionClick(user)}
                                       className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
                                     >

@@ -76,14 +76,21 @@ export default function BottomNav() {
 
     setIsSending(true);
     try {
-      const invitation = await createInvitation(
-        user.id,
-        selectedMethod,
-        selectedMethod === 'email' ? email : undefined,
-        selectedMethod === 'sms' || selectedMethod === 'kakao' ? phone : undefined
-      );
+      const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+      let inviteLink: string;
 
-      const inviteLink = generateInviteLink(invitation.inviteCode);
+      if (isDemoMode) {
+        // 데모 모드: Firebase 없이 가짜 초대 링크 생성
+        inviteLink = `${window.location.origin}/invite?code=DEMO-${Date.now().toString(36).toUpperCase()}`;
+      } else {
+        const invitation = await createInvitation(
+          user.id,
+          selectedMethod,
+          selectedMethod === 'email' ? email : undefined,
+          selectedMethod === 'sms' || selectedMethod === 'kakao' ? phone : undefined
+        );
+        inviteLink = generateInviteLink(invitation.inviteCode);
+      }
       setGeneratedLink(inviteLink);
 
       const copyToClipboard = async (text: string) => {

@@ -11,15 +11,29 @@ export default function Home() {
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
+    // 데모 모드 체크: 이미 데모 로그인된 상태면 바로 네트워크로
+    const isDemoMode = localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) {
+      // Zustand persist에서 유저 복원 확인
+      const authData = localStorage.getItem('nexus-auth');
+      if (authData) {
+        setLoading(false);
+        router.push('/network');
+        return;
+      }
+    }
+
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
         setUser(userData);
         router.push('/network');
       } else {
-        setUser(null);
-        // Redirect to login immediately
-        router.push('/login');
+        // 데모 모드가 아닌 경우에만 로그인으로 리디렉트
+        if (!isDemoMode) {
+          setUser(null);
+          router.push('/login');
+        }
       }
       setLoading(false);
     });

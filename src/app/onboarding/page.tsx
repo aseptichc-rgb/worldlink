@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
 import { User as UserType, Invitation } from '@/types';
 import { Mail, Lock, ArrowRight, User, Users, Check, X, Shield, Eye, EyeOff, Sparkles, Handshake } from 'lucide-react';
+import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX } from '@/lib/demo-seed-data';
 
 type OnboardingStep = 'welcome' | 'auth' | 'profile' | 'connection';
 
@@ -705,14 +706,50 @@ function OnboardingContent() {
         )}
       </AnimatePresence>
 
-      {/* Login Link */}
+      {/* Login Link & Demo */}
       {step === 'auth' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center"
+          className="mt-8 text-center space-y-4"
         >
+          <button
+            type="button"
+            onClick={() => {
+              const demo = DEMO_MEMBERS[DEMO_ACCOUNT_INDEX];
+              setUser({
+                id: demo.id,
+                name: demo.name,
+                email: demo.email,
+                phone: demo.phone,
+                company: demo.company,
+                position: demo.position,
+                bio: demo.bio,
+                keywords: demo.keywords,
+                category: demo.category,
+                profileImage: `/faces/${demo.name}.jpg`,
+                inviteCode: 'DEMO-001',
+                invitesRemaining: 999,
+                coffeeStatus: 'available' as const,
+                privacySettings: {
+                  allowProfileDiscovery: true,
+                  displaySettings: {
+                    nameDisplay: 'full' as const,
+                    companyDisplay: 'full' as const,
+                    positionDisplay: 'full' as const,
+                  },
+                },
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+              localStorage.setItem('nodded_demo_mode', 'true');
+              router.push('/network');
+            }}
+            className="w-64 mx-auto block py-3 rounded-xl border border-[#30363D] bg-[#161B22] text-[#8B949E] hover:text-[#F0F6FC] hover:border-[#58A6FF]/50 hover:bg-[#1C2128] transition-all text-sm font-medium"
+          >
+            데모 계정으로 체험하기
+          </button>
           <p className="text-[#888888] text-sm">
             이미 계정이 있으신가요?{' '}
             <button

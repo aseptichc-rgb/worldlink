@@ -44,6 +44,12 @@ export default function ProfilePage() {
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
 
   useEffect(() => {
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
@@ -59,11 +65,21 @@ export default function ProfilePage() {
     return () => unsubscribe();
   }, [setUser, setLoading, router]);
 
+  const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
     try {
+      if (isDemoMode) {
+        // 데모 모드에서는 로컬 URL로 미리보기만 제공
+        const localUrl = URL.createObjectURL(file);
+        setUser({ ...user, profileImage: localUrl });
+        setEditedUser(prev => prev ? { ...prev, profileImage: localUrl } : prev);
+        updateNodeProfileImage(user.id, localUrl);
+        return;
+      }
       const imageUrl = await uploadProfileImage(user.id, file);
       await updateUser(user.id, { profileImage: imageUrl });
 
@@ -93,26 +109,28 @@ export default function ProfilePage() {
 
     setIsSaving(true);
     try {
-      await updateUser(user.id, {
-        name: editedUser.name,
-        company: editedUser.company,
-        position: editedUser.position,
-        bio: editedUser.bio,
-        keywords: editedUser.keywords,
+      if (!isDemoMode) {
+        await updateUser(user.id, {
+          name: editedUser.name,
+          company: editedUser.company,
+          position: editedUser.position,
+          bio: editedUser.bio,
+          keywords: editedUser.keywords,
         });
 
-      // 공개 명함도 자동 업데이트 (QR 코드 스캔 시 최신 정보 표시)
-      await savePublicCard({
-        id: editedUser.id,
-        name: editedUser.name,
-        company: editedUser.company,
-        position: editedUser.position,
-        email: editedUser.email,
-        phone: editedUser.phone,
-        bio: editedUser.bio,
-        profileImage: editedUser.profileImage,
-        keywords: editedUser.keywords,
-      });
+        // 공개 명함도 자동 업데이트 (QR 코드 스캔 시 최신 정보 표시)
+        await savePublicCard({
+          id: editedUser.id,
+          name: editedUser.name,
+          company: editedUser.company,
+          position: editedUser.position,
+          email: editedUser.email,
+          phone: editedUser.phone,
+          bio: editedUser.bio,
+          profileImage: editedUser.profileImage,
+          keywords: editedUser.keywords,
+        });
+      }
 
       setUser(editedUser);
       setIsEditing(false);
@@ -134,7 +152,43 @@ export default function ProfilePage() {
       });
       setNewKeyword('');
 
-      // 즉시 Firebase에 저장
+      if (isDemoMode) {
+        setUser({ ...user, keywords: newKeywords });
+      } else {
+        try {
+          await updateUser(user.id, { keywords: newKeywords });
+          await savePublicCard({
+            id: user.id,
+            name: editedUser.name,
+            company: editedUser.company,
+            position: editedUser.position,
+            email: editedUser.email,
+            phone: editedUser.phone,
+            bio: editedUser.bio,
+            profileImage: editedUser.profileImage,
+            keywords: newKeywords,
+          });
+          setUser({ ...user, keywords: newKeywords });
+        } catch (error) {
+          console.error('Error saving keyword:', error);
+        }
+      }
+    } else {
+      setNewKeyword('');
+    }
+  };
+
+  const removeKeyword = async (keyword: string) => {
+    if (!editedUser || !user) return;
+    const newKeywords = editedUser.keywords.filter(k => k !== keyword);
+    setEditedUser({
+      ...editedUser,
+      keywords: newKeywords,
+    });
+
+    if (isDemoMode) {
+      setUser({ ...user, keywords: newKeywords });
+    } else {
       try {
         await updateUser(user.id, { keywords: newKeywords });
         await savePublicCard({
@@ -150,45 +204,17 @@ export default function ProfilePage() {
         });
         setUser({ ...user, keywords: newKeywords });
       } catch (error) {
-        console.error('Error saving keyword:', error);
+        console.error('Error removing keyword:', error);
       }
-    } else {
-      setNewKeyword('');
-    }
-  };
-
-  const removeKeyword = async (keyword: string) => {
-    if (!editedUser || !user) return;
-    const newKeywords = editedUser.keywords.filter(k => k !== keyword);
-    setEditedUser({
-      ...editedUser,
-      keywords: newKeywords,
-    });
-
-    // 즉시 Firebase에 저장
-    try {
-      await updateUser(user.id, { keywords: newKeywords });
-      await savePublicCard({
-        id: user.id,
-        name: editedUser.name,
-        company: editedUser.company,
-        position: editedUser.position,
-        email: editedUser.email,
-        phone: editedUser.phone,
-        bio: editedUser.bio,
-        profileImage: editedUser.profileImage,
-        keywords: newKeywords,
-      });
-      setUser({ ...user, keywords: newKeywords });
-    } catch (error) {
-      console.error('Error removing keyword:', error);
     }
   };
 
   const handleLogout = async () => {
     try {
-      await flushGroupSync(); // 대기 중인 그룹 데이터를 Firebase에 즉시 저장
-      await logoutUser();
+      if (!isDemoMode) {
+        await flushGroupSync();
+        await logoutUser();
+      }
       logout();
       router.push('/onboarding');
     } catch (error) {

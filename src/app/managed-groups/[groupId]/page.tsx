@@ -15,6 +15,7 @@ import GroupNetworkGraph from '@/components/managed-group/GroupNetworkGraph';
 import BottomNav from '@/components/ui/BottomNav';
 import { getUser, getGroupMemberConnections, MemberConnection } from '@/lib/firebase-services';
 import { ManagedGroupMember, User } from '@/types';
+import { demoUsers } from '@/lib/demo-data';
 
 export default function ManagedGroupDetailPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function ManagedGroupDetailPage() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [autoConnect, setAutoConnect] = useState(true);
   const [allowMemberInvite, setAllowMemberInvite] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'network'>('network');
+  const [viewMode, setViewMode] = useState<string>('network');
   const [roleSheetMember, setRoleSheetMember] = useState<MemberInfo | null>(null);
   const [membersWithUser, setMembersWithUser] = useState<(ManagedGroupMember & { user?: User })[]>([]);
   const [memberConnections, setMemberConnections] = useState<MemberConnection[]>([]);
@@ -78,14 +79,22 @@ export default function ManagedGroupDetailPage() {
   // Load member user data for network graph
   useEffect(() => {
     if (!selectedGroup?.members) return;
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     const loadMembersData = async () => {
       const loaded = await Promise.all(
         selectedGroup.members.map(async (member) => {
+          // 데모 모드: 로컬 데모 유저 데이터 사용
+          if (isDemoMode) {
+            const demoUser = demoUsers.find(u => u.id === member.userId);
+            return { ...member, user: demoUser || undefined };
+          }
           try {
             const userData = await getUser(member.userId);
             return { ...member, user: userData || undefined };
           } catch {
-            return { ...member };
+            // Firebase 실패 시 데모 데이터 fallback
+            const demoUser = demoUsers.find(u => u.id === member.userId);
+            return { ...member, user: demoUser || undefined };
           }
         })
       );
@@ -450,30 +459,15 @@ export default function ManagedGroupDetailPage() {
             transition={{ delay: 0.1 }}
             className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-[#F0F6FC]">
                 멤버 ({selectedGroup.members.length})
               </h3>
               <div className="flex items-center gap-2">
-                {/* View Toggle */}
-                <div className="flex items-center gap-0.5 bg-[#0D1117] rounded-lg p-0.5">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className="p-1.5 rounded-md transition-all bg-[#58A6FF]/20 text-[#58A6FF]"
-                  >
-                    <List size={14} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('network')}
-                    className="p-1.5 rounded-md transition-all text-[#484F58] hover:text-[#8B949E]"
-                  >
-                    <Share2 size={14} />
-                  </button>
-                </div>
                 {isOwner && (
                   <button
                     onClick={openAddMemberModal}
-                    className="flex items-center gap-1 text-xs text-[#3FB950] font-medium"
+                    className="flex items-center gap-1 text-xs text-[#3FB950] font-medium px-2 py-1.5"
                   >
                     <Users size={14} />
                     인맥 추가
@@ -482,13 +476,39 @@ export default function ManagedGroupDetailPage() {
                 {canInvite && (
                   <button
                     onClick={openInviteModal}
-                    className="flex items-center gap-1 text-xs text-[#58A6FF] font-medium"
+                    className="flex items-center gap-1 text-xs text-[#58A6FF] font-medium px-2 py-1.5"
                   >
                     <UserPlus size={14} />
                     초대
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* View Toggle - 큰 탭 버튼 */}
+            <div className="flex items-center gap-1 bg-[#0D1117] rounded-xl p-1 mb-4">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-[#58A6FF]/15 text-[#58A6FF] shadow-sm'
+                    : 'text-[#484F58] hover:text-[#8B949E]'
+                }`}
+              >
+                <List size={18} />
+                목록
+              </button>
+              <button
+                onClick={() => setViewMode('network')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'network'
+                    ? 'bg-[#58A6FF]/15 text-[#58A6FF] shadow-sm'
+                    : 'text-[#484F58] hover:text-[#8B949E]'
+                }`}
+              >
+                <Share2 size={18} />
+                관계 시각화
+              </button>
             </div>
 
             {/* Tip for role editors */}

@@ -1,24 +1,28 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, Crown } from 'lucide-react';
+import { Users, Crown, Trash2, LogOut } from 'lucide-react';
 import { ManagedGroup } from '@/types';
 
 interface ManagedGroupCardProps {
   group: ManagedGroup;
   currentUserId: string;
   onClick: () => void;
+  onRemove?: () => void;
 }
 
-export default function ManagedGroupCard({ group, currentUserId, onClick }: ManagedGroupCardProps) {
+export default function ManagedGroupCard({ group, currentUserId, onClick, onRemove }: ManagedGroupCardProps) {
   const isOwner = group.ownerId === currentUserId;
   const memberCount = group.members.length;
 
   return (
-    <motion.button
+    <motion.div
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+      role="button"
+      tabIndex={0}
       whileTap={{ scale: 0.98 }}
-      className="w-full flex items-center gap-4 p-4 bg-[#161B22] border border-[#30363D] rounded-xl hover:border-[#58A6FF]/50 transition-colors text-left"
+      className="w-full flex items-center gap-4 p-4 bg-[#161B22] border border-[#30363D] rounded-xl hover:border-[#58A6FF]/50 transition-colors text-left cursor-pointer"
     >
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
@@ -50,6 +54,18 @@ export default function ManagedGroupCard({ group, currentUserId, onClick }: Mana
           <span className="text-xs text-[#484F58]">{memberCount}명</span>
         </div>
       </div>
-    </motion.button>
+
+      {onRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="shrink-0 p-2 rounded-lg hover:bg-[#DA3633]/15 text-[#484F58] hover:text-[#DA3633] transition-colors"
+        >
+          {isOwner ? <Trash2 size={16} /> : <LogOut size={16} />}
+        </button>
+      )}
+    </motion.div>
   );
 }

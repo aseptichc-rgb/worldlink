@@ -22,8 +22,9 @@ import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
-import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
-import { getNetworkGraph, onAuthChange, getUser, logoutUser, connectWithAllUsers } from '@/lib/firebase-services';
+import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, getDemoNetworkGraph, getDemoRecommendations } from '@/lib/demo-data';
+import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser, connectWithAllUsers } from '@/lib/firebase-services';
+import { Recommendation } from '@/types';
 
 export default function NetworkPage() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function NetworkPage() {
 
   const [showMenu, setShowMenu] = useState(false);
   const [centerUserName, setCenterUserName] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
   // 로그인 시 Firebase에서 그룹 불러오기
   useEffect(() => {
@@ -65,8 +67,14 @@ export default function NetworkPage() {
     ];
   };
 
-  // Auth state listener
+  // Auth state listener (데모 모드에서는 건너뜀)
   useEffect(() => {
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
@@ -89,6 +97,8 @@ export default function NetworkPage() {
 
   // Load network data (centerUserId가 바뀌면 해당 인물 중심으로 재로드)
   useEffect(() => {
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+
     const loadNetworkData = async () => {
       if (!user) return;
 
@@ -111,13 +121,17 @@ export default function NetworkPage() {
 
         if (isMyNetwork) {
           // 내 네트워크
-          const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, {
+          const userInfo = {
             name: user.name,
             profileImage: user.profileImage,
             company: user.company,
             position: user.position,
             keywords: user.keywords,
-          });
+          };
+          // 데모 모드에서는 Firebase 호출 없이 데모 데이터 직접 사용
+          const { nodes: fetchedNodes, edges } = isDemoMode
+            ? getDemoNetworkGraph(user.id, userInfo)
+            : await getNetworkGraph(user.id, userInfo);
           const demoId = getDemoCompatibleId(user);
           const syncedNodes = fetchedNodes.map(node =>
             (node.id === user.id || node.id === demoId) && node.degree === 0 && user.profileImage
@@ -129,7 +143,9 @@ export default function NetworkPage() {
           setCenterUserName(null);
         } else {
           // 다른 인물의 네트워크
-          const { nodes: fetchedNodes, edges } = await getNetworkGraph(targetUserId);
+          const { nodes: fetchedNodes, edges } = isDemoMode
+            ? getDemoNetworkGraph(targetUserId)
+            : await getNetworkGraph(targetUserId);
           setNodes(fetchedNodes);
           setEdges(edges);
           // 중심 인물 이름 저장 및 프로필 시트 자동 표시
@@ -139,6 +155,16 @@ export default function NetworkPage() {
           if (centerNode) {
             const degree = centerUserOriginalDegree ?? 1;
             setSelectedNode({ ...centerNode, degree });
+          }
+        }
+
+        // Load recommendations (내 네트워크일 때만)
+        if (isMyNetwork) {
+          if (isDemoMode) {
+            setRecommendations(getDemoRecommendations(user.id));
+          } else {
+            const recs = await getRecommendations(user.id, 3);
+            setRecommendations(recs);
           }
         }
       } catch (error) {
@@ -397,8 +423,11 @@ export default function NetworkPage() {
                 onClick={async () => {
                   setShowMenu(false);
                   try {
-                    await flushGroupSync(); // 대기 중인 그룹 데이터를 Firebase에 즉시 저장
-                    await logoutUser();
+                    const isDemo = localStorage.getItem('nodded_demo_mode') === 'true';
+                    if (!isDemo) {
+                      await flushGroupSync();
+                      await logoutUser();
+                    }
                     clearGroups();
                     logout();
                     router.push('/onboarding');

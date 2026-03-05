@@ -6,6 +6,7 @@ import { X, Search, Loader2, UserPlus, Check, Users } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useManagedGroupStore } from '@/store/managedGroupStore';
 import { getUserConnectionsWithDetails } from '@/lib/firebase-services';
+import { demoUsers, demoConnections } from '@/lib/demo-data';
 import { User } from '@/types';
 
 export default function ManagedGroupAddMemberModal() {
@@ -28,10 +29,22 @@ export default function ManagedGroupAddMemberModal() {
       setIsLoadingConnections(true);
       setSelectedIds(new Set());
       setSearchQuery('');
-      getUserConnectionsWithDetails(user.id)
-        .then(setConnections)
-        .catch(() => setConnections([]))
-        .finally(() => setIsLoadingConnections(false));
+
+      const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+      if (isDemoMode) {
+        // 데모 모드: 로컬 데모 데이터에서 인맥 목록 가져오기
+        const connIds = demoConnections[user.id] || [];
+        const connUsers = connIds
+          .map(id => demoUsers.find(u => u.id === id))
+          .filter((u): u is User => u !== undefined);
+        setConnections(connUsers);
+        setIsLoadingConnections(false);
+      } else {
+        getUserConnectionsWithDetails(user.id)
+          .then(setConnections)
+          .catch(() => setConnections([]))
+          .finally(() => setIsLoadingConnections(false));
+      }
     }
   }, [isAddMemberModalOpen, user]);
 

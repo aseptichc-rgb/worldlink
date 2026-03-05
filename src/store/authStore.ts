@@ -30,13 +30,21 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('nodded-contacts');
           localStorage.removeItem('nodded-memos');
           localStorage.removeItem('nodded-groups');
+          localStorage.removeItem('nodded_demo_mode');
         } catch { /* ignore */ }
         set({ user: null, isAuthenticated: false, inviteCode: null });
       },
     }),
     {
       name: 'nexus-auth',
-      partialize: (state) => ({ inviteCode: state.inviteCode }),
+      partialize: (state) => {
+        // 데모 모드일 때는 유저 데이터도 persist (Firebase Auth가 없으므로)
+        const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+        if (isDemoMode && state.user) {
+          return { inviteCode: state.inviteCode, user: state.user, isAuthenticated: true };
+        }
+        return { inviteCode: state.inviteCode };
+      },
     }
   )
 );

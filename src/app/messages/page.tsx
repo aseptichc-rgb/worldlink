@@ -64,8 +64,14 @@ export default function MessagesPage() {
   const [replyContent, setReplyContent] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  // Auth state listener
+  // Auth state listener (데모 모드에서는 건너뜀)
   useEffect(() => {
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
