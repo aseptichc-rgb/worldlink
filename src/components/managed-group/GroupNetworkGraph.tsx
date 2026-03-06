@@ -163,12 +163,13 @@ export default function GroupNetworkGraph({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Layout nodes - 스크린샷처럼 정렬된 레이아웃
+  // Layout nodes - 중앙 임원단 + 주변 멤버 방사형 배치 (모바일 최적화)
   useEffect(() => {
     if (members.length === 0 || dimensions.width === 0) return;
 
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
+    const isMobile = dimensions.width < 500;
 
     const president = members.find(m => m.role === 'president');
     const executives = members.filter(m =>
@@ -191,17 +192,26 @@ export default function GroupNetworkGraph({
       ? regulars.filter(m => m.userId !== president.userId && !innerRing.some(e => e.userId === m.userId))
       : regulars.filter(m => m.userId !== centerMember?.userId && !innerRing.some(e => e.userId === m.userId));
 
-    // 카테고리별 그룹핑
-    const categoryGroups = new Map<string, typeof outerRing>();
-    outerRing.forEach(m => {
-      const cat = (m.user as any)?.category || 'default';
-      if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
-      categoryGroups.get(cat)!.push(m);
-    });
-
     const nodes: MemberNode[] = [];
 
-    // 1. 회장 - 정중앙
+    // 분야별로 멤버 그룹핑 (분야 없으면 인덱스 기반으로 분산)
+    const categoryMap = new Map<string, typeof outerRing>();
+    const categoryColors = Object.keys(CATEGORY_COLORS).filter(k => k !== 'default');
+
+    outerRing.forEach((m, idx) => {
+      let cat = m.user?.category || m.user?.industry;
+      // 분야 정보가 없으면 색상 팔레트를 순환하며 분배
+      if (!cat) {
+        cat = categoryColors[idx % categoryColors.length];
+      }
+      if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+      categoryMap.get(cat)!.push({ ...m, assignedCategory: cat });
+    });
+
+    const categories = Array.from(categoryMap.keys());
+    const numCategories = Math.max(categories.length, 1);
+
+    // 1. 회장 - 중앙
     if (centerMember) {
       nodes.push({
         ...centerMember,
@@ -210,53 +220,106 @@ export default function GroupNetworkGraph({
         vx: 0,
         vy: 0,
         ring: 0,
-        radius: NODE_SIZES[0],
+        radius: isMobile ? 40 : NODE_SIZES[0],
         category: (centerMember.user as any)?.category,
       });
     }
 
-    // 2. 회장단 - 회장 주변 원형 배치 (겹치지 않게 넓게)
-    const executiveRadius = 140;
-    const execCount = innerRing.length;
+    // 2. 임원단 - 회장 주변 원형 배치
+    const execRadius = isMobile ? 70 : 100;
     innerRing.forEach((member, i) => {
-      // 첫 번째는 우측 상단부터 시작, 균등 분배 (세로 겹침 방지)
-      const startAngle = -Math.PI / 3; // -60도에서 시작
-      const angleSpan = Math.PI * 1.5; // 270도 범위로 분산
-      const angle = execCount === 1
-        ? 0 // 1명이면 오른쪽
-        : startAngle + (i / (execCount - 1 || 1)) * angleSpan;
-
+      const angle = (i / Math.max(innerRing.length, 1)) * Math.PI * 2 - Math.PI / 2;
       nodes.push({
         ...member,
-        x: centerX + Math.cos(angle) * executiveRadius,
-        y: centerY + Math.sin(angle) * executiveRadius,
+        x: centerX + Math.cos(angle) * execRadius,
+        y: centerY + Math.sin(angle) * execRadius,
         vx: 0,
         vy: 0,
         ring: 1,
-        radius: NODE_SIZES[1],
+        radius: isMobile ? 32 : NODE_SIZES[1],
         category: (member.user as any)?.category,
       });
     });
 
-    // 3. 일반 멤버 - 회장/회장단 외곽에 원형으로 균등 배치
-    const outerRadius = 280; // 외곽 반경
-    const totalOuterMembers = outerRing.length;
+    // 3. 일반 멤버 - 분야별로 섹터에 배치
+    const minDim = Math.min(dimensions.width, dimensions.height);
+    const baseRadius = isMobile ? minDim * 0.38 : minDim * 0.35;
+    const nodeSize = isMobile ? 24 : NODE_SIZES[2];
+    const nodeSpacing = isMobile ? 55 : 65;
 
-    outerRing.forEach((member, i) => {
-      // 360도 전체에 균등 분배
-      const angle = (i / Math.max(totalOuterMembers, 1)) * Math.PI * 2 - Math.PI / 2;
+    categories.forEach((category, catIdx) => {
+      const membersInCategory = categoryMap.get(category)!;
+      const numMembers = membersInCategory.length;
 
-      nodes.push({
-        ...member,
-        x: centerX + Math.cos(angle) * outerRadius,
-        y: centerY + Math.sin(angle) * outerRadius,
-        vx: 0,
-        vy: 0,
-        ring: 2,
-        radius: NODE_SIZES[2],
-        category: (member.user as any)?.category || 'default',
+      // 각 분야가 차지하는 각도 범위
+      const sectorAngle = (Math.PI * 2) / numCategories;
+      const sectorStart = catIdx * sectorAngle - Math.PI / 2;
+
+      // 멤버들을 여러 층으로 배치
+      const maxPerRing = Math.max(3, Math.floor(sectorAngle * baseRadius / nodeSpacing));
+      const numRings = Math.ceil(numMembers / maxPerRing);
+
+      membersInCategory.forEach((member, idx) => {
+        const ringIdx = Math.floor(idx / maxPerRing);
+        const posInRing = idx % maxPerRing;
+        const membersInThisRing = Math.min(maxPerRing, numMembers - ringIdx * maxPerRing);
+
+        // 현재 링의 반경
+        const radius = baseRadius + ringIdx * nodeSpacing;
+
+        // 섹터 내 각도 (양쪽 여백 포함)
+        const padding = sectorAngle * 0.1;
+        const usableAngle = sectorAngle - padding * 2;
+        const angleStep = membersInThisRing > 1 ? usableAngle / (membersInThisRing - 1) : 0;
+        const angle = sectorStart + padding + posInRing * angleStep;
+
+        const assignedCat = (member as any).assignedCategory || category;
+
+        nodes.push({
+          ...member,
+          x: centerX + Math.cos(angle) * radius,
+          y: centerY + Math.sin(angle) * radius,
+          vx: 0,
+          vy: 0,
+          ring: 2,
+          radius: nodeSize,
+          category: assignedCat,
+        });
       });
     });
+
+    // 4. 충돌 방지
+    const minDistance = isMobile ? 45 : 55;
+    for (let iter = 0; iter < 30; iter++) {
+      let moved = false;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i];
+          const b = nodes[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = a.radius + b.radius + minDistance;
+
+          if (dist < minDist && dist > 0) {
+            const overlap = (minDist - dist) / 2;
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            const weightA = a.ring === 0 ? 0 : a.ring === 1 ? 0.1 : 1;
+            const weightB = b.ring === 0 ? 0 : b.ring === 1 ? 0.1 : 1;
+            const total = weightA + weightB || 1;
+
+            a.x -= nx * overlap * (weightA / total);
+            a.y -= ny * overlap * (weightA / total);
+            b.x += nx * overlap * (weightB / total);
+            b.y += ny * overlap * (weightB / total);
+            moved = true;
+          }
+        }
+      }
+      if (!moved) break;
+    }
 
     nodesRef.current = nodes;
   }, [members, ownerId, dimensions]);
@@ -399,36 +462,115 @@ export default function GroupNetworkGraph({
       const nodes = nodesRef.current;
       const centerNode = nodes.find(n => n.ring === 0);
 
-      // Draw ring guides
-      if (centerNode) {
-        const minDim = Math.min(dimensions.width, dimensions.height);
-        const innerRadius = Math.max(120, minDim * 0.2);
-        const outerRadius = Math.max(220, minDim * 0.36);
+      // Draw category labels (분야 그룹 바깥쪽에 표시 - 겹침 방지)
+      if (transform.scale >= 0.5 && centerNode) {
+        const memberNodes = nodes.filter(n => n.ring === 2);
+        const categoryData = new Map<string, { sumX: number; sumY: number; maxDist: number; count: number }>();
 
-        [innerRadius, outerRadius].forEach(r => {
+        // 각 분야별 중심과 최대 거리 계산
+        memberNodes.forEach(node => {
+          const cat = node.category || 'default';
+          if (!categoryData.has(cat)) {
+            categoryData.set(cat, { sumX: 0, sumY: 0, maxDist: 0, count: 0 });
+          }
+          const data = categoryData.get(cat)!;
+          data.sumX += node.x;
+          data.sumY += node.y;
+          const dist = Math.sqrt(Math.pow(node.x - centerNode.x, 2) + Math.pow(node.y - centerNode.y, 2));
+          data.maxDist = Math.max(data.maxDist, dist);
+          data.count++;
+        });
+
+        // 분야 라벨 그리기 (중심에서 바깥 방향으로)
+        categoryData.forEach((data, category) => {
+          if (data.count === 0) return;
+
+          // 분야 그룹 중심
+          const avgX = data.sumX / data.count;
+          const avgY = data.sumY / data.count;
+
+          // 중심에서 바깥 방향 계산
+          const dx = avgX - centerNode.x;
+          const dy = avgY - centerNode.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist === 0) return;
+
+          // 라벨을 가장 바깥쪽 노드보다 더 바깥에 배치
+          const labelDist = data.maxDist + 50;
+          const labelX = centerNode.x + (dx / dist) * labelDist;
+          const labelY = centerNode.y + (dy / dist) * labelDist;
+
+          const categoryColor = CATEGORY_COLORS[category] || CATEGORY_COLORS['default'];
+
+          // 라벨 배경
+          ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+          const textWidth = ctx.measureText(category).width;
+          ctx.fillStyle = hexToRgba(categoryColor, 0.2);
           ctx.beginPath();
-          ctx.arc(centerNode.x, centerNode.y, r, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(48, 54, 61, 0.3)';
+          ctx.roundRect(labelX - textWidth / 2 - 8, labelY - 9, textWidth + 16, 18, 9);
+          ctx.fill();
+
+          // 라벨 테두리
+          ctx.strokeStyle = hexToRgba(categoryColor, 0.5);
           ctx.lineWidth = 1;
-          ctx.setLineDash([4, 8]);
           ctx.stroke();
-          ctx.setLineDash([]);
+
+          // 라벨 텍스트
+          ctx.fillStyle = categoryColor;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(category, labelX, labelY);
+          ctx.textBaseline = 'alphabetic';
         });
       }
 
-      // Draw edges - 실제 인맥 연결 관계
-      const nodeMap = new Map(nodes.map(n => [n.userId, n]));
+      // Draw edges - 임원단에서 각 분야 그룹으로 연결
+      const executiveNodes = nodes.filter(n => n.ring === 1);
+      const memberNodes = nodes.filter(n => n.ring === 2);
 
-      // 1. 회장 → 회장단 연결 (골드/그룹색 강조)
+      // 분야별 그룹핑
+      const categoryGroups = new Map<string, MemberNode[]>();
+      memberNodes.forEach(node => {
+        const cat = node.category || 'default';
+        if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
+        categoryGroups.get(cat)!.push(node);
+      });
+
+      // 1. 임원단/회장 → 각 멤버 연결 (방사형)
+      const coreNodes = centerNode ? [centerNode, ...executiveNodes] : executiveNodes;
+
+      memberNodes.forEach(member => {
+        // 가장 가까운 임원/회장 찾기
+        let closestCore = coreNodes[0];
+        let minDist = Infinity;
+        coreNodes.forEach(core => {
+          const dx = core.x - member.x;
+          const dy = core.y - member.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist) {
+            minDist = dist;
+            closestCore = core;
+          }
+        });
+
+        const catColor = CATEGORY_COLORS[member.category || 'default'] || CATEGORY_COLORS['default'];
+
+        ctx.beginPath();
+        ctx.moveTo(closestCore.x, closestCore.y);
+        ctx.lineTo(member.x, member.y);
+        ctx.strokeStyle = hexToRgba(catColor, 0.15);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // 2. 회장 → 임원단 연결 (골드 강조)
       if (centerNode) {
-        nodes.forEach(node => {
-          if (node.ring !== 1) return; // 회장단만
-
+        executiveNodes.forEach(node => {
           ctx.beginPath();
           ctx.moveTo(centerNode.x, centerNode.y);
           ctx.lineTo(node.x, node.y);
-          ctx.strokeStyle = hexToRgba('#FFD700', 0.35);
-          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = hexToRgba('#FFD700', 0.4);
+          ctx.lineWidth = 2;
           ctx.stroke();
         });
       }
@@ -441,44 +583,44 @@ export default function GroupNetworkGraph({
         const { x, y, radius } = node;
         const effectiveRadius = isHovered ? radius + 5 : radius;
 
-        // Glow - 회장/회장단에게 항상 글로우 적용
-        if (node.ring <= 1 || isHovered) {
-          const glowMult = GLOW_MULTIPLIERS[node.ring as keyof typeof GLOW_MULTIPLIERS] || 1.8;
-          const glowRadius = effectiveRadius * glowMult;
-          const glowGrad = ctx.createRadialGradient(x, y, effectiveRadius * 0.3, x, y, glowRadius);
-
-          let glowColor: string;
-          let glowAlpha: number;
-          if (node.ring === 0) {
-            glowColor = '#FFD700';
-            glowAlpha = 0.45;
-          } else if (node.ring === 1) {
-            glowColor = groupColor;
-            glowAlpha = 0.25;
-          } else {
-            glowColor = groupColor;
-            glowAlpha = 0.15;
-          }
-
-          glowGrad.addColorStop(0, hexToRgba(glowColor, glowAlpha));
-          glowGrad.addColorStop(0.6, hexToRgba(glowColor, glowAlpha * 0.3));
-          glowGrad.addColorStop(1, 'transparent');
-          ctx.beginPath();
-          ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-          ctx.fillStyle = glowGrad;
-          ctx.fill();
-        }
-
-        // Border color - 회장/회장단은 역할 색상, 일반 멤버는 카테고리 색상
+        // Border color - 분야별 색상 적용
         let borderColor: string;
         if (node.ring === 0) {
           borderColor = '#FFD700'; // 회장 - 골드
         } else if (node.ring === 1) {
           borderColor = '#FFA657'; // 회장단 - 오렌지
         } else {
+          // 일반 멤버 - 분야별 색상
           borderColor = CATEGORY_COLORS[node.category || 'default'] || CATEGORY_COLORS['default'];
         }
-        const borderWidth = node.ring === 0 ? 4 : node.ring === 1 ? 3.5 : isHovered ? 3 : 2.5;
+
+        // Glow - 모든 노드에 분야별 색상 글로우 적용
+        const glowMult = node.ring === 0 ? 2.8 : node.ring === 1 ? 2.2 : 1.8;
+        const glowRadius = effectiveRadius * glowMult;
+        const glowGrad = ctx.createRadialGradient(x, y, effectiveRadius * 0.3, x, y, glowRadius);
+
+        let glowColor: string;
+        let glowAlpha: number;
+        if (node.ring === 0) {
+          glowColor = '#FFD700';
+          glowAlpha = 0.5;
+        } else if (node.ring === 1) {
+          glowColor = '#FFA657';
+          glowAlpha = 0.35;
+        } else {
+          glowColor = borderColor; // 분야별 색상으로 글로우
+          glowAlpha = isHovered ? 0.4 : 0.2;
+        }
+
+        glowGrad.addColorStop(0, hexToRgba(glowColor, glowAlpha));
+        glowGrad.addColorStop(0.5, hexToRgba(glowColor, glowAlpha * 0.3));
+        glowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.fill();
+
+        const borderWidth = node.ring === 0 ? 4 : node.ring === 1 ? 3.5 : 3;
 
         // Node circle background
         ctx.beginPath();

@@ -150,6 +150,10 @@ export interface NetworkNode {
   degree: number; // 1 = direct connection, 2 = friend of friend
   connectionCount: number;
   category?: string; // 분야/카테고리 (예: 의료기기, 솔루션, 투자 등)
+  isImported?: boolean; // 가져온 연락처 여부
+  importedByUserId?: string; // 가져온 연락처를 소유한 사용자 ID
+  phone?: string; // 가져온 연락처의 전화번호
+  email?: string; // 가져온 연락처의 이메일
 }
 
 export interface NetworkEdge {

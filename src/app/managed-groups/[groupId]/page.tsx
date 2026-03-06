@@ -129,10 +129,12 @@ export default function ManagedGroupDetailPage() {
   }
 
   const isOwner = user?.id === selectedGroup.ownerId;
-  // 현재 사용자가 회장(president) 역할인지 확인
-  const isPresident = selectedGroup.members.some(
-    m => m.userId === user?.id && m.role === 'president'
-  );
+  // 현재 사용자의 역할 확인
+  const currentUserMember = selectedGroup.members.find(m => m.userId === user?.id);
+  const isPresident = currentUserMember?.role === 'president';
+  const isExecutive = currentUserMember?.role === 'executive';
+  // 회장 또는 회장단은 역할 편집 가능
+  const canEditRoles = isPresident || isExecutive;
   const canInvite = isOwner || selectedGroup.settings.allowMemberInvite;
 
   const handleSaveEdit = async () => {
@@ -169,8 +171,8 @@ export default function ManagedGroupDetailPage() {
   };
 
   const handleMemberTap = (member: MemberInfo | (ManagedGroupMember & { user?: User })) => {
-    // 회장만 역할 변경 가능 (목록 뷰에서만)
-    if (isPresident) {
+    // 회장 또는 회장단은 역할 변경 가능 (목록 뷰에서만)
+    if (canEditRoles) {
       setRoleSheetMember(member as MemberInfo);
     }
   };
@@ -489,8 +491,8 @@ export default function ManagedGroupDetailPage() {
               </div>
             </div>
 
-            {/* Tip for president */}
-            {isPresident && viewMode === 'list' && (
+            {/* Tip for role editors */}
+            {canEditRoles && viewMode === 'list' && (
               <p className="text-[10px] text-[#484F58] mb-3">
                 멤버를 탭하면 프로필로 이동합니다. 연필 아이콘으로 역할을 편집할 수 있습니다.
               </p>
@@ -500,9 +502,10 @@ export default function ManagedGroupDetailPage() {
               members={selectedGroup.members}
               ownerId={selectedGroup.ownerId}
               currentUserId={user!.id}
+              currentUserRole={currentUserMember?.role}
               onRemoveMember={handleRemoveMember}
               onMemberClick={handleMemberClick}
-              onRoleEdit={isPresident ? handleMemberTap : undefined}
+              onRoleEdit={canEditRoles ? handleMemberTap : undefined}
             />
           </motion.div>
 
@@ -587,6 +590,7 @@ export default function ManagedGroupDetailPage() {
         onClose={() => setRoleSheetMember(null)}
         member={roleSheetMember}
         groupId={groupId}
+        currentUserRole={currentUserMember?.role}
       />
 
       <ManagedGroupInviteModal />

@@ -11,6 +11,7 @@ interface MemberRoleSheetProps {
   onClose: () => void;
   member: (ManagedGroupMember & { user?: User }) | null;
   groupId: string;
+  currentUserRole?: ManagedGroupRole;
 }
 
 const ROLE_OPTIONS: {
@@ -48,8 +49,15 @@ export default function MemberRoleSheet({
   onClose,
   member,
   groupId,
+  currentUserRole,
 }: MemberRoleSheetProps) {
   const { updateMemberRole } = useManagedGroupStore();
+
+  // 회장단(executive)은 회장 지정 불가, executive/member만 선택 가능
+  const isCurrentUserExecutive = currentUserRole === 'executive';
+  const availableRoleOptions = isCurrentUserExecutive
+    ? ROLE_OPTIONS.filter(opt => opt.role !== 'president')
+    : ROLE_OPTIONS;
 
   const [selectedRole, setSelectedRole] = useState<ManagedGroupRole>('member');
   const [title, setTitle] = useState('');
@@ -63,6 +71,12 @@ export default function MemberRoleSheet({
   }, [member]);
 
   if (!member) return null;
+
+  // 회장단은 회장의 역할을 변경할 수 없음
+  const isTargetPresident = member.role === 'president';
+  if (isCurrentUserExecutive && isTargetPresident) {
+    return null;
+  }
 
   const name = member.user?.name || '알 수 없음';
 
@@ -114,7 +128,7 @@ export default function MemberRoleSheet({
         {/* Role Selection */}
         <p className="text-sm font-semibold text-[#F0F6FC] mb-3">역할 설정</p>
         <div className="space-y-2 mb-4">
-          {ROLE_OPTIONS.map((option) => {
+          {availableRoleOptions.map((option) => {
             const Icon = option.icon;
             const isSelected = selectedRole === option.role;
             return (

@@ -29,12 +29,14 @@ const COLORS = {
   nodePrimary: '#4A90E2',        // 1차 연결 - 청색
   nodeSecondary: '#1F6FEB',      // 2차 연결 - 보라색
   nodeTertiary: '#9B8ED9',       // 3차 연결 - 연보라
+  nodeImported: '#3FB950',       // 가져온 연락처 - 녹색
 
   // 엣지 색상
   edgePrimary: '#4A90E2',        // 1차 연결선
   edgeSecondary: '#1F6FEB',      // 2차 연결선
   edgeTertiary: '#9B8ED9',       // 3차 연결선
   edgeHighlighted: '#FFB800',    // 강조된 연결선
+  edgeImported: '#3FB950',       // 가져온 연락처 연결선
 
   // 상호작용 색상
   hover: '#58A6FF',
@@ -147,7 +149,7 @@ export default function NetworkGraph() {
   const nodesRef = useRef<GraphNode[]>([]);
   const edgesRef = useRef<GraphEdge[]>([]);
   const edgeAnimationRef = useRef<number>(0);
-  const categoryAnglesRef = useRef<Map<string, { start: number; end: number; nodes: NetworkNode[] }>>(new Map());
+  const categoryAnglesRef = useRef<Map<string, { start: number; end: number; nodes: NetworkNode[]; clusterCenter?: { x: number; y: number } }>>(new Map());
   const transitionRef = useRef<TransitionState>({
     isActive: false,
     startTime: 0,
@@ -276,22 +278,24 @@ export default function NetworkGraph() {
     const sortedCategories = Array.from(categoriesMap.entries())
       .sort((a, b) => b[1].length - a[1].length);
 
-    // Calculate angle sectors for each category with gaps
+    // 카테고리별 섹터 배치 - 각 카테고리가 부채꼴 영역을 차지
     const totalNodes = degree1Nodes.length;
-    const gapAngle = 0.15; // Larger gap between sectors for clearer separation
+    const gapAngle = 0.2; // 카테고리 사이 간격
     const totalGaps = sortedCategories.length * gapAngle;
     const usableAngle = Math.PI * 2 - totalGaps;
-    let currentAngle = -Math.PI / 2; // Start at top
+    let currentAngle = -Math.PI / 2;
 
-    const categoryAngles = new Map<string, { start: number; end: number; nodes: NetworkNode[] }>();
+    const categoryAngles = new Map<string, { start: number; end: number; nodes: NetworkNode[]; clusterCenter: { x: number; y: number } }>();
     sortedCategories.forEach(([category, categoryNodes]) => {
       const angleSpan = (categoryNodes.length / totalNodes) * usableAngle;
+      const midAngle = currentAngle + angleSpan / 2;
       categoryAngles.set(category, {
         start: currentAngle,
         end: currentAngle + angleSpan,
         nodes: categoryNodes,
+        clusterCenter: { x: centerX + Math.cos(midAngle) * 250, y: centerY + Math.sin(midAngle) * 250 },
       });
-      currentAngle += angleSpan + gapAngle; // Add gap after each sector
+      currentAngle += angleSpan + gapAngle;
     });
 
     // Store for rendering category labels
@@ -305,7 +309,7 @@ export default function NetworkGraph() {
         x = centerX;
         y = centerY;
       } else if (node.degree === 1) {
-        // Position within category sector - multi-ring layout for large categories
+        // 카테고리 섹터 내 컴팩트 배치
         const category = node.category || '기타';
         const categoryInfo = categoryAngles.get(category);
 
@@ -314,19 +318,18 @@ export default function NetworkGraph() {
           const nodeIndex = categoryNodes.findIndex(n => n.id === node.id);
           const nodesInCategory = categoryNodes.length;
 
-          // Calculate how many nodes fit per ring based on arc length
-          // Minimum spacing between nodes (in pixels) to avoid overlap
-          const minNodeSpacing = 110;
-          const baseRadius = 300;
-          const ringGap = 95; // distance between rings
-          const sectorPadding = 0.05;
+          // 노드 간격을 줄여서 더 밀집되게
+          const minNodeSpacing = 75;
+          const baseRadius = 200;
+          const ringGap = 65;
+          const sectorPadding = 0.08;
           const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
 
-          // Calculate max nodes per ring at the base radius
+          // 링당 노드 수 계산
           const arcLength = sectorAngle * baseRadius;
           const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
 
-          // Determine which ring this node belongs to
+          // 어떤 링에 속하는지 계산
           const ringIndex = Math.floor(nodeIndex / nodesPerRing);
           const indexInRing = nodeIndex % nodesPerRing;
           const nodesInThisRing = Math.min(nodesPerRing, nodesInCategory - ringIndex * nodesPerRing);
@@ -341,11 +344,62 @@ export default function NetworkGraph() {
           y = centerY + Math.sin(angle) * radius;
         }
       } else if (node.degree === 2) {
-        const index = degree2Nodes.findIndex(n => n.id === node.id);
-        const angle = (index / degree2Nodes.length) * Math.PI * 2 - Math.PI / 2;
-        const radius = 550;
-        x = centerX + Math.cos(angle) * radius;
-        y = centerY + Math.sin(angle) * radius;
+        // degree 2 노드: 해당 카테고리 섹터 바깥쪽에 배치
+        const connectedEdge = edges.find(e => {
+          const sourceId = typeof e.source === 'string' ? e.source : (e.source as GraphNode).id;
+          const targetId = typeof e.target === 'string' ? e.target : (e.target as GraphNode).id;
+          return (sourceId === node.id && e.degree === 2) || (targetId === node.id && e.degree === 2);
+        });
+
+        let parentCategory = '기타';
+        if (connectedEdge) {
+          const parentId = typeof connectedEdge.source === 'string' ? connectedEdge.source : (connectedEdge.source as GraphNode).id;
+          const targetId = typeof connectedEdge.target === 'string' ? connectedEdge.target : (connectedEdge.target as GraphNode).id;
+          const parentNodeId = parentId === node.id ? targetId : parentId;
+          const parentNode = degree1Nodes.find(n => n.id === parentNodeId);
+          if (parentNode) {
+            parentCategory = parentNode.category || '기타';
+          }
+        }
+
+        const categoryInfo = categoryAngles.get(parentCategory);
+        if (categoryInfo) {
+          const { start, end } = categoryInfo;
+          // 같은 카테고리에 속한 degree 2 노드들
+          const deg2InSameCategory = degree2Nodes.filter(n => {
+            const edge = edges.find(e => {
+              const src = typeof e.source === 'string' ? e.source : (e.source as GraphNode).id;
+              const tgt = typeof e.target === 'string' ? e.target : (e.target as GraphNode).id;
+              return (src === n.id || tgt === n.id) && e.degree === 2;
+            });
+            if (!edge) return false;
+            const pId = typeof edge.source === 'string' ? edge.source : (edge.source as GraphNode).id;
+            const tId = typeof edge.target === 'string' ? edge.target : (edge.target as GraphNode).id;
+            const pNodeId = pId === n.id ? tId : pId;
+            const pNode = degree1Nodes.find(nd => nd.id === pNodeId);
+            return pNode && (pNode.category || '기타') === parentCategory;
+          });
+
+          const idxInCategory = deg2InSameCategory.findIndex(n => n.id === node.id);
+          const totalInCategory = deg2InSameCategory.length;
+
+          // 섹터 각도 내에서 배치
+          const sectorAngle = end - start;
+          const nodeAngle = totalInCategory === 1
+            ? (start + end) / 2
+            : start + 0.1 * sectorAngle + (idxInCategory / (totalInCategory - 1)) * sectorAngle * 0.8;
+
+          // 바깥 링에 배치 (1차 노드보다 더 바깥)
+          const outerRadius = 420 + Math.floor(idxInCategory / 10) * 55;
+
+          x = centerX + Math.cos(nodeAngle) * outerRadius;
+          y = centerY + Math.sin(nodeAngle) * outerRadius;
+        } else {
+          const index = degree2Nodes.findIndex(n => n.id === node.id);
+          const angle = (index / degree2Nodes.length) * Math.PI * 2 - Math.PI / 2;
+          x = centerX + Math.cos(angle) * 450;
+          y = centerY + Math.sin(angle) * 450;
+        }
       }
 
       return {
@@ -700,24 +754,33 @@ export default function NetworkGraph() {
 
     // 3. Border (카테고리별 색상)
     ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : isMutual ? 3 : 2;
-    if (isDimmed) {
-      ctx.strokeStyle = 'rgba(33, 38, 45, 0.15)';
-    } else if (isMutual) {
-      ctx.strokeStyle = COLORS.mutual;
-    } else if (isFocused && node.degree !== 0) {
-      ctx.strokeStyle = COLORS.selected;
-    } else if (isConnected && node.degree !== 0) {
-      ctx.strokeStyle = COLORS.focused;
-    } else if (isHighlighted) {
-      ctx.strokeStyle = COLORS.hover;
-    } else if (node.degree === 0) {
-      ctx.strokeStyle = COLORS.nodeCore;
+
+    // 가져온 연락처는 점선 테두리
+    if (node.isImported && !isDimmed) {
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = COLORS.nodeImported;
+      ctx.stroke();
+      ctx.setLineDash([]);
     } else {
-      // Use category color for border
-      const category = node.category || '기타';
-      ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+      if (isDimmed) {
+        ctx.strokeStyle = 'rgba(33, 38, 45, 0.15)';
+      } else if (isMutual) {
+        ctx.strokeStyle = COLORS.mutual;
+      } else if (isFocused && node.degree !== 0) {
+        ctx.strokeStyle = COLORS.selected;
+      } else if (isConnected && node.degree !== 0) {
+        ctx.strokeStyle = COLORS.focused;
+      } else if (isHighlighted) {
+        ctx.strokeStyle = COLORS.hover;
+      } else if (node.degree === 0) {
+        ctx.strokeStyle = COLORS.nodeCore;
+      } else {
+        // Use category color for border
+        const category = node.category || '기타';
+        ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
 
     // 3.5. Mutual connection outer ring (공통 인맥 이중 링)
     if (isMutual && !isDimmed) {
@@ -1238,7 +1301,14 @@ export default function NetworkGraph() {
         ctx.moveTo(source.x || 0, source.y || 0);
         ctx.lineTo(target.x || 0, target.y || 0);
 
-        if (edge.degree === 1) {
+        // 가져온 연락처와의 연결은 녹색 점선
+        const isImportedEdge = source.isImported || target.isImported;
+
+        if (isImportedEdge) {
+          ctx.strokeStyle = isHighlighted ? COLORS.edgeImported : 'rgba(63, 185, 80, 0.2)';
+          ctx.lineWidth = isHighlighted ? 2 : 1;
+          ctx.setLineDash([3, 3]);
+        } else if (edge.degree === 1) {
           ctx.strokeStyle = isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.15)';
           ctx.lineWidth = isHighlighted ? 2 : 1;
           ctx.setLineDash([]);

@@ -761,6 +761,48 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
 
   console.log('[getNetworkGraph] Removed duplicates:', duplicateIds.size, 'nodes');
 
+  // importedContacts 추가 (가져온 연락처)
+  const userDoc = await getDoc(doc(db, 'users', userId));
+  const importedContacts = userDoc.data()?.importedContacts || [];
+
+  if (importedContacts.length > 0) {
+    console.log('[getNetworkGraph] Adding imported contacts:', importedContacts.length);
+
+    // 이미 추가된 이름 집합 (중복 방지)
+    const existingNames = new Set(filteredNodes.map(n => n.name));
+
+    for (const contact of importedContacts) {
+      // 이미 같은 이름의 노드가 있으면 건너뛰기
+      if (existingNames.has(contact.name)) continue;
+
+      const importedNode: NetworkNode = {
+        id: contact.id || `imported_${contact.phone?.replace(/[^0-9]/g, '') || Date.now()}`,
+        name: contact.name,
+        company: contact.company,
+        position: contact.position,
+        keywords: [],
+        degree: 1,
+        connectionCount: 0,
+        isImported: true,
+        importedByUserId: userId,
+        phone: contact.phone,
+        email: contact.email,
+      };
+
+      filteredNodes.push(importedNode);
+      existingNames.add(contact.name);
+
+      // 중심 사용자와 연결
+      filteredEdges.push({
+        source: userId,
+        target: importedNode.id,
+        degree: 1,
+      });
+    }
+
+    console.log('[getNetworkGraph] Total nodes after imports:', filteredNodes.length);
+  }
+
   return { nodes: filteredNodes, edges: filteredEdges };
 };
 
@@ -1188,6 +1230,25 @@ export const acceptGroupInvite = async (
 // Helper: Firestore 문서 → ManagedGroup 변환
 const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
   const data = docSnap.data();
+
+  // 멤버 중복 제거 (userId 기준)
+  const seenUserIds = new Set<string>();
+  const uniqueMembers = (data.members || [])
+    .map((m: any) => ({
+      userId: m.userId,
+      role: m.role,
+      ...(m.title ? { title: m.title } : {}),
+      joinedAt: m.joinedAt?.toDate?.() || new Date(),
+    }))
+    .filter((m: any) => {
+      if (seenUserIds.has(m.userId)) return false;
+      seenUserIds.add(m.userId);
+      return true;
+    });
+
+  // memberUserIds도 중복 제거
+  const uniqueMemberUserIds = [...new Set(data.memberUserIds || [])];
+
   return {
     id: docSnap.id,
     name: data.name,
@@ -1195,13 +1256,8 @@ const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
     color: data.color,
     icon: data.icon,
     ownerId: data.ownerId,
-    members: (data.members || []).map((m: any) => ({
-      userId: m.userId,
-      role: m.role,
-      ...(m.title ? { title: m.title } : {}),
-      joinedAt: m.joinedAt?.toDate?.() || new Date(),
-    })),
-    memberUserIds: data.memberUserIds || [],
+    members: uniqueMembers,
+    memberUserIds: uniqueMemberUserIds,
     settings: data.settings || { autoConnect: true, allowMemberInvite: false },
     createdAt: data.createdAt?.toDate?.() || new Date(),
     updatedAt: data.updatedAt?.toDate?.() || new Date(),
@@ -1346,7 +1402,10 @@ export const addMemberToManagedGroup = async (
     ...group.members.map(m => ({ ...m, joinedAt: Timestamp.fromDate(m.joinedAt) })),
     newMember,
   ];
-  const updatedMemberUserIds = [...group.memberUserIds, userId];
+  // memberUserIds 중복 방지
+  const updatedMemberUserIds = group.memberUserIds.includes(userId)
+    ? group.memberUserIds
+    : [...group.memberUserIds, userId];
 
   batch.update(groupRef, {
     members: updatedMembers,

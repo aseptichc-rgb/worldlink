@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown, Upload } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
@@ -266,14 +266,14 @@ export default function NetworkPage() {
         </div>
       </div>
 
-      {/* Group Filter Bar */}
-      {groups.length > 0 && (
+      {/* Group Filter Bar - 비활성화 */}
+      {/* {groups.length > 0 && (
         <div className="fixed top-[88px] left-5 z-25 max-w-[calc(100%-40px)]">
           <div className="bg-[#161B22]/60 backdrop-blur-xl rounded-xl px-3 py-1.5 w-fit max-w-full">
             <GroupFilterBar />
           </div>
         </div>
-      )}
+      )} */}
 
 
       {/* Network Stats */}
@@ -370,6 +370,16 @@ export default function NetworkPage() {
               >
                 <Crown size={20} />
                 <span>나의 모임</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  router.push('/import-contacts');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#3FB950] hover:bg-[#3FB950]/10 transition-colors"
+              >
+                <Upload size={20} />
+                <span>연락처 가져오기</span>
               </button>
               {user.email === 'kjykjj04@naver.com' && (
                 <button

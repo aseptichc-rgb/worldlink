@@ -14,6 +14,7 @@ interface ManagedGroupMemberListProps {
   members: ManagedGroupMember[];
   ownerId: string;
   currentUserId: string;
+  currentUserRole?: string;
   onRemoveMember: (userId: string) => void;
   onMemberTap?: (member: MemberInfo) => void;
   onMemberClick?: (member: MemberInfo) => void;
@@ -31,11 +32,14 @@ export default function ManagedGroupMemberList({
   members,
   ownerId,
   currentUserId,
+  currentUserRole,
   onRemoveMember,
   onMemberTap,
   onMemberClick,
   onRoleEdit,
 }: ManagedGroupMemberListProps) {
+  // 회장단은 회장의 역할을 편집할 수 없음
+  const isCurrentUserExecutive = currentUserRole === 'executive';
   const [memberInfos, setMemberInfos] = useState<MemberInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
@@ -167,8 +171,8 @@ export default function ManagedGroupMemberList({
               </p>
             </div>
 
-            {/* Role Edit Button (for president, not for self) */}
-            {onRoleEdit && !isSelf && (
+            {/* Role Edit Button (for president/executive, self-edit allowed for president/executive, executive cannot edit president) */}
+            {onRoleEdit && (!isSelf || info.role === 'president' || info.role === 'executive') && !(isCurrentUserExecutive && info.role === 'president') && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();

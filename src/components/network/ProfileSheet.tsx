@@ -23,6 +23,7 @@ import {
   Loader2,
   FolderOpen,
   Plus,
+  Upload,
 } from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
 import { useNetworkStore } from '@/store/networkStore';
@@ -110,6 +111,31 @@ export default function ProfileSheet() {
 
       setIsLoadingPath(true);
       try {
+        // 가져온 연락처인 경우: 노드 정보를 직접 사용
+        if (selectedNode.isImported) {
+          const importedUserData: User = {
+            id: selectedNode.id,
+            name: selectedNode.name,
+            email: selectedNode.email || '',
+            phone: selectedNode.phone,
+            company: selectedNode.company,
+            position: selectedNode.position,
+            keywords: selectedNode.keywords || [],
+            inviteCode: '',
+            invitesRemaining: 0,
+            coffeeStatus: 'available' as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          if (cancelled) return;
+          setConnectionPath([currentUser, importedUserData]);
+          setSelectedUserData(importedUserData);
+          setTheirConnections([]);
+          setIsLoadingPath(false);
+          return;
+        }
+
         const fromDemoId = getDemoCompatibleId(currentUser);
         const isDemoNode = selectedNode.id.startsWith('member_') || demoConnections[selectedNode.id];
         if (isDemoNode) {
@@ -328,9 +354,13 @@ export default function ProfileSheet() {
                         src={selectedNode.profileImage}
                         name={selectedNode.name}
                         size="xl"
-                        hasGlow={connectionDegree === 1}
+                        hasGlow={connectionDegree === 1 && !selectedNode.isImported}
                       />
-                      {connectionDegree === 1 && (
+                      {selectedNode.isImported ? (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#3FB950] flex items-center justify-center">
+                          <Upload size={10} className="text-[#121212]" />
+                        </div>
+                      ) : connectionDegree === 1 && (
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#58A6FF] flex items-center justify-center">
                           <Link2 size={12} className="text-[#121212]" />
                         </div>
@@ -382,6 +412,38 @@ export default function ProfileSheet() {
                     const mutualCount = theirConnections
                       .map(u => u.id)
                       .filter(id => myConnectionIds.has(id)).length;
+
+                    // 가져온 연락처인 경우 다른 뱃지 표시
+                    if (selectedNode.isImported) {
+                      // 내가 가져온 연락처인 경우에만 전화번호/이메일 표시
+                      const isMyImportedContact = currentUser?.id === selectedNode.importedByUserId;
+
+                      return (
+                        <div className="mt-5">
+                          <div className="flex items-center gap-2 px-3 py-2 bg-[#3FB950]/10 rounded-lg border border-[#3FB950]/30 mb-3">
+                            <Upload size={14} className="text-[#3FB950]" />
+                            <span className="text-sm text-[#3FB950]">가져온 연락처</span>
+                          </div>
+                          {isMyImportedContact && selectedNode.phone && (
+                            <div className="flex items-center gap-2 text-[#8B949E] text-sm mb-1">
+                              <Phone size={14} className="text-[#58A6FF]" />
+                              <span>{selectedNode.phone}</span>
+                            </div>
+                          )}
+                          {isMyImportedContact && selectedNode.email && (
+                            <div className="flex items-center gap-2 text-[#8B949E] text-sm">
+                              <Mail size={14} className="text-[#58A6FF]" />
+                              <span>{selectedNode.email}</span>
+                            </div>
+                          )}
+                          {!isMyImportedContact && (
+                            <div className="text-[#484F58] text-sm">
+                              연락처 소유자만 개인정보 열람 가능
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
 
                     return (
                       <div className="flex items-center gap-3 mt-5">

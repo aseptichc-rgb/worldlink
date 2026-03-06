@@ -48,17 +48,25 @@ export default function ManagedGroupInviteModal() {
     [selectedGroup?.memberUserIds]
   );
 
-  // 검색 필터링
+  // 검색 필터링 + 이미 멤버인 사람은 아래로 정렬
   const filteredConnections = useMemo(() => {
-    if (!searchQuery.trim()) return connections;
-    const q = searchQuery.toLowerCase();
-    return connections.filter(
-      (c) =>
-        c.name?.toLowerCase().includes(q) ||
-        c.company?.toLowerCase().includes(q) ||
-        c.position?.toLowerCase().includes(q)
-    );
-  }, [connections, searchQuery]);
+    let result = connections;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = connections.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(q) ||
+          c.company?.toLowerCase().includes(q) ||
+          c.position?.toLowerCase().includes(q)
+      );
+    }
+    // 이미 멤버인 사람은 목록 아래로 정렬
+    return result.slice().sort((a, b) => {
+      const aIsMember = memberUserIds.has(a.id) ? 1 : 0;
+      const bIsMember = memberUserIds.has(b.id) ? 1 : 0;
+      return aIsMember - bIsMember;
+    });
+  }, [connections, searchQuery, memberUserIds]);
 
   // 추가 가능한 인원 수
   const availableCount = useMemo(
