@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown, Upload } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown, Upload, BarChart3, Plus, Zap, X, Building, Trash2 } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
 import SearchBar from '@/components/network/SearchBar';
@@ -15,6 +15,8 @@ import GroupAssignModal from '@/components/network/GroupAssignModal';
 import GroupDetailPanel from '@/components/network/GroupDetailPanel';
 import AddMembersToGroupModal from '@/components/network/AddMembersToGroupModal';
 import GroupInviteModal from '@/components/network/GroupInviteModal';
+import RelationshipReminders from '@/components/network/RelationshipReminders';
+import QuickCaptureModal from '@/components/network/QuickCaptureModal';
 
 import { Avatar, Button } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
@@ -22,7 +24,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
-import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, getDemoNetworkGraph, getDemoRecommendations } from '@/lib/demo-data';
+import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, getDemoNetworkGraph, getDemoRecommendations, demoConnections } from '@/lib/demo-data';
+import { useInteractionStore } from '@/store/interactionStore';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser, connectWithAllUsers } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
 
@@ -32,10 +35,14 @@ export default function NetworkPage() {
   const { setNodes, setEdges, setSelectedNode, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, centerUserOriginalDegree, setCenterUserId } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
   const { groups, toggleGroupPanel, loadFromFirebase, clearGroups } = useGroupStore();
+  const { initDemoInteractions } = useInteractionStore();
 
   const [showMenu, setShowMenu] = useState(false);
   const [centerUserName, setCenterUserName] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [showQuickCapture, setShowQuickCapture] = useState(false);
+  const [showQuickCaptureList, setShowQuickCaptureList] = useState(false);
+  const { quickCaptures, removeQuickCapture } = useInteractionStore();
 
   // 로그인 시 Firebase에서 그룹 불러오기
   useEffect(() => {
@@ -43,6 +50,17 @@ export default function NetworkPage() {
       loadFromFirebase(user.id);
     }
   }, [user, loadFromFirebase]);
+
+  // 데모 인터랙션 데이터 초기화
+  useEffect(() => {
+    if (user) {
+      const demoId = getDemoCompatibleId(user);
+      const connIds = demoConnections[demoId] || demoConnections[user.id] || [];
+      if (connIds.length > 0) {
+        initDemoInteractions(demoId, connIds);
+      }
+    }
+  }, [user, initDemoInteractions]);
 
   // 데모 메세지 생성 함수
   const generateDemoMessages = (currentUserId: string): Message[] => {
@@ -143,9 +161,20 @@ export default function NetworkPage() {
           setCenterUserName(null);
         } else {
           // 다른 인물의 네트워크
+          // 현재 그래프에서 대상 인물의 정보를 가져와서 전달 (폴백 방지)
+          const currentNodes = useNetworkStore.getState().nodes;
+          const targetNode = currentNodes.find(n => n.id === targetUserId);
+          const targetUserData = targetNode ? {
+            name: targetNode.name,
+            profileImage: targetNode.profileImage,
+            company: targetNode.company,
+            position: targetNode.position,
+            keywords: targetNode.keywords,
+          } : undefined;
+
           const { nodes: fetchedNodes, edges } = isDemoMode
-            ? getDemoNetworkGraph(targetUserId)
-            : await getNetworkGraph(targetUserId);
+            ? getDemoNetworkGraph(targetUserId, targetUserData)
+            : await getNetworkGraph(targetUserId, targetUserData);
           setNodes(fetchedNodes);
           setEdges(edges);
           // 중심 인물 이름 저장 및 프로필 시트 자동 표시
@@ -302,8 +331,9 @@ export default function NetworkPage() {
       )} */}
 
 
-      {/* Network Stats */}
-      <div className="fixed bottom-4 left-4 z-20">
+      {/* Network Stats + Relationship Reminders */}
+      <div className="fixed bottom-4 left-4 z-20 flex flex-col gap-2">
+        <RelationshipReminders />
         <div className="glass-light rounded-xl px-4 py-3 flex items-center gap-4">
           <div className="text-center min-w-[48px]">
             <p className="text-2xl font-bold text-[#58A6FF]">
@@ -390,12 +420,37 @@ export default function NetworkPage() {
               <button
                 onClick={() => {
                   setShowMenu(false);
+                  router.push('/insights');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#58A6FF] hover:bg-[#58A6FF]/10 transition-colors"
+              >
+                <BarChart3 size={20} />
+                <span>인맥 인사이트</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
                   router.push('/managed-groups');
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#FFA657] hover:bg-[#FFA657]/10 transition-colors"
               >
                 <Crown size={20} />
                 <span>나의 모임</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowQuickCaptureList(true);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#D29922] hover:bg-[#D29922]/10 transition-colors"
+              >
+                <Zap size={20} />
+                <span>빠른 기록</span>
+                {quickCaptures.length > 0 && (
+                  <span className="ml-auto text-xs bg-[#D29922]/20 text-[#D29922] px-2 py-0.5 rounded-full font-medium">
+                    {quickCaptures.length}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => {
@@ -478,6 +533,94 @@ export default function NetworkPage() {
 
       {/* Group Invite Modal */}
       <GroupInviteModal />
+
+      {/* FAB - Quick Capture */}
+      <button
+        onClick={() => setShowQuickCapture(true)}
+        className="fixed bottom-20 right-4 z-20 w-12 h-12 rounded-full bg-[#58A6FF] shadow-lg shadow-[#58A6FF]/25 flex items-center justify-center hover:bg-[#58A6FF]/90 active:scale-95 transition-all"
+      >
+        <Plus size={22} className="text-[#0D1117]" />
+      </button>
+
+      {/* Quick Capture Modal */}
+      <QuickCaptureModal
+        isOpen={showQuickCapture}
+        onClose={() => setShowQuickCapture(false)}
+      />
+
+      {/* Quick Capture List (보관함) */}
+      {showQuickCaptureList && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowQuickCaptureList(false)}
+            className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25 }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[#161B22] border-t border-[#30363D] rounded-t-2xl max-h-[60vh] overflow-y-auto"
+          >
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Zap size={18} className="text-[#D29922]" />
+                  빠른 기록 보관함
+                  {quickCaptures.length > 0 && (
+                    <span className="text-sm text-[#8B949E] font-normal">({quickCaptures.length})</span>
+                  )}
+                </h3>
+                <button onClick={() => setShowQuickCaptureList(false)} className="p-2 rounded-lg hover:bg-[#30363D]">
+                  <X size={18} className="text-[#8B949E]" />
+                </button>
+              </div>
+
+              {quickCaptures.length === 0 ? (
+                <div className="text-center py-10">
+                  <Zap size={32} className="text-[#484F58] mx-auto mb-3" />
+                  <p className="text-[#8B949E]">아직 빠른 기록이 없습니다</p>
+                  <p className="text-xs text-[#484F58] mt-1">네트워킹 행사 후 만난 사람을 빠르게 기록해보세요</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {quickCaptures.map(qc => (
+                    <div key={qc.id} className="flex items-center gap-3 bg-[#0D1117] rounded-xl p-3.5 border border-[#30363D]/50">
+                      <div className="w-10 h-10 rounded-full bg-[#D29922]/10 flex items-center justify-center flex-shrink-0">
+                        <UserIcon size={18} className="text-[#D29922]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white font-medium">{qc.name}</p>
+                        {qc.company && (
+                          <p className="text-xs text-[#8B949E] flex items-center gap-1">
+                            <Building size={10} />
+                            {qc.company}
+                          </p>
+                        )}
+                        {qc.memo && <p className="text-xs text-[#484F58] mt-0.5 truncate">{qc.memo}</p>}
+                      </div>
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span className="text-[10px] text-[#484F58]">
+                          {new Date(qc.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                        </span>
+                        <button
+                          onClick={() => removeQuickCapture(qc.id)}
+                          className="p-1 rounded hover:bg-[#F85149]/10 transition-colors"
+                        >
+                          <Trash2 size={12} className="text-[#F85149]" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
 
       {/* Loading Overlay */}
       {networkLoading && (

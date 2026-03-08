@@ -8,6 +8,35 @@ export interface InvitableContact extends Contact {
   invitedAt?: Date;
 }
 
+// 초대 상태 저장용 타입
+interface InviteStatus {
+  id: string;
+  invitedAt?: string;
+}
+
+// 공통 필터 헬퍼
+function applyFilters(
+  contacts: InvitableContact[],
+  category: ContactCategory | 'all',
+  query: string
+): InvitableContact[] {
+  let filtered = category === 'all'
+    ? contacts
+    : contacts.filter(c => c.category === category);
+
+  if (query) {
+    const q = query.toLowerCase();
+    filtered = filtered.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.company.toLowerCase().includes(q) ||
+      c.position.toLowerCase().includes(q) ||
+      c.department.toLowerCase().includes(q)
+    );
+  }
+
+  return filtered;
+}
+
 interface ContactStore {
   contacts: InvitableContact[];
   filteredContacts: InvitableContact[];
@@ -16,6 +45,8 @@ interface ContactStore {
   searchQuery: string;
   categoryStats: CategoryStats[];
   isLoading: boolean;
+  // 초대 상태만 persist 용
+  _inviteStatuses: InviteStatus[];
 
   // Actions
   loadContacts: (csvText: string) => void;
@@ -38,15 +69,27 @@ export const useContactStore = create<ContactStore>()(
       searchQuery: '',
       categoryStats: [],
       isLoading: false,
+      _inviteStatuses: [],
 
       loadContacts: (csvText: string) => {
         set({ isLoading: true });
 
         const parsed = parseCSV(csvText);
-        const contacts: InvitableContact[] = parsed.map(c => ({
-          ...c,
-          isInvited: false,
-        }));
+        const { _inviteStatuses } = get();
+
+        // 저장된 초대 상태 복원
+        const inviteMap = new Map(
+          _inviteStatuses.map(s => [s.id, s])
+        );
+
+        const contacts: InvitableContact[] = parsed.map(c => {
+          const invite = inviteMap.get(c.id);
+          return {
+            ...c,
+            isInvited: !!invite,
+            invitedAt: invite?.invitedAt ? new Date(invite.invitedAt) : undefined,
+          };
+        });
         const stats = calculateCategoryStats(contacts);
 
         set({
@@ -59,20 +102,7 @@ export const useContactStore = create<ContactStore>()(
 
       setSelectedCategory: (category: ContactCategory | 'all') => {
         const { contacts, searchQuery } = get();
-
-        let filtered = category === 'all'
-          ? contacts
-          : contacts.filter(c => c.category === category);
-
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          filtered = filtered.filter(c =>
-            c.name.toLowerCase().includes(query) ||
-            c.company.toLowerCase().includes(query) ||
-            c.position.toLowerCase().includes(query)
-          );
-        }
-
+        const filtered = applyFilters(contacts, category, searchQuery);
         set({ selectedCategory: category, filteredContacts: filtered });
       },
 
@@ -82,21 +112,7 @@ export const useContactStore = create<ContactStore>()(
 
       setSearchQuery: (query: string) => {
         const { contacts, selectedCategory } = get();
-
-        let filtered = selectedCategory === 'all'
-          ? contacts
-          : contacts.filter(c => c.category === selectedCategory);
-
-        if (query) {
-          const q = query.toLowerCase();
-          filtered = filtered.filter(c =>
-            c.name.toLowerCase().includes(q) ||
-            c.company.toLowerCase().includes(q) ||
-            c.position.toLowerCase().includes(q) ||
-            c.department.toLowerCase().includes(q)
-          );
-        }
-
+        const filtered = applyFilters(contacts, selectedCategory, query);
         set({ searchQuery: query, filteredContacts: filtered });
       },
 
@@ -106,30 +122,28 @@ export const useContactStore = create<ContactStore>()(
       },
 
       inviteContact: (contactId: string) => {
-        const { contacts, filteredContacts, selectedCategory, searchQuery } = get();
+        const { contacts, selectedCategory, searchQuery, _inviteStatuses } = get();
 
+        const now = new Date();
         const updatedContacts = contacts.map(c =>
           c.id === contactId
-            ? { ...c, isInvited: true, invitedAt: new Date() }
+            ? { ...c, isInvited: true, invitedAt: now }
             : c
         );
 
-        // filteredContacts도 업데이트
-        let filtered = selectedCategory === 'all'
-          ? updatedContacts
-          : updatedContacts.filter(c => c.category === selectedCategory);
+        const filtered = applyFilters(updatedContacts, selectedCategory, searchQuery);
 
-        if (searchQuery) {
-          const q = searchQuery.toLowerCase();
-          filtered = filtered.filter(c =>
-            c.name.toLowerCase().includes(q) ||
-            c.company.toLowerCase().includes(q) ||
-            c.position.toLowerCase().includes(q) ||
-            c.department.toLowerCase().includes(q)
-          );
-        }
+        // 초대 상태 업데이트
+        const newInviteStatuses = [
+          ..._inviteStatuses.filter(s => s.id !== contactId),
+          { id: contactId, invitedAt: now.toISOString() },
+        ];
 
-        set({ contacts: updatedContacts, filteredContacts: filtered });
+        set({
+          contacts: updatedContacts,
+          filteredContacts: filtered,
+          _inviteStatuses: newInviteStatuses,
+        });
       },
 
       getInvitedContacts: () => {
@@ -144,6 +158,10 @@ export const useContactStore = create<ContactStore>()(
     }),
     {
       name: 'nodded-contacts',
+      // 초대 상태만 localStorage에 저장 (전체 연락처 X)
+      partialize: (state) => ({
+        _inviteStatuses: state._inviteStatuses,
+      }),
     }
   )
 );

@@ -1236,7 +1236,7 @@ const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
     });
 
   // memberUserIds도 중복 제거
-  const uniqueMemberUserIds = [...new Set(data.memberUserIds || [])];
+  const uniqueMemberUserIds = [...new Set((data.memberUserIds || []) as string[])];
 
   return {
     id: docSnap.id,

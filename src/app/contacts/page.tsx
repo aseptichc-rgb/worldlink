@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContactStore, InvitableContact } from '@/store/contactStore';
 import { CATEGORY_INFO, ContactCategory } from '@/types/contacts';
@@ -85,21 +85,20 @@ export default function ContactsPage() {
     }
   };
 
-  // 필터 적용된 연락처
-  const getDisplayContacts = (): InvitableContact[] => {
-    let displayContacts = filteredContacts;
-
+  // 필터 적용된 연락처 (메모이제이션)
+  const displayContacts = useMemo((): InvitableContact[] => {
     if (filterMode === 'invited') {
-      displayContacts = displayContacts.filter(c => c.isInvited);
+      return filteredContacts.filter(c => c.isInvited);
     } else if (filterMode === 'pending') {
-      displayContacts = displayContacts.filter(c => !c.isInvited);
+      return filteredContacts.filter(c => !c.isInvited);
     }
+    return filteredContacts;
+  }, [filteredContacts, filterMode]);
 
-    return displayContacts;
-  };
-
-  const invitedCount = contacts.filter(c => c.isInvited).length;
-  const pendingCount = contacts.filter(c => !c.isInvited).length;
+  const { invitedCount, pendingCount } = useMemo(() => ({
+    invitedCount: contacts.filter(c => c.isInvited).length,
+    pendingCount: contacts.filter(c => !c.isInvited).length,
+  }), [contacts]);
 
   if (isLoading) {
     return (
@@ -263,7 +262,7 @@ export default function ContactsPage() {
               className="h-[calc(100vh-220px)]"
             >
               <ContactGraph
-                contacts={getDisplayContacts()}
+                contacts={displayContacts}
                 onSelectContact={setSelectedContact}
               />
             </motion.div>
@@ -275,7 +274,7 @@ export default function ContactsPage() {
               exit={{ opacity: 0 }}
             >
               <ContactList
-                contacts={getDisplayContacts()}
+                contacts={displayContacts}
                 onSelectContact={setSelectedContact}
                 onInvite={handleInvite}
                 showInviteButton={true}

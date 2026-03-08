@@ -298,3 +298,34 @@ export function calculateCategoryStats(contacts: Contact[]): CategoryStats[] {
     .filter(stat => stat.count > 0)
     .sort((a, b) => b.count - a.count);
 }
+
+// 가상 스크롤용 플랫 리스트 아이템 타입
+export type VirtualListItem =
+  | { type: 'header'; category: ContactCategory; count: number; info: CategoryInfo }
+  | { type: 'contact'; contact: Contact; category: ContactCategory };
+
+// 그룹화된 연락처를 가상 스크롤에 맞는 플랫 배열로 변환
+export function flattenGroupedContacts<T extends Contact>(contacts: T[]): VirtualListItem[] {
+  const grouped = groupByCategory(contacts);
+  const sortedCategories = Array.from(grouped.entries())
+    .filter(([_, list]) => list.length > 0)
+    .sort((a, b) => b[1].length - a[1].length);
+
+  const items: VirtualListItem[] = [];
+  for (const [category, categoryContacts] of sortedCategories) {
+    items.push({
+      type: 'header',
+      category,
+      count: categoryContacts.length,
+      info: CATEGORY_INFO[category],
+    });
+    for (const contact of categoryContacts) {
+      items.push({
+        type: 'contact',
+        contact,
+        category,
+      });
+    }
+  }
+  return items;
+}

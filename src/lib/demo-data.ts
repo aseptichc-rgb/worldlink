@@ -272,5 +272,49 @@ export const getDemoNetworkGraphForUser = (centerId: string): { nodes: NetworkNo
   return getDemoNetworkGraph(centerId);
 };
 
+// 데모 소개 매칭 데이터
+export interface DemoMatch {
+  person1Id: string;
+  person2Id: string;
+  reason: string;
+  benefit: string;
+}
+
+export const getDemoMatches = (userId: string): DemoMatch[] => {
+  const userConns = demoConnections[userId] || demoConnections[DEMO_MEMBERS[DEMO_ACCOUNT_INDEX].id] || [];
+  if (userConns.length < 6) return [];
+
+  // 카테고리가 다르면서 서로 시너지가 있을 쌍 선택
+  const connUsers = userConns
+    .map(id => demoUsers.find(u => u.id === id))
+    .filter((u): u is User => u !== null);
+
+  const matches: DemoMatch[] = [];
+  const usedIds = new Set<string>();
+
+  const matchPairs: Array<{ cat1: string; cat2: string; reason: string; benefit: string }> = [
+    { cat1: 'IT/기술', cat2: '투자/금융', reason: 'AI 스타트업 대표와 VC 투자자를 연결하면 투자 유치 기회가 생깁니다', benefit: '투자 유치 & 포트폴리오 확장' },
+    { cat1: '헬스케어/바이오', cat2: '법률/특허', reason: '바이오 연구자와 특허 전문 변리사를 연결하면 기술 보호가 가능합니다', benefit: '기술특허 확보 & IP 전략' },
+    { cat1: '미디어/콘텐츠', cat2: 'F&B/라이프스타일', reason: '콘텐츠 제작자와 F&B 브랜드를 연결하면 브랜드 콘텐츠 협업이 가능합니다', benefit: '브랜드 콘텐츠 & 마케팅 시너지' },
+  ];
+
+  for (const pair of matchPairs) {
+    const p1 = connUsers.find(u => u.category === pair.cat1 && !usedIds.has(u.id));
+    const p2 = connUsers.find(u => u.category === pair.cat2 && !usedIds.has(u.id));
+    if (p1 && p2) {
+      usedIds.add(p1.id);
+      usedIds.add(p2.id);
+      matches.push({
+        person1Id: p1.id,
+        person2Id: p2.id,
+        reason: pair.reason,
+        benefit: pair.benefit,
+      });
+    }
+  }
+
+  return matches;
+};
+
 // 멤버 원본 데이터 (seed 스크립트 등에서 사용)
 export const memberRawData = DEMO_MEMBERS;

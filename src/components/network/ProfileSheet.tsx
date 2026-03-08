@@ -24,8 +24,12 @@ import {
   FolderOpen,
   Plus,
   Upload,
+  Clock,
+  CalendarPlus,
 } from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
+import InteractionLogModal from '@/components/interaction/InteractionLogModal';
+import InteractionTimeline from '@/components/interaction/InteractionTimeline';
 import { useNetworkStore } from '@/store/networkStore';
 import { useCoffeeChatStore } from '@/store/coffeeChatStore';
 import { useConnectionRequestStore } from '@/store/connectionRequestStore';
@@ -33,6 +37,7 @@ import { useMemoStore } from '@/store/memoStore';
 import { useGroupStore } from '@/store/groupStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMessageStore, Message } from '@/store/messageStore';
+import { useInteractionStore } from '@/store/interactionStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
@@ -56,6 +61,11 @@ export default function ProfileSheet() {
   // 메모 관련 상태
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [memoText, setMemoText] = useState('');
+
+  // 연락 기록 모달 상태
+  const [showInteractionModal, setShowInteractionModal] = useState(false);
+
+  const { getDaysSinceLastContact, getRelationshipStatus, addInteraction } = useInteractionStore();
 
   // 메시지 관련 상태
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -240,6 +250,7 @@ export default function ProfileSheet() {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     addMessage(newMessage);
+    addInteraction(currentUserId, selectedNode.id, 'message', messageContent.trim(), true);
     setMessageSent(true);
     setIsSendingMessage(false);
 
@@ -266,6 +277,10 @@ export default function ProfileSheet() {
     if (selectedNode && memoText.trim()) {
       setMemo(selectedNode.id, memoText.trim());
       setIsEditingMemo(false);
+      if (currentUser) {
+        const userId = getDemoCompatibleId(currentUser);
+        addInteraction(userId, selectedNode.id, 'memo', memoText.trim(), true);
+      }
     }
   };
 
@@ -743,6 +758,41 @@ export default function ProfileSheet() {
                     </section>
                   )}
 
+                  {/* 연락 기록 - 1촌에게만 표시 */}
+                  {connectionDegree === 1 && (
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
+                          <Clock size={12} />
+                          연락 기록
+                          {(() => {
+                            const days = getDaysSinceLastContact(selectedNode.id);
+                            if (days < 999) {
+                              const status = getRelationshipStatus(selectedNode.id);
+                              const statusColor = status === 'active' ? '#3FB950' : status === 'warm' ? '#D29922' : status === 'cold' ? '#FF6B8A' : '#F85149';
+                              return (
+                                <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full" style={{ color: statusColor, backgroundColor: statusColor + '15' }}>
+                                  {days}일 전
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </h3>
+                        <button
+                          onClick={() => setShowInteractionModal(true)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#58A6FF]/10 hover:bg-[#58A6FF]/20 transition-colors"
+                        >
+                          <CalendarPlus size={12} className="text-[#58A6FF]" />
+                          <span className="text-[11px] text-[#58A6FF] font-medium">기록하기</span>
+                        </button>
+                      </div>
+                      <div className="info-card">
+                        <InteractionTimeline targetUserId={selectedNode.id} />
+                      </div>
+                    </section>
+                  )}
+
                   {/* 공통 인맥 - 모든 degree에서 표시 */}
                   {connectionDegree !== 0 && (() => {
                     const mutualIds = theirConnections
@@ -1046,6 +1096,15 @@ export default function ProfileSheet() {
             )}
           </motion.div>
         </motion.div>
+      )}
+      {/* 연락 기록 모달 */}
+      {selectedNode && (
+        <InteractionLogModal
+          isOpen={showInteractionModal}
+          onClose={() => setShowInteractionModal(false)}
+          targetUserId={selectedNode.id}
+          targetName={selectedNode.name}
+        />
       )}
     </AnimatePresence>
   );

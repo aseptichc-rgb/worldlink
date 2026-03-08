@@ -303,6 +303,36 @@ export interface ManagedGroup {
   updatedAt: Date;
 }
 
+// ==================== 인터랙션 & 관계 관리 ====================
+
+export type InteractionType = 'meeting' | 'call' | 'message' | 'coffee_chat' | 'memo' | 'other';
+
+export interface Interaction {
+  id: string;
+  userId: string;        // 기록하는 사용자
+  targetUserId: string;  // 대상 인물
+  type: InteractionType;
+  note?: string;
+  nextAction?: string;
+  date: Date;
+  createdAt: Date;
+  isAutoTracked: boolean;
+}
+
+export type RelationshipStatus = 'active' | 'warm' | 'cold' | 'dormant';
+
+export interface QuickCapture {
+  id: string;
+  name: string;
+  company?: string;
+  memo?: string;
+  photo?: string;
+  createdAt: Date;
+  convertedToContactId?: string;
+}
+
+// ==================== 나의 모임 초대 ====================
+
 export interface ManagedGroupInvite {
   id: string;
   groupId: string;

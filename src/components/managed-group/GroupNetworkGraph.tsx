@@ -205,7 +205,7 @@ export default function GroupNetworkGraph({
         cat = categoryColors[idx % categoryColors.length];
       }
       if (!categoryMap.has(cat)) categoryMap.set(cat, []);
-      categoryMap.get(cat)!.push({ ...m, assignedCategory: cat });
+      categoryMap.get(cat)!.push({ ...m, assignedCategory: cat } as typeof m & { assignedCategory: string });
     });
 
     const categories = Array.from(categoryMap.keys());
