@@ -109,6 +109,16 @@ export function getDisplayInfo(
 } {
   const settings = user.privacySettings;
 
+  // 1촌 연결인 경우 전체 정보 표시 (프로필 공개 설정과 무관)
+  if (viewerIsConnected) {
+    return {
+      name: user.name,
+      company: user.company || null,
+      position: user.position || null,
+      isPublic: true,
+    };
+  }
+
   // 개인정보 공개 동의가 없는 경우 (비공개 사용자)
   if (!settings?.allowProfileDiscovery) {
     return {
@@ -116,16 +126,6 @@ export function getDisplayInfo(
       company: null,
       position: null,
       isPublic: false,
-    };
-  }
-
-  // 1촌 연결인 경우 전체 정보 표시
-  if (viewerIsConnected) {
-    return {
-      name: user.name,
-      company: user.company || null,
-      position: user.position || null,
-      isPublic: true,
     };
   }
 

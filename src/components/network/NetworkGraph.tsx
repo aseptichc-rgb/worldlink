@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore } from '@/store/groupStore';
@@ -14,6 +14,7 @@ interface GraphNode extends NetworkNode {
   vy?: number;
   fx?: number | null;
   fy?: number | null;
+  importance?: number; // 중심성/중요도 점수 (연결 수 기반)
 }
 
 interface GraphEdge {
@@ -67,12 +68,12 @@ const CATEGORY_COLORS: { [key: string]: string } = {
   '특허': '#16A085',        // 진한 청록
 };
 
-// 노드 크기 상수 - 프로필 이미지가 잘 보이도록 확대
+// 노드 크기 상수 — 계층별 크기 차별화 (시각적 위계)
 const NODE_SIZES = {
-  core: 40,        // 중앙 노드
-  primary: 32,     // 1차 연결 (얼굴이 잘 보이도록)
-  secondary: 32,   // 2차 연결 (1차와 동일 크기)
-  tertiary: 14,    // 3차 연결 (최소)
+  core: 44,        // 중앙 노드 (가장 크게 — 시선 집중)
+  primary: 26,     // 1차 연결 (프로필 보이되 적당히)
+  secondary: 16,   // 2차 연결 (1차보다 확실히 작게)
+  tertiary: 10,    // 3차 연결 (최소)
 };
 
 // 폰트 크기 상수
@@ -83,9 +84,165 @@ const FONT_SIZES = {
   tertiary: 13,
 };
 
+// 레이아웃 상수 (라디얼 레이아웃 — 충돌 방지용 넉넉한 간격)
+const LAYOUT = {
+  clusterOrbitRadius: 280,   // 중앙에서 클러스터 중심까지 거리
+  baseRadius: 200,           // degree 1 기본 반경 (넓게 → 겹침 방지)
+  radialRingGap: 80,         // 라디얼 링 간격 (충분히 넓게)
+  minNodeSpacing: 80,        // 최소 노드 간격 (라벨 포함)
+  sectorPadding: 0.05,       // 섹터 양쪽 패딩 비율
+  degree2OuterGap: 130,      // degree 2 바깥 링 추가 거리
+  collisionRadius: 85,       // 충돌 판정 반경 (노드 + 라벨 여유)
+  collisionIterations: 12,   // 충돌 해소 반복 횟수
+};
+
+// 라디얼(극좌표) 위치 계산 - 섹터 내 동심원 배치
+// 카테고리 섹터의 startAngle~endAngle 범위 안에서 노드들을 동심원으로 배치
+function radialPackPosition(
+  index: number,
+  totalInCategory: number,
+  sectorStart: number,
+  sectorEnd: number,
+  centerX: number,
+  centerY: number,
+  baseRadius: number,
+  ringGap: number,
+): { x: number; y: number } {
+  const sectorSpan = sectorEnd - sectorStart;
+  const padding = sectorSpan * LAYOUT.sectorPadding;
+  const usableStart = sectorStart + padding;
+  const usableEnd = sectorEnd - padding;
+  const usableSpan = usableEnd - usableStart;
+
+  // 링당 최대 노드 수를 호 길이 기반으로 계산
+  const getMaxNodesInRing = (ringIdx: number): number => {
+    const ringRadius = baseRadius + ringIdx * ringGap;
+    const arcLength = ringRadius * usableSpan;
+    return Math.max(1, Math.floor(arcLength / (LAYOUT.minNodeSpacing)));
+  };
+
+  // 몇 번째 링의 몇 번째 노드인지 계산
+  let ring = 0;
+  let consumed = 0;
+  while (consumed + getMaxNodesInRing(ring) <= index) {
+    consumed += getMaxNodesInRing(ring);
+    ring++;
+  }
+  const indexInRing = index - consumed;
+  const nodesInRing = Math.min(getMaxNodesInRing(ring), totalInCategory - consumed);
+  const radius = baseRadius + ring * ringGap;
+
+  // 호 위에 균등 분포 (극좌표 → 데카르트 변환)
+  const angle = nodesInRing === 1
+    ? (usableStart + usableEnd) / 2
+    : usableStart + (indexInRing / (nodesInRing - 1)) * usableSpan;
+
+  return {
+    x: centerX + radius * Math.cos(angle),
+    y: centerY + radius * Math.sin(angle),
+  };
+}
+
 // 트랜지션 이징 함수
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
+}
+
+// ===================================================================
+// ===== 어안 렌즈(Fish-eye) 왜곡 함수 (Sarkar & Brown 모델) =====
+// ===================================================================
+// 터치/마우스 지점을 중심으로 주변 노드를 확대하고 먼 노드를 밀어내는 효과
+function fisheyeDistort(
+  nodeX: number, nodeY: number,
+  focusX: number, focusY: number,
+  radius: number,  // 왜곡 영향 반경 (G)
+  mag: number,     // 확대 배율 (M)
+): { nx: number; ny: number; s: number } {
+  const dx = nodeX - focusX;
+  const dy = nodeY - focusY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // 영향 범위 밖이거나 중앙이면 원래 위치 유지
+  if (dist > radius || dist === 0) return { nx: nodeX, ny: nodeY, s: 1 };
+
+  // 어안 렌즈 공식: d' = ((M+1) * G * d) / (M * d + G)
+  const newDist = ((mag + 1) * radius * dist) / (mag * dist + radius);
+  const ratio = newDist / dist;
+
+  return {
+    nx: focusX + dx * ratio,
+    ny: focusY + dy * ratio,
+    s: 1 + (mag - 1) * (1 - dist / radius) * 0.3, // 크기 스케일 (부드러운 감쇠)
+  };
+}
+
+// 노드 중요도(Importance) 계산 — 연결 수 + degree 기반
+function calcImportance(node: NetworkNode, edgeCount: number): number {
+  if (node.degree === 0) return 100; // 중앙 노드: 최대 중요도
+  const degreeWeight = node.degree === 1 ? 3 : node.degree === 2 ? 1 : 0.5;
+  return (edgeCount * 2 + degreeWeight * 10 + (node.connectionCount || 0) * 0.5);
+}
+
+// ===================================================================
+// ===== 의미론적 줌 (Semantic Zoom) — 정보 위계(Hierarchy) 설정 =====
+// ===================================================================
+// 핵심 원칙: "모든 걸 보여주지 않는다. 지금 중요한 것만 보여준다."
+
+// 라벨(이름) 표시 여부 — 매우 보수적으로 제한
+function shouldShowLabel(
+  node: GraphNode, scale: number, _importance: number, rank: number
+): boolean {
+  if (node.degree === 0) return true;
+
+  // ★ 2촌 이상은 절대 자동 표시하지 않음 (포커스/호버 시에만 별도 처리)
+  if (node.degree >= 2) return false;
+
+  // ★ 1촌(degree 1) — 줌 레벨별로 엄격하게 상위 N명만 이름 표시
+  if (scale < 0.55) return rank < 3;    // 극단적 줌아웃: 3명
+  if (scale < 0.7) return rank < 5;     // 줌아웃: 5명
+  if (scale < 0.85) return rank < 8;    // 중간: 8명
+  if (scale < 1.0) return rank < 12;    // 기본 줌: 12명
+  if (scale < 1.3) return rank < 20;    // 약간 줌인: 20명
+  return true; // 많이 줌인해야 전체 표시
+}
+
+// 노드 렌더링 모드 — full(원+이미지), dot(작은 점), hidden(안 보임)
+function shouldShowNodeDetail(
+  node: GraphNode, scale: number, rank: number
+): 'full' | 'dot' | 'hidden' {
+  if (node.degree === 0) return 'full';
+
+  // ★ 2촌 노드: 기본적으로 숨김, 확장 시에만 작은 점으로 표시
+  if (node.degree >= 2) {
+    if (scale >= 1.2) return 'dot';
+    return 'hidden';
+  }
+
+  // 1촌 노드: 줌아웃 시 하위 노드는 점으로
+  if (scale < 0.55) return rank < 6 ? 'full' : 'dot';
+  if (scale < 0.7) return rank < 12 ? 'full' : 'dot';
+  return 'full';
+}
+
+// 시각적 깊이감: degree에 따른 투명도 (3단계 동심원)
+function getDepthAlpha(degree: number, scale: number): number {
+  if (degree === 0) return 1;
+  if (degree === 1) {
+    if (scale < 0.55) return 0.5;
+    if (scale < 0.85) return 0.75;
+    return 1;
+  }
+  // 2촌: 항상 반투명 (점으로 표시될 때 눈에 띄지 않게)
+  if (degree === 2) return scale < 0.85 ? 0.15 : scale < 1.2 ? 0.35 : 0.55;
+  return 0.2;
+}
+
+// 시각적 깊이감: degree에 따른 노드 크기 스케일
+function getDepthScale(degree: number, scale: number): number {
+  if (degree === 0) return 1;
+  if (degree === 1) return 1;
+  if (degree === 2) return 0.55; // 2촌은 항상 작게
+  return 0.4;
 }
 
 // 트랜지션 상태 타입
@@ -139,7 +296,7 @@ function invalidateNodeImageCache(nodeId: string, newImageUrl: string | undefine
 // 시맨틱 줌 레벨 상수
 const ZOOM_CLUSTER_THRESHOLD = 0.7;   // 이하: 클러스터 뷰
 const ZOOM_DETAIL_THRESHOLD = 1.4;    // 이상: 상세 뷰 (회사/직책 추가)
-const PROFILE_IMAGE_ZOOM_THRESHOLD = 0.8; // 프로필 이미지는 기본 줌부터 표시
+const PROFILE_IMAGE_ZOOM_THRESHOLD = 0.5; // 프로필 이미지를 더 낮은 줌에서부터 표시
 
 export default function NetworkGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -189,19 +346,39 @@ export default function NetworkGraph() {
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphNode } | null>(null);
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
+  // 어안 렌즈(Fish-eye) 상태: 터치/마우스가 머무는 캔버스 좌표 (world space)
+  const fisheyeFocusRef = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
+  const fisheyeAnimRef = useRef<{ targetX: number; targetY: number; currentX: number; currentY: number; strength: number }>({
+    targetX: 0, targetY: 0, currentX: 0, currentY: 0, strength: 0,
+  });
+  const lastClickTimeRef = useRef<number>(0);
+  const lastClickNodeRef = useRef<string | null>(null);
   const lastPosRef = useRef({ x: 0, y: 0 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastPinchDistRef = useRef<number>(0);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const dprRef = useRef<number>(1);
 
-  // Initialize dimensions
+  // Initialize dimensions + DPR (모바일 고해상도 Retina 디스플레이 대응)
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
+        const dpr = window.devicePixelRatio || 1;
+        dprRef.current = dpr;
+        const w = containerRef.current.clientWidth;
+        const h = containerRef.current.clientHeight;
+        setDimensions({ width: w, height: h });
+
+        // Canvas 물리적 해상도를 DPR만큼 키워 선명하게 렌더링
+        const canvas = canvasRef.current;
+        if (canvas) {
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.scale(dpr, dpr);
+        }
       }
     };
 
@@ -309,39 +486,27 @@ export default function NetworkGraph() {
         x = centerX;
         y = centerY;
       } else if (node.degree === 1) {
-        // 카테고리 섹터 내 컴팩트 배치
+        // 카테고리 섹터 내 라디얼(극좌표) 배치
         const category = node.category || '기타';
         const categoryInfo = categoryAngles.get(category);
 
         if (categoryInfo) {
           const { start, end, nodes: categoryNodes } = categoryInfo;
           const nodeIndex = categoryNodes.findIndex(n => n.id === node.id);
-          const nodesInCategory = categoryNodes.length;
 
-          // 노드 간격을 줄여서 더 밀집되게
-          const minNodeSpacing = 75;
-          const baseRadius = 200;
-          const ringGap = 65;
-          const sectorPadding = 0.08;
-          const sectorAngle = (end - start) * (1 - 2 * sectorPadding);
-
-          // 링당 노드 수 계산
-          const arcLength = sectorAngle * baseRadius;
-          const nodesPerRing = Math.max(1, Math.floor(arcLength / minNodeSpacing));
-
-          // 어떤 링에 속하는지 계산
-          const ringIndex = Math.floor(nodeIndex / nodesPerRing);
-          const indexInRing = nodeIndex % nodesPerRing;
-          const nodesInThisRing = Math.min(nodesPerRing, nodesInCategory - ringIndex * nodesPerRing);
-
-          const radius = baseRadius + ringIndex * ringGap;
-          const angle = nodesInThisRing === 1
-            ? (start + end) / 2
-            : start + (end - start) * sectorPadding +
-              (indexInRing / (nodesInThisRing - 1)) * sectorAngle;
-
-          x = centerX + Math.cos(angle) * radius;
-          y = centerY + Math.sin(angle) * radius;
+          // 극좌표 → 데카르트 변환으로 동심원 배치
+          const pos = radialPackPosition(
+            nodeIndex,
+            categoryNodes.length,
+            start,
+            end,
+            centerX,
+            centerY,
+            LAYOUT.baseRadius,
+            LAYOUT.radialRingGap,
+          );
+          x = pos.x;
+          y = pos.y;
         }
       } else if (node.degree === 2) {
         // degree 2 노드: 해당 카테고리 섹터 바깥쪽에 배치
@@ -383,24 +548,40 @@ export default function NetworkGraph() {
           const idxInCategory = deg2InSameCategory.findIndex(n => n.id === node.id);
           const totalInCategory = deg2InSameCategory.length;
 
-          // 섹터 각도 내에서 배치
-          const sectorAngle = end - start;
+          // 라디얼 방식으로 바깥 링에 배치 (1차 노드보다 더 바깥)
+          const sectorPadding = (end - start) * LAYOUT.sectorPadding;
+          const usableStart = start + sectorPadding;
+          const usableEnd = end - sectorPadding;
+          const usableSpan = usableEnd - usableStart;
           const nodeAngle = totalInCategory === 1
-            ? (start + end) / 2
-            : start + 0.1 * sectorAngle + (idxInCategory / (totalInCategory - 1)) * sectorAngle * 0.8;
+            ? (usableStart + usableEnd) / 2
+            : usableStart + (idxInCategory / (totalInCategory - 1)) * usableSpan;
 
-          // 바깥 링에 배치 (1차 노드보다 더 바깥)
-          const outerRadius = 420 + Math.floor(idxInCategory / 10) * 55;
+          // 카테고리 내 1차 노드 최대 반경 + 추가 간격
+          const catDeg1Nodes = nodesRef.current.filter(n => n.category === (node.category || '기타') && n.degree === 1);
+          let maxDeg1Radius = LAYOUT.baseRadius;
+          for (const d1 of catDeg1Nodes) {
+            const dist = Math.sqrt(((d1.x || centerX) - centerX) ** 2 + ((d1.y || centerY) - centerY) ** 2);
+            if (dist > maxDeg1Radius) maxDeg1Radius = dist;
+          }
+          const outerRadius = maxDeg1Radius + LAYOUT.degree2OuterGap + Math.floor(idxInCategory / 10) * 45;
 
           x = centerX + Math.cos(nodeAngle) * outerRadius;
           y = centerY + Math.sin(nodeAngle) * outerRadius;
         } else {
           const index = degree2Nodes.findIndex(n => n.id === node.id);
           const angle = (index / degree2Nodes.length) * Math.PI * 2 - Math.PI / 2;
-          x = centerX + Math.cos(angle) * 450;
-          y = centerY + Math.sin(angle) * 450;
+          x = centerX + Math.cos(angle) * 380;
+          y = centerY + Math.sin(angle) * 380;
         }
       }
+
+      // 노드별 연결 엣지 수 계산 → 중요도 산출
+      const edgeCount = edges.filter(e => {
+        const sid = typeof e.source === 'string' ? e.source : e.source;
+        const tid = typeof e.target === 'string' ? e.target : e.target;
+        return sid === node.id || tid === node.id;
+      }).length;
 
       return {
         ...node,
@@ -410,6 +591,7 @@ export default function NetworkGraph() {
         vy: 0,
         fx: x,
         fy: y,
+        importance: calcImportance(node, edgeCount),
       };
     });
 
@@ -418,6 +600,44 @@ export default function NetworkGraph() {
       source: edge.source,
       target: edge.target,
     }));
+
+    // ===== 포스트 레이아웃 충돌 해소 (Collision Detection) =====
+    // 라디얼 배치 후 겹치는 노드들을 서로 밀어내어 이름 겹침 방지
+    const placedNodes = nodesRef.current.filter(n => n.degree !== 0);
+    for (let iter = 0; iter < LAYOUT.collisionIterations; iter++) {
+      let anyCollision = false;
+      for (let i = 0; i < placedNodes.length; i++) {
+        for (let j = i + 1; j < placedNodes.length; j++) {
+          const a = placedNodes[i];
+          const b = placedNodes[j];
+          const dx = (b.x || 0) - (a.x || 0);
+          const dy = (b.y || 0) - (a.y || 0);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = LAYOUT.collisionRadius;
+
+          if (dist < minDist && dist > 0.1) {
+            anyCollision = true;
+            const overlap = (minDist - dist) / 2;
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // degree가 높은 노드를 더 많이 밀어냄 (1차 노드 우선)
+            const aWeight = a.degree === 1 ? 0.3 : 0.7;
+            const bWeight = b.degree === 1 ? 0.3 : 0.7;
+            a.x = (a.x || 0) - nx * overlap * aWeight;
+            a.y = (a.y || 0) - ny * overlap * aWeight;
+            b.x = (b.x || 0) + nx * overlap * bWeight;
+            b.y = (b.y || 0) + ny * overlap * bWeight;
+
+            a.fx = a.x;
+            a.fy = a.y;
+            b.fx = b.x;
+            b.fy = b.y;
+          }
+        }
+      }
+      if (!anyCollision) break;
+    }
 
     // 트랜지션 애니메이션 설정: 이전 위치가 있으면 부드럽게 이동
     if (prevPositions.size > 0 && nodesRef.current.length > 0) {
@@ -799,7 +1019,7 @@ export default function NetworkGraph() {
       if (img) {
         // 줌 레벨에 따른 이미지 투명도 (부드러운 페이드인)
         const fadeStart = PROFILE_IMAGE_ZOOM_THRESHOLD;
-        const fadeEnd = PROFILE_IMAGE_ZOOM_THRESHOLD + 0.3;
+        const fadeEnd = PROFILE_IMAGE_ZOOM_THRESHOLD + 0.2;
         const zoomAlpha = Math.min(1, (transform.scale - fadeStart) / (fadeEnd - fadeStart));
         // dimmed 노드는 낮은 투명도로 표시
         const imageAlpha = isDimmed ? zoomAlpha * 0.2 : zoomAlpha;
@@ -807,20 +1027,33 @@ export default function NetworkGraph() {
         ctx.save();
         ctx.globalAlpha = imageAlpha;
 
-        // 원형 클리핑
+        // 원형 클리핑 - 프로필 이미지를 완벽한 원형으로 렌더링
         ctx.beginPath();
-        ctx.arc(x, y, radius - 2, 0, Math.PI * 2);
+        ctx.arc(x, y, radius - 1.5, 0, Math.PI * 2);
         ctx.clip();
 
-        // 이미지를 원 안에 맞춰 그리기
-        ctx.drawImage(img, x - radius + 2, y - radius + 2, (radius - 2) * 2, (radius - 2) * 2);
+        // 이미지를 원 안에 중앙 맞춤 (cover 방식 - 잘린 부분은 자연스럽게 처리)
+        const imgSize = (radius - 1.5) * 2;
+        const imgAspect = img.width / img.height;
+        let drawW = imgSize;
+        let drawH = imgSize;
+        let drawX = x - radius + 1.5;
+        let drawY = y - radius + 1.5;
+        if (imgAspect > 1) {
+          drawW = imgSize * imgAspect;
+          drawX = x - drawW / 2;
+        } else if (imgAspect < 1) {
+          drawH = imgSize / imgAspect;
+          drawY = y - drawH / 2;
+        }
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
         ctx.restore();
 
-        // 이미지 위에 테두리 다시 그리기
+        // 이미지 위에 깔끔한 원형 테두리 다시 그리기
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : isMutual ? 3 : 2.5;
+        ctx.lineWidth = isHovered ? 3.5 : isFocused ? 4.5 : isMutual ? 3.5 : 2.5;
         if (isMutual) {
           ctx.strokeStyle = COLORS.mutual;
         } else if (isFocused && node.degree !== 0) {
@@ -834,6 +1067,44 @@ export default function NetworkGraph() {
           ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
         }
         ctx.stroke();
+
+        // 호버/포커스 시 밝은 외곽 링 추가 (인터랙션 피드백)
+        if (isHovered || isFocused) {
+          ctx.beginPath();
+          ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+          ctx.strokeStyle = isHovered ? 'rgba(88, 166, 255, 0.5)' : 'rgba(255, 215, 0, 0.5)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 5. 연결 수 뱃지 (degree 1 노드에 degree 2 연결 수 표시)
+    if (node.degree === 1 && !isDimmed && transform.scale >= 0.5) {
+      const degree2Count = edgesRef.current.filter(e => {
+        const sid = typeof e.source === 'string' ? e.source : e.source.id;
+        const tid = typeof e.target === 'string' ? e.target : e.target.id;
+        return (sid === node.id || tid === node.id) && e.degree === 2;
+      }).length;
+      if (degree2Count > 0) {
+        const badgeX = x + radius * 0.7;
+        const badgeY = y - radius * 0.7;
+        const badgeRadius = 10;
+        // 뱃지 배경
+        ctx.beginPath();
+        ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(30, 30, 50, 0.85)';
+        ctx.fill();
+        const category = node.category || '기타';
+        ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // 뱃지 텍스트
+        ctx.font = 'bold 9px -apple-system, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`+${degree2Count}`, badgeX, badgeY);
       }
     }
 
@@ -1019,6 +1290,22 @@ export default function NetworkGraph() {
 
     const visibleIds = getVisibleNodeIds();
     const nodes = allNodes.filter(n => visibleIds.has(n.id));
+
+    // 중요도 순위 계산 (의미론적 줌에 사용)
+    const sortedByImportance = [...nodes].sort((a, b) => (b.importance || 0) - (a.importance || 0));
+    const importanceRankMap = new Map<string, number>();
+    sortedByImportance.forEach((n, i) => importanceRankMap.set(n.id, i));
+
+    // 어안 렌즈 보간 (부드러운 이동)
+    const fe = fisheyeAnimRef.current;
+    const feActive = fisheyeFocusRef.current.active;
+    if (feActive) {
+      fe.currentX += (fe.targetX - fe.currentX) * 0.15;
+      fe.currentY += (fe.targetY - fe.currentY) * 0.15;
+      fe.strength += (3.0 - fe.strength) * 0.1; // 부드럽게 강도 증가
+    } else {
+      fe.strength *= 0.85; // 부드럽게 소멸
+    }
     const edges = allEdges.filter(e => isEdgeVisible(e, visibleIds));
 
     const connectedNodeIds = getConnectedNodeIds(focusedNodeId);
@@ -1050,8 +1337,10 @@ export default function NetworkGraph() {
       ? new Set(getNodesInGroup(activeGroupFilter))
       : null;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dpr = dprRef.current;
     ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // DPR 리셋 후 다시 적용
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.scale, transform.scale);
 
@@ -1183,16 +1472,14 @@ export default function NetworkGraph() {
         drawNodeLabel(ctx, centerNode, { isDimmed: false, isFocused: false, allNodes: nodes });
       }
 
-      // 카테고리별 클러스터 원 그리기
+      // 카테고리별 '슈퍼 노드' (Hierarchical Clustering) 그리기
+      // 중앙에서 각 클러스터로 연결선을 먼저 그림
+      const clusterCenters: { cx: number; cy: number; category: string; color: string }[] = [];
       categoryAngles.forEach((info, category) => {
         const { start, end, nodes: categoryNodes } = info;
         const midAngle = (start + end) / 2;
         const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
-        const r = parseInt(categoryColor.slice(1, 3), 16);
-        const g = parseInt(categoryColor.slice(3, 5), 16);
-        const b = parseInt(categoryColor.slice(5, 7), 16);
 
-        // 클러스터 중심 좌표 (카테고리 노드들의 평균 위치)
         let cx = 0, cy = 0;
         const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
         if (catGraphNodes.length > 0) {
@@ -1203,26 +1490,85 @@ export default function NetworkGraph() {
           cx = centerX + Math.cos(midAngle) * 280;
           cy = centerY + Math.sin(midAngle) * 280;
         }
+        clusterCenters.push({ cx, cy, category, color: categoryColor });
+      });
+
+      // 중앙 → 클러스터 연결선 (부드러운 곡선)
+      for (const cc of clusterCenters) {
+        const r = parseInt(cc.color.slice(1, 3), 16);
+        const g = parseInt(cc.color.slice(3, 5), 16);
+        const b = parseInt(cc.color.slice(5, 7), 16);
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        // 베지어 곡선으로 부드러운 연결
+        const midX = (centerX + cc.cx) / 2;
+        const midY = (centerY + cc.cy) / 2;
+        const perpX = -(cc.cy - centerY) * 0.15;
+        const perpY = (cc.cx - centerX) * 0.15;
+        ctx.quadraticCurveTo(midX + perpX, midY + perpY, cc.cx, cc.cy);
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.2)`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // 클러스터 원 그리기
+      categoryAngles.forEach((info, category) => {
+        const { start, end, nodes: categoryNodes } = info;
+        const midAngle = (start + end) / 2;
+        const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
+        const r = parseInt(categoryColor.slice(1, 3), 16);
+        const g = parseInt(categoryColor.slice(3, 5), 16);
+        const b = parseInt(categoryColor.slice(5, 7), 16);
+
+        const cc = clusterCenters.find(c => c.category === category)!;
+        const { cx, cy } = cc;
 
         const clusterRadius = Math.min(80, 40 + categoryNodes.length * 3);
 
-        // 클러스터 글로우
-        const glowGrad = ctx.createRadialGradient(cx, cy, clusterRadius, cx, cy, clusterRadius * 2.5);
-        glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.35)`);
+        // 클러스터 글로우 (부드러운 그라디언트)
+        const glowGrad = ctx.createRadialGradient(cx, cy, clusterRadius * 0.5, cx, cy, clusterRadius * 2.5);
+        glowGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.25)`);
+        glowGrad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.1)`);
         glowGrad.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(cx, cy, clusterRadius * 2.5, 0, Math.PI * 2);
         ctx.fillStyle = glowGrad;
         ctx.fill();
 
-        // 클러스터 원
+        // 클러스터 원 (이중 링으로 고급스러운 느낌)
         ctx.beginPath();
         ctx.arc(cx, cy, clusterRadius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.25)`;
+        const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, clusterRadius);
+        bgGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
+        bgGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.12)`);
+        ctx.fillStyle = bgGrad;
         ctx.fill();
         ctx.strokeStyle = categoryColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
+
+        // 외곽 링 (점선)
+        ctx.beginPath();
+        ctx.arc(cx, cy, clusterRadius + 6, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.2)`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 미니 노드 미리보기 (클러스터 안에 3~5개의 작은 점)
+        const previewCount = Math.min(5, categoryNodes.length);
+        for (let i = 0; i < previewCount; i++) {
+          const angle = (i / previewCount) * Math.PI * 2 - Math.PI / 2;
+          const pr = clusterRadius * 0.45;
+          const px = cx + Math.cos(angle) * pr;
+          const py = cy + Math.sin(angle) * pr;
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, 0.4)`;
+          ctx.fill();
+        }
 
         // 카테고리명 + 인원수
         const labelText = category;
@@ -1246,7 +1592,16 @@ export default function NetworkGraph() {
     // ===== NODE VIEW & DETAIL VIEW (scale >= 0.7) =====
     // ===================================================================
 
-    // (섹터 배경 쐐기 제거 — 노드 테두리 색상만으로 카테고리 구분)
+    // ===== 라디얼 가이드 링 (배경 동심원) =====
+    // 극좌표 기반 레이아웃의 구조를 시각적으로 보여주는 얇은 동심원
+    const ringRadii = [LAYOUT.baseRadius, LAYOUT.baseRadius + LAYOUT.radialRingGap, LAYOUT.baseRadius + LAYOUT.radialRingGap * 2];
+    for (const ringR of ringRadii) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, ringR, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(88, 166, 255, 0.06)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
 
     // Draw category labels (바깥쪽)
     categoryAngles.forEach((info, category) => {
@@ -1286,35 +1641,67 @@ export default function NetworkGraph() {
       ctx.fillText(labelText, labelX, labelY);
     });
 
+    // ===================================================================
+    // ===== Fish-eye 왜곡 좌표 사전 계산 =====
+    // ===================================================================
+    const feStrength = fe.strength;
+    const useFisheye = feStrength > 0.05;
+    const fisheyePositions = new Map<string, { nx: number; ny: number; s: number }>();
+    if (useFisheye) {
+      for (const node of nodes) {
+        const pos = fisheyeDistort(
+          node.x || 0, node.y || 0,
+          fe.currentX, fe.currentY,
+          280, // 왜곡 영향 반경
+          feStrength,
+        );
+        fisheyePositions.set(node.id, pos);
+      }
+    }
+
+    // 노드의 렌더링 좌표 (fish-eye 적용 시 왜곡 좌표, 아닐 시 원래 좌표)
+    const getNodeRenderPos = (node: GraphNode) => {
+      const fePos = fisheyePositions.get(node.id);
+      return fePos || { nx: node.x || 0, ny: node.y || 0, s: 1 };
+    };
+
     // ===== Draw Edges =====
-    // 포커스된 노드가 있으면 엣지를 모두 숨기고, 노드 하이라이트로만 표현
-    if (!hasFocusedNode) {
+    // 스마트 엣지 렌더링: hover 또는 focus된 노드의 엣지만 표시
+    const activeNodeId = focusedNodeId || hoveredNode?.id || null;
+    if (activeNodeId) {
       for (const edge of edges) {
-        const source = nodes.find(n => n.id === (typeof edge.source === 'string' ? edge.source : edge.source.id));
-        const target = nodes.find(n => n.id === (typeof edge.target === 'string' ? edge.target : edge.target.id));
+        const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+        const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+
+        // 활성 노드에 연결된 엣지만 그리기
+        if (sourceId !== activeNodeId && targetId !== activeNodeId) continue;
+
+        const source = nodes.find(n => n.id === sourceId);
+        const target = nodes.find(n => n.id === targetId);
         if (!source || !target) continue;
 
-        const isHighlighted = highlightedKeyword &&
-          (source.keywords.includes(highlightedKeyword) || target.keywords.includes(highlightedKeyword));
+        // Fish-eye 적용된 좌표 사용
+        const sPos = getNodeRenderPos(source);
+        const tPos = getNodeRenderPos(target);
 
         ctx.beginPath();
-        ctx.moveTo(source.x || 0, source.y || 0);
-        ctx.lineTo(target.x || 0, target.y || 0);
+        ctx.moveTo(sPos.nx, sPos.ny);
+        ctx.lineTo(tPos.nx, tPos.ny);
 
         // 가져온 연락처와의 연결은 녹색 점선
         const isImportedEdge = source.isImported || target.isImported;
 
         if (isImportedEdge) {
-          ctx.strokeStyle = isHighlighted ? COLORS.edgeImported : 'rgba(63, 185, 80, 0.2)';
-          ctx.lineWidth = isHighlighted ? 2 : 1;
+          ctx.strokeStyle = COLORS.edgeImported;
+          ctx.lineWidth = 1.5;
           ctx.setLineDash([3, 3]);
         } else if (edge.degree === 1) {
-          ctx.strokeStyle = isHighlighted ? COLORS.edgePrimary : 'rgba(74, 144, 226, 0.15)';
-          ctx.lineWidth = isHighlighted ? 2 : 1;
+          ctx.strokeStyle = 'rgba(74, 144, 226, 0.4)';
+          ctx.lineWidth = 1.5;
           ctx.setLineDash([]);
         } else {
-          ctx.strokeStyle = isHighlighted ? COLORS.edgeSecondary : 'rgba(123, 104, 238, 0.1)';
-          ctx.lineWidth = 0.5;
+          ctx.strokeStyle = 'rgba(123, 104, 238, 0.3)';
+          ctx.lineWidth = 1;
           ctx.setLineDash([4, 8]);
         }
         ctx.stroke();
@@ -1331,15 +1718,99 @@ export default function NetworkGraph() {
       transEased = easeOutCubic(Math.min(1, elapsed / transition.duration));
     }
 
-    // 1. Non-connected nodes first
+    // Fish-eye + 시각적 깊이감 + LOD를 적용한 노드 그리기 헬퍼
+    const drawNodeWithFisheye = (
+      node: GraphNode,
+      opts: Parameters<typeof drawNode>[2],
+      rank: number,
+    ) => {
+      const fePos = getNodeRenderPos(node);
+      const depthAlpha = getDepthAlpha(node.degree, transform.scale);
+      const depthSc = getDepthScale(node.degree, transform.scale);
+      const detail = shouldShowNodeDetail(node, transform.scale, rank);
+
+      // 좌표 백업 (Fish-eye 복원용)
+      const origX = node.x;
+      const origY = node.y;
+      if (useFisheye) {
+        node.x = fePos.nx;
+        node.y = fePos.ny;
+      }
+
+      // ★ 'hidden' 노드 처리
+      if (detail === 'hidden' && !opts.isFocused && !opts.isHovered) {
+        if (opts.isConnected) {
+          // 연결된 hidden 노드는 작은 점(dot)으로만 표시
+          ctx.save();
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          ctx.arc(node.x || 0, node.y || 0, 4, 0, Math.PI * 2);
+          ctx.fillStyle = CATEGORY_COLORS[node.category || '기타'] || COLORS.nodePrimary;
+          ctx.fill();
+          ctx.restore();
+        }
+        node.x = origX;
+        node.y = origY;
+        return;
+      }
+
+      ctx.save();
+      ctx.globalAlpha = (ctx.globalAlpha || 1) * depthAlpha;
+
+      // ★ 'dot' 모드: 이름/프로필 없이 작은 색상 점으로만 표시
+      if (detail === 'dot' && !opts.isConnected && !opts.isFocused && !opts.isHovered) {
+        const nx = node.x || 0;
+        const ny = node.y || 0;
+        const dotRadius = 5 * depthSc;
+        const catColor = CATEGORY_COLORS[node.category || '기타'] || COLORS.nodePrimary;
+
+        // 작은 글로우
+        const glowGrad = ctx.createRadialGradient(nx, ny, dotRadius, nx, ny, dotRadius * 3);
+        glowGrad.addColorStop(0, catColor + '40');
+        glowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(nx, ny, dotRadius * 3, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.fill();
+
+        // 점 본체
+        ctx.beginPath();
+        ctx.arc(nx, ny, dotRadius, 0, Math.PI * 2);
+        ctx.fillStyle = catColor;
+        ctx.fill();
+
+        ctx.restore();
+        node.x = origX;
+        node.y = origY;
+        return;
+      }
+
+      // ★ 'full' 모드: Fish-eye 확대 + 깊이 스케일 적용
+      const totalScale = depthSc * (useFisheye && fePos.s > 1.01 ? fePos.s : 1);
+      if (totalScale !== 1) {
+        const cx = node.x || 0;
+        const cy = node.y || 0;
+        ctx.translate(cx, cy);
+        ctx.scale(totalScale, totalScale);
+        ctx.translate(-cx, -cy);
+      }
+
+      drawNode(ctx, node, opts);
+      ctx.restore();
+
+      node.x = origX;
+      node.y = origY;
+    };
+
+    // 1. Non-connected nodes first (뒤쪽 레이어)
     for (const node of nodes) {
       const isConnectedToFocused = connectedNodeIds.has(node.id);
       if (hasFocusedNode && isConnectedToFocused) continue;
 
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
-      // 모든 노드를 밝게 표시 (isDimmed 비활성화)
       const isDimmed = false;
+      const rank = importanceRankMap.get(node.id) || 999;
 
       // 새로 나타나는 노드: 페이드인
       const isNewNode = isTransitioning && !transition.prevPositions.has(node.id);
@@ -1348,20 +1819,20 @@ export default function NetworkGraph() {
         ctx.globalAlpha = transEased;
       }
 
-      drawNode(ctx, node, {
+      drawNodeWithFisheye(node, {
         isHovered,
         isFocused: false,
         isConnected: false,
         isDimmed,
         isHighlighted,
-      });
+      }, rank);
 
       if (isNewNode) {
         ctx.restore();
       }
     }
 
-    // 2. Connected nodes (drawn on top)
+    // 2. Connected nodes (drawn on top - 앞쪽 레이어, 항상 full detail)
     if (hasFocusedNode) {
       for (const node of nodes) {
         const isConnectedToFocused = connectedNodeIds.has(node.id);
@@ -1370,34 +1841,127 @@ export default function NetworkGraph() {
         const isFocused = focusedNodeId === node.id;
         const isHovered = hoveredNode?.id === node.id;
 
-        // 모든 노드를 밝게 표시
-        drawNode(ctx, node, {
+        drawNodeWithFisheye(node, {
           isHovered,
           isFocused,
           isConnected: true,
           isDimmed: false,
           isHighlighted: false,
           isMutual: mutualNodeIds.has(node.id),
-        });
+        }, 0); // rank 0 = always full detail
       }
     }
 
     // ===== Draw Labels (separate pass - always on top of all nodes) =====
+    // 의미론적 줌 + 라벨-노드 충돌 감지로 가독성 극대화
+    // 이미 표시된 라벨 영역 추적 (겹침 방지)
+    const placedLabels: { cx: number; cy: number; hw: number; hh: number }[] = [];
+
     for (const node of nodes) {
-      // 모든 노드 라벨을 밝게 표시
-      const isDimmed = false;
       const isFocused = focusedNodeId === node.id;
+      const isConnected = connectedNodeIds.has(node.id);
+      const rank = importanceRankMap.get(node.id) || 999;
+      const importance = node.importance || 0;
 
-      drawNodeLabel(ctx, node, { isDimmed, isFocused, allNodes: nodes, isMutual: mutualNodeIds.has(node.id) });
+      // 의미론적 줌 — 줌 아웃 시 상위 노드만 라벨 표시
+      let showLabel = shouldShowLabel(node, transform.scale, importance, rank);
 
-      // 그룹 배지 그리기
-      if (!isDimmed && node.degree !== 0) {
-        const nodeGroups = getGroupsForNode(node.id);
-        if (nodeGroups.length > 0) {
-          const radius = getNodeSize(node, hoveredNode?.id === node.id, isFocused);
-          drawGroupBadges(ctx, node, nodeGroups, radius);
+      // 포커스된 노드 및 연결된 노드는 항상 라벨 표시
+      if (isFocused || (hasFocusedNode && isConnected)) showLabel = true;
+
+      // Fish-eye 확대 중인 노드는 항상 라벨 표시
+      const fePos = fisheyePositions.get(node.id);
+      const isFisheyeEnlarged = fePos && fePos.s > 1.3;
+      if (isFisheyeEnlarged) showLabel = true;
+
+      // 호버 중인 노드도 라벨 표시
+      if (hoveredNode?.id === node.id) showLabel = true;
+
+      if (!showLabel) continue;
+
+      // Fish-eye 좌표 적용
+      const origX = node.x;
+      const origY = node.y;
+      if (useFisheye && fePos) {
+        node.x = fePos.nx;
+        node.y = fePos.ny;
+      }
+
+      const depthAlpha = getDepthAlpha(node.degree, transform.scale);
+      const labelX = node.x || 0;
+      const radius = getNodeSize(node, false, isFocused);
+      const labelY = (node.y || 0) + radius + 14;
+
+      // 라벨-라벨 겹침 방지: 새 라벨이 기존 라벨과 겹치면 건너뜀
+      // (한글 이름 3자 기준 약 45px 폭 + 여유)
+      const estHW = 45;
+      const estHH = 14;
+      let overlaps = false;
+      for (const placed of placedLabels) {
+        if (
+          Math.abs(labelX - placed.cx) < (estHW + placed.hw) &&
+          Math.abs(labelY - placed.cy) < (estHH + placed.hh)
+        ) {
+          overlaps = true;
+          break;
         }
       }
+
+      // 중요한 노드(포커스, 호버, 중앙)는 겹침이 있어도 표시
+      if (overlaps && !isFocused && node.degree !== 0 && hoveredNode?.id !== node.id) {
+        node.x = origX;
+        node.y = origY;
+        continue;
+      }
+
+      placedLabels.push({ cx: labelX, cy: labelY, hw: estHW, hh: estHH });
+
+      ctx.save();
+      ctx.globalAlpha = depthAlpha;
+
+      drawNodeLabel(ctx, node, { isDimmed: false, isFocused, allNodes: nodes, isMutual: mutualNodeIds.has(node.id) });
+
+      ctx.restore();
+      node.x = origX;
+      node.y = origY;
+
+      // 그룹 배지 그리기
+      if (node.degree !== 0) {
+        const nodeGroups = getGroupsForNode(node.id);
+        if (nodeGroups.length > 0) {
+          const feP = getNodeRenderPos(node);
+          const origX2 = node.x;
+          const origY2 = node.y;
+          if (useFisheye) { node.x = feP.nx; node.y = feP.ny; }
+          const r = getNodeSize(node, hoveredNode?.id === node.id, isFocused);
+          drawGroupBadges(ctx, node, nodeGroups, r);
+          node.x = origX2;
+          node.y = origY2;
+        }
+      }
+    }
+
+    // Fish-eye 렌즈 시각적 인디케이터 (터치 영역 표시)
+    if (useFisheye && feStrength > 0.3) {
+      ctx.beginPath();
+      ctx.arc(fe.currentX, fe.currentY, 280, 0, Math.PI * 2);
+      const lensAlpha = Math.min(0.12, feStrength * 0.04);
+      ctx.strokeStyle = `rgba(88, 166, 255, ${lensAlpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 8]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 렌즈 중심 십자표시
+      const crossSize = 8;
+      ctx.strokeStyle = `rgba(88, 166, 255, ${lensAlpha * 2})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(fe.currentX - crossSize, fe.currentY);
+      ctx.lineTo(fe.currentX + crossSize, fe.currentY);
+      ctx.moveTo(fe.currentX, fe.currentY - crossSize);
+      ctx.lineTo(fe.currentX, fe.currentY + crossSize);
+      ctx.stroke();
     }
 
     ctx.restore();
@@ -1412,7 +1976,7 @@ export default function NetworkGraph() {
         const dx = targetTransform.x - prev.x;
         const dy = targetTransform.y - prev.y;
         const ds = targetTransform.scale - prev.scale;
-        const ease = 0.12;
+        const ease = 0.15; // 더 부드러운 감속 이징
 
         const newX = prev.x + dx * ease;
         const newY = prev.y + dy * ease;
@@ -1488,12 +2052,17 @@ export default function NetworkGraph() {
     };
   }, [render]);
 
-  // Mouse interactions
+  // Mouse interactions — 보로노이(Voronoi) 기반 최근접 노드 선택
+  // 정확히 노드 위를 터치하지 않아도 가장 가까운 노드가 선택됨 (모바일 최적화)
   const getNodeAtPosition = (x: number, y: number): GraphNode | null => {
     const adjustedX = (x - transform.x) / transform.scale;
     const adjustedY = (y - transform.y) / transform.scale;
 
     const visibleIds = getVisibleNodeIds();
+    let closestNode: GraphNode | null = null;
+    let closestDist = Infinity;
+
+    // 1단계: 정확한 히트 검사 (노드 원 내부)
     for (const node of nodesRef.current) {
       if (!visibleIds.has(node.id)) continue;
       const dx = (node.x || 0) - adjustedX;
@@ -1501,11 +2070,35 @@ export default function NetworkGraph() {
       const radius = node.degree === 0 ? NODE_SIZES.core :
                      node.degree === 1 ? NODE_SIZES.primary : NODE_SIZES.secondary;
 
-      if (dx * dx + dy * dy < (radius + 10) * (radius + 10)) {
-        return node;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < (radius + 10) * (radius + 10)) {
+        if (distSq < closestDist) {
+          closestDist = distSq;
+          closestNode = node;
+        }
       }
     }
-    return null;
+
+    // 2단계: 정확한 히트가 없으면 보로노이 방식으로 최근접 노드 선택
+    // (반경 60px 이내에서만 — 너무 먼 빈 공간은 null)
+    if (!closestNode) {
+      const voronoiMaxDist = 60 / transform.scale; // 화면 크기 대비 60px
+      const voronoiMaxDistSq = voronoiMaxDist * voronoiMaxDist;
+
+      for (const node of nodesRef.current) {
+        if (!visibleIds.has(node.id)) continue;
+        const dx = (node.x || 0) - adjustedX;
+        const dy = (node.y || 0) - adjustedY;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq < voronoiMaxDistSq && distSq < closestDist) {
+          closestDist = distSq;
+          closestNode = node;
+        }
+      }
+    }
+
+    return closestNode;
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1540,10 +2133,16 @@ export default function NetworkGraph() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    // 어안 렌즈(Fish-eye): 마우스 위치를 월드 좌표로 변환하여 왜곡 중심 업데이트
+    const worldX = (x - transform.x) / transform.scale;
+    const worldY = (y - transform.y) / transform.scale;
+
     if (draggedNode) {
-      draggedNode.fx = (x - transform.x) / transform.scale;
-      draggedNode.fy = (y - transform.y) / transform.scale;
+      draggedNode.fx = worldX;
+      draggedNode.fy = worldY;
       setTooltip(null);
+      // 드래그 중에는 fish-eye 비활성화
+      fisheyeFocusRef.current.active = false;
     } else if (isDragging) {
       const dx = e.clientX - lastPosRef.current.x;
       const dy = e.clientY - lastPosRef.current.y;
@@ -1554,9 +2153,19 @@ export default function NetworkGraph() {
       }));
       lastPosRef.current = { x: e.clientX, y: e.clientY };
       setTooltip(null);
+      fisheyeFocusRef.current.active = false;
     } else {
       const node = getNodeAtPosition(x, y);
       setHoveredNode(node);
+
+      // Fish-eye 활성화: 노드 위에 있을 때만 (클러스터 뷰 제외)
+      if (node && transform.scale >= ZOOM_CLUSTER_THRESHOLD) {
+        fisheyeFocusRef.current = { x: worldX, y: worldY, active: true };
+        fisheyeAnimRef.current.targetX = worldX;
+        fisheyeAnimRef.current.targetY = worldY;
+      } else {
+        fisheyeFocusRef.current.active = false;
+      }
 
       if (canvasRef.current) {
         if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
@@ -1595,6 +2204,7 @@ export default function NetworkGraph() {
     handleMouseUp();
     setHoveredNode(null);
     setTooltip(null);
+    fisheyeFocusRef.current.active = false;
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
@@ -1616,6 +2226,17 @@ export default function NetworkGraph() {
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
       const node = getNodeAtPosition(x, y);
+
+      // 터치 시 Fish-eye 활성화 (노드 위에 터치했을 때)
+      const worldX = (x - transform.x) / transform.scale;
+      const worldY = (y - transform.y) / transform.scale;
+      if (node && transform.scale >= ZOOM_CLUSTER_THRESHOLD) {
+        fisheyeFocusRef.current = { x: worldX, y: worldY, active: true };
+        fisheyeAnimRef.current.targetX = worldX;
+        fisheyeAnimRef.current.targetY = worldY;
+        fisheyeAnimRef.current.currentX = worldX;
+        fisheyeAnimRef.current.currentY = worldY;
+      }
 
       if (node) {
         setDraggedNode(node);
@@ -1703,6 +2324,9 @@ export default function NetworkGraph() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
 
+    // Fish-eye 비활성화 (터치 종료)
+    fisheyeFocusRef.current.active = false;
+
     // 탭 감지: 터치 시작 위치에서 거의 움직이지 않았으면 클릭으로 처리
     if (e.changedTouches.length === 1 && touchStartPosRef.current && !lastPinchDistRef.current) {
       const touch = e.changedTouches[0];
@@ -1745,10 +2369,34 @@ export default function NetworkGraph() {
                   next.delete(node.id);
                   return next;
                 });
+                lastClickTimeRef.current = 0;
+                lastClickNodeRef.current = null;
               } else if (node.degree !== 0) {
-                // degree 0이 아닌 노드 터치 → 해당 인물 중심으로 그래프 재로드
-                setExpandedNodeIds(new Set());
-                setCenterUserId(node.id, node.degree);
+                // 싱글탭=expand 토글, 더블탭=recenter
+                const now = Date.now();
+                const isDoubleTap = lastClickNodeRef.current === node.id && (now - lastClickTimeRef.current) < 300;
+
+                if (isDoubleTap) {
+                  lastClickTimeRef.current = 0;
+                  lastClickNodeRef.current = null;
+                  setExpandedNodeIds(new Set());
+                  setCenterUserId(node.id, node.degree);
+                } else {
+                  lastClickTimeRef.current = now;
+                  lastClickNodeRef.current = node.id;
+                  focusOnNode(node);
+                  setSelectedNode(node);
+                  setExpandedNodeIds(prev => {
+                    const next = new Set(prev);
+                    if (next.has(node.id)) {
+                      next.delete(node.id);
+                    } else {
+                      next.clear();
+                      next.add(node.id);
+                    }
+                    return next;
+                  });
+                }
               } else {
                 // 중앙 노드 터치
                 focusOnNode(node);
@@ -1790,13 +2438,16 @@ export default function NetworkGraph() {
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
 
-    const targetX = centerX - node.x * transform.scale;
-    const targetY = centerY - node.y * transform.scale;
+    // 클릭 시 약간 줌인하면서 중앙으로 이동 (최소 1.0 배율 보장)
+    const targetScale = Math.max(1.0, Math.min(1.8, transform.scale * 1.15));
+
+    const targetX = centerX - node.x * targetScale;
+    const targetY = centerY - node.y * targetScale;
 
     setTargetTransform({
       x: targetX,
       y: targetY,
-      scale: transform.scale,
+      scale: targetScale,
     });
 
     setFocusedNodeId(node.id);
@@ -1868,13 +2519,40 @@ export default function NetworkGraph() {
           next.delete(node.id);
           return next;
         });
+        lastClickTimeRef.current = 0;
+        lastClickNodeRef.current = null;
         return;
       }
 
-      // degree 0이 아닌 노드 클릭 시 → 해당 인물 중심으로 그래프 재로드
+      // degree 0이 아닌 노드: 싱글클릭=expand 토글, 더블클릭=recenter
       if (node.degree !== 0) {
-        setExpandedNodeIds(new Set());
-        setCenterUserId(node.id, node.degree);
+        const now = Date.now();
+        const isDoubleClick = lastClickNodeRef.current === node.id && (now - lastClickTimeRef.current) < 300;
+
+        if (isDoubleClick) {
+          // 더블클릭: 해당 인물 중심으로 그래프 재로드
+          lastClickTimeRef.current = 0;
+          lastClickNodeRef.current = null;
+          setExpandedNodeIds(new Set());
+          setCenterUserId(node.id, node.degree);
+          return;
+        }
+
+        // 싱글클릭: degree 2 자식 expand/collapse 토글 + 포커스
+        lastClickTimeRef.current = now;
+        lastClickNodeRef.current = node.id;
+        focusOnNode(node);
+        setSelectedNode(node);
+        setExpandedNodeIds(prev => {
+          const next = new Set(prev);
+          if (next.has(node.id)) {
+            next.delete(node.id);
+          } else {
+            next.clear(); // 하나만 확장
+            next.add(node.id);
+          }
+          return next;
+        });
         return;
       }
 
@@ -1941,8 +2619,6 @@ export default function NetworkGraph() {
     <div ref={containerRef} className="w-full h-full relative">
       <canvas
         ref={canvasRef}
-        width={dimensions.width}
-        height={dimensions.height}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

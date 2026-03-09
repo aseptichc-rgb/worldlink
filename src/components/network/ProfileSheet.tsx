@@ -382,9 +382,9 @@ export default function ProfileSheet() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                      {/* 1촌이면 전체 정보, 아니면 비식별화된 정보 표시 */}
+                      {/* 1촌이거나 가져온 연락처면 전체 정보, 아니면 비식별화된 정보 표시 */}
                       {(() => {
-                        const isConnected = connectionDegree === 1;
+                        const isConnected = connectionDegree === 1 || !!selectedNode.isImported;
                         const displayInfo = selectedUserData
                           ? getDisplayInfo(selectedUserData, isConnected)
                           : {
@@ -491,8 +491,8 @@ export default function ProfileSheet() {
                 </div>
 
                 <div className="px-5 pb-5 space-y-5">
-                  {/* Contact Info - 1촌에게만 표시 */}
-                  {connectionDegree === 1 && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
+                  {/* Contact Info - 1촌 또는 가져온 연락처에게 표시 */}
+                  {(connectionDegree === 1 || selectedNode.isImported) && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Mail size={12} />
@@ -666,8 +666,8 @@ export default function ProfileSheet() {
                     </section>
                   )}
 
-                  {/* Memo - 1촌에게만 메모 남기기 가능 */}
-                  {connectionDegree === 1 && (
+                  {/* Memo - 1촌 또는 가져온 연락처에게 메모 남기기 가능 */}
+                  {(connectionDegree === 1 || selectedNode.isImported) && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
@@ -758,8 +758,8 @@ export default function ProfileSheet() {
                     </section>
                   )}
 
-                  {/* 연락 기록 - 1촌에게만 표시 */}
-                  {connectionDegree === 1 && (
+                  {/* 연락 기록 - 1촌 또는 가져온 연락처에게 표시 */}
+                  {(connectionDegree === 1 || selectedNode.isImported) && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Hash, User, Building, ArrowRight, StickyNote, Sparkles, Loader2 } from 'lucide-react';
+import { Search, X, Hash, User, Building, ArrowRight, StickyNote, Sparkles, Loader2, Briefcase, Tag as TagIcon } from 'lucide-react';
 import { useNetworkStore } from '@/store/networkStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMemoStore } from '@/store/memoStore';
@@ -37,6 +37,7 @@ interface PersonResult {
   degree: number; // 연결 단계
   path: string[]; // 연결 경로
   memoMatch?: string; // 메모 검색 일치 내용
+  matchedFields?: string[]; // 매칭된 필드 목록
 }
 
 export default function SearchBar() {
@@ -97,18 +98,32 @@ export default function SearchBar() {
         if (userId !== currentUserId) {
           const user = demoUsers.find(u => u.id === userId);
           if (user) {
-            // 이름, 회사, 직책, 키워드로 검색 (각 단어를 OR로 매칭)
+            // 이름, 회사, 직책, 키워드, 자기소개, 카테고리, 업종으로 검색 (각 단어를 OR로 매칭)
             const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
             const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
             const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
             const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+            const bioMatch = queryWords.some(w => user.bio?.toLowerCase().includes(w)) ?? false;
+            const categoryMatch = queryWords.some(w => user.category?.toLowerCase().includes(w)) ?? false;
+            const industryMatch = queryWords.some(w => user.industry?.toLowerCase().includes(w)) ?? false;
 
             // 메모 검색 (나만의 메모)
             const userMemo = memos[userId];
             const memoMatch = queryWords.some(w => userMemo?.content.toLowerCase().includes(w));
             const memoMatchContent = memoMatch ? userMemo.content : undefined;
 
-            if (nameMatch || companyMatch || positionMatch || keywordMatch || memoMatch) {
+            // 매칭된 필드 추적
+            const matchedFields: string[] = [];
+            if (nameMatch) matchedFields.push('이름');
+            if (companyMatch) matchedFields.push('회사');
+            if (positionMatch) matchedFields.push('직책');
+            if (keywordMatch) matchedFields.push('키워드');
+            if (bioMatch) matchedFields.push('자기소개');
+            if (categoryMatch) matchedFields.push('분야');
+            if (industryMatch) matchedFields.push('업종');
+            if (memoMatch) matchedFields.push('메모');
+
+            if (matchedFields.length > 0) {
               results.push({
                 id: user.id,
                 name: user.name,
@@ -119,6 +134,7 @@ export default function SearchBar() {
                 degree: degree,
                 path: path,
                 memoMatch: memoMatchContent,
+                matchedFields,
               });
             }
           }
@@ -139,6 +155,53 @@ export default function SearchBar() {
         }
       }
 
+      // 네트워크 그래프에 표시된 노드 중 BFS로 탐색되지 않은 노드도 검색
+      for (const node of nodes) {
+        if (visited.has(node.id) || node.id === currentUserId) continue;
+        visited.add(node.id);
+
+        const nameMatch = queryWords.some(w => node.name.toLowerCase().includes(w));
+        const companyMatch = queryWords.some(w => node.company?.toLowerCase().includes(w)) ?? false;
+        const positionMatch = queryWords.some(w => node.position?.toLowerCase().includes(w)) ?? false;
+        const keywordMatch = node.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+        const categoryMatch = queryWords.some(w => node.category?.toLowerCase().includes(w)) ?? false;
+
+        // 노드에 대응하는 demoUser가 있으면 bio도 검색
+        const demoUser = demoUsers.find(u => u.id === node.id);
+        const bioMatch = demoUser ? (queryWords.some(w => demoUser.bio?.toLowerCase().includes(w)) ?? false) : false;
+        const industryMatch = demoUser ? (queryWords.some(w => demoUser.industry?.toLowerCase().includes(w)) ?? false) : false;
+
+        // 메모 검색
+        const userMemo = memos[node.id];
+        const memoMatch = queryWords.some(w => userMemo?.content.toLowerCase().includes(w));
+        const memoMatchContent = memoMatch ? userMemo.content : undefined;
+
+        const matchedFields: string[] = [];
+        if (nameMatch) matchedFields.push('이름');
+        if (companyMatch) matchedFields.push('회사');
+        if (positionMatch) matchedFields.push('직책');
+        if (keywordMatch) matchedFields.push('키워드');
+        if (bioMatch) matchedFields.push('자기소개');
+        if (categoryMatch) matchedFields.push('분야');
+        if (industryMatch) matchedFields.push('업종');
+        if (memoMatch) matchedFields.push('메모');
+
+        if (matchedFields.length > 0) {
+          results.push({
+            id: node.id,
+            name: node.name,
+            company: node.company ?? "",
+            position: node.position ?? "",
+            profileImage: node.profileImage,
+            keywords: node.keywords,
+            degree: node.degree,
+            path: [],
+            memoMatch: memoMatchContent,
+            matchedFields,
+          });
+        }
+      }
+
       // 전체 공개 설정한 사용자 중 키워드 매칭되는 사람 추가 검색
       // (아직 결과에 없고, allowProfileDiscovery가 true인 경우)
       for (const user of demoUsers) {
@@ -147,13 +210,25 @@ export default function SearchBar() {
         // 전체 공개 설정 확인
         if (!user.privacySettings?.allowProfileDiscovery) continue;
 
-        // 키워드 매칭 검색 (이름, 회사, 직책, 키워드 - 각 단어 OR 매칭)
+        // 키워드 매칭 검색 (이름, 회사, 직책, 키워드, 자기소개, 카테고리, 업종 - 각 단어 OR 매칭)
         const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
         const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
         const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
         const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+        const bioMatch = queryWords.some(w => user.bio?.toLowerCase().includes(w)) ?? false;
+        const categoryMatch = queryWords.some(w => user.category?.toLowerCase().includes(w)) ?? false;
+        const industryMatch = queryWords.some(w => user.industry?.toLowerCase().includes(w)) ?? false;
 
-        if (nameMatch || companyMatch || positionMatch || keywordMatch) {
+        const matchedFields: string[] = [];
+        if (nameMatch) matchedFields.push('이름');
+        if (companyMatch) matchedFields.push('회사');
+        if (positionMatch) matchedFields.push('직책');
+        if (keywordMatch) matchedFields.push('키워드');
+        if (bioMatch) matchedFields.push('자기소개');
+        if (categoryMatch) matchedFields.push('분야');
+        if (industryMatch) matchedFields.push('업종');
+
+        if (matchedFields.length > 0) {
           results.push({
             id: user.id,
             name: user.name,
@@ -163,6 +238,7 @@ export default function SearchBar() {
             keywords: user.keywords,
             degree: -1, // 연결되지 않은 전체 공개 사용자 표시
             path: [],
+            matchedFields,
           });
         }
       }
@@ -175,7 +251,7 @@ export default function SearchBar() {
         return a.degree - b.degree;
       }).slice(0, 10);
     };
-  }, [currentUserId, memos]);
+  }, [currentUserId, memos, nodes]);
 
   // 검색어 변경 시 결과 업데이트
   useEffect(() => {
@@ -210,15 +286,39 @@ export default function SearchBar() {
     setAiResponse(null);
     setAiError(null);
 
-    const members = demoUsers.map(u => ({
-      id: u.id,
-      name: u.name,
-      company: u.company || '',
-      position: u.position || '',
-      bio: u.bio || '',
-      keywords: u.keywords,
-      category: u.category || '',
-    }));
+    // demoUsers + nodes를 합쳐서 AI에게 전달 (중복 제거)
+    const memberMap = new Map<string, { id: string; name: string; company: string; position: string; bio: string; keywords: string[]; category: string }>();
+
+    // demoUsers 추가
+    for (const u of demoUsers) {
+      memberMap.set(u.id, {
+        id: u.id,
+        name: u.name,
+        company: u.company || '',
+        position: u.position || '',
+        bio: u.bio || '',
+        keywords: u.keywords,
+        category: u.category || '',
+      });
+    }
+
+    // nodes에 있지만 demoUsers에 없는 인물도 추가
+    for (const node of nodes) {
+      if (!memberMap.has(node.id)) {
+        const demoUser = demoUsers.find(u => u.id === node.id);
+        memberMap.set(node.id, {
+          id: node.id,
+          name: node.name,
+          company: node.company || '',
+          position: node.position || '',
+          bio: demoUser?.bio || '',
+          keywords: node.keywords,
+          category: node.category || '',
+        });
+      }
+    }
+
+    const members = Array.from(memberMap.values());
 
     try {
       const idToken = await auth?.currentUser?.getIdToken();
@@ -232,9 +332,16 @@ export default function SearchBar() {
         signal: controller.signal,
       });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('AI search failed:', res.status, errorData);
-        throw new Error(errorData.error || 'AI search failed');
+        const errorText = await res.text().catch(() => '');
+        let errorMsg = 'AI search failed';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMsg = errorData.error || errorMsg;
+          console.error('AI search failed:', res.status, errorData);
+        } catch {
+          console.error('AI search failed:', res.status, errorText.substring(0, 200));
+        }
+        throw new Error(errorMsg);
       }
       const data: AiSearchResponse = await res.json();
       setAiResponse(data);
@@ -249,7 +356,7 @@ export default function SearchBar() {
     } finally {
       setAiLoading(false);
     }
-  }, []);
+  }, [nodes]);
 
   // query가 바뀌면 이전 AI 결과 초기화 (자동 트리거 제거 - 버튼 클릭으로만 시작)
   useEffect(() => {
@@ -360,7 +467,7 @@ export default function SearchBar() {
               }
             }
           }}
-          placeholder="AI에게 인맥 추천을 요청해보세요"
+          placeholder="이름, 회사, 직책, 분야, 자기소개 등으로 검색"
           className="
             flex-1 bg-transparent text-white
             py-4 pr-5
@@ -675,6 +782,12 @@ export default function SearchBar() {
                         {person.degree === -1 && (
                           <div className="flex items-center gap-1.5 text-sm text-[#10B981] mt-1.5">
                             <span>키워드 매칭으로 검색됨</span>
+                          </div>
+                        )}
+                        {person.matchedFields && person.matchedFields.length > 0 && (
+                          <div className="flex items-center gap-1.5 text-sm text-[#58A6FF] mt-1.5 flex-wrap">
+                            <TagIcon size={14} />
+                            <span>매칭: {person.matchedFields.join(', ')}</span>
                           </div>
                         )}
                         {person.memoMatch && (

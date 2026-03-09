@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { verifyAuthToken } from '@/lib/firebase-admin';
 
 interface MemberInput {
   id: string;
@@ -19,9 +18,15 @@ export async function POST(req: NextRequest) {
                          process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
   if (hasAdminConfig) {
-    const uid = await verifyAuthToken(req);
-    if (!uid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+      const { verifyAuthToken } = await import('@/lib/firebase-admin');
+      const uid = await verifyAuthToken(req);
+      if (!uid) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } catch (authErr) {
+      console.error('Firebase Admin auth error:', authErr);
+      return NextResponse.json({ error: 'Auth verification failed' }, { status: 500 });
     }
   }
 
@@ -119,9 +124,12 @@ ${membersContext}
   } catch (err) {
     const error = err as Error;
     console.error('AI Search error:', error.message, error.stack);
-    return NextResponse.json({
-      error: 'AI search failed',
-      details: error.message
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error.message || 'AI search failed',
+        details: error.stack?.split('\n')[0] || 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
