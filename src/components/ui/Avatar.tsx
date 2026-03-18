@@ -55,7 +55,7 @@ export default function Avatar({
     <div className={`relative ${sizes[size]} ${className}`}>
       <div
         className={`
-          ${sizes[size]} rounded-full overflow-hidden
+          relative ${sizes[size]} rounded-full overflow-hidden
           border-2 ${hasGlow ? 'border-[#58A6FF]' : 'border-[#30363D]'}
           ${hasGlow ? 'shadow-[0_0_16px_rgba(88,166,255,0.25)]' : ''}
           bg-[#1C2333] flex items-center justify-center

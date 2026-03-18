@@ -19,7 +19,7 @@ export const demoUsers: User[] = DEMO_MEMBERS.map(m => ({
   bio: m.bio,
   keywords: m.keywords,
   category: m.category,
-  profileImage: `/faces/${m.name}.jpg`,
+  profileImage: `/faces/${m.id}.jpg`,
   inviteCode: `INV-${m.id.split('_')[1]?.padStart(3, '0') || '000'}`,
   invitesRemaining: 999,
   coffeeStatus: 'available' as const,
