@@ -232,20 +232,23 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#121212] pb-32">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-30 glass-light">
+      {/* Header - 모바일 safe-area 적용 */}
+      <div
+        className="fixed top-0 left-0 right-0 z-30 glass-light"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-[#252525] transition-colors"
+            className="p-2.5 rounded-lg hover:bg-[#252525] active:bg-[#303030] transition-colors touch-manipulation"
           >
             <ArrowLeft size={22} className="text-[#8B949E]" />
           </button>
-          <div className="w-8" />
+          <h1 className="text-lg font-semibold text-white">프로필</h1>
           <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
             disabled={isSaving}
-            className="p-2 rounded-lg hover:bg-[#252525] transition-colors"
+            className="p-2.5 rounded-lg hover:bg-[#252525] active:bg-[#303030] transition-colors touch-manipulation min-w-[60px] flex justify-end"
           >
             {isEditing ? (
               <span className="text-[#58A6FF] text-base font-medium">
@@ -258,7 +261,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="pt-16 px-5">
+      <div className="pt-20 px-4 sm:px-5">
         {/* Profile Card - 통합된 프로필 카드 */}
         <Card className="px-6 py-8 mb-6">
           <motion.div
@@ -275,8 +278,8 @@ export default function ProfilePage() {
                 hasGlow
               />
               {isEditing && (
-                <label className="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] rounded-full flex items-center justify-center cursor-pointer">
-                  <Camera size={16} className="text-white" />
+                <label className="absolute bottom-0 right-0 w-10 h-10 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:scale-95 transition-transform shadow-lg">
+                  <Camera size={18} className="text-white" />
                   <input
                     type="file"
                     accept="image/*"

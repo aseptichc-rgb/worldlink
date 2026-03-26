@@ -156,7 +156,10 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[rgba(18,18,18,0.95)] backdrop-blur-xl border-t border-[rgba(240,246,252,0.05)] safe-area-bottom">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 bg-[rgba(18,18,18,0.95)] backdrop-blur-xl border-t border-[rgba(240,246,252,0.05)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = item.isInvite ? showInviteModal : pathname === item.path;
@@ -166,7 +169,7 @@ export default function BottomNav() {
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path, item.requiresAuth, item.isInvite)}
-                className="relative flex flex-col items-center justify-center w-16 h-full"
+                className="relative flex flex-col items-center justify-center w-16 h-full touch-manipulation active:opacity-70 transition-opacity"
               >
                 {/* 활성 상태: Filled 아이콘, 비활성: Outline 아이콘 (선 두께 증가) */}
                 {isActive && item.path === '/profile' ? (

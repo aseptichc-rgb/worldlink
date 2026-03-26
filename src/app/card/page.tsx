@@ -176,16 +176,22 @@ export default function MyCardPage() {
 
   return (
     <div className="min-h-screen bg-[#0D1117] pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#30363D]">
+      {/* Header - 모바일 safe-area 적용 */}
+      <div
+        className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#30363D]"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
         <div className="flex items-center justify-between px-4 py-3">
-          <button onClick={() => router.back()} className="p-2 -ml-2">
+          <button
+            onClick={() => router.back()}
+            className="p-2.5 -ml-2 rounded-lg active:bg-[#30363D] touch-manipulation"
+          >
             <ArrowLeft size={24} className="text-white" />
           </button>
           <h1 className="text-lg font-semibold text-white">내 명함</h1>
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 -mr-2"
+            className="p-2.5 -mr-2 rounded-lg active:bg-[#30363D] touch-manipulation"
           >
             <Settings size={24} className="text-[#8B949E]" />
           </button>
@@ -265,37 +271,37 @@ export default function MyCardPage() {
           </div>
         </motion.div>
 
-        {/* 액션 버튼들 */}
-        <div className="grid grid-cols-3 gap-3.5">
+        {/* 액션 버튼들 - 모바일 터치 최적화 */}
+        <div className="grid grid-cols-3 gap-3">
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleShare}
-            className="flex flex-col items-center gap-3 p-5 rounded-xl bg-[#1C2333] border border-[#30363D]"
+            className="flex flex-col items-center gap-2.5 p-4 sm:p-5 rounded-xl bg-[#1C2333] border border-[#30363D] active:bg-[#252B3B] touch-manipulation min-h-[88px]"
           >
             <Share2 size={24} className="text-[#58A6FF]" />
-            <span className="text-base text-white">공유하기</span>
+            <span className="text-sm sm:text-base text-white">공유하기</span>
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleCopyLink}
-            className="flex flex-col items-center gap-3 p-5 rounded-xl bg-[#1C2333] border border-[#30363D]"
+            className="flex flex-col items-center gap-2.5 p-4 sm:p-5 rounded-xl bg-[#1C2333] border border-[#30363D] active:bg-[#252B3B] touch-manipulation min-h-[88px]"
           >
             {copied ? (
               <Check size={24} className="text-[#3FB950]" />
             ) : (
               <Copy size={24} className="text-[#58A6FF]" />
             )}
-            <span className="text-base text-white">{copied ? '복사됨!' : '링크 복사'}</span>
+            <span className="text-sm sm:text-base text-white">{copied ? '복사됨!' : '링크 복사'}</span>
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleDownloadQR}
-            className="flex flex-col items-center gap-3 p-5 rounded-xl bg-[#1C2333] border border-[#30363D]"
+            className="flex flex-col items-center gap-2.5 p-4 sm:p-5 rounded-xl bg-[#1C2333] border border-[#30363D] active:bg-[#252B3B] touch-manipulation min-h-[88px]"
           >
             <Download size={24} className="text-[#58A6FF]" />
-            <span className="text-base text-white">QR 저장</span>
+            <span className="text-sm sm:text-base text-white">QR 저장</span>
           </motion.button>
         </div>
 
@@ -331,7 +337,7 @@ export default function MyCardPage() {
         </div>
       </div>
 
-      {/* 인맥 공개 설정 모달 */}
+      {/* 인맥 공개 설정 모달 - 모바일 최적화 */}
       <AnimatePresence>
         {showSettings && (
           <motion.div
@@ -347,16 +353,17 @@ export default function MyCardPage() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#1C2333] rounded-t-2xl border-t border-[#30363D] px-8 py-7"
+              className="w-full bg-[#1C2333] rounded-t-[20px] border-t border-[#30363D] px-5 sm:px-8 py-6"
+              style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}
             >
-              <div className="w-12 h-1 bg-[#484F58] rounded-full mx-auto mb-6" />
+              <div className="w-10 h-1 bg-[#484F58] rounded-full mx-auto mb-5" />
 
-              <h3 className="text-lg font-semibold text-white mb-4">인맥 공개 범위</h3>
-              <p className="text-base text-[#8B949E] mb-7 leading-relaxed">
+              <h3 className="text-lg font-semibold text-white mb-3">인맥 공개 범위</h3>
+              <p className="text-sm sm:text-base text-[#8B949E] mb-5 leading-relaxed">
                 내 명함을 받은 사람이 내 인맥을 얼마나 볼 수 있을지 설정하세요
               </p>
 
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 {visibilityOptions.map((option) => {
                   const Icon = option.icon;
                   const isSelected = myCard.networkVisibility === option.value;
@@ -367,23 +374,23 @@ export default function MyCardPage() {
                         updateMyCard({ networkVisibility: option.value });
                         setShowSettings(false);
                       }}
-                      className={`w-full flex items-center gap-4 p-5 rounded-xl border transition-all ${
+                      className={`w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border transition-all touch-manipulation active:scale-[0.98] ${
                         isSelected
                           ? 'bg-[#58A6FF]/10 border-[#58A6FF]'
-                          : 'bg-[#161B22] border-[#30363D] hover:border-[#484F58]'
+                          : 'bg-[#161B22] border-[#30363D] active:border-[#484F58]'
                       }`}
                     >
-                      <div className={`p-2.5 rounded-lg ${isSelected ? 'bg-[#58A6FF]/20' : 'bg-[#30363D]'}`}>
+                      <div className={`p-2.5 rounded-lg flex-shrink-0 ${isSelected ? 'bg-[#58A6FF]/20' : 'bg-[#30363D]'}`}>
                         <Icon size={20} className={isSelected ? 'text-[#58A6FF]' : 'text-[#8B949E]'} />
                       </div>
-                      <div className="flex-1 text-left">
+                      <div className="flex-1 text-left min-w-0">
                         <p className={`font-medium ${isSelected ? 'text-[#58A6FF]' : 'text-white'}`}>
                           {option.label}
                         </p>
-                        <p className="text-base text-[#8B949E] mt-0.5">{option.desc}</p>
+                        <p className="text-sm text-[#8B949E] mt-0.5 truncate">{option.desc}</p>
                       </div>
                       {isSelected && (
-                        <Check size={20} className="text-[#58A6FF]" />
+                        <Check size={20} className="text-[#58A6FF] flex-shrink-0" />
                       )}
                     </button>
                   );

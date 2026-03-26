@@ -351,7 +351,7 @@ export default function NetworkPage() {
         </div>
       </div>
 
-      {/* Side Menu */}
+      {/* Side Menu - 모바일에서는 하단 시트, 데스크탑에서는 사이드 패널 */}
       {showMenu && (
         <>
           <motion.div
@@ -361,12 +361,145 @@ export default function NetworkPage() {
             onClick={() => setShowMenu(false)}
             className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
           />
+          {/* 모바일: 하단 시트 */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#161B22] border-t border-[#30363D] rounded-t-[20px] z-50 max-h-[85vh] overflow-y-auto"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
+          >
+            {/* 스와이프 핸들 */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-[#484F58] rounded-full" />
+            </div>
+
+            <div className="px-5 pb-4">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#30363D]">
+                <Avatar
+                  src={user.profileImage}
+                  name={user.name}
+                  size="lg"
+                  hasGlow
+                />
+                <div>
+                  <h3 className="font-semibold text-white">{user.name}</h3>
+                  <p className="text-sm text-[#8B949E]">{user.company}</p>
+                </div>
+              </div>
+
+              <nav className="grid grid-cols-3 gap-3 mb-4">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    router.push('/profile');
+                  }}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1C2333] active:bg-[#252B3B] transition-colors"
+                >
+                  <UserIcon size={22} className="text-[#8B949E]" />
+                  <span className="text-xs text-[#8B949E]">프로필</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    router.push('/messages');
+                  }}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#1C2333] active:bg-[#252B3B] transition-colors"
+                >
+                  <MessageCircle size={22} className="text-[#8B949E]" />
+                  <span className="text-xs text-[#8B949E]">메세지</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    router.push('/insights');
+                  }}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[#58A6FF]/10 active:bg-[#58A6FF]/20 transition-colors"
+                >
+                  <BarChart3 size={22} className="text-[#58A6FF]" />
+                  <span className="text-xs text-[#58A6FF]">인사이트</span>
+                </button>
+              </nav>
+
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    router.push('/managed-groups');
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#FFA657] bg-[#FFA657]/10 active:bg-[#FFA657]/20 transition-colors"
+                >
+                  <Crown size={20} />
+                  <span className="font-medium">나의 모임</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowQuickCaptureList(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#D29922] bg-[#D29922]/10 active:bg-[#D29922]/20 transition-colors"
+                >
+                  <Zap size={20} />
+                  <span className="font-medium">빠른 기록</span>
+                  {quickCaptures.length > 0 && (
+                    <span className="ml-auto text-xs bg-[#D29922]/30 text-[#D29922] px-2 py-0.5 rounded-full font-bold">
+                      {quickCaptures.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    router.push('/import-contacts');
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#3FB950] bg-[#3FB950]/10 active:bg-[#3FB950]/20 transition-colors"
+                >
+                  <Upload size={20} />
+                  <span className="font-medium">연락처 가져오기</span>
+                </button>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-[#30363D]">
+                <div className="flex items-center justify-between p-3 bg-[#1C2333] rounded-xl mb-3">
+                  <div>
+                    <p className="text-xs text-[#8B949E]">내 초대 코드</p>
+                    <p className="font-mono text-sm text-[#58A6FF]">{user.inviteCode}</p>
+                  </div>
+                  <span className="text-xs text-[#484F58]">남은 {user.invitesRemaining}개</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    setShowMenu(false);
+                    try {
+                      const isDemo = localStorage.getItem('nodded_demo_mode') === 'true';
+                      if (!isDemo) {
+                        await flushGroupSync();
+                        await logoutUser();
+                      }
+                      clearGroups();
+                      logout();
+                      router.push('/onboarding');
+                    } catch (error) {
+                      console.error('Error logging out:', error);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[#FF6B8A] bg-[#FF6B8A]/10 active:bg-[#FF6B8A]/20 transition-colors"
+                >
+                  <LogOut size={18} />
+                  <span>로그아웃</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 데스크탑: 사이드 패널 */}
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25 }}
-            className="fixed top-0 left-0 bottom-0 w-72 bg-[#161B22] border-r border-[#30363D] z-50 p-6"
+            className="hidden sm:block fixed top-0 left-0 bottom-0 w-72 bg-[#161B22] border-r border-[#30363D] z-50 p-6"
           >
             <div className="flex items-center gap-3 mb-8">
               <Avatar

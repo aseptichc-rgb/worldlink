@@ -339,23 +339,26 @@ export default function ProfileSheet() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-0 right-0 bottom-0 w-full max-w-[380px] z-30 pointer-events-auto"
+          className="fixed top-0 right-0 bottom-0 w-full sm:max-w-[380px] z-30 pointer-events-auto"
         >
-          {/* Panel Container */}
-          <div className="h-full bg-gradient-to-l from-[#121212]/98 via-[#1E1E1E]/95 to-transparent">
+          {/* Panel Container - 모바일에서는 전체 화면 */}
+          <div className="h-full bg-[#121212] sm:bg-gradient-to-l sm:from-[#121212]/98 sm:via-[#1E1E1E]/95 sm:to-transparent">
             {/* Content Area */}
-            <div className="h-full w-[340px] ml-auto bg-[#1E1E1E]/98 backdrop-blur-2xl border-l border-[#363636]/60 overflow-hidden flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#363636]/50 bg-[#121212]/50">
+            <div className="h-full w-full sm:w-[340px] sm:ml-auto bg-[#1E1E1E] sm:bg-[#1E1E1E]/98 sm:backdrop-blur-2xl sm:border-l border-[#363636]/60 overflow-hidden flex flex-col">
+              {/* Header - 모바일에서 더 큰 터치 영역 */}
+              <div
+                className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-[#363636]/50 bg-[#121212]/50"
+                style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
+              >
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] animate-pulse" />
                   <span className="text-base font-medium text-[#8B949E]">프로필</span>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-2 rounded-lg hover:bg-[#363636] transition-all duration-200 group"
+                  className="p-2.5 sm:p-2 rounded-lg hover:bg-[#363636] active:bg-[#404040] transition-all duration-200 touch-manipulation"
                 >
-                  <X size={18} className="text-[#8B949E] group-hover:text-white transition-colors" />
+                  <X size={20} className="sm:w-[18px] sm:h-[18px] text-[#8B949E] hover:text-white transition-colors" />
                 </button>
               </div>
 
@@ -959,19 +962,22 @@ export default function ProfileSheet() {
                 </div>
               </div>
 
-              {/* Action Buttons - 하단 고정 */}
-              <div className="px-5 py-4 border-t border-[#363636]/50 bg-[#121212]/80 backdrop-blur-xl">
+              {/* Action Buttons - 하단 고정, 모바일에서 safe-area 적용 */}
+              <div
+                className="px-4 sm:px-5 py-4 border-t border-[#363636]/50 bg-[#121212]/80 backdrop-blur-xl"
+                style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
+              >
                 {connectionDegree === 1 ? (
                   <div className="flex gap-3">
                     <Button
                       variant="secondary"
-                      className="flex-1 text-sm py-2.5"
+                      className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
                       leftIcon={<Star size={16} />}
                     >
                       관심
                     </Button>
                     <Button
-                      className="flex-1 text-sm py-2.5"
+                      className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
                       leftIcon={<MessageCircle size={16} />}
                       onClick={handleMessageClick}
                     >
@@ -981,7 +987,7 @@ export default function ProfileSheet() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     <Button
-                      className="w-full text-sm py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300"
+                      className="w-full text-sm py-3.5 sm:py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300 touch-manipulation"
                       leftIcon={<UserPlus size={16} />}
                       onClick={handleConnectionRequestClick}
                     >
@@ -990,14 +996,14 @@ export default function ProfileSheet() {
                     <div className="flex gap-3">
                       <Button
                         variant="secondary"
-                        className="flex-1 text-sm py-2.5"
+                        className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
                         leftIcon={<Star size={16} />}
                       >
                         관심
                       </Button>
                       <Button
                         variant="secondary"
-                        className="flex-1 text-sm py-2.5"
+                        className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
                         leftIcon={<MessageCircle size={16} />}
                         onClick={handleCoffeeChatClick}
                       >
