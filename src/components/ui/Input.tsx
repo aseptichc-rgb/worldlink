@@ -42,7 +42,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         `}>
           {/* 내부 입력창 */}
           <div className={`
-            bg-[#21262D] rounded-xl h-[48px] px-5 flex items-center
+            bg-[#21262D] rounded-xl h-[48px] px-6 flex items-center
             transition-all duration-300
             ${isFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}
           `}>

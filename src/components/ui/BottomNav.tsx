@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, User, Network, X, UserPlus, Users, Share2, Mail, Copy, Check, MessageCircle, Link2, UserRound, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
+import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { Avatar } from '@/components/ui';
 import { createInvitation, generateInviteLink } from '@/lib/firebase-services';
 import { loadKakaoSDK, sendKakaoInvite } from '@/lib/kakao-sdk';
@@ -34,6 +35,7 @@ export default function BottomNav() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const { groups, getNodesInGroup, openGroupInviteModal } = useGroupStore();
+  const { totalGroupUnread } = useNewsAlertStore();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [targetPath, setTargetPath] = useState('');
 
@@ -180,11 +182,18 @@ export default function BottomNav() {
                     className="text-[#58A6FF] transition-colors duration-200"
                   />
                 ) : (
-                  <Icon
-                    size={24}
-                    strokeWidth={isActive ? 2.5 : 2}
-                    className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#6B7280]'}`}
-                  />
+                  <div className="relative">
+                    <Icon
+                      size={24}
+                      strokeWidth={isActive ? 2.5 : 2}
+                      className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#6B7280]'}`}
+                    />
+                    {item.path === '/managed-groups' && totalGroupUnread > 0 && (
+                      <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-[#F85149] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {totalGroupUnread > 99 ? '99+' : totalGroupUnread}
+                      </span>
+                    )}
+                  </div>
                 )}
                 <span
                   className={`text-xs mt-0.5 transition-colors duration-200 ${

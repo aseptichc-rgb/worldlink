@@ -165,27 +165,29 @@ export default function GroupNetworkGraph({
 
   // Layout nodes - 중앙 임원단 + 주변 멤버 방사형 배치 (모바일 최적화)
   useEffect(() => {
-    if (members.length === 0 || dimensions.width === 0) return;
+    // 유저 데이터 없는 멤버 제외
+    const validMembers = members.filter(m => m.user?.name);
+    if (validMembers.length === 0 || dimensions.width === 0) return;
 
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
     const isMobile = dimensions.width < 500;
 
-    const president = members.find(m => m.role === 'president');
-    const executives = members.filter(m =>
+    const president = validMembers.find(m => m.role === 'president');
+    const executives = validMembers.filter(m =>
       m.role === 'executive' || (m.role === 'admin' && m.userId !== president?.userId)
     );
-    const regulars = members.filter(m => {
+    const regulars = validMembers.filter(m => {
       if (m.role === 'president') return false;
       if (m.role === 'executive') return false;
       if (m.role === 'admin') return false;
       return true;
     });
 
-    const centerMember = president || members.find(m => m.userId === ownerId);
+    const centerMember = president || validMembers.find(m => m.userId === ownerId);
     const innerRing = president
       ? executives.concat(
-          members.filter(m => m.userId === ownerId && m.userId !== president.userId && !executives.some(e => e.userId === m.userId))
+          validMembers.filter(m => m.userId === ownerId && m.userId !== president.userId && !executives.some(e => e.userId === m.userId))
         )
       : executives;
     const outerRing = president

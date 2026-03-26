@@ -93,13 +93,12 @@ export default function ManagedGroupDetailPage() {
             const userData = await getUser(member.userId);
             return { ...member, user: userData || undefined };
           } catch {
-            // Firebase 실패 시 데모 데이터 fallback
-            const demoUser = demoUsers.find(u => u.id === member.userId);
-            return { ...member, user: demoUser || undefined };
+            return { ...member, user: undefined };
           }
         })
       );
-      setMembersWithUser(loaded);
+      // 유저 데이터를 불러올 수 없는 멤버는 제외 (알 수 없음 방지)
+      setMembersWithUser(loaded.filter(m => m.user?.name));
     };
     loadMembersData();
   }, [selectedGroup?.members]);

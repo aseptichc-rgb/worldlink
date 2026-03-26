@@ -1,17 +1,18 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, Crown, Trash2, LogOut } from 'lucide-react';
+import { Users, Crown, Trash2, LogOut, Newspaper } from 'lucide-react';
 import { ManagedGroup } from '@/types';
 
 interface ManagedGroupCardProps {
   group: ManagedGroup;
   currentUserId: string;
+  newsCount?: number;
   onClick: () => void;
   onRemove?: () => void;
 }
 
-export default function ManagedGroupCard({ group, currentUserId, onClick, onRemove }: ManagedGroupCardProps) {
+export default function ManagedGroupCard({ group, currentUserId, newsCount = 0, onClick, onRemove }: ManagedGroupCardProps) {
   const isOwner = group.ownerId === currentUserId;
   const memberCount = group.members.length;
 
@@ -49,9 +50,17 @@ export default function ManagedGroupCard({ group, currentUserId, onClick, onRemo
         {group.description && (
           <p className="text-xs text-[#8B949E] mt-0.5 truncate">{group.description}</p>
         )}
-        <div className="flex items-center gap-1.5 mt-1">
-          <Users size={12} className="text-[#484F58]" />
-          <span className="text-xs text-[#484F58]">{memberCount}명</span>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-1.5">
+            <Users size={12} className="text-[#484F58]" />
+            <span className="text-xs text-[#484F58]">{memberCount}명</span>
+          </div>
+          {newsCount > 0 && (
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F85149]/15 rounded-full">
+              <Newspaper size={10} className="text-[#F85149]" />
+              <span className="text-[10px] font-bold text-[#F85149]">{newsCount}</span>
+            </div>
+          )}
         </div>
       </div>
 

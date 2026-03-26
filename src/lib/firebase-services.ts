@@ -23,6 +23,7 @@ import {
   signInWithCustomToken,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -50,6 +51,24 @@ export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
 
 export const loginWithCustomToken = async (customToken: string) => {
   return signInWithCustomToken(auth, customToken);
+};
+
+// 이름 + 전화번호로 이메일(아이디) 찾기
+export const findEmailByNameAndPhone = async (name: string, phone: string): Promise<string | null> => {
+  const q = query(
+    collection(db, 'users'),
+    where('name', '==', name),
+    where('phone', '==', phone),
+    limit(1)
+  );
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  return snapshot.docs[0].data().email || null;
+};
+
+// 비밀번호 재설정 이메일 발송
+export const sendPasswordReset = async (email: string) => {
+  return sendPasswordResetEmail(auth, email);
 };
 
 // ==================== USER SERVICES ====================
@@ -84,7 +103,14 @@ export const getUser = async (userId: string): Promise<User | null> => {
   try {
     userSnap = await getDocFromServer(userRef);
   } catch {
-    userSnap = await getDoc(userRef);
+    try {
+      userSnap = await getDoc(userRef);
+    } catch (err) {
+      console.warn('[getUser] Permission denied for userId:', userId, err);
+      // Firebase에서 읽기 실패 시 데모 데이터 fallback
+      const { demoUsers } = await import('./demo-data');
+      return demoUsers.find(u => u.id === userId) || null;
+    }
   }
 
   if (!userSnap.exists()) {
@@ -130,61 +156,72 @@ export const searchUsersByKeyword = async (keywords: string[]): Promise<User[]> 
 
 // 모든 사용자 조회
 export const getAllUsers = async (): Promise<User[]> => {
-  const usersRef = collection(db, 'users');
-  const snapshot = await getDocs(usersRef);
-  return snapshot.docs.map(doc => ({
-    ...doc.data(),
-    id: doc.id,
-    createdAt: doc.data().createdAt?.toDate() || new Date(),
-    updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-  })) as User[];
+  try {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    return snapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id,
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    })) as User[];
+  } catch (err) {
+    console.warn('[getAllUsers] Permission denied or fetch failed, returning empty:', err);
+    return [];
+  }
 };
 
 // 현재 사용자와 모든 다른 사용자 사이에 connection 생성 (이미 있는 연결은 건너뜀)
 export const connectWithAllUsers = async (currentUserId: string): Promise<number> => {
-  const allUsers = await getAllUsers();
-  const existingConnections = await getDirectConnections(currentUserId);
+  try {
+    const allUsers = await getAllUsers();
+    if (allUsers.length === 0) return 0;
+    const existingConnections = await getDirectConnections(currentUserId);
 
-  // 이미 연결된 사용자 ID 목록
-  const connectedUserIds = new Set(
-    existingConnections.map(conn =>
-      conn.fromUserId === currentUserId ? conn.toUserId : conn.fromUserId
-    )
-  );
+    // 이미 연결된 사용자 ID 목록
+    const connectedUserIds = new Set(
+      existingConnections.map(conn =>
+        conn.fromUserId === currentUserId ? conn.toUserId : conn.fromUserId
+      )
+    );
 
-  let newConnectionsCount = 0;
-  const batch = writeBatch(db);
+    let newConnectionsCount = 0;
+    const batch = writeBatch(db);
 
-  for (const user of allUsers) {
-    // 자기 자신이거나 이미 연결된 경우 건너뜀
-    if (user.id === currentUserId || connectedUserIds.has(user.id)) {
-      continue;
+    for (const user of allUsers) {
+      // 자기 자신이거나 이미 연결된 경우 건너뜀
+      if (user.id === currentUserId || connectedUserIds.has(user.id)) {
+        continue;
+      }
+
+      const connRef = doc(collection(db, 'connections'));
+      batch.set(connRef, {
+        id: connRef.id,
+        fromUserId: currentUserId,
+        toUserId: user.id,
+        status: 'accepted',
+        method: 'auto',
+        createdAt: serverTimestamp(),
+        acceptedAt: serverTimestamp(),
+      });
+      newConnectionsCount++;
+
+      // Firestore batch는 500개 제한이 있으므로 나눠서 처리
+      if (newConnectionsCount % 450 === 0) {
+        await batch.commit();
+      }
     }
 
-    const connRef = doc(collection(db, 'connections'));
-    batch.set(connRef, {
-      id: connRef.id,
-      fromUserId: currentUserId,
-      toUserId: user.id,
-      status: 'accepted',
-      method: 'auto',
-      createdAt: serverTimestamp(),
-      acceptedAt: serverTimestamp(),
-    });
-    newConnectionsCount++;
-
-    // Firestore batch는 500개 제한이 있으므로 나눠서 처리
-    if (newConnectionsCount % 450 === 0) {
+    if (newConnectionsCount > 0 && newConnectionsCount % 450 !== 0) {
       await batch.commit();
     }
-  }
 
-  if (newConnectionsCount % 450 !== 0) {
-    await batch.commit();
+    console.log(`[connectWithAllUsers] Created ${newConnectionsCount} new connections`);
+    return newConnectionsCount;
+  } catch (err) {
+    console.warn('[connectWithAllUsers] Permission denied or write failed:', err);
+    return 0;
   }
-
-  console.log(`[connectWithAllUsers] Created ${newConnectionsCount} new connections`);
-  return newConnectionsCount;
 };
 
 // ==================== INVITE CODE SERVICES ====================
@@ -446,60 +483,65 @@ export const rejectConnection = async (connectionId: string): Promise<void> => {
 
 export const getDirectConnections = async (userId: string): Promise<Connection[]> => {
   console.log('[getDirectConnections] Querying for userId:', userId);
-  const connectionsRef = collection(db, 'connections');
+  try {
+    const connectionsRef = collection(db, 'connections');
 
-  // Get connections where user is either sender or receiver
-  const sentQuery = query(
-    connectionsRef,
-    where('fromUserId', '==', userId),
-    where('status', '==', 'accepted')
-  );
+    // Get connections where user is either sender or receiver
+    const sentQuery = query(
+      connectionsRef,
+      where('fromUserId', '==', userId),
+      where('status', '==', 'accepted')
+    );
 
-  const receivedQuery = query(
-    connectionsRef,
-    where('toUserId', '==', userId),
-    where('status', '==', 'accepted')
-  );
+    const receivedQuery = query(
+      connectionsRef,
+      where('toUserId', '==', userId),
+      where('status', '==', 'accepted')
+    );
 
-  const [sentSnap, receivedSnap] = await Promise.all([
-    getDocs(sentQuery),
-    getDocs(receivedQuery)
-  ]);
+    const [sentSnap, receivedSnap] = await Promise.all([
+      getDocs(sentQuery),
+      getDocs(receivedQuery)
+    ]);
 
-  const connections: Connection[] = [];
-  const seenPairs = new Set<string>();  // 중복 연결 방지를 위한 Set
+    const connections: Connection[] = [];
+    const seenPairs = new Set<string>();  // 중복 연결 방지를 위한 Set
 
-  sentSnap.docs.forEach(doc => {
-    const data = doc.data();
-    // 연결 쌍 키 생성 (순서 정렬하여 양방향 중복 방지)
-    const pairKey = [userId, data.toUserId].sort().join('-');
-    if (!seenPairs.has(pairKey)) {
-      seenPairs.add(pairKey);
-      connections.push({
-        ...data,
-        id: doc.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        acceptedAt: data.acceptedAt?.toDate(),
-      } as Connection);
-    }
-  });
+    sentSnap.docs.forEach(doc => {
+      const data = doc.data();
+      // 연결 쌍 키 생성 (순서 정렬하여 양방향 중복 방지)
+      const pairKey = [userId, data.toUserId].sort().join('-');
+      if (!seenPairs.has(pairKey)) {
+        seenPairs.add(pairKey);
+        connections.push({
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          acceptedAt: data.acceptedAt?.toDate(),
+        } as Connection);
+      }
+    });
 
-  receivedSnap.docs.forEach(doc => {
-    const data = doc.data();
-    // 연결 쌍 키 생성 (순서 정렬하여 양방향 중복 방지)
-    const pairKey = [userId, data.fromUserId].sort().join('-');
-    if (!seenPairs.has(pairKey)) {
-      seenPairs.add(pairKey);
-      connections.push({
-        ...data,
-        id: doc.id,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        acceptedAt: data.acceptedAt?.toDate(),
-      } as Connection);
-    }
-  });
+    receivedSnap.docs.forEach(doc => {
+      const data = doc.data();
+      // 연결 쌍 키 생성 (순서 정렬하여 양방향 중복 방지)
+      const pairKey = [userId, data.fromUserId].sort().join('-');
+      if (!seenPairs.has(pairKey)) {
+        seenPairs.add(pairKey);
+        connections.push({
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          acceptedAt: data.acceptedAt?.toDate(),
+        } as Connection);
+      }
+    });
 
-  return connections;
+    return connections;
+  } catch (err) {
+    console.warn('[getDirectConnections] Permission denied or fetch failed, returning empty:', err);
+    return [];
+  }
 };
 
 export const getPendingConnections = async (userId: string): Promise<Connection[]> => {
@@ -1059,23 +1101,27 @@ export const saveUserGroups = async (
     groupConnections: { groupId: string; sourceNodeId: string; targetNodeId: string; createdAt: Date }[];
   }
 ): Promise<void> => {
-  const groupsRef = doc(db, 'userGroups', userId);
-  await setDoc(groupsRef, {
-    groups: data.groups.map(g => ({
-      ...g,
-      createdAt: g.createdAt instanceof Date ? Timestamp.fromDate(g.createdAt) : g.createdAt,
-      updatedAt: g.updatedAt instanceof Date ? Timestamp.fromDate(g.updatedAt) : g.updatedAt,
-    })),
-    memberships: data.memberships.map(m => ({
-      ...m,
-      addedAt: m.addedAt instanceof Date ? Timestamp.fromDate(m.addedAt) : m.addedAt,
-    })),
-    groupConnections: data.groupConnections.map(c => ({
-      ...c,
-      createdAt: c.createdAt instanceof Date ? Timestamp.fromDate(c.createdAt) : c.createdAt,
-    })),
-    updatedAt: serverTimestamp(),
-  });
+  try {
+    const groupsRef = doc(db, 'userGroups', userId);
+    await setDoc(groupsRef, {
+      groups: data.groups.map(g => ({
+        ...g,
+        createdAt: g.createdAt instanceof Date ? Timestamp.fromDate(g.createdAt) : g.createdAt,
+        updatedAt: g.updatedAt instanceof Date ? Timestamp.fromDate(g.updatedAt) : g.updatedAt,
+      })),
+      memberships: data.memberships.map(m => ({
+        ...m,
+        addedAt: m.addedAt instanceof Date ? Timestamp.fromDate(m.addedAt) : m.addedAt,
+      })),
+      groupConnections: data.groupConnections.map(c => ({
+        ...c,
+        createdAt: c.createdAt instanceof Date ? Timestamp.fromDate(c.createdAt) : c.createdAt,
+      })),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.warn('[saveUserGroups] Permission denied or write failed:', err);
+  }
 };
 
 // 사용자 그룹 데이터 불러오기
@@ -1086,34 +1132,39 @@ export const loadUserGroups = async (
   memberships: { groupId: string; nodeId: string; addedAt: Date }[];
   groupConnections: { groupId: string; sourceNodeId: string; targetNodeId: string; createdAt: Date }[];
 } | null> => {
-  const groupsRef = doc(db, 'userGroups', userId);
-  const groupsSnap = await getDoc(groupsRef);
+  try {
+    const groupsRef = doc(db, 'userGroups', userId);
+    const groupsSnap = await getDoc(groupsRef);
 
-  if (!groupsSnap.exists()) return null;
+    if (!groupsSnap.exists()) return null;
 
-  const data = groupsSnap.data();
+    const data = groupsSnap.data();
 
-  return {
-    groups: (data.groups || []).map((g: Record<string, unknown>) => ({
-      id: g.id as string,
-      name: g.name as string,
-      color: g.color as string,
-      icon: g.icon as string,
-      createdAt: (g.createdAt as Timestamp)?.toDate?.() || new Date(),
-      updatedAt: (g.updatedAt as Timestamp)?.toDate?.() || new Date(),
-    })),
-    memberships: (data.memberships || []).map((m: Record<string, unknown>) => ({
-      groupId: m.groupId as string,
-      nodeId: m.nodeId as string,
-      addedAt: (m.addedAt as Timestamp)?.toDate?.() || new Date(),
-    })),
-    groupConnections: (data.groupConnections || []).map((c: Record<string, unknown>) => ({
-      groupId: c.groupId as string,
-      sourceNodeId: c.sourceNodeId as string,
-      targetNodeId: c.targetNodeId as string,
-      createdAt: (c.createdAt as Timestamp)?.toDate?.() || new Date(),
-    })),
-  };
+    return {
+      groups: (data.groups || []).map((g: Record<string, unknown>) => ({
+        id: g.id as string,
+        name: g.name as string,
+        color: g.color as string,
+        icon: g.icon as string,
+        createdAt: (g.createdAt as Timestamp)?.toDate?.() || new Date(),
+        updatedAt: (g.updatedAt as Timestamp)?.toDate?.() || new Date(),
+      })),
+      memberships: (data.memberships || []).map((m: Record<string, unknown>) => ({
+        groupId: m.groupId as string,
+        nodeId: m.nodeId as string,
+        addedAt: (m.addedAt as Timestamp)?.toDate?.() || new Date(),
+      })),
+      groupConnections: (data.groupConnections || []).map((c: Record<string, unknown>) => ({
+        groupId: c.groupId as string,
+        sourceNodeId: c.sourceNodeId as string,
+        targetNodeId: c.targetNodeId as string,
+        createdAt: (c.createdAt as Timestamp)?.toDate?.() || new Date(),
+      })),
+    };
+  } catch (err) {
+    console.warn('[loadUserGroups] Permission denied or fetch failed:', err);
+    return null;
+  }
 };
 
 // 그룹 초대 정보 저장
@@ -1315,26 +1366,31 @@ export const getManagedGroup = async (groupId: string): Promise<ManagedGroup | n
 
 // 사용자가 속한 모든 나의 모임 조회
 export const getUserManagedGroups = async (userId: string): Promise<ManagedGroup[]> => {
-  const groupsRef = collection(db, 'managedGroups');
+  try {
+    const groupsRef = collection(db, 'managedGroups');
 
-  // ownerId 또는 memberUserIds에 포함된 그룹 조회
-  const ownerQuery = query(groupsRef, where('ownerId', '==', userId));
-  const memberQuery = query(groupsRef, where('memberUserIds', 'array-contains', userId));
+    // ownerId 또는 memberUserIds에 포함된 그룹 조회
+    const ownerQuery = query(groupsRef, where('ownerId', '==', userId));
+    const memberQuery = query(groupsRef, where('memberUserIds', 'array-contains', userId));
 
-  const [ownerSnap, memberSnap] = await Promise.all([
-    getDocs(ownerQuery),
-    getDocs(memberQuery),
-  ]);
+    const [ownerSnap, memberSnap] = await Promise.all([
+      getDocs(ownerQuery),
+      getDocs(memberQuery),
+    ]);
 
-  const groupMap = new Map<string, ManagedGroup>();
-  ownerSnap.docs.forEach(d => groupMap.set(d.id, parseManagedGroupDoc(d)));
-  memberSnap.docs.forEach(d => {
-    if (!groupMap.has(d.id)) groupMap.set(d.id, parseManagedGroupDoc(d));
-  });
+    const groupMap = new Map<string, ManagedGroup>();
+    ownerSnap.docs.forEach(d => groupMap.set(d.id, parseManagedGroupDoc(d)));
+    memberSnap.docs.forEach(d => {
+      if (!groupMap.has(d.id)) groupMap.set(d.id, parseManagedGroupDoc(d));
+    });
 
-  return Array.from(groupMap.values()).sort(
-    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
-  );
+    return Array.from(groupMap.values()).sort(
+      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+    );
+  } catch (err) {
+    console.warn('[getUserManagedGroups] Permission denied or fetch failed:', err);
+    return [];
+  }
 };
 
 // 나의 모임 정보 수정

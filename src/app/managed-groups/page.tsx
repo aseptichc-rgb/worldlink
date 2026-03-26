@@ -3,20 +3,52 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Users, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Loader2, AlertTriangle, Newspaper, ExternalLink, ChevronDown, ChevronUp, Bell, BellOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useManagedGroupStore } from '@/store/managedGroupStore';
+import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { ManagedGroup } from '@/types';
 import ManagedGroupCard from '@/components/managed-group/ManagedGroupCard';
 import ManagedGroupCreateModal from '@/components/managed-group/ManagedGroupCreateModal';
 import BottomNav from '@/components/ui/BottomNav';
+import { demoUsers } from '@/lib/demo-data';
+import { getUser } from '@/lib/firebase-services';
+import type { NewsItem } from '@/app/api/news/route';
 
 export default function ManagedGroupsPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const { groups, isLoading, fetchMyGroups, openCreateModal, deleteGroup, leaveGroup } = useManagedGroupStore();
+  const { searchNewsForAllGroups, groupNewsMap, groupNewsItems, allGroupNews, isLoading: newsLoading, lastCheckedAt, readNewsIds, markAsRead } = useNewsAlertStore();
   const [confirmTarget, setConfirmTarget] = useState<ManagedGroup | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushRequesting, setPushRequesting] = useState(false);
+
+  // 푸시 알림 상태 확인
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const hasFcmToken = !!localStorage.getItem('nodded_fcm_user_id');
+      setPushEnabled(Notification.permission === 'granted' && hasFcmToken);
+    }
+  }, []);
+
+  const handleTogglePush = async () => {
+    if (!user?.id) return;
+    if (pushEnabled) return; // 이미 활성화된 경우 브라우저 설정에서 변경해야 함
+
+    setPushRequesting(true);
+    try {
+      const { requestNotificationPermission } = await import('@/lib/fcm');
+      const token = await requestNotificationPermission(user.id);
+      setPushEnabled(!!token);
+    } catch (err) {
+      console.error('푸시 알림 설정 실패:', err);
+    } finally {
+      setPushRequesting(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -29,6 +61,96 @@ export default function ManagedGroupsPage() {
       fetchMyGroups(user.id);
     }
   }, [user?.id, fetchMyGroups]);
+
+  // 모든 그룹의 뉴스 검색 (첫 로그인: 6개월, 이후: 24시간) + 1시간마다 자동 반복
+  useEffect(() => {
+    if (groups.length === 0) return;
+
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    const INITIAL_SEARCH_KEY = 'nodded_news_initial_search_done';
+
+    const buildGroupInfos = async () => {
+      return Promise.all(
+        groups.map(async (group) => {
+          const memberResults = await Promise.all(
+            group.members.map(async (member) => {
+              if (isDemoMode) {
+                const demoUser = demoUsers.find(u => u.id === member.userId);
+                return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
+              }
+              try {
+                const userData = await getUser(member.userId);
+                return userData ? { name: userData.name, company: userData.company } : null;
+              } catch {
+                return null;
+              }
+            })
+          );
+          const members = memberResults.filter((m): m is NonNullable<typeof m> => m !== null);
+
+          if (members.length === 0 && group.name) {
+            members.push({ name: group.name, company: undefined });
+          }
+
+          return { id: group.id, members };
+        })
+      );
+    };
+
+    const runSearch = async (timeRange: string) => {
+      const groupInfos = await buildGroupInfos();
+      searchNewsForAllGroups(groupInfos, timeRange);
+    };
+
+    // 첫 로그인 여부 확인
+    const isInitialSearch = !localStorage.getItem(INITIAL_SEARCH_KEY);
+
+    if (isInitialSearch) {
+      // 첫 로그인: 최근 6개월 뉴스 검색
+      runSearch('6m').then(() => {
+        localStorage.setItem(INITIAL_SEARCH_KEY, new Date().toISOString());
+      });
+    } else {
+      // 이후: 24시간 이내 새 뉴스만
+      runSearch('1d');
+    }
+
+    // 1시간마다 자동 반복 (항상 24시간 기준)
+    const intervalId = window.setInterval(() => runSearch('1d'), 60 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [groups, searchNewsForAllGroups]);
+
+  const toggleGroupExpand = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  const handleNewsClick = (newsId: string, link: string) => {
+    markAsRead(newsId);
+    if (link && link !== '#') {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+
+    if (minutes < 60) return `${minutes}분 전`;
+    if (hours < 24) return `${hours}시간 전`;
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+  };
 
   const handleRemove = async () => {
     if (!confirmTarget || !user?.id) return;
@@ -55,6 +177,7 @@ export default function ManagedGroupsPage() {
   }
 
   const isOwnerOfTarget = confirmTarget?.ownerId === user?.id;
+  const totalNewsCount = allGroupNews.length;
 
   return (
     <div className="min-h-screen bg-[#0D1117] pb-24">
@@ -79,6 +202,62 @@ export default function ManagedGroupsPage() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-4">
+        {/* 24시간 뉴스 요약 헤더 */}
+        {!isLoading && groups.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-4 bg-[#161B22] border border-[#30363D] rounded-xl"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#58A6FF]/15 flex items-center justify-center">
+                <Newspaper size={20} className="text-[#58A6FF]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-[#F0F6FC]">24시간 멤버 뉴스</h3>
+                <p className="text-xs text-[#8B949E]">
+                  {newsLoading ? (
+                    '검색 중...'
+                  ) : totalNewsCount > 0 ? (
+                    `${totalNewsCount}건의 뉴스가 발견되었습니다`
+                  ) : (
+                    '최근 24시간 내 관련 뉴스가 없습니다'
+                  )}
+                </p>
+              </div>
+              {newsLoading && (
+                <Loader2 size={18} className="animate-spin text-[#58A6FF]" />
+              )}
+            </div>
+
+            {/* 푸시 알림 토글 */}
+            <button
+              onClick={handleTogglePush}
+              disabled={pushRequesting || pushEnabled}
+              className={`mt-3 ml-[52px] flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                pushEnabled
+                  ? 'bg-[#238636]/20 text-[#3FB950] cursor-default'
+                  : 'bg-[#21262D] text-[#8B949E] hover:bg-[#30363D] hover:text-[#F0F6FC]'
+              }`}
+            >
+              {pushRequesting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : pushEnabled ? (
+                <Bell size={14} />
+              ) : (
+                <BellOff size={14} />
+              )}
+              {pushEnabled ? '스마트폰 알림 켜짐' : '스마트폰 알림 받기'}
+            </button>
+
+            {lastCheckedAt && (
+              <p className="text-[10px] text-[#484F58] mt-2 pl-[52px]">
+                마지막 검색: {formatTime(lastCheckedAt)}
+              </p>
+            )}
+          </motion.div>
+        )}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 size={28} className="animate-spin text-[#58A6FF]" />
@@ -108,22 +287,86 @@ export default function ManagedGroupsPage() {
             </button>
           </motion.div>
         ) : (
-          <div className="space-y-2">
-            {groups.map((group, index) => (
-              <motion.div
-                key={group.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <ManagedGroupCard
-                  group={group}
-                  currentUserId={user!.id}
-                  onClick={() => router.push(`/managed-groups/${group.id}`)}
-                  onRemove={() => setConfirmTarget(group)}
-                />
-              </motion.div>
-            ))}
+          <div className="space-y-3">
+            {groups.map((group, index) => {
+              const newsItems = groupNewsItems[group.id] || [];
+              const newsCount = groupNewsMap[group.id] || 0;
+              const isExpanded = expandedGroups.has(group.id);
+              const previewCount = 3;
+
+              return (
+                <motion.div
+                  key={group.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <ManagedGroupCard
+                    group={group}
+                    currentUserId={user!.id}
+                    newsCount={newsCount}
+                    onClick={() => router.push(`/managed-groups/${group.id}`)}
+                    onRemove={() => setConfirmTarget(group)}
+                  />
+
+                  {/* 그룹별 뉴스 인라인 표시 */}
+                  {newsItems.length > 0 && (
+                    <div className="mt-1 ml-2 mr-2">
+                      {/* 뉴스 미리보기 (최대 3개) */}
+                      <div className="bg-[#0D1117] border border-[#21262D] rounded-xl overflow-hidden">
+                        {newsItems.slice(0, isExpanded ? newsItems.length : previewCount).map((item, i) => {
+                          const isRead = readNewsIds.has(item.id);
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => handleNewsClick(item.id, item.link)}
+                              className={`w-full text-left px-4 py-3 transition-colors hover:bg-[#161B22] flex items-start gap-2.5 ${
+                                i > 0 ? 'border-t border-[#21262D]' : ''
+                              } ${isRead ? 'opacity-50' : ''}`}
+                            >
+                              {!isRead && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] mt-1.5 shrink-0" />
+                              )}
+                              <div className={`flex-1 min-w-0 ${isRead ? 'ml-4' : ''}`}>
+                                <p className="text-xs font-medium text-[#F0F6FC] line-clamp-1">
+                                  {item.title}
+                                </p>
+                                <div className="flex items-center gap-1.5 mt-1 text-[10px] text-[#484F58]">
+                                  {item.memberName && (
+                                    <span className="px-1.5 py-0.5 bg-[#21262D] rounded text-[#8B949E]">
+                                      {item.memberName}
+                                    </span>
+                                  )}
+                                  {item.source && (
+                                    <span>{item.source}</span>
+                                  )}
+                                  <span>{formatTime(item.pubDate)}</span>
+                                </div>
+                              </div>
+                              <ExternalLink size={12} className="text-[#484F58] shrink-0 mt-1" />
+                            </button>
+                          );
+                        })}
+
+                        {/* 더보기/접기 버튼 */}
+                        {newsItems.length > previewCount && (
+                          <button
+                            onClick={() => toggleGroupExpand(group.id)}
+                            className="w-full px-4 py-2 text-center text-[11px] font-medium text-[#58A6FF] hover:bg-[#161B22] transition-colors border-t border-[#21262D] flex items-center justify-center gap-1"
+                          >
+                            {isExpanded ? (
+                              <>접기 <ChevronUp size={12} /></>
+                            ) : (
+                              <>{newsItems.length - previewCount}건 더보기 <ChevronDown size={12} /></>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

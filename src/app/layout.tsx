@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import PushNotificationInit from "@/components/pwa/PushNotificationInit";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -106,6 +107,7 @@ export default function RootLayout({
       >
         {children}
         <InstallPrompt />
+        <PushNotificationInit />
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Newspaper, Bell, BellOff, Loader2 } from 'lucide-react';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
@@ -20,14 +20,18 @@ export default function NewsAlertButton({
   variant = 'icon',
 }: NewsAlertButtonProps) {
   const {
+    news,
     newNewsCount,
     isMonitoring,
     isLoading,
     monitoringGroupId,
+    searchNews,
     startMonitoring,
     stopMonitoring,
     openDrawer,
   } = useNewsAlertStore();
+
+  const hasAutoSearched = useRef(false);
 
   // 멤버 정보를 검색용 형식으로 변환
   const memberSearchData = members
@@ -36,6 +40,14 @@ export default function NewsAlertButton({
       name: m.user!.name,
       company: m.user?.company,
     }));
+
+  // 페이지 진입 시 자동 뉴스 검색 (24시간 이내)
+  useEffect(() => {
+    if (memberSearchData.length > 0 && !hasAutoSearched.current && news.length === 0 && !isLoading) {
+      hasAutoSearched.current = true;
+      searchNews(memberSearchData, '1d');
+    }
+  }, [memberSearchData.length]);
 
   // 이 그룹이 모니터링 중인지 확인
   const isThisGroupMonitoring = isMonitoring && monitoringGroupId === groupId;

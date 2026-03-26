@@ -204,7 +204,7 @@ function LoginContent() {
                 {/* 외부 컨테이너 */}
                 <div className="relative bg-[#161B22] rounded-2xl p-2.5 transition-all duration-300 ease-out">
                   {/* 내부 입력창 */}
-                  <div className={`bg-[#21262D] rounded-xl h-[48px] pl-5 pr-4 flex items-center transition-all duration-300 ${emailFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
+                  <div className={`bg-[#21262D] rounded-xl h-[48px] px-6 flex items-center transition-all duration-300 ${emailFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
                     <input
                       type="email"
                       value={email}
@@ -213,7 +213,7 @@ function LoginContent() {
                       onBlur={() => setEmailFocused(false)}
                       placeholder="email@example.com"
                       required
-                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58] pl-2"
+                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58]"
                     />
                   </div>
                 </div>
@@ -227,7 +227,7 @@ function LoginContent() {
                 {/* 외부 컨테이너 */}
                 <div className="relative bg-[#161B22] rounded-2xl p-2.5 transition-all duration-300 ease-out">
                   {/* 내부 입력창 */}
-                  <div className={`bg-[#21262D] rounded-xl h-[48px] pl-5 pr-4 flex items-center transition-all duration-300 ${passwordFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
+                  <div className={`bg-[#21262D] rounded-xl h-[48px] px-6 flex items-center transition-all duration-300 ${passwordFocused ? 'bg-[#282E36] ring-1 ring-[#30363D]' : ''}`}>
                     <input
                       type="password"
                       value={password}
@@ -236,7 +236,7 @@ function LoginContent() {
                       onBlur={() => setPasswordFocused(false)}
                       placeholder="••••••••"
                       required
-                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58] pl-2"
+                      className="flex-1 bg-transparent border-0 text-[#FFFFFF] h-full text-base font-medium focus:outline-none placeholder:text-[#484F58]"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ function LoginContent() {
                 )}
               </div>
 
-              {/* Remember Me - custom checkbox */}
+              {/* Remember Me */}
               <label className="flex items-center gap-3 py-3 mt-2 cursor-pointer select-none group">
                 <div
                   className={`w-5 h-5 rounded flex items-center justify-center border transition-all duration-200 ${
@@ -262,7 +262,7 @@ function LoginContent() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="hidden"
                 />
-                <span className="text-base text-[#8B949E] group-hover:text-[#F0F6FC] transition-colors">로그인 정보 저장</span>
+                <span className="text-sm text-[#8B949E] group-hover:text-[#F0F6FC] transition-colors">로그인 정보 저장</span>
               </label>
 
               {/* Login Button */}
@@ -279,8 +279,19 @@ function LoginContent() {
               </div>
             </form>
 
+            {/* Find Account */}
+            <div className="text-center mt-5">
+              <button
+                type="button"
+                onClick={() => router.push('/find-account')}
+                className="text-sm text-[#8B949E] hover:text-[#58A6FF] transition-colors"
+              >
+                아이디/비밀번호 찾기
+              </button>
+            </div>
+
             {/* Demo Login */}
-            <div className="mt-8">
+            <div className="mt-5">
               <button
                 type="button"
                 onClick={handleDemoLogin}

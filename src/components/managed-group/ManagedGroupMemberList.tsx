@@ -61,19 +61,21 @@ export default function ManagedGroupMemberList({
             const user = await getUser(member.userId);
             return { ...member, user: user || undefined };
           } catch {
-            return { ...member };
+            return { ...member, user: undefined };
           }
         })
       );
+      // 유저 데이터를 불러올 수 없는 멤버 제외 (알 수 없음 방지)
+      const validInfos = infos.filter(m => m.user?.name);
       // 역할 기반 정렬: 회장 → 그룹장 → 회장단 → 일반 멤버
-      infos.sort((a, b) => {
+      validInfos.sort((a, b) => {
         if (a.userId === ownerId && a.role !== 'president') return -1;
         if (b.userId === ownerId && b.role !== 'president') return 1;
         const aPriority = ROLE_PRIORITY[a.role] ?? 3;
         const bPriority = ROLE_PRIORITY[b.role] ?? 3;
         return aPriority - bPriority;
       });
-      setMemberInfos(infos);
+      setMemberInfos(validInfos);
       setIsLoading(false);
     };
     loadMembers();

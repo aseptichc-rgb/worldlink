@@ -10,6 +10,25 @@ function isDemoMode(): boolean {
   return localStorage.getItem('nodded_demo_mode') === 'true';
 }
 
+// FCM 푸시 알림 전송
+async function sendPushNotification(title: string, body: string, newsCount: number) {
+  if (typeof window === 'undefined') return;
+
+  // FCM 토큰이 등록된 유저만 푸시 전송
+  const fcmUserId = localStorage.getItem('nodded_fcm_user_id');
+  if (!fcmUserId) return;
+
+  try {
+    await fetch('/api/push-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: fcmUserId, title, body, newsCount, url: '/managed-groups' }),
+    });
+  } catch (err) {
+    console.error('푸시 알림 전송 실패:', err);
+  }
+}
+
 // 데모 뉴스 데이터 생성
 function generateDemoNews(members: { name: string; company?: string }[]): NewsItem[] {
   const newsTemplates = [
@@ -52,7 +71,6 @@ function generateDemoNews(members: { name: string; company?: string }[]): NewsIt
   const news: NewsItem[] = [];
   const now = Date.now();
 
-  // 각 멤버에 대해 1-2개의 뉴스 생성
   members.slice(0, 8).forEach((member, memberIdx) => {
     const numNews = Math.min(2, Math.floor(Math.random() * 2) + 1);
 
@@ -69,8 +87,8 @@ function generateDemoNews(members: { name: string; company?: string }[]): NewsIt
         .replace(/{name}/g, member.name)
         .replace(/{company}/g, company);
 
-      // 최근 7일 내 랜덤 시간
-      const randomHours = Math.floor(Math.random() * 168);
+      // 최근 24시간 내 랜덤 시간
+      const randomHours = Math.floor(Math.random() * 24);
       const pubDate = new Date(now - randomHours * 60 * 60 * 1000);
 
       news.push({
@@ -87,8 +105,12 @@ function generateDemoNews(members: { name: string; company?: string }[]): NewsIt
     }
   });
 
-  // 최신순 정렬
   return news.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+}
+
+interface GroupInfo {
+  id: string;
+  members: { name: string; company?: string }[];
 }
 
 interface NewsAlertState {
@@ -101,6 +123,12 @@ interface NewsAlertState {
   error: string | null;
   readNewsIds: Set<string>;
 
+  // Multi-group news tracking
+  groupNewsMap: Record<string, number>; // groupId -> unread news count
+  groupNewsItems: Record<string, NewsItem[]>; // groupId -> news items
+  allGroupNews: NewsItem[]; // 전체 그룹 뉴스
+  totalGroupUnread: number;
+
   // Monitoring state
   monitoringGroupId: string | null;
   intervalId: number | null;
@@ -109,11 +137,14 @@ interface NewsAlertState {
   isDrawerOpen: boolean;
 
   // Actions
-  searchNews: (members: { name: string; company?: string }[]) => Promise<void>;
+  searchNews: (members: { name: string; company?: string }[], timeRange?: string) => Promise<void>;
+  searchNewsForAllGroups: (groups: GroupInfo[], timeRange?: string) => Promise<void>;
   startMonitoring: (groupId: string, members: { name: string; company?: string }[]) => void;
   stopMonitoring: () => void;
   markAsRead: (newsId: string) => void;
   markAllAsRead: () => void;
+  getGroupUnreadCount: (groupId: string) => number;
+  getGroupNews: (groupId: string) => NewsItem[];
   openDrawer: () => void;
   closeDrawer: () => void;
   clearError: () => void;
@@ -135,7 +166,6 @@ function loadReadNewsIds(): Set<string> {
 function saveReadNewsIds(ids: Set<string>) {
   if (typeof window === 'undefined') return;
   try {
-    // 최근 500개만 유지 (오래된 것 정리)
     const arr = Array.from(ids).slice(-500);
     localStorage.setItem(`${STORAGE_KEY}_read`, JSON.stringify(arr));
   } catch {
@@ -171,30 +201,32 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
   isLoading: false,
   error: null,
   readNewsIds: loadReadNewsIds(),
+  groupNewsMap: {},
+  groupNewsItems: {},
+  allGroupNews: [],
+  totalGroupUnread: 0,
   monitoringGroupId: null,
   intervalId: null,
   isDrawerOpen: false,
 
-  searchNews: async (members) => {
+  searchNews: async (members, timeRange = '1d') => {
     set({ isLoading: true, error: null });
 
     try {
       let newNews: NewsItem[];
 
-      // 데모 모드: 예시 뉴스 생성
       if (isDemoMode()) {
-        // 로딩 효과를 위한 딜레이
         await new Promise(resolve => setTimeout(resolve, 500));
         newNews = generateDemoNews(members);
       } else {
         const response = await fetch('/api/news', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ members }),
+          body: JSON.stringify({ members, timeRange }),
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || '뉴스 검색 실패');
         }
 
@@ -203,8 +235,6 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       }
 
       const readIds = get().readNewsIds;
-
-      // 새 뉴스 개수 계산 (읽지 않은 뉴스)
       const unreadCount = newNews.filter(n => !readIds.has(n.id)).length;
 
       const now = new Date().toISOString();
@@ -217,39 +247,131 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
         isLoading: false,
       });
 
-      // 새 뉴스가 있으면 브라우저 알림 표시 (데모 모드에서는 생략)
-      if (!isDemoMode() && unreadCount > 0 && typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification('새로운 뉴스가 있습니다', {
-            body: `나의 모임 멤버 관련 ${unreadCount}개의 새 뉴스가 발견되었습니다.`,
-            icon: '/favicon.ico',
-            tag: 'news-alert',
-          });
-        }
+      // FCM 푸시 알림 전송
+      if (!isDemoMode() && unreadCount > 0) {
+        sendPushNotification(
+          '새로운 뉴스가 있습니다',
+          `나의 모임 멤버 관련 ${unreadCount}개의 새 뉴스가 발견되었습니다.`,
+          unreadCount,
+        );
       }
     } catch (err) {
       console.error('News search error:', err);
       set({
-        error: (err as Error).message,
+        error: null,
+        news: get().news, // 기존 뉴스 유지
         isLoading: false,
       });
     }
   },
 
-  startMonitoring: (groupId, members) => {
-    const { intervalId, searchNews, isMonitoring } = get();
+  searchNewsForAllGroups: async (groups, timeRange = '1d') => {
+    if (groups.length === 0) {
+      set({ groupNewsMap: {}, groupNewsItems: {}, allGroupNews: [], totalGroupUnread: 0 });
+      return;
+    }
 
-    // 이미 모니터링 중이면 중지
+    // 모든 그룹의 멤버를 합쳐서 한 번에 뉴스 검색
+    const allMembers: { name: string; company?: string }[] = [];
+    const memberToGroups: Record<string, string[]> = {};
+
+    for (const group of groups) {
+      for (const member of group.members) {
+        const key = `${member.name}|${member.company || ''}`;
+        if (!memberToGroups[key]) {
+          memberToGroups[key] = [];
+          allMembers.push(member);
+        }
+        memberToGroups[key].push(group.id);
+      }
+    }
+
+    set({ isLoading: true, error: null });
+
+    try {
+      let allNews: NewsItem[];
+
+      if (isDemoMode()) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        allNews = generateDemoNews(allMembers);
+      } else {
+        const response = await fetch('/api/news', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ members: allMembers, timeRange }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || '뉴스 검색 실패');
+        }
+
+        const data = await response.json();
+        allNews = data.news as NewsItem[];
+      }
+
+      const readIds = get().readNewsIds;
+
+      // 각 뉴스를 해당 그룹에 매핑
+      const groupNewsMap: Record<string, number> = {};
+      const groupNewsItems: Record<string, NewsItem[]> = {};
+      for (const group of groups) {
+        groupNewsMap[group.id] = 0;
+        groupNewsItems[group.id] = [];
+      }
+
+      for (const newsItem of allNews) {
+        const key = `${newsItem.memberName || ''}|${newsItem.memberCompany || ''}`;
+        const groupIds = memberToGroups[key];
+        if (groupIds) {
+          for (const gid of groupIds) {
+            groupNewsItems[gid].push(newsItem);
+            if (!readIds.has(newsItem.id)) {
+              groupNewsMap[gid] = (groupNewsMap[gid] || 0) + 1;
+            }
+          }
+        }
+      }
+
+      const totalGroupUnread = Object.values(groupNewsMap).reduce((sum, c) => sum + c, 0);
+
+      const now = new Date().toISOString();
+      saveLastCheckedAt(now);
+
+      set({
+        groupNewsMap,
+        groupNewsItems,
+        allGroupNews: allNews,
+        totalGroupUnread,
+        lastCheckedAt: now,
+        isLoading: false,
+      });
+
+      // FCM 푸시 알림 전송
+      if (!isDemoMode() && totalGroupUnread > 0) {
+        sendPushNotification(
+          '새로운 뉴스가 있습니다',
+          `나의 모임 멤버 관련 ${totalGroupUnread}개의 새 뉴스가 발견되었습니다.`,
+          totalGroupUnread,
+        );
+      }
+    } catch (err) {
+      console.error('News search for all groups error:', err);
+      set({ error: null, isLoading: false });
+    }
+  },
+
+  startMonitoring: (groupId, members) => {
+    const { intervalId, searchNews } = get();
+
     if (intervalId) {
       clearInterval(intervalId);
     }
 
-    // 즉시 한 번 검색
-    searchNews(members);
+    searchNews(members, '1d');
 
-    // 1시간마다 반복
     const newIntervalId = window.setInterval(() => {
-      searchNews(members);
+      searchNews(members, '1d');
     }, CHECK_INTERVAL);
 
     set({
@@ -258,7 +380,6 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       intervalId: newIntervalId,
     });
 
-    // 브라우저 알림 권한 요청
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
         Notification.requestPermission();
@@ -293,13 +414,23 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
 
   markAllAsRead: () => {
     const readIds = new Set(get().readNewsIds);
+    // news (단일 그룹)과 allGroupNews (전체) 모두 읽음 처리
     get().news.forEach(n => readIds.add(n.id));
+    get().allGroupNews.forEach(n => readIds.add(n.id));
     saveReadNewsIds(readIds);
 
     set({
       readNewsIds: readIds,
       newNewsCount: 0,
     });
+  },
+
+  getGroupUnreadCount: (groupId) => {
+    return get().groupNewsMap[groupId] || 0;
+  },
+
+  getGroupNews: (groupId) => {
+    return get().groupNewsItems[groupId] || [];
   },
 
   openDrawer: () => set({ isDrawerOpen: true }),
@@ -318,6 +449,10 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       isMonitoring: false,
       isLoading: false,
       error: null,
+      groupNewsMap: {},
+      groupNewsItems: {},
+      allGroupNews: [],
+      totalGroupUnread: 0,
       monitoringGroupId: null,
       intervalId: null,
       isDrawerOpen: false,

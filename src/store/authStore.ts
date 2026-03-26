@@ -31,6 +31,8 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('nodded-memos');
           localStorage.removeItem('nodded-groups');
           localStorage.removeItem('nodded_demo_mode');
+          localStorage.removeItem('nodded_fcm_user_id');
+          localStorage.removeItem('nodded_news_initial_search_done');
         } catch { /* ignore */ }
         set({ user: null, isAuthenticated: false, inviteCode: null });
       },
