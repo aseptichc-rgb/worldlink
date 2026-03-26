@@ -718,6 +718,8 @@ function OnboardingContent() {
             type="button"
             onClick={() => {
               const demo = DEMO_MEMBERS[DEMO_ACCOUNT_INDEX];
+              // 데모 모드 플래그를 먼저 설정해야 zustand persist가 올바르게 user를 저장함
+              localStorage.setItem('nodded_demo_mode', 'true');
               setUser({
                 id: demo.id,
                 name: demo.name,
@@ -728,7 +730,7 @@ function OnboardingContent() {
                 bio: demo.bio,
                 keywords: demo.keywords,
                 category: demo.category,
-                profileImage: `/faces/${demo.name}.jpg`,
+                profileImage: `/faces/${demo.id}.jpg`,
                 inviteCode: 'DEMO-001',
                 invitesRemaining: 999,
                 coffeeStatus: 'available' as const,
@@ -743,7 +745,6 @@ function OnboardingContent() {
                 createdAt: new Date(),
                 updatedAt: new Date(),
               });
-              localStorage.setItem('nodded_demo_mode', 'true');
               router.push('/network');
             }}
             className="w-64 mx-auto block py-3 rounded-xl border border-[#30363D] bg-[#161B22] text-[#8B949E] hover:text-[#F0F6FC] hover:border-[#58A6FF]/50 hover:bg-[#1C2128] transition-all text-sm font-medium"

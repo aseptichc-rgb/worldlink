@@ -147,7 +147,8 @@ export default function ProfileSheet() {
         }
 
         const fromDemoId = getDemoCompatibleId(currentUser);
-        const isDemoNode = selectedNode.id.startsWith('member_') || demoConnections[selectedNode.id];
+        const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+        const isDemoNode = isDemoMode || selectedNode.id.startsWith('demo_') || selectedNode.id.startsWith('member_') || !!demoConnections[selectedNode.id];
         if (isDemoNode) {
           ensureUserInDemoNetwork(currentUser.id);
           const pathIds = findDemoConnectionPath(fromDemoId !== currentUser.id ? fromDemoId : currentUser.id, selectedNode.id);

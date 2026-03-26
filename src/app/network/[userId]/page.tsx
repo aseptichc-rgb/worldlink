@@ -16,31 +16,11 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
 import { getUser, getUserConnectionsWithDetails } from '@/lib/firebase-services';
+import { demoUsers, demoConnections } from '@/lib/demo-data';
 import { BusinessCard, IntroductionRequest, User } from '@/types';
 import Avatar from '@/components/ui/Avatar';
 import BottomNav from '@/components/ui/BottomNav';
 import { v4 as uuidv4 } from 'uuid';
-
-// 데모 인맥 데이터 생성
-const generateDemoConnections = (userId: string) => {
-  const names = ['김철수', '이영희', '박민수', '정소연', '최준혁', '한지원', '송민재', '윤서연'];
-  const companies = ['카카오', '네이버', '토스', '쿠팡', '배달의민족', '당근마켓', '리디', '왓챠'];
-  const positions = ['CEO', 'CTO', 'PM', '개발자', '디자이너', '마케터', 'HR', 'CFO'];
-
-  return Array.from({ length: 6 }, (_, i) => ({
-    id: `demo-${userId}-${i}`,
-    userId: `demo-${userId}-${i}`,
-    name: names[i % names.length],
-    company: companies[i % companies.length],
-    position: positions[i % positions.length],
-    keywords: ['스타트업', 'AI', '투자'].slice(0, Math.floor(Math.random() * 3) + 1),
-    profileImage: undefined,
-    networkVisibility: 'connections_only' as const,
-    qrCode: '',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }));
-};
 
 export default function UserNetworkPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = use(params);
@@ -58,6 +38,49 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
 
   useEffect(() => {
     const loadUserData = async () => {
+      const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+
+      // 데모 모드: demoUsers에서 사용자 찾기
+      if (isDemoMode) {
+        const demoUser = demoUsers.find(u => u.id === userId);
+        if (demoUser) {
+          setTargetUser({
+            id: demoUser.id,
+            userId: demoUser.id,
+            name: demoUser.name,
+            company: demoUser.company || '',
+            position: demoUser.position || '',
+            keywords: demoUser.keywords || [],
+            profileImage: demoUser.profileImage,
+            networkVisibility: 'connections_only',
+            qrCode: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+
+          // 데모 인맥 가져오기
+          const connectionIds = demoConnections[userId] || [];
+          const connectionCards: BusinessCard[] = connectionIds
+            .map(id => demoUsers.find(u => u.id === id))
+            .filter((u): u is User => u !== undefined)
+            .map(conn => ({
+              id: conn.id,
+              userId: conn.id,
+              name: conn.name,
+              company: conn.company || '',
+              position: conn.position || '',
+              keywords: conn.keywords || [],
+              profileImage: conn.profileImage,
+              networkVisibility: 'connections_only' as const,
+              qrCode: '',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }));
+          setConnections(connectionCards);
+          return;
+        }
+      }
+
       // 저장된 명함에서 사용자 찾기
       const savedCard = savedCards.find(c => c.cardId === userId);
       if (savedCard) {
@@ -66,13 +89,32 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
         if (savedCard.card.networkVisibility === 'private') {
           setIsLocked(true);
         } else {
-          // 데모 인맥 데이터 로드
-          setConnections(generateDemoConnections(userId));
+          // 데모 모드면 demoConnections 사용, 아니면 Firebase
+          if (isDemoMode) {
+            const connectionIds = demoConnections[userId] || [];
+            const connectionCards: BusinessCard[] = connectionIds
+              .map(id => demoUsers.find(u => u.id === id))
+              .filter((u): u is User => u !== undefined)
+              .map(conn => ({
+                id: conn.id,
+                userId: conn.id,
+                name: conn.name,
+                company: conn.company || '',
+                position: conn.position || '',
+                keywords: conn.keywords || [],
+                profileImage: conn.profileImage,
+                networkVisibility: 'connections_only' as const,
+                qrCode: '',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              }));
+            setConnections(connectionCards);
+          }
         }
         return;
       }
 
-      // getUser로 사용자 정보 가져오기 (demo data 포함)
+      // getUser로 사용자 정보 가져오기
       try {
         const userData = await getUser(userId);
         if (userData) {
@@ -110,11 +152,48 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                 updatedAt: new Date(),
               }));
               setConnections(connectionCards);
-            } else {
-              setConnections(generateDemoConnections(userId));
+            } else if (isDemoMode) {
+              // 데모 모드에서 Firebase 연결이 없으면 demoConnections 사용
+              const connectionIds = demoConnections[userId] || [];
+              const connectionCards: BusinessCard[] = connectionIds
+                .map(id => demoUsers.find(u => u.id === id))
+                .filter((u): u is User => u !== undefined)
+                .map(conn => ({
+                  id: conn.id,
+                  userId: conn.id,
+                  name: conn.name,
+                  company: conn.company || '',
+                  position: conn.position || '',
+                  keywords: conn.keywords || [],
+                  profileImage: conn.profileImage,
+                  networkVisibility: 'connections_only' as const,
+                  qrCode: '',
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                }));
+              setConnections(connectionCards);
             }
           } catch {
-            setConnections(generateDemoConnections(userId));
+            if (isDemoMode) {
+              const connectionIds = demoConnections[userId] || [];
+              const connectionCards: BusinessCard[] = connectionIds
+                .map(id => demoUsers.find(u => u.id === id))
+                .filter((u): u is User => u !== undefined)
+                .map(conn => ({
+                  id: conn.id,
+                  userId: conn.id,
+                  name: conn.name,
+                  company: conn.company || '',
+                  position: conn.position || '',
+                  keywords: conn.keywords || [],
+                  profileImage: conn.profileImage,
+                  networkVisibility: 'connections_only' as const,
+                  qrCode: '',
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                }));
+              setConnections(connectionCards);
+            }
           }
           return;
         }
@@ -122,20 +201,60 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
         console.error('Failed to load user:', error);
       }
 
-      // 사용자를 찾지 못한 경우 데모 데이터 사용
+      // 데모 모드에서 demoUsers에서 다시 찾기
+      if (isDemoMode) {
+        const demoUser = demoUsers.find(u => u.id === userId);
+        if (demoUser) {
+          setTargetUser({
+            id: demoUser.id,
+            userId: demoUser.id,
+            name: demoUser.name,
+            company: demoUser.company || '',
+            position: demoUser.position || '',
+            keywords: demoUser.keywords || [],
+            profileImage: demoUser.profileImage,
+            networkVisibility: 'connections_only',
+            qrCode: '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+
+          const connectionIds = demoConnections[userId] || [];
+          const connectionCards: BusinessCard[] = connectionIds
+            .map(id => demoUsers.find(u => u.id === id))
+            .filter((u): u is User => u !== undefined)
+            .map(conn => ({
+              id: conn.id,
+              userId: conn.id,
+              name: conn.name,
+              company: conn.company || '',
+              position: conn.position || '',
+              keywords: conn.keywords || [],
+              profileImage: conn.profileImage,
+              networkVisibility: 'connections_only' as const,
+              qrCode: '',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }));
+          setConnections(connectionCards);
+          return;
+        }
+      }
+
+      // 최종 fallback: 빈 프로필 (사용자를 찾지 못한 경우)
       setTargetUser({
         id: userId,
         userId: userId,
-        name: '사용자',
-        company: '회사',
-        position: '직책',
+        name: '알 수 없는 사용자',
+        company: '',
+        position: '',
         keywords: [],
         networkVisibility: 'connections_only',
         qrCode: '',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      setConnections(generateDemoConnections(userId));
+      setConnections([]);
     };
 
     loadUserData();

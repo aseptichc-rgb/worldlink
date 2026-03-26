@@ -1,0 +1,141 @@
+'use client';
+
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Newspaper, Bell, BellOff, Loader2 } from 'lucide-react';
+import { useNewsAlertStore } from '@/store/newsAlertStore';
+import { ManagedGroupMember, User } from '@/types';
+
+interface NewsAlertButtonProps {
+  groupId: string;
+  groupName: string;
+  members: (ManagedGroupMember & { user?: User })[];
+  variant?: 'icon' | 'full';
+}
+
+export default function NewsAlertButton({
+  groupId,
+  groupName,
+  members,
+  variant = 'icon',
+}: NewsAlertButtonProps) {
+  const {
+    newNewsCount,
+    isMonitoring,
+    isLoading,
+    monitoringGroupId,
+    startMonitoring,
+    stopMonitoring,
+    openDrawer,
+  } = useNewsAlertStore();
+
+  // 멤버 정보를 검색용 형식으로 변환
+  const memberSearchData = members
+    .filter(m => m.user?.name)
+    .map(m => ({
+      name: m.user!.name,
+      company: m.user?.company,
+    }));
+
+  // 이 그룹이 모니터링 중인지 확인
+  const isThisGroupMonitoring = isMonitoring && monitoringGroupId === groupId;
+
+  const handleToggleMonitoring = () => {
+    if (isThisGroupMonitoring) {
+      stopMonitoring();
+    } else {
+      startMonitoring(groupId, memberSearchData);
+    }
+  };
+
+  // 컴포넌트 언마운트 시 모니터링 유지 (다른 페이지 이동해도 계속)
+  // 하지만 다른 그룹 모니터링 시작하면 기존 것은 중지됨
+
+  if (variant === 'icon') {
+    return (
+      <button
+        onClick={openDrawer}
+        className="relative p-2 text-[#8B949E] hover:text-[#58A6FF] transition-colors"
+        title="뉴스 알림"
+      >
+        <Newspaper size={20} />
+        {newNewsCount > 0 && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#F85149] text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+          >
+            {newNewsCount > 9 ? '9+' : newNewsCount}
+          </motion.span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#58A6FF]/15 flex items-center justify-center">
+            <Newspaper size={20} className="text-[#58A6FF]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-[#F0F6FC]">뉴스 모니터링</h3>
+            <p className="text-xs text-[#8B949E]">
+              멤버 관련 뉴스를 1시간마다 자동 검색
+            </p>
+          </div>
+        </div>
+        {newNewsCount > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="px-2.5 py-1 bg-[#F85149] text-white text-xs font-bold rounded-full"
+          >
+            {newNewsCount}
+          </motion.div>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={handleToggleMonitoring}
+          disabled={isLoading}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+            isThisGroupMonitoring
+              ? 'bg-[#F85149]/15 text-[#F85149] border border-[#F85149]/30'
+              : 'bg-[#238636] text-white'
+          }`}
+        >
+          {isLoading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : isThisGroupMonitoring ? (
+            <>
+              <BellOff size={16} />
+              모니터링 중지
+            </>
+          ) : (
+            <>
+              <Bell size={16} />
+              모니터링 시작
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={openDrawer}
+          className="px-4 py-2.5 bg-[#21262D] text-[#F0F6FC] rounded-xl text-sm font-medium hover:bg-[#30363D] transition-colors"
+        >
+          뉴스 보기
+        </button>
+      </div>
+
+      {isThisGroupMonitoring && (
+        <p className="text-[10px] text-[#3FB950] mt-3 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 bg-[#3FB950] rounded-full animate-pulse" />
+          뉴스 모니터링이 활성화되어 있습니다
+        </p>
+      )}
+    </div>
+  );
+}

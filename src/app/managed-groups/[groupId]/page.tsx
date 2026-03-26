@@ -13,6 +13,7 @@ import ManagedGroupAddMemberModal from '@/components/managed-group/ManagedGroupA
 import MemberRoleSheet from '@/components/managed-group/MemberRoleSheet';
 import GroupNetworkGraph from '@/components/managed-group/GroupNetworkGraph';
 import BottomNav from '@/components/ui/BottomNav';
+import { NewsAlertButton, NewsAlertDrawer } from '@/components/news-alert';
 import { getUser, getGroupMemberConnections, MemberConnection } from '@/lib/firebase-services';
 import { ManagedGroupMember, User } from '@/types';
 import { demoUsers } from '@/lib/demo-data';
@@ -209,6 +210,12 @@ export default function ManagedGroupDetailPage() {
           </button>
           <h1 className="text-base font-bold text-[#F0F6FC] truncate mx-4">{selectedGroup.name}</h1>
           <div className="flex items-center gap-1">
+            <NewsAlertButton
+              groupId={groupId}
+              groupName={selectedGroup.name}
+              members={membersWithUser}
+              variant="icon"
+            />
             {isOwner && (
               <button
                 onClick={() => setShowSettings(!showSettings)}
@@ -452,6 +459,20 @@ export default function ManagedGroupDetailPage() {
             )}
           </AnimatePresence>
 
+          {/* News Monitoring Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <NewsAlertButton
+              groupId={groupId}
+              groupName={selectedGroup.name}
+              members={membersWithUser}
+              variant="full"
+            />
+          </motion.div>
+
           {/* Member Section */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -615,6 +636,7 @@ export default function ManagedGroupDetailPage() {
 
       <ManagedGroupInviteModal />
       <ManagedGroupAddMemberModal />
+      <NewsAlertDrawer groupName={selectedGroup.name} />
       <BottomNav />
     </div>
   );
