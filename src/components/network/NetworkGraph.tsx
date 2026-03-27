@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore } from '@/store/groupStore';
+import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { NetworkNode, NodeGroup } from '@/types';
 import { Plus, Minus, Maximize2, RotateCcw, Home } from 'lucide-react';
 
@@ -337,6 +338,19 @@ export default function NetworkGraph() {
     getGroupsForNode,
     getNodesInGroup,
   } = useGroupStore();
+
+  const { allGroupNews, readNewsIds } = useNewsAlertStore();
+
+  // 뉴스가 있는 인물 이름 집합 (읽지 않은 뉴스 기준)
+  const nodesWithNews = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of allGroupNews) {
+      if (item.memberName && !readNewsIds.has(item.id)) {
+        set.add(item.memberName);
+      }
+    }
+    return set;
+  }, [allGroupNews, readNewsIds]);
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -908,9 +922,10 @@ export default function NetworkGraph() {
       isDimmed: boolean;
       isHighlighted: boolean;
       isMutual?: boolean;
+      hasNews?: boolean;
     }
   ) => {
-    const { isHovered, isFocused, isConnected, isDimmed, isHighlighted, isMutual } = options;
+    const { isHovered, isFocused, isConnected, isDimmed, isHighlighted, isMutual, hasNews } = options;
     const radius = getNodeSize(node, isHovered, isFocused);
     const x = node.x || 0;
     const y = node.y || 0;
@@ -1106,6 +1121,33 @@ export default function NetworkGraph() {
         ctx.textBaseline = 'middle';
         ctx.fillText(`+${degree2Count}`, badgeX, badgeY);
       }
+    }
+
+    // 6. 뉴스 인디케이터 (뉴스가 있는 인물에 빨간 점 표시)
+    if (hasNews && !isDimmed && node.degree !== 0) {
+      const dotX = x - radius * 0.68;
+      const dotY = y - radius * 0.68;
+      const dotR = Math.max(4, radius * 0.22);
+
+      // 글로우
+      const glowGrad = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, dotR * 2.8);
+      glowGrad.addColorStop(0, 'rgba(255, 59, 48, 0.55)');
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR * 2.8, 0, Math.PI * 2);
+      ctx.fillStyle = glowGrad;
+      ctx.fill();
+
+      // 점 본체
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = '#FF3B30';
+      ctx.fill();
+
+      // 흰 테두리 (배경과 구분)
+      ctx.strokeStyle = '#0D1117';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
 
     // Labels are drawn separately in a second pass (see drawNodeLabel)
@@ -1468,6 +1510,7 @@ export default function NetworkGraph() {
           isConnected: false,
           isDimmed: false,
           isHighlighted: false,
+          hasNews: nodesWithNews.has(centerNode.name),
         });
         drawNodeLabel(ctx, centerNode, { isDimmed: false, isFocused: false, allNodes: nodes });
       }
@@ -1825,6 +1868,7 @@ export default function NetworkGraph() {
         isConnected: false,
         isDimmed,
         isHighlighted,
+        hasNews: nodesWithNews.has(node.name),
       }, rank);
 
       if (isNewNode) {
@@ -1848,6 +1892,7 @@ export default function NetworkGraph() {
           isDimmed: false,
           isHighlighted: false,
           isMutual: mutualNodeIds.has(node.id),
+          hasNews: nodesWithNews.has(node.name),
         }, 0); // rank 0 = always full detail
       }
     }
@@ -1965,7 +2010,7 @@ export default function NetworkGraph() {
     }
 
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, drawGroupBadges, getGroupsForNode, getNodeSize, activeGroupFilter, getNodesInGroup, allMemberships, allGroups, dimensions.width, dimensions.height]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, drawGroupBadges, getGroupsForNode, getNodeSize, activeGroupFilter, getNodesInGroup, allMemberships, allGroups, dimensions.width, dimensions.height, nodesWithNews]);
 
   // Smooth animation to target transform
   useEffect(() => {
@@ -2133,7 +2178,7 @@ export default function NetworkGraph() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 어안 렌즈(Fish-eye): 마우스 위치를 월드 좌표로 변환하여 왜곡 중심 업데이트
+    // 월드 좌표 변환 (드래그에 사용)
     const worldX = (x - transform.x) / transform.scale;
     const worldY = (y - transform.y) / transform.scale;
 
@@ -2158,14 +2203,8 @@ export default function NetworkGraph() {
       const node = getNodeAtPosition(x, y);
       setHoveredNode(node);
 
-      // Fish-eye 활성화: 노드 위에 있을 때만 (클러스터 뷰 제외)
-      if (node && transform.scale >= ZOOM_CLUSTER_THRESHOLD) {
-        fisheyeFocusRef.current = { x: worldX, y: worldY, active: true };
-        fisheyeAnimRef.current.targetX = worldX;
-        fisheyeAnimRef.current.targetY = worldY;
-      } else {
-        fisheyeFocusRef.current.active = false;
-      }
+      // Fish-eye 비활성화: 노드 움직임으로 클릭이 어려워지는 문제 방지
+      fisheyeFocusRef.current.active = false;
 
       if (canvasRef.current) {
         if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
@@ -2227,16 +2266,8 @@ export default function NetworkGraph() {
       const y = touch.clientY - rect.top;
       const node = getNodeAtPosition(x, y);
 
-      // 터치 시 Fish-eye 활성화 (노드 위에 터치했을 때)
-      const worldX = (x - transform.x) / transform.scale;
-      const worldY = (y - transform.y) / transform.scale;
-      if (node && transform.scale >= ZOOM_CLUSTER_THRESHOLD) {
-        fisheyeFocusRef.current = { x: worldX, y: worldY, active: true };
-        fisheyeAnimRef.current.targetX = worldX;
-        fisheyeAnimRef.current.targetY = worldY;
-        fisheyeAnimRef.current.currentX = worldX;
-        fisheyeAnimRef.current.currentY = worldY;
-      }
+      // Fish-eye 비활성화: 노드 움직임으로 클릭이 어려워지는 문제 방지
+      fisheyeFocusRef.current.active = false;
 
       if (node) {
         setDraggedNode(node);
@@ -2578,16 +2609,21 @@ export default function NetworkGraph() {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
 
+    // 진행 중인 자동 이동 애니메이션을 즉시 취소 (휠과 충돌 방지)
+    setTargetTransform(null);
+
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.max(0.3, Math.min(3, transform.scale * delta));
 
-    setTransform(prev => ({
-      x: x - (x - prev.x) * (newScale / prev.scale),
-      y: y - (y - prev.y) * (newScale / prev.scale),
-      scale: newScale,
-    }));
+    setTransform(prev => {
+      const newScale = Math.max(0.3, Math.min(3, prev.scale * delta));
+      return {
+        x: x - (x - prev.x) * (newScale / prev.scale),
+        y: y - (y - prev.y) * (newScale / prev.scale),
+        scale: newScale,
+      };
+    });
   };
 
   const handleZoomIn = () => {
