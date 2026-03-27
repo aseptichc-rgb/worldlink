@@ -3,6 +3,7 @@ import { NewsItem } from '@/app/api/news/route';
 
 const STORAGE_KEY = 'nodded_news_alert';
 const CHECK_INTERVAL = 60 * 60 * 1000; // 1시간
+const CACHE_MAX_ITEMS = 200; // 캐시할 최대 뉴스 수
 
 // 데모 모드 체크
 function isDemoMode(): boolean {
@@ -125,8 +126,9 @@ interface NewsAlertState {
 
   // Multi-group news tracking
   groupNewsMap: Record<string, number>; // groupId -> unread news count
-  groupNewsItems: Record<string, NewsItem[]>; // groupId -> news items
-  allGroupNews: NewsItem[]; // 전체 그룹 뉴스
+  groupNewsItems: Record<string, NewsItem[]>; // groupId -> news items (최신 + 이전 합산)
+  allGroupNews: NewsItem[]; // 전체 그룹 뉴스 (최신 + 이전 합산)
+  latestNewsIds: Set<string>; // 가장 최근 검색에서 가져온 뉴스 ID
   totalGroupUnread: number;
 
   // Monitoring state
@@ -193,6 +195,69 @@ function saveLastCheckedAt(time: string) {
   }
 }
 
+// LocalStorage에서 그룹 뉴스 캐시 로드
+function loadCachedGroupNews(): {
+  groupNewsMap: Record<string, number>;
+  groupNewsItems: Record<string, NewsItem[]>;
+  allGroupNews: NewsItem[];
+  latestNewsIds: string[];
+} {
+  const empty = { groupNewsMap: {}, groupNewsItems: {}, allGroupNews: [], latestNewsIds: [] };
+  if (typeof window === 'undefined') return empty;
+  try {
+    const stored = localStorage.getItem(`${STORAGE_KEY}_groupNews`);
+    if (!stored) return empty;
+    return { ...empty, ...JSON.parse(stored) };
+  } catch {
+    return empty;
+  }
+}
+
+// LocalStorage에 그룹 뉴스 캐시 저장
+function saveCachedGroupNews(
+  groupNewsMap: Record<string, number>,
+  groupNewsItems: Record<string, NewsItem[]>,
+  allGroupNews: NewsItem[],
+  latestNewsIds: string[],
+) {
+  if (typeof window === 'undefined') return;
+  try {
+    const truncatedAllGroupNews = allGroupNews.slice(0, CACHE_MAX_ITEMS);
+    const truncatedGroupNewsItems: Record<string, NewsItem[]> = {};
+    for (const [gid, items] of Object.entries(groupNewsItems)) {
+      truncatedGroupNewsItems[gid] = items.slice(0, 100);
+    }
+    localStorage.setItem(
+      `${STORAGE_KEY}_groupNews`,
+      JSON.stringify({ groupNewsMap, groupNewsItems: truncatedGroupNewsItems, allGroupNews: truncatedAllGroupNews, latestNewsIds }),
+    );
+  } catch {
+    // ignore (storage full 등)
+  }
+}
+
+// Bing 리다이렉트 URL이 캐시된 경우 초기화
+function clearStaleNewsCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    const stored = localStorage.getItem(`${STORAGE_KEY}_groupNews`);
+    if (!stored) return;
+    const data = JSON.parse(stored);
+    const allNews: NewsItem[] = data.allGroupNews || [];
+    const hasBingRedirect = allNews.some(
+      (n) => n.link && n.link.includes('bing.com/news/apiclick.aspx'),
+    );
+    if (hasBingRedirect) {
+      localStorage.removeItem(`${STORAGE_KEY}_groupNews`);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+clearStaleNewsCache();
+const _cachedGroupNews = loadCachedGroupNews();
+
 export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
   news: [],
   newNewsCount: 0,
@@ -201,10 +266,11 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
   isLoading: false,
   error: null,
   readNewsIds: loadReadNewsIds(),
-  groupNewsMap: {},
-  groupNewsItems: {},
-  allGroupNews: [],
-  totalGroupUnread: 0,
+  groupNewsMap: _cachedGroupNews.groupNewsMap,
+  groupNewsItems: _cachedGroupNews.groupNewsItems,
+  allGroupNews: _cachedGroupNews.allGroupNews,
+  latestNewsIds: new Set(_cachedGroupNews.latestNewsIds),
+  totalGroupUnread: Object.values(_cachedGroupNews.groupNewsMap).reduce((s, c) => s + c, 0),
   monitoringGroupId: null,
   intervalId: null,
   isDrawerOpen: false,
@@ -312,6 +378,15 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
 
       const readIds = get().readNewsIds;
 
+      // 최신 검색 결과의 ID 집합
+      const latestIds = new Set(allNews.map(n => n.id));
+
+      // 이전 뉴스 중 최신 검색에 없는 것만 유지 (중복 제거)
+      const previousNews = get().allGroupNews.filter(n => !latestIds.has(n.id));
+
+      // 병합: 최신 뉴스 먼저, 그 다음 이전 뉴스
+      const mergedNews = [...allNews, ...previousNews];
+
       // 각 뉴스를 해당 그룹에 매핑
       const groupNewsMap: Record<string, number> = {};
       const groupNewsItems: Record<string, NewsItem[]> = {};
@@ -320,7 +395,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
         groupNewsItems[group.id] = [];
       }
 
-      for (const newsItem of allNews) {
+      for (const newsItem of mergedNews) {
         const key = `${newsItem.memberName || ''}|${newsItem.memberCompany || ''}`;
         const groupIds = memberToGroups[key];
         if (groupIds) {
@@ -334,14 +409,17 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       }
 
       const totalGroupUnread = Object.values(groupNewsMap).reduce((sum, c) => sum + c, 0);
+      const latestIdsArr = Array.from(latestIds);
 
       const now = new Date().toISOString();
       saveLastCheckedAt(now);
+      saveCachedGroupNews(groupNewsMap, groupNewsItems, mergedNews, latestIdsArr);
 
       set({
         groupNewsMap,
         groupNewsItems,
-        allGroupNews: allNews,
+        allGroupNews: mergedNews,
+        latestNewsIds: latestIds,
         totalGroupUnread,
         lastCheckedAt: now,
         isLoading: false,
@@ -452,6 +530,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       groupNewsMap: {},
       groupNewsItems: {},
       allGroupNews: [],
+      latestNewsIds: new Set(),
       totalGroupUnread: 0,
       monitoringGroupId: null,
       intervalId: null,

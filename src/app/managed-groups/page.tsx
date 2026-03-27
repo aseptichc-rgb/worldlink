@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Users, Loader2, AlertTriangle, Newspaper, ExternalLink, ChevronDown, ChevronUp, Bell, BellOff } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Loader2, AlertTriangle, Newspaper, ExternalLink, ChevronDown, ChevronUp, Bell, BellOff, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useManagedGroupStore } from '@/store/managedGroupStore';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
@@ -19,7 +19,7 @@ export default function ManagedGroupsPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const { groups, isLoading, fetchMyGroups, openCreateModal, deleteGroup, leaveGroup } = useManagedGroupStore();
-  const { searchNewsForAllGroups, groupNewsMap, groupNewsItems, allGroupNews, isLoading: newsLoading, lastCheckedAt, readNewsIds, markAsRead } = useNewsAlertStore();
+  const { searchNewsForAllGroups, groupNewsMap, groupNewsItems, allGroupNews, latestNewsIds, isLoading: newsLoading, lastCheckedAt, readNewsIds, markAsRead } = useNewsAlertStore();
   const [confirmTarget, setConfirmTarget] = useState<ManagedGroup | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -62,47 +62,52 @@ export default function ManagedGroupsPage() {
     }
   }, [user?.id, fetchMyGroups]);
 
-  // 모든 그룹의 뉴스 검색 (첫 로그인: 6개월, 이후: 24시간) + 1시간마다 자동 반복
+  const buildGroupInfos = async () => {
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    return Promise.all(
+      groups.map(async (group) => {
+        const memberResults = await Promise.all(
+          group.members.map(async (member) => {
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
+            }
+            try {
+              const userData = await getUser(member.userId);
+              return userData ? { name: userData.name, company: userData.company } : null;
+            } catch {
+              return null;
+            }
+          })
+        );
+        const members = memberResults.filter((m): m is NonNullable<typeof m> => m !== null);
+
+        if (members.length === 0 && group.name) {
+          members.push({ name: group.name, company: undefined });
+        }
+
+        return { id: group.id, members };
+      })
+    );
+  };
+
+  const runSearch = async (timeRange: string) => {
+    const groupInfos = await buildGroupInfos();
+    searchNewsForAllGroups(groupInfos, timeRange);
+  };
+
+  // 뉴스 수동 새로고침 핸들러
+  const handleNewsRefresh = () => {
+    runSearch('1d');
+  };
+
+  // 모든 그룹의 뉴스 검색: 캐시가 1시간 이상 지난 경우에만 자동 검색
   useEffect(() => {
     if (groups.length === 0) return;
 
-    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     const INITIAL_SEARCH_KEY = 'nodded_news_initial_search_done';
+    const ONE_HOUR = 60 * 60 * 1000;
 
-    const buildGroupInfos = async () => {
-      return Promise.all(
-        groups.map(async (group) => {
-          const memberResults = await Promise.all(
-            group.members.map(async (member) => {
-              if (isDemoMode) {
-                const demoUser = demoUsers.find(u => u.id === member.userId);
-                return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
-              }
-              try {
-                const userData = await getUser(member.userId);
-                return userData ? { name: userData.name, company: userData.company } : null;
-              } catch {
-                return null;
-              }
-            })
-          );
-          const members = memberResults.filter((m): m is NonNullable<typeof m> => m !== null);
-
-          if (members.length === 0 && group.name) {
-            members.push({ name: group.name, company: undefined });
-          }
-
-          return { id: group.id, members };
-        })
-      );
-    };
-
-    const runSearch = async (timeRange: string) => {
-      const groupInfos = await buildGroupInfos();
-      searchNewsForAllGroups(groupInfos, timeRange);
-    };
-
-    // 첫 로그인 여부 확인
     const isInitialSearch = !localStorage.getItem(INITIAL_SEARCH_KEY);
 
     if (isInitialSearch) {
@@ -111,15 +116,19 @@ export default function ManagedGroupsPage() {
         localStorage.setItem(INITIAL_SEARCH_KEY, new Date().toISOString());
       });
     } else {
-      // 이후: 24시간 이내 새 뉴스만
-      runSearch('1d');
+      // 이미 캐시된 결과가 있고 1시간 이내면 검색 생략
+      const elapsed = lastCheckedAt ? Date.now() - new Date(lastCheckedAt).getTime() : Infinity;
+      if (elapsed >= ONE_HOUR) {
+        runSearch('1d');
+      }
     }
 
-    // 1시간마다 자동 반복 (항상 24시간 기준)
-    const intervalId = window.setInterval(() => runSearch('1d'), 60 * 60 * 1000);
+    // 1시간마다 자동 반복
+    const intervalId = window.setInterval(() => runSearch('1d'), ONE_HOUR);
 
     return () => clearInterval(intervalId);
-  }, [groups, searchNewsForAllGroups]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups]);
 
   const toggleGroupExpand = (groupId: string) => {
     setExpandedGroups(prev => {
@@ -225,8 +234,16 @@ export default function ManagedGroupsPage() {
                   )}
                 </p>
               </div>
-              {newsLoading && (
+              {newsLoading ? (
                 <Loader2 size={18} className="animate-spin text-[#58A6FF]" />
+              ) : (
+                <button
+                  onClick={handleNewsRefresh}
+                  className="p-1.5 text-[#484F58] hover:text-[#58A6FF] transition-colors rounded-lg hover:bg-[#21262D]"
+                  title="뉴스 새로고침"
+                >
+                  <RefreshCw size={15} />
+                </button>
               )}
             </div>
 
@@ -310,60 +327,86 @@ export default function ManagedGroupsPage() {
                   />
 
                   {/* 그룹별 뉴스 인라인 표시 */}
-                  {newsItems.length > 0 && (
-                    <div className="mt-1 ml-2 mr-2">
-                      {/* 뉴스 미리보기 (최대 3개) */}
-                      <div className="bg-[#0D1117] border border-[#21262D] rounded-xl overflow-hidden">
-                        {newsItems.slice(0, isExpanded ? newsItems.length : previewCount).map((item, i) => {
-                          const isRead = readNewsIds.has(item.id);
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => handleNewsClick(item.id, item.link)}
-                              className={`w-full text-left px-4 py-3 transition-colors hover:bg-[#161B22] flex items-start gap-2.5 ${
-                                i > 0 ? 'border-t border-[#21262D]' : ''
-                              } ${isRead ? 'opacity-50' : ''}`}
-                            >
-                              {!isRead && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] mt-1.5 shrink-0" />
-                              )}
-                              <div className={`flex-1 min-w-0 ${isRead ? 'ml-4' : ''}`}>
-                                <p className="text-xs font-medium text-[#F0F6FC] line-clamp-1">
-                                  {item.title}
-                                </p>
-                                <div className="flex items-center gap-1.5 mt-1 text-[10px] text-[#484F58]">
-                                  {item.memberName && (
-                                    <span className="px-1.5 py-0.5 bg-[#21262D] rounded text-[#8B949E]">
-                                      {item.memberName}
-                                    </span>
-                                  )}
-                                  {item.source && (
-                                    <span>{item.source}</span>
-                                  )}
-                                  <span>{formatTime(item.pubDate)}</span>
-                                </div>
-                              </div>
-                              <ExternalLink size={12} className="text-[#484F58] shrink-0 mt-1" />
-                            </button>
-                          );
-                        })}
+                  {newsItems.length > 0 && (() => {
+                    const newItems = newsItems.filter(n => latestNewsIds.has(n.id));
+                    const oldItems = newsItems.filter(n => !latestNewsIds.has(n.id));
+                    const oldVisible = isExpanded ? oldItems : oldItems.slice(0, previewCount);
 
-                        {/* 더보기/접기 버튼 */}
-                        {newsItems.length > previewCount && (
-                          <button
-                            onClick={() => toggleGroupExpand(group.id)}
-                            className="w-full px-4 py-2 text-center text-[11px] font-medium text-[#58A6FF] hover:bg-[#161B22] transition-colors border-t border-[#21262D] flex items-center justify-center gap-1"
-                          >
-                            {isExpanded ? (
-                              <>접기 <ChevronUp size={12} /></>
-                            ) : (
-                              <>{newsItems.length - previewCount}건 더보기 <ChevronDown size={12} /></>
-                            )}
-                          </button>
-                        )}
+                    const renderNewsItem = (item: typeof newsItems[0], i: number, isFirst: boolean) => {
+                      const isRead = readNewsIds.has(item.id);
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleNewsClick(item.id, item.link)}
+                          className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-2.5 ${
+                            !isFirst ? 'border-t border-[#21262D]' : ''
+                          } ${isRead ? 'hover:bg-[#161B22]/50' : 'hover:bg-[#161B22]'}`}
+                        >
+                          {!isRead ? (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#58A6FF] mt-1.5 shrink-0" />
+                          ) : (
+                            <span className="w-1.5 h-1.5 mt-1.5 shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-medium line-clamp-1 ${isRead ? 'text-[#484F58]' : 'text-[#F0F6FC]'}`}>
+                              {item.title}
+                            </p>
+                            <div className={`flex items-center gap-1.5 mt-1 text-[10px] ${isRead ? 'text-[#30363D]' : 'text-[#484F58]'}`}>
+                              {item.memberName && (
+                                <span className={`px-1.5 py-0.5 rounded ${isRead ? 'bg-[#161B22] text-[#484F58]' : 'bg-[#21262D] text-[#8B949E]'}`}>
+                                  {item.memberName}
+                                </span>
+                              )}
+                              {item.source && <span>{item.source}</span>}
+                              <span>{formatTime(item.pubDate)}</span>
+                            </div>
+                          </div>
+                          <ExternalLink size={12} className={`shrink-0 mt-1 ${isRead ? 'text-[#30363D]' : 'text-[#484F58]'}`} />
+                        </button>
+                      );
+                    };
+
+                    return (
+                      <div className="mt-1 ml-2 mr-2">
+                        <div className="bg-[#0D1117] border border-[#21262D] rounded-xl overflow-hidden">
+                          {/* 새 뉴스 섹션 */}
+                          {newItems.length > 0 && (
+                            <>
+                              {(oldItems.length > 0 || latestNewsIds.size > 0) && (
+                                <div className="px-4 py-1.5 bg-[#58A6FF]/8 border-b border-[#21262D] flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#58A6FF]" />
+                                  <span className="text-[10px] font-semibold text-[#58A6FF]">새 뉴스 {newItems.length}건</span>
+                                </div>
+                              )}
+                              {newItems.map((item, i) => renderNewsItem(item, i, i === 0))}
+                            </>
+                          )}
+
+                          {/* 이전 뉴스 섹션 */}
+                          {oldItems.length > 0 && (
+                            <>
+                              <div className={`px-4 py-1.5 flex items-center gap-1.5 ${newItems.length > 0 ? 'border-t border-[#21262D]' : ''} bg-[#161B22]/50`}>
+                                <span className="text-[10px] font-medium text-[#484F58]">이전 뉴스</span>
+                              </div>
+                              {oldVisible.map((item, i) => renderNewsItem(item, i, i === 0))}
+                              {oldItems.length > previewCount && (
+                                <button
+                                  onClick={() => toggleGroupExpand(group.id)}
+                                  className="w-full px-4 py-2 text-center text-[11px] font-medium text-[#484F58] hover:bg-[#161B22] transition-colors border-t border-[#21262D] flex items-center justify-center gap-1"
+                                >
+                                  {isExpanded ? (
+                                    <>접기 <ChevronUp size={12} /></>
+                                  ) : (
+                                    <>{oldItems.length - previewCount}건 더보기 <ChevronDown size={12} /></>
+                                  )}
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </motion.div>
               );
             })}
