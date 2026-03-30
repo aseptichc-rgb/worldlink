@@ -76,7 +76,7 @@ export interface Connection {
   fromUserId: string;
   toUserId: string;
   status: 'pending' | 'accepted' | 'rejected';
-  method: 'invite' | 'contact_sync' | 'search';
+  method: 'invite' | 'contact_sync' | 'search' | 'managed_group';
   createdAt: Date;
   acceptedAt?: Date;
 }

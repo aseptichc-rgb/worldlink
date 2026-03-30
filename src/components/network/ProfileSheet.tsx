@@ -57,6 +57,7 @@ export default function ProfileSheet() {
   const [theirConnections, setTheirConnections] = useState<User[]>([]);
   const [selectedUserData, setSelectedUserData] = useState<User | null>(null);
   const [myConnectionIds, setMyConnectionIds] = useState<Set<string>>(new Set());
+  const [myConnectionMethods, setMyConnectionMethods] = useState<Map<string, string>>(new Map());
 
   // 메모 관련 상태
   const [isEditingMemo, setIsEditingMemo] = useState(false);
@@ -104,6 +105,15 @@ export default function ProfileSheet() {
             conn.fromUserId === currentUser.id ? conn.toUserId : conn.fromUserId
           );
           setMyConnectionIds(new Set(connIds));
+          const methodMap = new Map<string, string>();
+          connections.forEach(conn => {
+            const otherId = conn.fromUserId === currentUser.id ? conn.toUserId : conn.fromUserId;
+            // 이미 더 강한 연결(managed_group 아닌)이 있으면 덮어쓰지 않음
+            if (!methodMap.has(otherId) || methodMap.get(otherId) === 'managed_group') {
+              methodMap.set(otherId, conn.method);
+            }
+          });
+          setMyConnectionMethods(methodMap);
         }
       } catch (error) {
         console.error('Error loading my connections:', error);
@@ -388,7 +398,7 @@ export default function ProfileSheet() {
                     <div className="flex-1 min-w-0 pt-1">
                       {/* 1촌이거나 가져온 연락처면 전체 정보, 아니면 비식별화된 정보 표시 */}
                       {(() => {
-                        const isConnected = connectionDegree === 1 || !!selectedNode.isImported;
+                        const isConnected = (connectionDegree === 1 && myConnectionMethods.get(selectedNode.id) !== 'managed_group') || !!selectedNode.isImported;
                         const displayInfo = selectedUserData
                           ? getDisplayInfo(selectedUserData, isConnected)
                           : {
@@ -495,8 +505,8 @@ export default function ProfileSheet() {
                 </div>
 
                 <div className="px-5 pb-5 space-y-5">
-                  {/* Contact Info - 1촌 또는 가져온 연락처에게 표시 */}
-                  {(connectionDegree === 1 || selectedNode.isImported) && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
+                  {/* Contact Info - 1촌(모임 자동연결 제외) 또는 가져온 연락처에게 표시 */}
+                  {((connectionDegree === 1 && myConnectionMethods.get(selectedNode.id) !== 'managed_group') || selectedNode.isImported) && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Mail size={12} />
