@@ -16,6 +16,7 @@ import {
   User as UserIcon,
   Mail,
   Search,
+  Loader2,
 } from 'lucide-react';
 import { Avatar, Input, Tag, Card } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const [editedUser, setEditedUser] = useState(user);
   const [newKeyword, setNewKeyword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
 
   useEffect(() => {
@@ -71,6 +73,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    setIsUploadingImage(true);
     try {
       if (isDemoMode) {
         // 데모 모드에서는 로컬 URL로 미리보기만 제공
@@ -80,7 +83,10 @@ export default function ProfilePage() {
         updateNodeProfileImage(user.id, localUrl);
         return;
       }
+      console.log('Uploading profile image...', { userId: user.id, fileName: file.name, fileSize: file.size });
       const imageUrl = await uploadProfileImage(user.id, file);
+      console.log('Upload successful, imageUrl:', imageUrl);
+
       await updateUser(user.id, { profileImage: imageUrl });
 
       // 공개 명함도 자동 업데이트 (프로필 이미지 변경 즉시 반영)
@@ -99,8 +105,11 @@ export default function ProfilePage() {
       setUser({ ...user, profileImage: imageUrl });
       setEditedUser(prev => prev ? { ...prev, profileImage: imageUrl } : prev);
       updateNodeProfileImage(user.id, imageUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
+      alert(`프로필 이미지 업로드 실패: ${error?.message || '알 수 없는 오류'}`);
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
