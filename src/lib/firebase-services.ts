@@ -189,8 +189,8 @@ export const connectWithAllUsers = async (currentUserId: string): Promise<number
     const batch = writeBatch(db);
 
     for (const user of allUsers) {
-      // 자기 자신이거나 이미 연결된 경우 건너뜀
-      if (user.id === currentUserId || connectedUserIds.has(user.id)) {
+      // 자기 자신이거나 이미 연결된 경우 또는 데모 사용자인 경우 건너뜀
+      if (user.id === currentUserId || connectedUserIds.has(user.id) || user.id.startsWith('demo_')) {
         continue;
       }
 
@@ -665,11 +665,13 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   });
   userMap.set(currentUser.id, currentUser);
 
-  // Get 1st degree connections (parallel fetch) - 중복 제거
+  // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외
   const firstDegreeIds = new Set<string>();
   directConnections.forEach(conn => {
     const connectedId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
-    firstDegreeIds.add(connectedId);
+    if (!connectedId.startsWith('demo_')) {
+      firstDegreeIds.add(connectedId);
+    }
   });
 
   const firstDegreeUsers = await Promise.all(
@@ -714,6 +716,8 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   for (const { firstDegreeId, connections: conns } of secondDegreeConnectionsByFirst) {
     for (const conn of conns) {
       const secondDegreeUserId = conn.fromUserId === firstDegreeId ? conn.toUserId : conn.fromUserId;
+      // 데모 사용자 제외
+      if (secondDegreeUserId.startsWith('demo_')) continue;
       if (secondDegreeUserId === userId || firstDegreeIds.has(secondDegreeUserId)) continue;
 
       secondDegreeEdges.push({ source: firstDegreeId, target: secondDegreeUserId });

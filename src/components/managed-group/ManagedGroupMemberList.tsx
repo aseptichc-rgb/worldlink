@@ -186,7 +186,7 @@ export default function ManagedGroupMemberList({
                   e.stopPropagation();
                   onRoleEdit(info);
                 }}
-                className="shrink-0 p-1.5 text-[#484F58] hover:text-[#58A6FF] hover:bg-[#58A6FF]/10 rounded-lg transition-all"
+                className="shrink-0 p-1.5 text-[#8B949E] hover:text-[#58A6FF] hover:bg-[#58A6FF]/10 rounded-lg transition-all"
                 title="역할 편집"
               >
                 <Edit3 size={14} />

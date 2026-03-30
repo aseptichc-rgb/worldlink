@@ -555,7 +555,7 @@ export default function ProfileSheet() {
                       <div className="info-card info-card-highlight">
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                           {connectionPath.map((user, idx) => (
-                            <div key={user.id} className="flex items-center gap-2 flex-shrink-0">
+                            <div key={user.id || idx} className="flex items-center gap-2 flex-shrink-0">
                               <div className="flex flex-col items-center">
                                 <div className="relative">
                                   <Avatar
@@ -599,11 +599,11 @@ export default function ProfileSheet() {
                         {selectedNode.name}님은
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {selectedNode.keywords.map((keyword) => {
+                        {selectedNode.keywords.filter(k => k && k.trim() !== '').map((keyword, idx) => {
                           const isMatching = currentUser?.keywords.includes(keyword);
                           return (
                             <Tag
-                              key={keyword}
+                              key={`${keyword}-${idx}`}
                               label={`#${keyword.replace(/^#/, '')}`}
                               isHighlighted={isMatching}
                               size="sm"

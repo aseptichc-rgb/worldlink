@@ -81,81 +81,87 @@ export default function SearchBar() {
       const results: PersonResult[] = [];
       const visited = new Set<string>();
 
-      // BFS로 연결된 사람들 탐색 (최대 3단계까지)
-      const MAX_BFS_DEGREE = 3;
-      const queue: { userId: string; path: string[]; degree: number }[] = [
-        { userId: currentUserId, path: [currentUserId], degree: 0 }
-      ];
+      // 실제 사용자인지 확인 (데모 사용자는 'demo_'로 시작하는 ID를 가짐)
+      const isRealUser = !currentUserId.startsWith('demo_');
 
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        const { userId, path, degree } = current;
+      // 데모 사용자인 경우에만 BFS로 데모 연결 데이터 탐색 (최대 3단계까지)
+      if (!isRealUser) {
+        const MAX_BFS_DEGREE = 3;
+        const queue: { userId: string; path: string[]; degree: number }[] = [
+          { userId: currentUserId, path: [currentUserId], degree: 0 }
+        ];
 
-        if (visited.has(userId)) continue;
-        visited.add(userId);
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          const { userId, path, degree } = current;
 
-        // 현재 사용자가 아닌 경우만 검색 결과에 포함
-        if (userId !== currentUserId) {
-          const user = demoUsers.find(u => u.id === userId);
-          if (user) {
-            // 이름, 회사, 직책, 키워드, 자기소개, 카테고리, 업종으로 검색 (각 단어를 OR로 매칭)
-            const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
-            const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
-            const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
-            const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
-            const bioMatch = queryWords.some(w => user.bio?.toLowerCase().includes(w)) ?? false;
-            const categoryMatch = queryWords.some(w => user.category?.toLowerCase().includes(w)) ?? false;
-            const industryMatch = queryWords.some(w => user.industry?.toLowerCase().includes(w)) ?? false;
+          if (visited.has(userId)) continue;
+          visited.add(userId);
 
-            // 메모 검색 (나만의 메모)
-            const userMemo = memos[userId];
-            const memoMatch = queryWords.some(w => userMemo?.content.toLowerCase().includes(w));
-            const memoMatchContent = memoMatch ? userMemo.content : undefined;
+          // 현재 사용자가 아닌 경우만 검색 결과에 포함
+          if (userId !== currentUserId) {
+            const user = demoUsers.find(u => u.id === userId);
+            if (user) {
+              // 이름, 회사, 직책, 키워드, 자기소개, 카테고리, 업종으로 검색 (각 단어를 OR로 매칭)
+              const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
+              const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
+              const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
+              const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+              const bioMatch = queryWords.some(w => user.bio?.toLowerCase().includes(w)) ?? false;
+              const categoryMatch = queryWords.some(w => user.category?.toLowerCase().includes(w)) ?? false;
+              const industryMatch = queryWords.some(w => user.industry?.toLowerCase().includes(w)) ?? false;
 
-            // 매칭된 필드 추적
-            const matchedFields: string[] = [];
-            if (nameMatch) matchedFields.push('이름');
-            if (companyMatch) matchedFields.push('회사');
-            if (positionMatch) matchedFields.push('직책');
-            if (keywordMatch) matchedFields.push('키워드');
-            if (bioMatch) matchedFields.push('자기소개');
-            if (categoryMatch) matchedFields.push('분야');
-            if (industryMatch) matchedFields.push('업종');
-            if (memoMatch) matchedFields.push('메모');
+              // 메모 검색 (나만의 메모)
+              const userMemo = memos[userId];
+              const memoMatch = queryWords.some(w => userMemo?.content.toLowerCase().includes(w));
+              const memoMatchContent = memoMatch ? userMemo.content : undefined;
 
-            if (matchedFields.length > 0) {
-              results.push({
-                id: user.id,
-                name: user.name,
-                company: user.company ?? "",
-                position: user.position ?? "",
-                profileImage: user.profileImage,
-                keywords: user.keywords,
-                degree: degree,
-                path: path,
-                memoMatch: memoMatchContent,
-                matchedFields,
-              });
+              // 매칭된 필드 추적
+              const matchedFields: string[] = [];
+              if (nameMatch) matchedFields.push('이름');
+              if (companyMatch) matchedFields.push('회사');
+              if (positionMatch) matchedFields.push('직책');
+              if (keywordMatch) matchedFields.push('키워드');
+              if (bioMatch) matchedFields.push('자기소개');
+              if (categoryMatch) matchedFields.push('분야');
+              if (industryMatch) matchedFields.push('업종');
+              if (memoMatch) matchedFields.push('메모');
+
+              if (matchedFields.length > 0) {
+                results.push({
+                  id: user.id,
+                  name: user.name,
+                  company: user.company ?? "",
+                  position: user.position ?? "",
+                  profileImage: user.profileImage,
+                  keywords: user.keywords,
+                  degree: degree,
+                  path: path,
+                  memoMatch: memoMatchContent,
+                  matchedFields,
+                });
+              }
             }
           }
-        }
 
-        // 연결된 사람들 큐에 추가 (깊이 제한)
-        if (degree < MAX_BFS_DEGREE) {
-          const connections = demoConnections[userId] || [];
-          for (const connId of connections) {
-            if (!visited.has(connId)) {
-              queue.push({
-                userId: connId,
-                path: [...path, connId],
-                degree: degree + 1
-              });
+          // 연결된 사람들 큐에 추가 (깊이 제한)
+          if (degree < MAX_BFS_DEGREE) {
+            const connections = demoConnections[userId] || [];
+            for (const connId of connections) {
+              if (!visited.has(connId)) {
+                queue.push({
+                  userId: connId,
+                  path: [...path, connId],
+                  degree: degree + 1
+                });
+              }
             }
           }
         }
       }
 
-      // 네트워크 그래프에 표시된 노드 중 BFS로 탐색되지 않은 노드도 검색
+      // 네트워크 그래프에 표시된 노드 중 아직 탐색되지 않은 노드도 검색
+      // (실제 사용자의 경우 Firestore에서 로드된 실제 인맥 노드만 검색)
       for (const node of nodes) {
         if (visited.has(node.id) || node.id === currentUserId) continue;
         visited.add(node.id);
@@ -203,8 +209,8 @@ export default function SearchBar() {
       }
 
       // 전체 공개 설정한 사용자 중 키워드 매칭되는 사람 추가 검색
-      // (아직 결과에 없고, allowProfileDiscovery가 true인 경우)
-      for (const user of demoUsers) {
+      // (데모 사용자인 경우에만 - 실제 사용자는 데모 데이터를 검색하지 않음)
+      for (const user of (isRealUser ? [] : demoUsers)) {
         if (visited.has(user.id) || user.id === currentUserId) continue;
 
         // 전체 공개 설정 확인
@@ -286,26 +292,29 @@ export default function SearchBar() {
     setAiResponse(null);
     setAiError(null);
 
-    // demoUsers + nodes를 합쳐서 AI에게 전달 (중복 제거)
+    // nodes를 AI에게 전달 (실제 사용자는 실제 인맥 노드만, 데모 사용자는 데모 데이터도 포함)
+    const isRealUserForAi = !currentUserId.startsWith('demo_');
     const memberMap = new Map<string, { id: string; name: string; company: string; position: string; bio: string; keywords: string[]; category: string }>();
 
-    // demoUsers 추가
-    for (const u of demoUsers) {
-      memberMap.set(u.id, {
-        id: u.id,
-        name: u.name,
-        company: u.company || '',
-        position: u.position || '',
-        bio: u.bio || '',
-        keywords: u.keywords,
-        category: u.category || '',
-      });
+    // 데모 사용자인 경우에만 demoUsers 추가
+    if (!isRealUserForAi) {
+      for (const u of demoUsers) {
+        memberMap.set(u.id, {
+          id: u.id,
+          name: u.name,
+          company: u.company || '',
+          position: u.position || '',
+          bio: u.bio || '',
+          keywords: u.keywords,
+          category: u.category || '',
+        });
+      }
     }
 
-    // nodes에 있지만 demoUsers에 없는 인물도 추가
+    // nodes에 있는 실제 인맥 추가 (실제 사용자는 이것만 사용)
     for (const node of nodes) {
       if (!memberMap.has(node.id)) {
-        const demoUser = demoUsers.find(u => u.id === node.id);
+        const demoUser = !isRealUserForAi ? demoUsers.find(u => u.id === node.id) : undefined;
         memberMap.set(node.id, {
           id: node.id,
           name: node.name,

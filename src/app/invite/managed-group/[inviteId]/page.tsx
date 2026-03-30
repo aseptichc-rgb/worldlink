@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Users, UserPlus, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { getManagedGroupInvite, getManagedGroup, getUser, acceptManagedGroupInvite } from '@/lib/firebase-services';
+import { getManagedGroupInvite, getManagedGroup, getUser, acceptManagedGroupInvite, onAuthChange } from '@/lib/firebase-services';
 import { ManagedGroup, ManagedGroupInvite, User } from '@/types';
 
 export default function ManagedGroupInvitePage() {
@@ -13,7 +13,7 @@ export default function ManagedGroupInvitePage() {
   const router = useRouter();
   const inviteId = params.inviteId as string;
 
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading: authLoading, setUser, setLoading } = useAuthStore();
 
   const [invite, setInvite] = useState<ManagedGroupInvite | null>(null);
   const [group, setGroup] = useState<ManagedGroup | null>(null);
@@ -23,6 +23,25 @@ export default function ManagedGroupInvitePage() {
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [alreadyMember, setAlreadyMember] = useState(false);
+
+  // Firebase 인증 상태 초기화 (authLoading stuck 방지)
+  useEffect(() => {
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) {
+      setLoading(false);
+      return;
+    }
+    const unsubscribe = onAuthChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        const userData = await getUser(firebaseUser.uid);
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [setUser, setLoading]);
 
   useEffect(() => {
     const loadInviteData = async () => {

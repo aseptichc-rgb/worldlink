@@ -47,7 +47,7 @@ export default function ManagedGroupDetailPage() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [autoConnect, setAutoConnect] = useState(true);
   const [allowMemberInvite, setAllowMemberInvite] = useState(false);
-  const [viewMode, setViewMode] = useState<string>('network');
+  const [viewMode, setViewMode] = useState<string>('list');
   const [roleSheetMember, setRoleSheetMember] = useState<MemberInfo | null>(null);
   const [membersWithUser, setMembersWithUser] = useState<(ManagedGroupMember & { user?: User })[]>([]);
   const [memberConnections, setMemberConnections] = useState<MemberConnection[]>([]);
@@ -215,7 +215,7 @@ export default function ManagedGroupDetailPage() {
               members={membersWithUser}
               variant="icon"
             />
-            {isOwner && (
+            {isOwner && viewMode !== 'network' && (
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className="p-2 text-[#8B949E] hover:text-white"
@@ -533,9 +533,12 @@ export default function ManagedGroupDetailPage() {
 
             {/* Tip for role editors */}
             {canEditRoles && viewMode === 'list' && (
-              <p className="text-[10px] text-[#484F58] mb-3">
-                멤버를 탭하면 프로필로 이동합니다. 연필 아이콘으로 역할을 편집할 수 있습니다.
-              </p>
+              <div className="flex items-center gap-1.5 mb-3 px-1">
+                <Edit3 size={12} className="text-[#58A6FF] shrink-0" />
+                <p className="text-xs text-[#8B949E]">
+                  오른쪽 연필 아이콘을 눌러 임원 역할을 설정하세요
+                </p>
+              </div>
             )}
 
             <ManagedGroupMemberList

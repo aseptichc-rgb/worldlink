@@ -65,22 +65,26 @@ export default function NewsAlertButton({
 
   if (variant === 'icon') {
     return (
-      <button
+      <motion.button
         onClick={openDrawer}
-        className="relative p-2 text-[#8B949E] hover:text-[#58A6FF] transition-colors"
-        title="뉴스 알림"
+        whileTap={{ scale: 0.92 }}
+        className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#58A6FF]/15 border border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/25 hover:border-[#58A6FF]/60 transition-all"
+        title="멤버 뉴스 알림"
       >
-        <Newspaper size={20} />
-        {newNewsCount > 0 && (
+        <Newspaper size={15} strokeWidth={2} />
+        <span className="text-xs font-semibold">새소식</span>
+        {newNewsCount > 0 ? (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#F85149] text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+            className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[#F85149] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg shadow-[#F85149]/40"
           >
             {newNewsCount > 9 ? '9+' : newNewsCount}
           </motion.span>
+        ) : (
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#3FB950] rounded-full border border-[#0D1117]" />
         )}
-      </button>
+      </motion.button>
     );
   }
 
