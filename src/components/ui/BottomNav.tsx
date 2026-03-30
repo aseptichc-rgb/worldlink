@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, User, Network, X, UserPlus, Users, Share2, Mail, Copy, Check, MessageCircle, Link2, UserRound, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { useGroupStore } from '@/store/groupStore';
+import { useManagedGroupStore } from '@/store/managedGroupStore';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { Avatar } from '@/components/ui';
 import { createInvitation, generateInviteLink } from '@/lib/firebase-services';
@@ -34,7 +34,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-  const { groups, getNodesInGroup, openGroupInviteModal } = useGroupStore();
+  const { groups: managedGroups } = useManagedGroupStore();
   const { totalGroupUnread } = useNewsAlertStore();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [targetPath, setTargetPath] = useState('');
@@ -146,8 +146,12 @@ export default function BottomNav() {
   };
 
   const handleSelectGroup = (groupId: string) => {
-    resetInviteModal();
-    openGroupInviteModal(groupId);
+    const group = managedGroups.find(g => g.id === groupId);
+    if (group) {
+      resetInviteModal();
+      useManagedGroupStore.getState().setSelectedGroup(group);
+      useManagedGroupStore.getState().openInviteModal();
+    }
   };
 
   const handleAuth = () => {
@@ -509,14 +513,14 @@ export default function BottomNav() {
                     </div>
                   </div>
 
-                  {groups.length === 0 ? (
+                  {managedGroups.length === 0 ? (
                     <div className="text-center py-8">
                       <Users size={32} className="text-[#484F58] mx-auto mb-3" />
                       <p className="text-[#8B949E] mb-4">아직 모임이 없습니다</p>
                       <button
                         onClick={() => {
                           resetInviteModal();
-                          router.push('/network');
+                          router.push('/managed-groups');
                         }}
                         className="px-4 py-2 bg-[#58A6FF] text-white text-sm font-medium rounded-lg"
                       >
@@ -525,9 +529,7 @@ export default function BottomNav() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {groups.map((group) => {
-                        const memberCount = getNodesInGroup(group.id).length;
-                        return (
+                      {managedGroups.map((group) => (
                           <button
                             key={group.id}
                             onClick={() => handleSelectGroup(group.id)}
@@ -542,13 +544,12 @@ export default function BottomNav() {
                             <div className="flex-1 text-left">
                               <p className="text-white font-medium">{group.name}</p>
                               <p className="text-xs text-[#8B949E]">
-                                {memberCount}명의 멤버
+                                {group.memberUserIds?.length || group.members?.length || 0}명의 멤버
                               </p>
                             </div>
                             <Share2 size={18} className="text-[#58A6FF]" />
                           </button>
-                        );
-                      })}
+                      ))}
                     </div>
                   )}
                 </>

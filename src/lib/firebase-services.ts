@@ -702,63 +702,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     }
   }
 
-  // Get 2nd degree connections (skip if too many 1st-degree to avoid slow loading)
-  const secondDegreeConnectionsByFirst = firstDegreeIds.size <= 20
-    ? await Promise.all(
-        [...firstDegreeIds].map(async (firstDegreeId) => ({
-          firstDegreeId,
-          connections: await getDirectConnections(firstDegreeId),
-        }))
-      )
-    : [];
-
-  // Collect 2nd degree user IDs to fetch
-  const secondDegreeToFetch = new Set<string>();
-  const secondDegreeEdges: { source: string; target: string }[] = [];
-
-  for (const { firstDegreeId, connections: conns } of secondDegreeConnectionsByFirst) {
-    for (const conn of conns) {
-      if (conn.method === 'managed_group') continue;
-      const secondDegreeUserId = conn.fromUserId === firstDegreeId ? conn.toUserId : conn.fromUserId;
-      // 데모 사용자 제외
-      if (secondDegreeUserId.startsWith('demo_')) continue;
-      if (secondDegreeUserId === userId || firstDegreeIds.has(secondDegreeUserId)) continue;
-
-      secondDegreeEdges.push({ source: firstDegreeId, target: secondDegreeUserId });
-      if (!userMap.has(secondDegreeUserId)) {
-        secondDegreeToFetch.add(secondDegreeUserId);
-      }
-    }
-  }
-
-  // Parallel fetch all 2nd degree users
-  const secondDegreeUsers = await Promise.all(
-    [...secondDegreeToFetch].map(id => getUser(id))
-  );
-
-  for (const user of secondDegreeUsers) {
-    if (user) {
-      userMap.set(user.id, user);
-      nodes.push({
-        id: user.id,
-        name: user.name,
-        profileImage: user.profileImage,
-        company: user.company,
-        position: user.position,
-        keywords: user.keywords,
-        degree: 2,
-        connectionCount: 0,
-        category: user.category || NAME_CATEGORY_MAP[user.name],
-      });
-    }
-  }
-
-  // Add all 2nd degree edges (only for users that were successfully fetched)
-  for (const { source, target } of secondDegreeEdges) {
-    if (userMap.has(target)) {
-      edges.push({ source, target, degree: 2 });
-    }
-  }
+  // 2차 인맥은 표시하지 않음 - 직접 연결된 1차 인맥만 표시
 
   // 이름 기반 중복 제거 - 같은 이름의 노드가 여러 개 있으면 가장 가까운 것(degree가 낮은 것)만 유지
   const nameToNode = new Map<string, NetworkNode>();

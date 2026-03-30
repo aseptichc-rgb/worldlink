@@ -248,7 +248,19 @@ function clearStaleNewsCache() {
       (n) => n.link && n.link.includes('bing.com/news/apiclick.aspx'),
     );
     if (hasBingRedirect) {
-      localStorage.removeItem(`${STORAGE_KEY}_groupNews`);
+      // Bing 리다이렉트 URL이 있는 뉴스만 제거하고 나머지는 유지
+      const cleanedNews = allNews.filter(
+        (n) => !n.link || !n.link.includes('bing.com/news/apiclick.aspx'),
+      );
+      const cleanedGroupNewsItems: Record<string, NewsItem[]> = {};
+      for (const [gid, items] of Object.entries((data.groupNewsItems || {}) as Record<string, NewsItem[]>)) {
+        cleanedGroupNewsItems[gid] = items.filter(
+          (n) => !n.link || !n.link.includes('bing.com/news/apiclick.aspx'),
+        );
+      }
+      data.allGroupNews = cleanedNews;
+      data.groupNewsItems = cleanedGroupNewsItems;
+      localStorage.setItem(`${STORAGE_KEY}_groupNews`, JSON.stringify(data));
     }
   } catch {
     // ignore
@@ -301,13 +313,23 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       }
 
       const readIds = get().readNewsIds;
-      const unreadCount = newNews.filter(n => !readIds.has(n.id)).length;
+
+      // 최신 검색 결과의 ID 집합
+      const latestIds = new Set(newNews.map(n => n.id));
+
+      // 이전 뉴스 중 최신 검색에 없는 것만 유지 (중복 제거)
+      const previousNews = get().news.filter(n => !latestIds.has(n.id));
+
+      // 병합: 최신 뉴스 먼저, 그 다음 이전 뉴스
+      const mergedNews = [...newNews, ...previousNews];
+
+      const unreadCount = mergedNews.filter(n => !readIds.has(n.id)).length;
 
       const now = new Date().toISOString();
       saveLastCheckedAt(now);
 
       set({
-        news: newNews,
+        news: mergedNews,
         newNewsCount: unreadCount,
         lastCheckedAt: now,
         isLoading: false,
