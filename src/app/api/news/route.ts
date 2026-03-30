@@ -34,6 +34,27 @@ function generateNewsId(link: string, pubDate: string): string {
   return Buffer.from(input).toString('base64').slice(-48);
 }
 
+function extractRealUrl(bingUrl: string): string {
+  // Bing RSS returns URLs like: https://www.bing.com/news/apiclick.aspx?...&url=https%3a%2f%2f...
+  // Extract the actual article URL from the 'url' parameter
+  if (bingUrl.includes('bing.com/news/apiclick')) {
+    try {
+      const urlObj = new URL(bingUrl);
+      const realUrl = urlObj.searchParams.get('url');
+      if (realUrl) {
+        return decodeURIComponent(realUrl);
+      }
+    } catch {
+      // If URL parsing fails, try regex extraction
+      const match = bingUrl.match(/[?&]url=([^&]+)/);
+      if (match) {
+        return decodeURIComponent(match[1]);
+      }
+    }
+  }
+  return bingUrl;
+}
+
 function parseBingNewsRSS(xml: string, query: string, memberName?: string, memberCompany?: string): NewsItem[] {
   const items: NewsItem[] = [];
   const itemRegex = /<item>([\s\S]*?)<\/item>/g;
@@ -49,7 +70,8 @@ function parseBingNewsRSS(xml: string, query: string, memberName?: string, membe
 
     if (titleMatch && linkMatch) {
       const title = stripHtml(titleMatch[1]);
-      const link = linkMatch[1].trim();
+      const rawLink = linkMatch[1].trim();
+      const link = extractRealUrl(rawLink);
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : new Date().toISOString();
 
       items.push({
