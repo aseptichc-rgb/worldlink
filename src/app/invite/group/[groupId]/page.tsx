@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Users, UserPlus, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
-import { getUser, acceptGroupInvite, createAutoConnection } from '@/lib/firebase-services';
-import { Avatar } from '@/components/ui';
+import { getUser, createAutoConnection } from '@/lib/firebase-services';
 import { User } from '@/types';
 
-export default function GroupInvitePage() {
+function GroupInviteContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -238,5 +237,19 @@ export default function GroupInvitePage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function GroupInvitePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
+          <Loader2 size={32} className="text-[#58A6FF] animate-spin" />
+        </div>
+      }
+    >
+      <GroupInviteContent />
+    </Suspense>
   );
 }

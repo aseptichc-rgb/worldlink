@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Share2, Link2, Loader2, Mail, MessageCircle, Search, Users, UserPlus } from 'lucide-react';
+import { X, Copy, Check, Share2, Link2, Loader2, Mail, MessageCircle, Search, Users, UserPlus, Lock } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useManagedGroupStore } from '@/store/managedGroupStore';
 import { loadKakaoSDK, sendKakaoInvite } from '@/lib/kakao-sdk';
@@ -14,6 +14,14 @@ type TabType = 'connections' | 'link';
 export default function ManagedGroupInviteModal() {
   const { user } = useAuthStore();
   const { isInviteModalOpen, closeInviteModal, selectedGroup, inviteLink, generateInviteLink, addMembersFromConnections } = useManagedGroupStore();
+
+  // 데모 모드 체크
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsDemoMode(localStorage.getItem('nodded_demo_mode') === 'true');
+    }
+  }, [isInviteModalOpen]);
 
   // 탭 상태
   const [activeTab, setActiveTab] = useState<TabType>('connections');
@@ -264,7 +272,25 @@ export default function ManagedGroupInviteModal() {
 
             {/* Tab Content */}
             <div className="flex-1 overflow-hidden flex flex-col">
-              {activeTab === 'connections' ? (
+              {isDemoMode ? (
+                /* 데모 모드 제한 메시지 */
+                <div className="flex-1 flex flex-col items-center justify-center px-5 py-12">
+                  <div className="w-16 h-16 rounded-full bg-[#F85149]/10 flex items-center justify-center mb-4">
+                    <Lock size={28} className="text-[#F85149]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-[#F0F6FC] mb-2">정식 계정에서만 가능합니다</h3>
+                  <p className="text-sm text-[#8B949E] text-center mb-6">
+                    데모 계정에서는 멤버 초대 기능을 사용할 수 없습니다.<br />
+                    정식 계정으로 가입하여 모든 기능을 이용해 보세요.
+                  </p>
+                  <button
+                    onClick={handleClose}
+                    className="px-6 py-3 bg-[#21262D] text-[#F0F6FC] font-medium rounded-xl border border-[#30363D]"
+                  >
+                    확인
+                  </button>
+                </div>
+              ) : activeTab === 'connections' ? (
                 /* 인맥에서 초대 탭 */
                 <>
                   {/* Search */}
