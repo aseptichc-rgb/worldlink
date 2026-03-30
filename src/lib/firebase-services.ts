@@ -702,13 +702,15 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     }
   }
 
-  // Get 2nd degree connections (parallel fetch of all 1st-degree connections)
-  const secondDegreeConnectionsByFirst = await Promise.all(
-    [...firstDegreeIds].map(async (firstDegreeId) => ({
-      firstDegreeId,
-      connections: await getDirectConnections(firstDegreeId),
-    }))
-  );
+  // Get 2nd degree connections (skip if too many 1st-degree to avoid slow loading)
+  const secondDegreeConnectionsByFirst = firstDegreeIds.size <= 20
+    ? await Promise.all(
+        [...firstDegreeIds].map(async (firstDegreeId) => ({
+          firstDegreeId,
+          connections: await getDirectConnections(firstDegreeId),
+        }))
+      )
+    : [];
 
   // Collect 2nd degree user IDs to fetch
   const secondDegreeToFetch = new Set<string>();

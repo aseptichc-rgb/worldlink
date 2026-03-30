@@ -565,7 +565,7 @@ export default function ProfileSheet() {
                       <div className="info-card info-card-highlight">
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                           {connectionPath.map((user, idx) => (
-                            <div key={user.id || idx} className="flex items-center gap-2 flex-shrink-0">
+                            <div key={`path-${user.id || ''}-${idx}`} className="flex items-center gap-2 flex-shrink-0">
                               <div className="flex flex-col items-center">
                                 <div className="relative">
                                   <Avatar
