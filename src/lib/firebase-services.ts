@@ -665,9 +665,10 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   });
   userMap.set(currentUser.id, currentUser);
 
-  // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외
+  // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외, 모임 자동연결 제외
   const firstDegreeIds = new Set<string>();
   directConnections.forEach(conn => {
+    if (conn.method === 'managed_group') return;
     const connectedId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
     if (!connectedId.startsWith('demo_')) {
       firstDegreeIds.add(connectedId);
@@ -715,6 +716,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
 
   for (const { firstDegreeId, connections: conns } of secondDegreeConnectionsByFirst) {
     for (const conn of conns) {
+      if (conn.method === 'managed_group') continue;
       const secondDegreeUserId = conn.fromUserId === firstDegreeId ? conn.toUserId : conn.fromUserId;
       // 데모 사용자 제외
       if (secondDegreeUserId.startsWith('demo_')) continue;
@@ -862,6 +864,7 @@ export const findConnectionPath = async (fromUserId: string, toUserId: string): 
 
     const connections = await getDirectConnections(userId);
     for (const conn of connections) {
+      if (conn.method === 'managed_group') continue;
       const nextUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
       if (!visited.has(nextUserId)) {
         queue.push({ userId: nextUserId, path: [...path, nextUserId] });
