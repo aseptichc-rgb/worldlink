@@ -633,14 +633,29 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   console.log('[getNetworkGraph] userId:', userId);
   console.log('[getNetworkGraph] directConnections:', directConnections.length, directConnections);
 
-  // 실제 연결이 없으면 데모 데이터 사용
+  // 실제 연결이 없으면 빈 네트워크 반환 (데모 모드가 아닌 경우)
   if (directConnections.length === 0) {
-    // 실제 사용자를 데모 멤버에 매핑 시도
-    const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
-    if (demoId !== userId) {
-      return getDemoNetworkGraph(demoId, userData);
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) {
+      const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
+      if (demoId !== userId) {
+        return getDemoNetworkGraph(demoId, userData);
+      }
+      return getDemoNetworkGraph(userId, userData);
     }
-    return getDemoNetworkGraph(userId, userData);
+    // 실제 사용자인데 연결이 없으면 본인 노드만 반환
+    const centerNode: NetworkNode = {
+      id: userId,
+      name: userData?.name || '나',
+      profileImage: userData?.profileImage,
+      company: userData?.company,
+      position: userData?.position,
+      keywords: userData?.keywords || [],
+      degree: 0,
+      category: '',
+      connectionCount: 0,
+    };
+    return { nodes: [centerNode], edges: [] };
   }
 
   const nodes: NetworkNode[] = [];
@@ -665,10 +680,11 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   });
   userMap.set(currentUser.id, currentUser);
 
-  // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외, 모임 자동연결 제외
+  // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외, 직접 연결만 표시
+  const VISIBLE_METHODS = new Set(['invite', 'contact_sync', 'search']);
   const firstDegreeIds = new Set<string>();
   directConnections.forEach(conn => {
-    if (conn.method === 'managed_group') return;
+    if (!VISIBLE_METHODS.has(conn.method)) return;
     const connectedId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
     if (!connectedId.startsWith('demo_')) {
       firstDegreeIds.add(connectedId);
@@ -810,7 +826,7 @@ export const findConnectionPath = async (fromUserId: string, toUserId: string): 
 
     const connections = await getDirectConnections(userId);
     for (const conn of connections) {
-      if (conn.method === 'managed_group') continue;
+      if (!['invite', 'contact_sync', 'search'].includes(conn.method)) continue;
       const nextUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
       if (!visited.has(nextUserId)) {
         queue.push({ userId: nextUserId, path: [...path, nextUserId] });
@@ -1641,4 +1657,113 @@ export const getGroupMemberConnections = async (memberUserIds: string[]): Promis
   }
 
   return connections;
+};
+
+// 마이그레이션: 관리 모임 멤버 간 잘못된 'invite' 연결을 'managed_group'으로 수정
+export const migrateGroupConnectionMethods = async (): Promise<{ fixed: number; groups: string[] }> => {
+  const groupsRef = collection(db, 'managedGroups');
+  const groupsSnap = await getDocs(groupsRef);
+
+  let fixed = 0;
+  const fixedGroups: string[] = [];
+
+  for (const groupDoc of groupsSnap.docs) {
+    const group = parseManagedGroupDoc(groupDoc);
+    const memberIds = group.memberUserIds;
+    if (memberIds.length < 2) continue;
+
+    const memberSet = new Set(memberIds);
+    const connectionsRef = collection(db, 'connections');
+    let groupFixed = 0;
+
+    // 각 멤버의 연결을 확인 (양방향)
+    const alreadyFixed = new Set<string>();
+    for (const userId of memberIds) {
+      const sentQ = query(
+        connectionsRef,
+        where('fromUserId', '==', userId),
+        where('status', '==', 'accepted')
+      );
+      const receivedQ = query(
+        connectionsRef,
+        where('toUserId', '==', userId),
+        where('status', '==', 'accepted')
+      );
+      const [sentSnap, receivedSnap] = await Promise.all([
+        getDocs(sentQ),
+        getDocs(receivedQ),
+      ]);
+
+      const batch = writeBatch(db);
+      let batchCount = 0;
+
+      for (const connDoc of [...sentSnap.docs, ...receivedSnap.docs]) {
+        if (alreadyFixed.has(connDoc.id)) continue;
+        const conn = connDoc.data();
+        const otherUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
+        if (conn.method === 'invite' && memberSet.has(otherUserId)) {
+          batch.update(connDoc.ref, { method: 'managed_group' });
+          batchCount++;
+          alreadyFixed.add(connDoc.id);
+        }
+      }
+
+      if (batchCount > 0) {
+        await batch.commit();
+        groupFixed += batchCount;
+      }
+    }
+
+    if (groupFixed > 0) {
+      fixed += groupFixed;
+      fixedGroups.push(`${group.name} (${groupFixed}건)`);
+    }
+  }
+
+  return { fixed, groups: fixedGroups };
+};
+
+// 이메일로 사용자 조회
+export const getUserByEmail = async (email: string): Promise<User | null> => {
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('email', '==', email));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return snap.docs[0].data() as User;
+};
+
+// 디버그: 특정 사용자의 네트워크에 보이는 연결 분석
+export const debugUserConnections = async (userId: string): Promise<{
+  total: number;
+  byMethod: Record<string, number>;
+  visibleInNetwork: { id: string; toUserId: string; fromUserId: string; method: string }[];
+  managedGroupMembers: { groupName: string; memberIds: string[] }[];
+}> => {
+  const connections = await getDirectConnections(userId);
+
+  const byMethod: Record<string, number> = {};
+  const visibleInNetwork: { id: string; toUserId: string; fromUserId: string; method: string }[] = [];
+
+  for (const conn of connections) {
+    byMethod[conn.method] = (byMethod[conn.method] || 0) + 1;
+    if (conn.method !== 'managed_group') {
+      visibleInNetwork.push({
+        id: conn.id,
+        fromUserId: conn.fromUserId,
+        toUserId: conn.toUserId,
+        method: conn.method,
+      });
+    }
+  }
+
+  // 사용자가 속한 관리 모임 정보
+  const groupsRef = collection(db, 'managedGroups');
+  const memberQ = query(groupsRef, where('memberUserIds', 'array-contains', userId));
+  const groupsSnap = await getDocs(memberQ);
+  const managedGroupMembers = groupsSnap.docs.map(d => {
+    const data = d.data();
+    return { groupName: data.name, memberIds: data.memberUserIds || [] };
+  });
+
+  return { total: connections.length, byMethod, visibleInNetwork, managedGroupMembers };
 };

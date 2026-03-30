@@ -356,6 +356,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
   searchNewsForAllGroups: async (groups, timeRange = '1d') => {
     if (groups.length === 0) {
       set({ groupNewsMap: {}, groupNewsItems: {}, allGroupNews: [], totalGroupUnread: 0 });
+      saveCachedGroupNews({}, {}, [], []);
       return;
     }
 

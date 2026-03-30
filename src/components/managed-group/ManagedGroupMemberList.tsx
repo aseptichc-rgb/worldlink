@@ -16,6 +16,7 @@ interface ManagedGroupMemberListProps {
   ownerId: string;
   currentUserId: string;
   currentUserRole?: string;
+  membersWithNews?: Set<string>;
   onRemoveMember: (userId: string) => void;
   onMemberTap?: (member: MemberInfo) => void;
   onMemberClick?: (member: MemberInfo) => void;
@@ -34,6 +35,7 @@ export default function ManagedGroupMemberList({
   ownerId,
   currentUserId,
   currentUserRole,
+  membersWithNews,
   onRemoveMember,
   onMemberTap,
   onMemberClick,
@@ -132,21 +134,26 @@ export default function ManagedGroupMemberList({
             }`}
           >
             {/* Avatar */}
-            {info.user?.profileImage ? (
-              <img
-                src={info.user.profileImage}
-                alt={name}
-                className="w-10 h-10 rounded-full object-cover shrink-0"
-                style={info.role === 'president' ? { border: '2px solid #FFD700' } : undefined}
-              />
-            ) : (
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-                style={{ backgroundColor: avatarColor }}
-              >
-                {initials}
-              </div>
-            )}
+            <div className="relative shrink-0">
+              {info.user?.profileImage ? (
+                <img
+                  src={info.user.profileImage}
+                  alt={name}
+                  className="w-10 h-10 rounded-full object-cover"
+                  style={info.role === 'president' ? { border: '2px solid #FFD700' } : undefined}
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ backgroundColor: avatarColor }}
+                >
+                  {initials}
+                </div>
+              )}
+              {membersWithNews?.has(name) && (
+                <span className="absolute -top-0.5 -left-0.5 w-3 h-3 rounded-full bg-[#FF3B30] border-2 border-[#161B22]" />
+              )}
+            </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">

@@ -51,9 +51,10 @@ export default function NetworkPage() {
     }
   }, [user, loadFromFirebase]);
 
-  // 데모 인터랙션 데이터 초기화
+  // 데모 인터랙션 데이터 초기화 (데모 모드에서만)
   useEffect(() => {
-    if (user) {
+    const isDemo = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (user && isDemo) {
       const demoId = getDemoCompatibleId(user);
       const connIds = demoConnections[demoId] || demoConnections[user.id] || [];
       if (connIds.length > 0) {
@@ -195,9 +196,10 @@ export default function NetworkPage() {
     loadNetworkData();
   }, [user, centerUserId, centerUserOriginalDegree, setNodes, setEdges, setSelectedNode, setNetworkLoading]);
 
-  // Load demo messages
+  // Load demo messages (데모 모드에서만)
   useEffect(() => {
-    if (user && messages.length === 0) {
+    const isDemo = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (user && messages.length === 0 && isDemo) {
       const demoId = getDemoCompatibleId(user);
       ensureUserInDemoNetwork(user.id);
       const currentUserId = demoId !== user.id ? demoId : user.id;
@@ -321,7 +323,7 @@ export default function NetworkPage() {
 
 
       {/* Network Stats + Relationship Reminders */}
-      <div className="fixed bottom-4 left-4 z-20 flex flex-col gap-2">
+      <div className="fixed bottom-20 left-4 z-20 flex flex-col gap-2">
         <RelationshipReminders />
         <div className="glass-light rounded-xl px-4 py-3 flex items-center gap-4">
           <div className="text-center min-w-[48px]">

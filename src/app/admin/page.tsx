@@ -24,6 +24,7 @@ import {
   getDailySignUpTrend,
   getWeeklySignUpTrend,
 } from '@/lib/admin-services';
+import { onAuthChange, getUser } from '@/lib/firebase-services';
 
 const CATEGORY_COLORS: Record<string, string> = {
   '의료기관': '#58A6FF',
@@ -75,6 +76,21 @@ export default function AdminPage() {
     setLoading, setSearchQuery, setTrendRange,
   } = useAdminStore();
 
+  const { setUser } = useAuthStore();
+
+  // Auth state listener
+  useEffect(() => {
+    const unsubscribe = onAuthChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        const userData = await getUser(firebaseUser.uid);
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, [setUser]);
+
   const isAdmin = isAuthenticated && user?.email === ADMIN_EMAIL;
 
   const loadData = useCallback(async () => {
@@ -101,6 +117,43 @@ export default function AdminPage() {
       loadData();
     }
   }, [isAdmin, loadData]);
+
+  // Computed data (hooks must be called before any early returns)
+  const acceptanceRate = useMemo(() => {
+    if (connectionStats.total === 0) return 0;
+    return Math.round((connectionStats.accepted / connectionStats.total) * 100);
+  }, [connectionStats]);
+
+  const keywords = useMemo(() => getKeywordDistribution(users), [users]);
+  const categories = useMemo(() => getCategoryDistribution(users), [users]);
+
+  const trendData = useMemo(() => {
+    if (trendRange === 'daily') {
+      return getDailySignUpTrend(users, 30).map(d => ({
+        label: d.date.split('-').slice(1).join('/'),
+        value: d.count,
+      }));
+    }
+    return getWeeklySignUpTrend(users, 12).map(d => ({
+      label: d.week,
+      value: d.count,
+    }));
+  }, [users, trendRange]);
+
+  const recentUsers = useMemo(() => users.slice(0, 10), [users]);
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase();
+    return users.filter(u =>
+      u.name.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.company?.toLowerCase().includes(q) ||
+      u.position?.toLowerCase().includes(q) ||
+      u.category?.toLowerCase().includes(q) ||
+      u.keywords?.some(k => k.toLowerCase().includes(q))
+    );
+  }, [users, searchQuery]);
 
   // 인증 로딩 중
   if (authLoading) {
@@ -145,43 +198,6 @@ export default function AdminPage() {
       </div>
     );
   }
-
-  // Computed data
-  const acceptanceRate = useMemo(() => {
-    if (connectionStats.total === 0) return 0;
-    return Math.round((connectionStats.accepted / connectionStats.total) * 100);
-  }, [connectionStats]);
-
-  const keywords = useMemo(() => getKeywordDistribution(users), [users]);
-  const categories = useMemo(() => getCategoryDistribution(users), [users]);
-
-  const trendData = useMemo(() => {
-    if (trendRange === 'daily') {
-      return getDailySignUpTrend(users, 30).map(d => ({
-        label: d.date.split('-').slice(1).join('/'),
-        value: d.count,
-      }));
-    }
-    return getWeeklySignUpTrend(users, 12).map(d => ({
-      label: d.week,
-      value: d.count,
-    }));
-  }, [users, trendRange]);
-
-  const recentUsers = useMemo(() => users.slice(0, 10), [users]);
-
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-    const q = searchQuery.toLowerCase();
-    return users.filter(u =>
-      u.name.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q) ||
-      u.company?.toLowerCase().includes(q) ||
-      u.position?.toLowerCase().includes(q) ||
-      u.category?.toLowerCase().includes(q) ||
-      u.keywords?.some(k => k.toLowerCase().includes(q))
-    );
-  }, [users, searchQuery]);
 
   if (isLoading) {
     return (

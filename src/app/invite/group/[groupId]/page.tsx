@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Users, UserPlus, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
-import { getUser, createAutoConnection } from '@/lib/firebase-services';
+import { getUser, addMemberToManagedGroup } from '@/lib/firebase-services';
 import { User } from '@/types';
 
 function GroupInviteContent() {
@@ -46,17 +46,8 @@ function GroupInviteContent() {
       // 1. 그룹에 새 멤버 추가 (로컬 상태)
       addNodeToGroup(user.id, groupId);
 
-      // 2. 초대한 사람과 인맥 연결
-      if (fromUserId && fromUserId !== user.id) {
-        await createAutoConnection(user.id, fromUserId);
-      }
-
-      // 3. 기존 그룹 멤버들과 인맥 연결
-      for (const memberId of memberNodeIds) {
-        if (memberId !== user.id && memberId !== fromUserId) {
-          await createAutoConnection(user.id, memberId);
-        }
-      }
+      // 2. 관리 모임에 멤버로 추가 (초대자만 invite, 나머지는 managed_group으로 자동 연결)
+      await addMemberToManagedGroup(groupId, user.id, 'member', fromUserId || undefined);
 
       setAccepted(true);
 

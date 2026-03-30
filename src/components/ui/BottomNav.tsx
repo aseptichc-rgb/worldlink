@@ -192,7 +192,7 @@ export default function BottomNav() {
                       strokeWidth={isActive ? 2.5 : 2}
                       className={`transition-colors duration-200 ${isActive ? 'text-[#58A6FF]' : 'text-[#6B7280]'}`}
                     />
-                    {item.path === '/managed-groups' && totalGroupUnread > 0 && (
+                    {item.path === '/managed-groups' && totalGroupUnread > 0 && managedGroups.length > 0 && (
                       <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-[#F85149] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                         {totalGroupUnread > 99 ? '99+' : totalGroupUnread}
                       </span>

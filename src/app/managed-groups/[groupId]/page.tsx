@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Settings, UserPlus, Edit3, Trash2, LogOut, Loader2, Users, X, Check, List, Share2 } from 'lucide-react';
@@ -14,6 +14,7 @@ import MemberRoleSheet from '@/components/managed-group/MemberRoleSheet';
 import GroupNetworkGraph from '@/components/managed-group/GroupNetworkGraph';
 import BottomNav from '@/components/ui/BottomNav';
 import { NewsAlertButton, NewsAlertDrawer } from '@/components/news-alert';
+import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { getUser, getGroupMemberConnections, MemberConnection } from '@/lib/firebase-services';
 import { ManagedGroupMember, User } from '@/types';
 import { demoUsers } from '@/lib/demo-data';
@@ -128,6 +129,19 @@ export default function ManagedGroupDetailPage() {
       loadConnections();
     }
   }, [selectedGroup?.memberUserIds, viewMode]);
+
+  const { groupNewsItems, readNewsIds } = useNewsAlertStore();
+
+  const membersWithNews = useMemo(() => {
+    const newsItems = groupNewsItems[groupId] || [];
+    const set = new Set<string>();
+    for (const item of newsItems) {
+      if (item.memberName && !readNewsIds.has(item.id)) {
+        set.add(item.memberName);
+      }
+    }
+    return set;
+  }, [groupNewsItems, groupId, readNewsIds]);
 
   if (authLoading || isLoading || !selectedGroup) {
     return (
@@ -546,6 +560,7 @@ export default function ManagedGroupDetailPage() {
               ownerId={selectedGroup.ownerId}
               currentUserId={user!.id}
               currentUserRole={currentUserMember?.role}
+              membersWithNews={membersWithNews}
               onRemoveMember={handleRemoveMember}
               onMemberClick={handleMemberClick}
               onRoleEdit={canEditRoles ? handleMemberTap : undefined}
