@@ -81,7 +81,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
       displaySettings: {
         nameDisplay: 'partial',
         companyDisplay: 'industry',
-        positionDisplay: 'level',
+        positionDisplay: 'full',
       },
     },
   });
@@ -149,9 +149,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
     if (!profile.company.trim()) {
       newErrors.company = '소속을 입력해주세요';
     }
-    if (!profile.position.trim()) {
-      newErrors.position = '직함을 입력해주세요';
-    }
+
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -605,22 +603,18 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                       <h4 className="text-white font-medium text-base">직책 표시</h4>
                     </div>
                     <div className="space-y-3">
-                      {!profile.positionLevel && (
-                        <select
-                          value={profile.positionLevel || ''}
-                          onChange={(e) => setProfile({ ...profile, positionLevel: e.target.value as ProfileData['positionLevel'] })}
-                          className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#58A6FF] mb-3"
-                        >
-                          <option value="">직급 수준 선택</option>
-                          {positionLevelOptions.map((level) => (
-                            <option key={level.value} value={level.value}>{level.label}</option>
-                          ))}
-                        </select>
-                      )}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          value={profile.position}
+                          onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                          placeholder="직책 입력 (선택사항) — 예: CEO, PM, CFO, 최고기술책임자"
+                          className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#58A6FF] placeholder-[#484F58]"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
                         {[
-                          { value: 'level', label: '직급 수준', example: positionLevelOptions.find(l => l.value === profile.positionLevel)?.label?.split('/')[0] || '실무자급' },
-                          { value: 'full', label: '전체 공개', example: profile.position || '직책' },
+                          { value: 'full', label: '공개', example: profile.position || '직책' },
                           { value: 'hidden', label: '비공개', example: '표시 안 함' },
                         ].map((option) => (
                           <button
@@ -680,11 +674,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                               }
                             }
                             if (profile.privacyConsent.displaySettings.positionDisplay !== 'hidden') {
-                              if (profile.privacyConsent.displaySettings.positionDisplay === 'level') {
-                                parts.push(positionLevelOptions.find(l => l.value === profile.positionLevel)?.label?.split('/')[0] || '실무자급');
-                              } else {
-                                parts.push(profile.position || '직책');
-                              }
+                              parts.push(profile.position || '직책');
                             }
                             return parts.length > 0 ? parts.join(' · ') : '비공개';
                           })()}

@@ -195,7 +195,7 @@ export default function NewsAlertDrawer({ groupName }: NewsAlertDrawerProps) {
                             </p>
                             <div className="flex items-center flex-wrap gap-1.5 text-[10px] text-[#484F58]">
                               {item.memberName && (
-                                <span className="px-1.5 py-0.5 bg-[#30363D] rounded">
+                                <span className="px-1.5 py-0.5 bg-[#1C2D3F] border border-[#58A6FF]/40 rounded text-[#58A6FF] font-medium">
                                   {item.memberName}
                                   {item.memberCompany && ` (${item.memberCompany})`}
                                 </span>

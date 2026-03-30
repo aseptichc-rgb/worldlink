@@ -26,7 +26,7 @@ import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, getDemoNetworkGraph, getDemoRecommendations, demoConnections } from '@/lib/demo-data';
 import { useInteractionStore } from '@/store/interactionStore';
-import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser, connectWithAllUsers } from '@/lib/firebase-services';
+import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
 
 export default function NetworkPage() {
@@ -125,17 +125,6 @@ export default function NetworkPage() {
 
       setNetworkLoading(true);
       try {
-        // 내 네트워크인 경우, 모든 사용자와 자동 연결 (한 번만 실행)
-        if (isMyNetwork) {
-          const connectKey = `connected_all_users_${user.id}`;
-          if (!sessionStorage.getItem(connectKey)) {
-            const newConnections = await connectWithAllUsers(user.id);
-            if (newConnections > 0) {
-              console.log(`[NetworkPage] Auto-connected with ${newConnections} users`);
-            }
-            sessionStorage.setItem(connectKey, 'true');
-          }
-        }
 
         if (isMyNetwork) {
           // 내 네트워크
