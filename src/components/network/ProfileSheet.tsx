@@ -26,6 +26,7 @@ import {
   Upload,
   Clock,
   CalendarPlus,
+  Newspaper,
 } from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
 import InteractionLogModal from '@/components/interaction/InteractionLogModal';
@@ -38,6 +39,7 @@ import { useGroupStore } from '@/store/groupStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMessageStore, Message } from '@/store/messageStore';
 import { useInteractionStore } from '@/store/interactionStore';
+import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
@@ -67,6 +69,12 @@ export default function ProfileSheet() {
   const [showInteractionModal, setShowInteractionModal] = useState(false);
 
   const { getDaysSinceLastContact, getRelationshipStatus, addInteraction } = useInteractionStore();
+  const { allGroupNews, markAsRead } = useNewsAlertStore();
+
+  // 선택된 인물의 관련 뉴스
+  const memberNews = selectedNode
+    ? allGroupNews.filter(n => n.memberName === selectedNode.name)
+    : [];
 
   // 메시지 관련 상태
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -346,6 +354,7 @@ export default function ProfileSheet() {
     <AnimatePresence>
       {selectedNode && (
         <motion.div
+          key={`profile-${selectedNode.id}`}
           initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
@@ -803,6 +812,43 @@ export default function ProfileSheet() {
                       </div>
                       <div className="info-card">
                         <InteractionTimeline targetUserId={selectedNode.id} />
+                      </div>
+                    </section>
+                  )}
+
+                  {/* 관련 뉴스 - 해당 인물의 기사가 있을 때 표시 */}
+                  {memberNews.length > 0 && (
+                    <section>
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
+                        <Newspaper size={12} />
+                        관련 뉴스
+                        <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-[#F85149]/15 text-[#F85149]">
+                          {memberNews.length}건
+                        </span>
+                      </h3>
+                      <div className="space-y-2">
+                        {memberNews.slice(0, 5).map((news) => (
+                          <a
+                            key={news.id}
+                            href={news.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => markAsRead(news.id)}
+                            className="block info-card hover:bg-[#2D3748] transition-colors cursor-pointer"
+                          >
+                            <p className="text-[13px] text-white font-medium leading-snug line-clamp-2">
+                              {news.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              {news.source && (
+                                <span className="text-[10px] text-[#8B949E]">{news.source}</span>
+                              )}
+                              <span className="text-[10px] text-[#8B949E]">
+                                {new Date(news.pubDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                          </a>
+                        ))}
                       </div>
                     </section>
                   )}
