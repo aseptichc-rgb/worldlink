@@ -36,17 +36,21 @@ function generateNewsId(link: string, pubDate: string): string {
 
 function extractRealUrl(bingUrl: string): string {
   // Bing RSS returns URLs like: https://www.bing.com/news/apiclick.aspx?...&url=https%3a%2f%2f...
-  // Extract the actual article URL from the 'url' parameter
+  // RSS XML encodes & as &amp;, so decode HTML entities first
   if (bingUrl.includes('bing.com/news/apiclick')) {
+    const decoded = bingUrl
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
     try {
-      const urlObj = new URL(bingUrl);
+      const urlObj = new URL(decoded);
       const realUrl = urlObj.searchParams.get('url');
       if (realUrl) {
         return decodeURIComponent(realUrl);
       }
     } catch {
       // If URL parsing fails, try regex extraction
-      const match = bingUrl.match(/[?&]url=([^&]+)/);
+      const match = decoded.match(/[?&]url=([^&]+)/);
       if (match) {
         return decodeURIComponent(match[1]);
       }
