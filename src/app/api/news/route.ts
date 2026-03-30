@@ -95,6 +95,24 @@ function parseBingNewsRSS(xml: string, query: string, memberName?: string, membe
   return items;
 }
 
+function filterByExactMention(items: NewsItem[], memberName?: string, memberCompany?: string): NewsItem[] {
+  if (!memberName) return items;
+
+  return items.filter(item => {
+    const text = `${item.title} ${item.description}`;
+    const hasName = text.includes(memberName);
+    if (!hasName) return false;
+
+    // 소속이 있으면 소속도 기사에 포함되어야 함
+    if (memberCompany) {
+      const companyShort = memberCompany.split(/\s+/)[0];
+      return text.includes(memberCompany) || text.includes(companyShort);
+    }
+
+    return true;
+  });
+}
+
 async function searchSingleQuery(
   query: string,
   memberName?: string,
@@ -106,9 +124,10 @@ async function searchSingleQuery(
     const xml = await fetchRSSNative(rssUrl, 8000);
     if (!xml) return [];
 
-    const items = parseBingNewsRSS(xml, query, memberName, memberCompany);
+    const parsed = parseBingNewsRSS(xml, query, memberName, memberCompany);
+    const items = filterByExactMention(parsed, memberName, memberCompany);
     if (items.length > 0) {
-      console.log(`[News] "${query}" -> ${items.length} items`);
+      console.log(`[News] "${query}" -> ${parsed.length} parsed, ${items.length} matched`);
     }
     return items;
   } catch {
