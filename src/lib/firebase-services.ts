@@ -1434,7 +1434,8 @@ export const deleteManagedGroup = async (groupId: string): Promise<void> => {
 export const addMemberToManagedGroup = async (
   groupId: string,
   userId: string,
-  role: ManagedGroupRole = 'member'
+  role: ManagedGroupRole = 'member',
+  inviterId?: string
 ): Promise<void> => {
   const group = await getManagedGroup(groupId);
   if (!group) throw new Error('그룹을 찾을 수 없습니다');
@@ -1472,12 +1473,14 @@ export const addMemberToManagedGroup = async (
     for (const existingMember of group.members) {
       if (existingMember.userId !== userId) {
         const connRef = doc(collection(db, 'connections'));
+        // 초대자와의 연결은 invite 타입 (네트워크에 표시됨), 나머지는 managed_group (네트워크에서 제외)
+        const method = inviterId && existingMember.userId === inviterId ? 'invite' : 'managed_group';
         batch.set(connRef, {
           id: connRef.id,
           fromUserId: userId,
           toUserId: existingMember.userId,
           status: 'accepted',
-          method: 'managed_group',
+          method,
           createdAt: serverTimestamp(),
           acceptedAt: serverTimestamp(),
         });
@@ -1640,7 +1643,7 @@ export const acceptManagedGroupInvite = async (
   const invite = await getManagedGroupInvite(inviteId);
   if (!invite) throw new Error('유효하지 않은 초대입니다');
 
-  await addMemberToManagedGroup(invite.groupId, userId);
+  await addMemberToManagedGroup(invite.groupId, userId, 'member', invite.inviterId);
 
   // 사용 횟수 증가
   const inviteRef = doc(db, 'managedGroupInvites', inviteId);
