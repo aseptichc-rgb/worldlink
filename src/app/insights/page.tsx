@@ -58,10 +58,12 @@ export default function InsightsPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // 네트워크 노드가 없으면 데모 데이터에서 가져오기
+  // 네트워크 노드가 없으면 데모 모드에서만 데모 데이터 사용
   const effectiveNodes = useMemo(() => {
     if (nodes.length > 0) return nodes;
     if (!user) return [];
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (!isDemoMode) return [];
     const demoId = getDemoCompatibleId(user);
     const { nodes: demoNodes } = getDemoNetworkGraph(demoId);
     return demoNodes;

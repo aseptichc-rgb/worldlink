@@ -68,14 +68,20 @@ export default function ManagedGroupsPage() {
       groups.map(async (group) => {
         const memberResults = await Promise.all(
           group.members.map(async (member) => {
-            if (isDemoMode) {
-              const demoUser = demoUsers.find(u => u.id === member.userId);
-              return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
-            }
             try {
               const userData = await getUser(member.userId);
-              return userData ? { name: userData.name, company: userData.company } : null;
+              if (userData) return { name: userData.name, company: userData.company };
+              // Firestore에 없으면 데모 모드에서만 데모 데이터 사용
+              if (isDemoMode) {
+                const demoUser = demoUsers.find(u => u.id === member.userId);
+                return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
+              }
+              return null;
             } catch {
+              if (isDemoMode) {
+                const demoUser = demoUsers.find(u => u.id === member.userId);
+                return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
+              }
               return null;
             }
           })

@@ -56,13 +56,19 @@ export default function ManagedGroupMemberList({
       const infos = await Promise.all(
         members.map(async (member) => {
           try {
+            // Firestore 우선 조회, 실패 시 데모 모드에서만 데모 데이터 사용
+            const user = await getUser(member.userId);
+            if (user) return { ...member, user };
             if (isDemoMode) {
               const demoUser = demoUsers.find(u => u.id === member.userId);
               return { ...member, user: demoUser || undefined };
             }
-            const user = await getUser(member.userId);
-            return { ...member, user: user || undefined };
+            return { ...member, user: undefined };
           } catch {
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return { ...member, user: demoUser || undefined };
+            }
             return { ...member, user: undefined };
           }
         })

@@ -24,7 +24,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
-import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, getDemoNetworkGraph, getDemoRecommendations, demoConnections } from '@/lib/demo-data';
+import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, demoConnections } from '@/lib/demo-data';
 import { useInteractionStore } from '@/store/interactionStore';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
@@ -116,8 +116,6 @@ export default function NetworkPage() {
 
   // Load network data (centerUserId가 바뀌면 해당 인물 중심으로 재로드)
   useEffect(() => {
-    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
-
     const loadNetworkData = async () => {
       if (!user) return;
 
@@ -136,10 +134,8 @@ export default function NetworkPage() {
             position: user.position,
             keywords: user.keywords,
           };
-          // 데모 모드에서는 Firebase 호출 없이 데모 데이터 직접 사용
-          const { nodes: fetchedNodes, edges } = isDemoMode
-            ? getDemoNetworkGraph(user.id, userInfo)
-            : await getNetworkGraph(user.id, userInfo);
+          // 항상 getNetworkGraph 사용 (내부에서 실제 연결 우선, 데모 fallback 처리)
+          const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, userInfo);
           const demoId = getDemoCompatibleId(user);
           const syncedNodes = fetchedNodes.map(node =>
             (node.id === user.id || node.id === demoId) && node.degree === 0 && user.profileImage
@@ -162,9 +158,7 @@ export default function NetworkPage() {
             keywords: targetNode.keywords,
           } : undefined;
 
-          const { nodes: fetchedNodes, edges } = isDemoMode
-            ? getDemoNetworkGraph(targetUserId, targetUserData)
-            : await getNetworkGraph(targetUserId, targetUserData);
+          const { nodes: fetchedNodes, edges } = await getNetworkGraph(targetUserId, targetUserData);
           setNodes(fetchedNodes);
           setEdges(edges);
           // 중심 인물 이름 저장 및 프로필 시트 자동 표시
@@ -179,12 +173,8 @@ export default function NetworkPage() {
 
         // Load recommendations (내 네트워크일 때만)
         if (isMyNetwork) {
-          if (isDemoMode) {
-            setRecommendations(getDemoRecommendations(user.id));
-          } else {
-            const recs = await getRecommendations(user.id, 3);
-            setRecommendations(recs);
-          }
+          const recs = await getRecommendations(user.id, 3);
+          setRecommendations(recs);
         }
       } catch (error) {
         console.error('Error loading network data:', error);

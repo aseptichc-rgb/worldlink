@@ -85,15 +85,20 @@ export default function ManagedGroupDetailPage() {
     const loadMembersData = async () => {
       const loaded = await Promise.all(
         selectedGroup.members.map(async (member) => {
-          // 데모 모드: 로컬 데모 유저 데이터 사용
-          if (isDemoMode) {
-            const demoUser = demoUsers.find(u => u.id === member.userId);
-            return { ...member, user: demoUser || undefined };
-          }
           try {
+            // Firestore 우선 조회, 실패 시 데모 모드에서만 데모 데이터 사용
             const userData = await getUser(member.userId);
-            return { ...member, user: userData || undefined };
+            if (userData) return { ...member, user: userData };
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return { ...member, user: demoUser || undefined };
+            }
+            return { ...member, user: undefined };
           } catch {
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return { ...member, user: demoUser || undefined };
+            }
             return { ...member, user: undefined };
           }
         })

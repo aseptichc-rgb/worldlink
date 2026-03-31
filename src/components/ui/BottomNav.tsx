@@ -11,6 +11,7 @@ import { Avatar } from '@/components/ui';
 import { createInvitation, generateInviteLink } from '@/lib/firebase-services';
 import { loadKakaoSDK, sendKakaoInvite } from '@/lib/kakao-sdk';
 import GroupInviteModal from '@/components/network/GroupInviteModal';
+import ManagedGroupInviteModal from '@/components/managed-group/ManagedGroupInviteModal';
 
 interface NavItem {
   path: string;
@@ -561,6 +562,7 @@ export default function BottomNav() {
 
       {/* Group Invite Modal - 모든 페이지에서 접근 가능 */}
       <GroupInviteModal />
+      <ManagedGroupInviteModal />
     </>
   );
 }

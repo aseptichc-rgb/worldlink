@@ -565,7 +565,10 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
   const connections = await getDirectConnections(userId);
 
   if (connections.length === 0) {
-    // Firebase에 연결이 없으면 데모 데이터 사용
+    // 데모 모드가 아니면 빈 배열 반환 (실제 사용자에게 데모 데이터 노출 방지)
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (!isDemoMode) return [];
+
     const { demoConnections, demoUsers, getDemoCompatibleId: getCompId, ensureUserInDemoNetwork: ensureUser } = await import('./demo-data');
     const demoId = getCompId({ id: userId });
     ensureUser(userId);
@@ -907,10 +910,12 @@ export const getPendingCoffeeChatRequests = async (userId: string): Promise<Coff
 // ==================== RECOMMENDATION SERVICES ====================
 
 export const getRecommendations = async (userId: string, count: number = 3): Promise<Recommendation[]> => {
-  // 실제 연결이 없으면 데모 추천 데이터 사용
+  // 실제 연결이 없으면 데모 모드에서만 데모 추천 데이터 사용
   const directConnections = await getDirectConnections(userId);
   if (directConnections.length === 0) {
-    return getDemoRecs(userId).slice(0, count);
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) return getDemoRecs(userId).slice(0, count);
+    return [];
   }
 
   const currentUser = await getUser(userId);
