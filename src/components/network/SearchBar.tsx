@@ -442,20 +442,18 @@ export default function SearchBar() {
     <div className="relative w-full">
       {/* Search Input */}
       <div className={`
-        relative flex items-center gap-4
-        bg-[#161B22]/90 backdrop-blur-xl
-        border rounded-2xl
+        relative flex items-center gap-2
         transition-all duration-300 ease-out
         ${isFocused
-          ? 'border-[#58A6FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.15)]'
-          : 'border-[#30363D]/80 hover:border-[#30363D]'}
+          ? 'text-[#58A6FF]'
+          : ''}
       `}>
         {/* Search Icon */}
         <div className={`
-          pl-5 transition-colors duration-200
+          flex-shrink-0 transition-colors duration-200
           ${isFocused ? 'text-[#58A6FF]' : 'text-[#484F58]'}
         `}>
-          <Search size={22} />
+          <Search size={18} />
         </div>
 
         <input
@@ -476,11 +474,11 @@ export default function SearchBar() {
               }
             }
           }}
-          placeholder="이름, 회사, 직책, 분야, 자기소개 등으로 검색"
+          placeholder="이름, 회사, 직책, 분야 등 검색"
           className="
-            flex-1 bg-transparent text-white
-            py-4 pr-5
-            text-lg font-medium
+            flex-1 min-w-0 bg-transparent text-white
+            py-1
+            text-sm font-medium
             placeholder:text-[#484F58]
             focus:outline-none
             tracking-wide
@@ -491,7 +489,7 @@ export default function SearchBar() {
         {(query || highlightedKeyword) && (
           <button
             onClick={clearSearch}
-            className="pr-5 text-[#484F58] hover:text-[#58A6FF] transition-colors duration-200 p-2"
+            className="text-[#484F58] hover:text-[#58A6FF] transition-colors duration-200 p-1"
           >
             <X size={20} />
           </button>

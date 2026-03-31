@@ -630,9 +630,6 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   // 먼저 Firebase에서 실제 연결 데이터 확인
   const directConnections = await getDirectConnections(userId);
 
-  console.log('[getNetworkGraph] userId:', userId);
-  console.log('[getNetworkGraph] directConnections:', directConnections.length, directConnections);
-
   // 실제 연결이 없으면 빈 네트워크 반환 (데모 모드가 아닌 경우)
   if (directConnections.length === 0) {
     const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
@@ -681,10 +678,8 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   userMap.set(currentUser.id, currentUser);
 
   // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외, 직접 연결만 표시
-  const VISIBLE_METHODS = new Set(['invite', 'contact_sync', 'search']);
   const firstDegreeIds = new Set<string>();
   directConnections.forEach(conn => {
-    if (!VISIBLE_METHODS.has(conn.method)) return;
     const connectedId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
     if (!connectedId.startsWith('demo_')) {
       firstDegreeIds.add(connectedId);
@@ -758,14 +753,11 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     }
   });
 
-  console.log('[getNetworkGraph] Removed duplicates:', duplicateIds.size, 'nodes');
-
   // importedContacts 추가 (가져온 연락처)
   const userDoc = await getDoc(doc(db, 'users', userId));
   const importedContacts = userDoc.data()?.importedContacts || [];
 
   if (importedContacts.length > 0) {
-    console.log('[getNetworkGraph] Adding imported contacts:', importedContacts.length);
 
     // 이미 추가된 이름 집합 (중복 방지)
     const existingNames = new Set(filteredNodes.map(n => n.name));
@@ -799,7 +791,6 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
       });
     }
 
-    console.log('[getNetworkGraph] Total nodes after imports:', filteredNodes.length);
   }
 
   return { nodes: filteredNodes, edges: filteredEdges };
@@ -826,7 +817,6 @@ export const findConnectionPath = async (fromUserId: string, toUserId: string): 
 
     const connections = await getDirectConnections(userId);
     for (const conn of connections) {
-      if (!['invite', 'contact_sync', 'search'].includes(conn.method)) continue;
       const nextUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
       if (!visited.has(nextUserId)) {
         queue.push({ userId: nextUserId, path: [...path, nextUserId] });
@@ -1433,7 +1423,7 @@ export const addMemberToManagedGroup = async (
     for (const existingMember of group.members) {
       if (existingMember.userId !== userId) {
         const connRef = doc(collection(db, 'connections'));
-        // 초대자와의 연결은 invite 타입 (네트워크에 표시됨), 나머지는 managed_group (네트워크에서 제외)
+        // 초대자와의 연결은 invite 타입, 나머지는 managed_group (둘 다 네트워크에 표시됨)
         const method = inviterId && existingMember.userId === inviterId ? 'invite' : 'managed_group';
         batch.set(connRef, {
           id: connRef.id,
@@ -1746,14 +1736,12 @@ export const debugUserConnections = async (userId: string): Promise<{
 
   for (const conn of connections) {
     byMethod[conn.method] = (byMethod[conn.method] || 0) + 1;
-    if (conn.method !== 'managed_group') {
-      visibleInNetwork.push({
-        id: conn.id,
-        fromUserId: conn.fromUserId,
-        toUserId: conn.toUserId,
-        method: conn.method,
-      });
-    }
+    visibleInNetwork.push({
+      id: conn.id,
+      fromUserId: conn.fromUserId,
+      toUserId: conn.toUserId,
+      method: conn.method,
+    });
   }
 
   // 사용자가 속한 관리 모임 정보
