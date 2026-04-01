@@ -2269,13 +2269,8 @@ export default function NetworkGraph() {
       // Fish-eye 비활성화: 노드 움직임으로 클릭이 어려워지는 문제 방지
       fisheyeFocusRef.current.active = false;
 
-      if (node) {
-        setDraggedNode(node);
-        node.fx = node.x;
-        node.fy = node.y;
-      } else {
-        setIsDragging(true);
-      }
+      // 노드 터치 여부와 관계없이 항상 패닝 시작 (노드 드래그 비활성화)
+      setIsDragging(true);
 
       lastPosRef.current = { x: touch.clientX, y: touch.clientY };
       touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
@@ -2390,9 +2385,40 @@ export default function NetworkGraph() {
               }
             }
           } else {
-            // 터치에서는 노드 선택 비활성화 (화면 이동 시 오선택 방지)
             const node = getNodeAtPosition(x, y);
-            if (!node) {
+            if (node) {
+              // 탭 시 프로필 표시 (더블탭 recenter 없음)
+              if (focusedNodeId === node.id) {
+                setFocusedNodeId(null);
+                setSelectedNode(null);
+                setExpandedNodeIds(prev => {
+                  const next = new Set(prev);
+                  next.delete(node.id);
+                  return next;
+                });
+              } else if (node.degree !== 0) {
+                focusOnNode(node);
+                setSelectedNode(node);
+                setExpandedNodeIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(node.id)) {
+                    next.delete(node.id);
+                  } else {
+                    next.clear();
+                    next.add(node.id);
+                  }
+                  return next;
+                });
+              } else {
+                focusOnNode(node);
+                if (centerUserId && centerUserOriginalDegree != null) {
+                  setSelectedNode({ ...node, degree: centerUserOriginalDegree });
+                } else {
+                  setSelectedNode(node);
+                }
+                setExpandedNodeIds(new Set());
+              }
+            } else {
               setFocusedNodeId(null);
               setSelectedNode(null);
               setExpandedNodeIds(new Set());

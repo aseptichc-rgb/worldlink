@@ -107,32 +107,12 @@ export default function ManagedGroupsPage() {
     runSearch('6m');
   };
 
-  // 모든 그룹의 뉴스 검색: 캐시가 1시간 이상 지난 경우에만 자동 검색
+  // 캐시된 뉴스가 전혀 없을 때만 최초 1회 검색 (이후는 수동 새로고침)
   useEffect(() => {
     if (groups.length === 0) return;
+    if (allGroupNews.length > 0) return; // 캐시된 뉴스가 있으면 검색 생략
 
-    const INITIAL_SEARCH_KEY = 'nodded_news_initial_search_done';
-    const ONE_HOUR = 60 * 60 * 1000;
-
-    const isInitialSearch = !localStorage.getItem(INITIAL_SEARCH_KEY);
-
-    if (isInitialSearch) {
-      // 첫 로그인: 최근 6개월 뉴스 검색
-      runSearch('6m').then(() => {
-        localStorage.setItem(INITIAL_SEARCH_KEY, new Date().toISOString());
-      });
-    } else {
-      // 이미 캐시된 결과가 있고 1시간 이내면 검색 생략
-      const elapsed = lastCheckedAt ? Date.now() - new Date(lastCheckedAt).getTime() : Infinity;
-      if (elapsed >= ONE_HOUR) {
-        runSearch('6m');
-      }
-    }
-
-    // 1시간마다 자동 반복 (6개월 뉴스 유지)
-    const intervalId = window.setInterval(() => runSearch('6m'), ONE_HOUR);
-
-    return () => clearInterval(intervalId);
+    runSearch('6m');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groups]);
 

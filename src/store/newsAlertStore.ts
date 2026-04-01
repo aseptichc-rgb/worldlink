@@ -141,6 +141,7 @@ interface NewsAlertState {
   // Actions
   searchNews: (members: { name: string; company?: string }[], timeRange?: string) => Promise<void>;
   searchNewsForAllGroups: (groups: GroupInfo[], timeRange?: string) => Promise<void>;
+  loadCachedNewsForGroup: (groupId: string) => void;
   startMonitoring: (groupId: string, members: { name: string; company?: string }[]) => void;
   stopMonitoring: () => void;
   markAsRead: (newsId: string) => void;
@@ -460,6 +461,13 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       console.error('News search for all groups error:', err);
       set({ error: null, isLoading: false });
     }
+  },
+
+  loadCachedNewsForGroup: (groupId) => {
+    const cached = get().groupNewsItems[groupId] || [];
+    const readIds = get().readNewsIds;
+    const unreadCount = cached.filter(n => !readIds.has(n.id)).length;
+    set({ news: cached, newNewsCount: unreadCount });
   },
 
   startMonitoring: (groupId, members) => {
