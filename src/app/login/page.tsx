@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { loginWithEmail, getUser } from '@/lib/firebase-services';
+import { loginWithEmail, getUser, getInvitationByCode, acceptInvitation, createAutoConnection } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
 import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX } from '@/lib/demo-seed-data';
 
@@ -100,6 +100,21 @@ function LoginContent() {
           localStorage.removeItem(STORAGE_KEY);
         }
         setUser(userData);
+
+        // 초대 코드가 있으면 인맥 자동 연결
+        const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+        if (pendingInviteCode) {
+          sessionStorage.removeItem('pendingInviteCode');
+          try {
+            const invitation = await getInvitationByCode(pendingInviteCode);
+            if (invitation && invitation.senderId !== userData.id) {
+              await createAutoConnection(invitation.senderId, userData.id);
+              await acceptInvitation(pendingInviteCode, userData.id);
+            }
+          } catch (err) {
+            console.error('Failed to process invite connection:', err);
+          }
+        }
 
         // 초대 링크 등에서 리디렉션 경로가 있으면 해당 경로로 이동
         const redirectPath = sessionStorage.getItem('redirectAfterAuth');

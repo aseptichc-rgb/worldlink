@@ -2390,56 +2390,9 @@ export default function NetworkGraph() {
               }
             }
           } else {
+            // 터치에서는 노드 선택 비활성화 (화면 이동 시 오선택 방지)
             const node = getNodeAtPosition(x, y);
-            if (node) {
-              if (focusedNodeId === node.id) {
-                setFocusedNodeId(null);
-                setSelectedNode(null);
-                setExpandedNodeIds(prev => {
-                  const next = new Set(prev);
-                  next.delete(node.id);
-                  return next;
-                });
-                lastClickTimeRef.current = 0;
-                lastClickNodeRef.current = null;
-              } else if (node.degree !== 0) {
-                // 싱글탭=expand 토글, 더블탭=recenter
-                const now = Date.now();
-                const isDoubleTap = lastClickNodeRef.current === node.id && (now - lastClickTimeRef.current) < 300;
-
-                if (isDoubleTap) {
-                  lastClickTimeRef.current = 0;
-                  lastClickNodeRef.current = null;
-                  setExpandedNodeIds(new Set());
-                  setCenterUserId(node.id, node.degree);
-                } else {
-                  lastClickTimeRef.current = now;
-                  lastClickNodeRef.current = node.id;
-                  focusOnNode(node);
-                  setSelectedNode(node);
-                  setExpandedNodeIds(prev => {
-                    const next = new Set(prev);
-                    if (next.has(node.id)) {
-                      next.delete(node.id);
-                    } else {
-                      next.clear();
-                      next.add(node.id);
-                    }
-                    return next;
-                  });
-                }
-              } else {
-                // 중앙 노드 터치
-                focusOnNode(node);
-                // 다른 인물의 네트워크를 보고 있을 때는 원래 촌수로 프로필 표시
-                if (centerUserId && centerUserOriginalDegree != null) {
-                  setSelectedNode({ ...node, degree: centerUserOriginalDegree });
-                } else {
-                  setSelectedNode(node);
-                }
-                setExpandedNodeIds(new Set());
-              }
-            } else {
+            if (!node) {
               setFocusedNodeId(null);
               setSelectedNode(null);
               setExpandedNodeIds(new Set());
@@ -2555,23 +2508,8 @@ export default function NetworkGraph() {
         return;
       }
 
-      // degree 0이 아닌 노드: 싱글클릭=expand 토글, 더블클릭=recenter
+      // degree 0이 아닌 노드: 클릭=expand 토글 + 포커스
       if (node.degree !== 0) {
-        const now = Date.now();
-        const isDoubleClick = lastClickNodeRef.current === node.id && (now - lastClickTimeRef.current) < 300;
-
-        if (isDoubleClick) {
-          // 더블클릭: 해당 인물 중심으로 그래프 재로드
-          lastClickTimeRef.current = 0;
-          lastClickNodeRef.current = null;
-          setExpandedNodeIds(new Set());
-          setCenterUserId(node.id, node.degree);
-          return;
-        }
-
-        // 싱글클릭: degree 2 자식 expand/collapse 토글 + 포커스
-        lastClickTimeRef.current = now;
-        lastClickNodeRef.current = node.id;
         focusOnNode(node);
         setSelectedNode(node);
         setExpandedNodeIds(prev => {

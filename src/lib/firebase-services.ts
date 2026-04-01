@@ -387,24 +387,30 @@ export const getSentInvitations = async (userId: string): Promise<Invitation[]> 
 // 초대 코드로 초대 정보 조회 (가입 시 연결용)
 export const getInvitationByCode = async (code: string): Promise<Invitation | null> => {
   const invitationsRef = collection(db, 'invitations');
-  const q = query(
-    invitationsRef,
-    where('inviteCode', '==', code.toUpperCase()),
-    where('status', '==', 'pending'),
-    limit(1)
-  );
 
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) return null;
+  // pending 또는 sent 상태 모두 검색 (기존 사용자 초대 수락 지원)
+  for (const status of ['pending', 'sent'] as const) {
+    const q = query(
+      invitationsRef,
+      where('inviteCode', '==', code.toUpperCase()),
+      where('status', '==', status),
+      limit(1)
+    );
 
-  const doc = snapshot.docs[0];
-  const data = doc.data();
-  return {
-    ...data,
-    id: doc.id,
-    sentAt: data.sentAt?.toDate() || new Date(),
-    acceptedAt: data.acceptedAt?.toDate(),
-  } as Invitation;
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        sentAt: data.sentAt?.toDate() || new Date(),
+        acceptedAt: data.acceptedAt?.toDate(),
+      } as Invitation;
+    }
+  }
+
+  return null;
 };
 
 // 초대 수락 처리 (가입 완료 시)
