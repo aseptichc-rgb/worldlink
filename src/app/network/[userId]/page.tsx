@@ -357,7 +357,8 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 rounded-xl bg-[#1C2333] border border-[#30363D]"
+                  className="p-4 rounded-xl bg-[#1C2333] border border-[#30363D] cursor-pointer hover:bg-[#1C2333]/80 transition-colors"
+                  onClick={() => router.push(`/profile/${connection.userId}`)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar
@@ -384,7 +385,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                       )}
                     </div>
                     <button
-                      onClick={() => handleRequestIntro(connection)}
+                      onClick={(e) => { e.stopPropagation(); handleRequestIntro(connection); }}
                       className="p-2 rounded-lg bg-[#58A6FF]/10 text-[#58A6FF] hover:bg-[#58A6FF]/20 transition-colors"
                     >
                       <UserPlus size={20} />

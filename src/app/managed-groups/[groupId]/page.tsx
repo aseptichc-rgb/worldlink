@@ -207,12 +207,12 @@ export default function ManagedGroupDetailPage() {
 
   // 목록에서 멤버 클릭 시 프로필 페이지로 이동
   const handleMemberClick = (member: MemberInfo) => {
-    router.push(`/network/${member.userId}`);
+    router.push(`/profile/${member.userId}`);
   };
 
   // 네트워크 그래프에서 노드 클릭 시 프로필 페이지로 이동
   const handleNodeClick = (member: ManagedGroupMember & { user?: User }) => {
-    router.push(`/network/${member.userId}`);
+    router.push(`/profile/${member.userId}`);
   };
 
   return (
