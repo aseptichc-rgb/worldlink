@@ -569,10 +569,13 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
     const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (!isDemoMode) return [];
 
-    const { demoConnections, demoUsers, getDemoCompatibleId: getCompId, ensureUserInDemoNetwork: ensureUser } = await import('./demo-data');
-    const demoId = getCompId({ id: userId });
+    // 데모 멤버만 데모 인맥 반환 (실제 계정은 빈 배열)
+    const isDemoUser = userId.startsWith('member_') || userId.startsWith('demo_');
+    if (!isDemoUser) return [];
+
+    const { demoConnections, demoUsers, ensureUserInDemoNetwork: ensureUser } = await import('./demo-data');
     ensureUser(userId);
-    const demoConnectionIds = demoConnections[demoId] || demoConnections[userId] || [];
+    const demoConnectionIds = demoConnections[userId] || [];
 
     return demoUsers.filter(user => demoConnectionIds.includes(user.id));
   }
@@ -639,9 +642,10 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     if (isDemoMode) {
       const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
       if (demoId !== userId) {
+        // 데모 멤버와 매칭되는 사용자만 데모 네트워크 표시
         return getDemoNetworkGraph(demoId, userData);
       }
-      return getDemoNetworkGraph(userId, userData);
+      // 매칭되지 않는 실제 계정은 데모 인맥 표시하지 않음 → 본인 노드만 반환
     }
     // 실제 사용자인데 연결이 없으면 본인 노드만 반환
     const centerNode: NetworkNode = {
@@ -1025,13 +1029,57 @@ export const getPublicCard = async (cardId: string): Promise<{
 
 // ==================== STORAGE SERVICES ====================
 
+const MAX_IMAGE_SIZE = 800; // 최대 가로/세로 px
+const IMAGE_QUALITY = 0.7; // JPEG 압축 품질 (0~1)
+
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+
+      // 리사이징: 긴 변이 MAX_IMAGE_SIZE를 초과하면 비율 유지 축소
+      if (width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE) {
+        if (width > height) {
+          height = Math.round(height * (MAX_IMAGE_SIZE / width));
+          width = MAX_IMAGE_SIZE;
+        } else {
+          width = Math.round(width * (MAX_IMAGE_SIZE / height));
+          height = MAX_IMAGE_SIZE;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context 생성 실패'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('이미지 압축 실패'));
+        },
+        'image/jpeg',
+        IMAGE_QUALITY
+      );
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export const uploadProfileImage = async (userId: string, file: File): Promise<string> => {
-  // 파일명에 타임스탬프를 추가하여 매번 고유한 URL 생성 (브라우저 캐시 무효화)
+  // 클라이언트에서 이미지 압축/리사이징 후 업로드
+  const compressed = await compressImage(file);
+
   const timestamp = Date.now();
-  const extension = file.name.split('.').pop() || 'jpg';
-  const fileName = `profile_${timestamp}.${extension}`;
+  const fileName = `profile_${timestamp}.jpg`;
   const storageRef = ref(storage, `profiles/${userId}/${fileName}`);
-  await uploadBytes(storageRef, file);
+  await uploadBytes(storageRef, compressed);
   return getDownloadURL(storageRef);
 };
 

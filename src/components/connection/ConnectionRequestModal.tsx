@@ -35,7 +35,7 @@ export default function ConnectionRequestModal() {
     // 연결 경로 찾기
     if (user && currentUser) {
       const demoId = getDemoCompatibleId(currentUser);
-      ensureUserInDemoNetwork(currentUser.id);
+      ensureUserInDemoNetwork(demoId);
       const fromUserId = demoId !== currentUser.id ? demoId : currentUser.id;
       const pathIds = findDemoConnectionPath(fromUserId, targetUserId);
       const pathUsers: User[] = pathIds.map(id => {

@@ -51,12 +51,14 @@ export default function NetworkPage() {
     }
   }, [user, loadFromFirebase]);
 
-  // 데모 인터랙션 데이터 초기화 (데모 모드에서만)
+  // 데모 인터랙션 데이터 초기화 (데모 멤버와 매칭되는 사용자만)
   useEffect(() => {
     const isDemo = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (user && isDemo) {
       const demoId = getDemoCompatibleId(user);
-      const connIds = demoConnections[demoId] || demoConnections[user.id] || [];
+      // 실제 계정(매칭 안 되는 사용자)은 데모 인터랙션 생성하지 않음
+      if (demoId === user.id) return;
+      const connIds = demoConnections[demoId] || [];
       if (connIds.length > 0) {
         initDemoInteractions(demoId, connIds);
       }
@@ -186,14 +188,15 @@ export default function NetworkPage() {
     loadNetworkData();
   }, [user, centerUserId, centerUserOriginalDegree, setNodes, setEdges, setSelectedNode, setNetworkLoading]);
 
-  // Load demo messages (데모 모드에서만)
+  // Load demo messages (데모 멤버와 매칭되는 사용자만)
   useEffect(() => {
     const isDemo = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (user && messages.length === 0 && isDemo) {
       const demoId = getDemoCompatibleId(user);
-      ensureUserInDemoNetwork(user.id);
-      const currentUserId = demoId !== user.id ? demoId : user.id;
-      const demoMessages = generateDemoMessages(currentUserId);
+      // 실제 계정은 데모 메시지/네트워크 오염 방지
+      if (demoId === user.id) return;
+      ensureUserInDemoNetwork(demoId);
+      const demoMessages = generateDemoMessages(demoId);
       setMessages(demoMessages);
     }
   }, [user, messages.length, setMessages]);

@@ -66,9 +66,7 @@ export default function SearchBar() {
   const currentUserId = useMemo(() => {
     if (!currentUser) return 'member_1';
     const demoId = getDemoCompatibleId(currentUser);
-    if (demoId !== currentUser.id) return demoId;
-    ensureUserInDemoNetwork(currentUser.id);
-    return currentUser.id;
+    return demoId;
   }, [currentUser]);
 
   // BFS로 연결된 사용자 + 전체 공개 사용자 검색

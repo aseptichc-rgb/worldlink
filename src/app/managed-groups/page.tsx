@@ -104,7 +104,7 @@ export default function ManagedGroupsPage() {
 
   // 뉴스 수동 새로고침 핸들러
   const handleNewsRefresh = () => {
-    runSearch('1d');
+    runSearch('6m');
   };
 
   // 모든 그룹의 뉴스 검색: 캐시가 1시간 이상 지난 경우에만 자동 검색
@@ -125,12 +125,12 @@ export default function ManagedGroupsPage() {
       // 이미 캐시된 결과가 있고 1시간 이내면 검색 생략
       const elapsed = lastCheckedAt ? Date.now() - new Date(lastCheckedAt).getTime() : Infinity;
       if (elapsed >= ONE_HOUR) {
-        runSearch('1d');
+        runSearch('6m');
       }
     }
 
-    // 1시간마다 자동 반복
-    const intervalId = window.setInterval(() => runSearch('1d'), ONE_HOUR);
+    // 1시간마다 자동 반복 (6개월 뉴스 유지)
+    const intervalId = window.setInterval(() => runSearch('6m'), ONE_HOUR);
 
     return () => clearInterval(intervalId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,14 +229,14 @@ export default function ManagedGroupsPage() {
                 <Newspaper size={20} className="text-[#58A6FF]" />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-[#F0F6FC]">24시간 멤버 뉴스</h3>
+                <h3 className="text-sm font-semibold text-[#F0F6FC]">인맥 새소식</h3>
                 <p className="text-xs text-[#8B949E]">
                   {newsLoading ? (
                     '검색 중...'
                   ) : totalNewsCount > 0 ? (
-                    `${totalNewsCount}건의 뉴스가 발견되었습니다`
+                    `최근 6개월 내 ${totalNewsCount}건의 뉴스`
                   ) : (
-                    '최근 24시간 내 관련 뉴스가 없습니다'
+                    '최근 6개월 내 관련 뉴스가 없습니다'
                   )}
                 </p>
               </div>
@@ -313,7 +313,8 @@ export default function ManagedGroupsPage() {
           <div className="space-y-3">
             {groups.map((group, index) => {
               const newsItems = groupNewsItems[group.id] || [];
-              const newsCount = groupNewsMap[group.id] || 0;
+              const unreadCount = groupNewsMap[group.id] || 0;
+              const totalCount = newsItems.length;
               const isExpanded = expandedGroups.has(group.id);
               const previewCount = 3;
 
@@ -327,7 +328,8 @@ export default function ManagedGroupsPage() {
                   <ManagedGroupCard
                     group={group}
                     currentUserId={user!.id}
-                    newsCount={newsCount}
+                    newsCount={totalCount}
+                    unreadCount={unreadCount}
                     onClick={() => router.push(`/managed-groups/${group.id}`)}
                     onRemove={() => setConfirmTarget(group)}
                   />

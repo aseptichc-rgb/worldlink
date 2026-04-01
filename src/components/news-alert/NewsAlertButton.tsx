@@ -41,11 +41,11 @@ export default function NewsAlertButton({
       company: m.user?.company,
     }));
 
-  // 페이지 진입 시 자동 뉴스 검색 (24시간 이내)
+  // 페이지 진입 시 자동 뉴스 검색 (최근 6개월)
   useEffect(() => {
     if (memberSearchData.length > 0 && !hasAutoSearched.current && news.length === 0 && !isLoading) {
       hasAutoSearched.current = true;
-      searchNews(memberSearchData, '1d');
+      searchNews(memberSearchData, '6m');
     }
   }, [memberSearchData.length]);
 

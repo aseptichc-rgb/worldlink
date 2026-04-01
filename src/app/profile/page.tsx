@@ -83,24 +83,23 @@ export default function ProfilePage() {
         updateNodeProfileImage(user.id, localUrl);
         return;
       }
-      console.log('Uploading profile image...', { userId: user.id, fileName: file.name, fileSize: file.size });
       const imageUrl = await uploadProfileImage(user.id, file);
-      console.log('Upload successful, imageUrl:', imageUrl);
 
-      await updateUser(user.id, { profileImage: imageUrl });
-
-      // 공개 명함도 자동 업데이트 (프로필 이미지 변경 즉시 반영)
-      await savePublicCard({
-        id: user.id,
-        name: user.name,
-        company: user.company,
-        position: user.position,
-        email: user.email,
-        phone: user.phone,
-        bio: user.bio,
-        profileImage: imageUrl,
-        keywords: user.keywords,
-      });
+      // 프로필 업데이트와 공개 명함 업데이트를 병렬로 실행
+      await Promise.all([
+        updateUser(user.id, { profileImage: imageUrl }),
+        savePublicCard({
+          id: user.id,
+          name: user.name,
+          company: user.company,
+          position: user.position,
+          email: user.email,
+          phone: user.phone,
+          bio: user.bio,
+          profileImage: imageUrl,
+          keywords: user.keywords,
+        }),
+      ]);
 
       setUser({ ...user, profileImage: imageUrl });
       setEditedUser(prev => prev ? { ...prev, profileImage: imageUrl } : prev);

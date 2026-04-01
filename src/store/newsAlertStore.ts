@@ -3,7 +3,7 @@ import { NewsItem } from '@/app/api/news/route';
 
 const STORAGE_KEY = 'nodded_news_alert';
 const CHECK_INTERVAL = 60 * 60 * 1000; // 1시간
-const CACHE_MAX_ITEMS = 200; // 캐시할 최대 뉴스 수
+const CACHE_MAX_ITEMS = 1000; // 캐시할 최대 뉴스 수 (6개월 대응)
 
 // 데모 모드 체크
 function isDemoMode(): boolean {
@@ -168,7 +168,7 @@ function loadReadNewsIds(): Set<string> {
 function saveReadNewsIds(ids: Set<string>) {
   if (typeof window === 'undefined') return;
   try {
-    const arr = Array.from(ids).slice(-500);
+    const arr = Array.from(ids).slice(-2000);
     localStorage.setItem(`${STORAGE_KEY}_read`, JSON.stringify(arr));
   } catch {
     // ignore
@@ -225,7 +225,7 @@ function saveCachedGroupNews(
     const truncatedAllGroupNews = allGroupNews.slice(0, CACHE_MAX_ITEMS);
     const truncatedGroupNewsItems: Record<string, NewsItem[]> = {};
     for (const [gid, items] of Object.entries(groupNewsItems)) {
-      truncatedGroupNewsItems[gid] = items.slice(0, 100);
+      truncatedGroupNewsItems[gid] = items.slice(0, 500);
     }
     localStorage.setItem(
       `${STORAGE_KEY}_groupNews`,
@@ -469,10 +469,10 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       clearInterval(intervalId);
     }
 
-    searchNews(members, '1d');
+    searchNews(members, '6m');
 
     const newIntervalId = window.setInterval(() => {
-      searchNews(members, '1d');
+      searchNews(members, '6m');
     }, CHECK_INTERVAL);
 
     set({

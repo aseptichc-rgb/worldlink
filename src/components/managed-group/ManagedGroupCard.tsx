@@ -8,11 +8,12 @@ interface ManagedGroupCardProps {
   group: ManagedGroup;
   currentUserId: string;
   newsCount?: number;
+  unreadCount?: number;
   onClick: () => void;
   onRemove?: () => void;
 }
 
-export default function ManagedGroupCard({ group, currentUserId, newsCount = 0, onClick, onRemove }: ManagedGroupCardProps) {
+export default function ManagedGroupCard({ group, currentUserId, newsCount = 0, unreadCount = 0, onClick, onRemove }: ManagedGroupCardProps) {
   const isOwner = group.ownerId === currentUserId;
   const memberCount = group.members.length;
 
@@ -56,9 +57,10 @@ export default function ManagedGroupCard({ group, currentUserId, newsCount = 0, 
             <span className="text-xs text-[#484F58]">{memberCount}명</span>
           </div>
           {newsCount > 0 && (
-            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F85149]/15 rounded-full">
-              <Newspaper size={10} className="text-[#F85149]" />
-              <span className="text-[10px] font-bold text-[#F85149]">{newsCount}</span>
+            <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full ${unreadCount > 0 ? 'bg-[#F85149]/15' : 'bg-[#30363D]/50'}`}>
+              {unreadCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-[#F85149]" />}
+              <Newspaper size={10} className={unreadCount > 0 ? 'text-[#F85149]' : 'text-[#484F58]'} />
+              <span className={`text-[10px] font-bold ${unreadCount > 0 ? 'text-[#F85149]' : 'text-[#484F58]'}`}>{newsCount}</span>
             </div>
           )}
         </div>

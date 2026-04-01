@@ -100,11 +100,12 @@ export default function ProfileSheet() {
       if (!currentUser) return;
 
       try {
-        if (currentUser.id.startsWith('member_') || !currentUser.id.includes('@')) {
+        const demoId = getDemoCompatibleId(currentUser);
+        const isDemoUser = demoId !== currentUser.id || currentUser.id.startsWith('member_') || currentUser.id.startsWith('demo_');
+        if (isDemoUser) {
           // 데모 사용자의 경우
-          const demoId = getDemoCompatibleId(currentUser);
-          ensureUserInDemoNetwork(currentUser.id);
-          const myConnIds = demoConnections[demoId] || demoConnections[currentUser.id] || [];
+          ensureUserInDemoNetwork(demoId);
+          const myConnIds = demoConnections[demoId] || [];
           setMyConnectionIds(new Set(myConnIds));
         } else {
           // 실제 사용자의 경우
@@ -166,9 +167,9 @@ export default function ProfileSheet() {
 
         const fromDemoId = getDemoCompatibleId(currentUser);
         const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
-        const isDemoNode = selectedNode.id.startsWith('demo_') || selectedNode.id.startsWith('member_') || !!demoConnections[selectedNode.id];
+        const isDemoNode = selectedNode.id.startsWith('demo_') || selectedNode.id.startsWith('member_');
         if (isDemoNode) {
-          ensureUserInDemoNetwork(currentUser.id);
+          ensureUserInDemoNetwork(fromDemoId);
           const pathIds = findDemoConnectionPath(fromDemoId !== currentUser.id ? fromDemoId : currentUser.id, selectedNode.id);
           const pathUsers: User[] = pathIds.map(id => {
             const demoUser = demoUsers.find(u => u.id === id);
@@ -328,7 +329,7 @@ export default function ProfileSheet() {
       setSelectedNode(existingNode);
       setFocusedNodeId(user.id);
     } else {
-      ensureUserInDemoNetwork(currentUser.id);
+      ensureUserInDemoNetwork(currentDemoId);
       const pathIds = findDemoConnectionPath(currentDemoId !== currentUser.id ? currentDemoId : currentUser.id, user.id);
       const degree = pathIds.length > 0 ? pathIds.length - 1 : 2;
 

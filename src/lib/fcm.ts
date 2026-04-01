@@ -38,8 +38,19 @@ export async function requestNotificationPermission(userId: string): Promise<str
   if (!msg) return null;
 
   try {
-    // 서비스 워커 등록
+    // 서비스 워커 등록 후 활성화 대기
     const sw = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+    // 서비스 워커가 active 상태가 될 때까지 대기
+    if (!sw.active) {
+      await new Promise<void>((resolve) => {
+        const worker = sw.installing || sw.waiting;
+        if (!worker) { resolve(); return; }
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'activated') resolve();
+        });
+      });
+    }
 
     const token = await getToken(msg, {
       vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,

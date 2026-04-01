@@ -209,8 +209,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      news: allNews.slice(0, 100),
-      totalCount: Math.min(allNews.length, 100),
+      news: allNews.slice(0, 500),
+      totalCount: Math.min(allNews.length, 500),
       searchedAt: new Date().toISOString(),
     });
   } catch (error) {

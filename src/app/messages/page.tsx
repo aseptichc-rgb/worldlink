@@ -92,13 +92,15 @@ export default function MessagesPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Load demo messages
+  // Load demo messages (데모 멤버와 매칭되는 사용자만)
   useEffect(() => {
     if (user && messages.length === 0) {
+      const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
       const demoId = getDemoCompatibleId(user);
-      ensureUserInDemoNetwork(user.id);
-      const currentUserId = demoId !== user.id ? demoId : user.id;
-      const demoMessages = generateDemoMessages(currentUserId);
+      const isDemoUser = demoId !== user.id || user.id.startsWith('member_') || user.id.startsWith('demo_');
+      if (!isDemoMode || !isDemoUser) return;
+      ensureUserInDemoNetwork(demoId);
+      const demoMessages = generateDemoMessages(demoId);
       setMessages(demoMessages);
     }
   }, [user, messages.length, setMessages]);
