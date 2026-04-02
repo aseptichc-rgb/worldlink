@@ -572,6 +572,23 @@ export default function ManagedGroupDetailPage() {
             />
           </motion.div>
 
+          {/* Invite Friends Button */}
+          {canInvite && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <button
+                onClick={openInviteModal}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#58A6FF]/10 text-[#58A6FF] text-sm font-semibold rounded-2xl border border-[#58A6FF]/20 hover:bg-[#58A6FF]/20 active:scale-[0.98] transition-all"
+              >
+                <UserPlus size={18} />
+                친구를 이 모임에 초대하기
+              </button>
+            </motion.div>
+          )}
+
           {/* Danger Zone */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}

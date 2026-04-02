@@ -198,13 +198,8 @@ function shouldShowLabel(
   // ★ 2촌 이상은 절대 자동 표시하지 않음 (포커스/호버 시에만 별도 처리)
   if (node.degree >= 2) return false;
 
-  // ★ 1촌(degree 1) — 줌 레벨별로 엄격하게 상위 N명만 이름 표시
-  if (scale < 0.55) return rank < 3;    // 극단적 줌아웃: 3명
-  if (scale < 0.7) return rank < 5;     // 줌아웃: 5명
-  if (scale < 0.85) return rank < 8;    // 중간: 8명
-  if (scale < 1.0) return rank < 12;    // 기본 줌: 12명
-  if (scale < 1.3) return rank < 20;    // 약간 줌인: 20명
-  return true; // 많이 줌인해야 전체 표시
+  // ★ 1촌(degree 1) — 항상 이름 표시
+  return true;
 }
 
 // 노드 렌더링 모드 — full(원+이미지), dot(작은 점), hidden(안 보임)
@@ -356,7 +351,6 @@ export default function NetworkGraph() {
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [targetTransform, setTargetTransform] = useState<{ x: number; y: number; scale: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [draggedNode, setDraggedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphNode } | null>(null);
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
@@ -2154,13 +2148,8 @@ export default function NetworkGraph() {
     const y = e.clientY - rect.top;
     const node = getNodeAtPosition(x, y);
 
-    if (node) {
-      setDraggedNode(node);
-      node.fx = node.x;
-      node.fy = node.y;
-    } else {
-      setIsDragging(true);
-    }
+    // 노드 클릭 여부와 관계없이 항상 캔버스 패닝
+    setIsDragging(true);
 
     lastPosRef.current = { x: e.clientX, y: e.clientY };
 
@@ -2178,17 +2167,7 @@ export default function NetworkGraph() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 월드 좌표 변환 (드래그에 사용)
-    const worldX = (x - transform.x) / transform.scale;
-    const worldY = (y - transform.y) / transform.scale;
-
-    if (draggedNode) {
-      draggedNode.fx = worldX;
-      draggedNode.fy = worldY;
-      setTooltip(null);
-      // 드래그 중에는 fish-eye 비활성화
-      fisheyeFocusRef.current.active = false;
-    } else if (isDragging) {
+    if (isDragging) {
       const dx = e.clientX - lastPosRef.current.x;
       const dy = e.clientY - lastPosRef.current.y;
       setTransform(prev => ({
@@ -2231,11 +2210,6 @@ export default function NetworkGraph() {
   };
 
   const handleMouseUp = () => {
-    if (draggedNode) {
-      draggedNode.x = draggedNode.fx ?? draggedNode.x;
-      draggedNode.y = draggedNode.fy ?? draggedNode.y;
-      setDraggedNode(null);
-    }
     setIsDragging(false);
   };
 
@@ -2277,7 +2251,6 @@ export default function NetworkGraph() {
     } else if (e.touches.length === 2) {
       // 핀치 줌 시작 - 드래그 중지
       setIsDragging(false);
-      setDraggedNode(null);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastPinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
@@ -2295,14 +2268,7 @@ export default function NetworkGraph() {
     if (e.touches.length === 1 && !lastPinchDistRef.current) {
       const touch = e.touches[0];
 
-      if (draggedNode) {
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        draggedNode.fx = (x - transform.x) / transform.scale;
-        draggedNode.fy = (y - transform.y) / transform.scale;
-      } else if (isDragging) {
+      if (isDragging) {
         const dx = touch.clientX - lastPosRef.current.x;
         const dy = touch.clientY - lastPosRef.current.y;
         setTransform(prev => ({
@@ -2428,11 +2394,6 @@ export default function NetworkGraph() {
       }
     }
 
-    if (draggedNode) {
-      draggedNode.x = draggedNode.fx ?? draggedNode.x;
-      draggedNode.y = draggedNode.fy ?? draggedNode.y;
-      setDraggedNode(null);
-    }
     setIsDragging(false);
     touchStartPosRef.current = null;
 
