@@ -135,6 +135,11 @@ export default function ProfileSheet() {
   useEffect(() => {
     let cancelled = false;
 
+    // 노드 변경 시 이전 데이터 즉시 초기화 (stale 데이터 방지)
+    setConnectionPath([]);
+    setSelectedUserData(null);
+    setTheirConnections([]);
+
     const loadConnectionPath = async () => {
       if (!selectedNode || !currentUser) return;
 
