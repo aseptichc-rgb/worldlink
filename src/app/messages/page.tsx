@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MessageCircle, Send, Inbox, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Send, Inbox, Check, CheckCheck, Users, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { useAuthStore } from '@/store/authStore';
 import { useMessageStore, Message } from '@/store/messageStore';
@@ -12,57 +12,19 @@ import { onAuthChange, getUser } from '@/lib/firebase-services';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
-// 데모용 메세지 데이터
-const generateDemoMessages = (currentUserId: string): Message[] => {
-  const otherUsers = demoUsers.filter(u => u.id !== currentUserId).slice(0, 5);
-
-  return [
-    {
-      id: 'msg-1',
-      fromUserId: otherUsers[0]?.id || 'demo-user-2',
-      toUserId: currentUserId,
-      content: '안녕하세요! 프로필 보고 연락드립니다. AI 관련해서 이야기 나눠보고 싶어요.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30분 전
-      isRead: false,
-    },
-    {
-      id: 'msg-2',
-      fromUserId: otherUsers[1]?.id || 'demo-user-3',
-      toUserId: currentUserId,
-      content: '스타트업 투자 관련해서 조언 부탁드려도 될까요?',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2시간 전
-      isRead: false,
-    },
-    {
-      id: 'msg-3',
-      fromUserId: currentUserId,
-      toUserId: otherUsers[2]?.id || 'demo-user-4',
-      content: '안녕하세요! 협업 제안드리고 싶어서 연락드립니다.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1일 전
-      isRead: true,
-    },
-    {
-      id: 'msg-4',
-      fromUserId: otherUsers[3]?.id || 'demo-user-5',
-      toUserId: currentUserId,
-      content: '마케팅 전략에 대해 이야기 나눠보고 싶습니다.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2일 전
-      isRead: true,
-    },
-  ];
-};
-
 type TabType = 'received' | 'sent';
 
 export default function MessagesPage() {
   const router = useRouter();
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading } = useAuthStore();
-  const { messages, setMessages, markAsRead, addMessage } = useMessageStore();
+  const { messages, loadMessages, markAsRead, sendMessageToUser } = useMessageStore();
   const [activeTab, setActiveTab] = useState<TabType>('received');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [replyError, setReplyError] = useState('');
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
 
   // Auth state listener (데모 모드에서는 건너뜀)
   useEffect(() => {
@@ -92,18 +54,22 @@ export default function MessagesPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Load demo messages (데모 멤버와 매칭되는 사용자만)
+  // Firebase/데모 메시지 로드
   useEffect(() => {
-    if (user && messages.length === 0) {
+    if (user && !messagesLoaded) {
       const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
       const demoId = getDemoCompatibleId(user);
       const isDemoUser = demoId !== user.id || user.id.startsWith('member_') || user.id.startsWith('demo_');
-      if (!isDemoMode || !isDemoUser) return;
-      ensureUserInDemoNetwork(demoId);
-      const demoMessages = generateDemoMessages(demoId);
-      setMessages(demoMessages);
+
+      if (isDemoMode && isDemoUser) {
+        ensureUserInDemoNetwork(demoId);
+      }
+
+      const userId = isDemoMode && isDemoUser ? demoId : user.id;
+      loadMessages(userId);
+      setMessagesLoaded(true);
     }
-  }, [user, messages.length, setMessages]);
+  }, [user, messagesLoaded, loadMessages]);
 
   if (authLoading) {
     return (
@@ -134,6 +100,7 @@ export default function MessagesPage() {
 
   const handleMessageClick = (message: Message) => {
     setSelectedMessage(message);
+    setReplyError('');
     if (!message.isRead && message.toUserId === currentUserId) {
       markAsRead(message.id);
     }
@@ -153,29 +120,41 @@ export default function MessagesPage() {
     }
   };
 
+  const getDegreeLabel = (degree: number) => {
+    if (degree === 1) return '1촌';
+    if (degree === 2) return '2촌';
+    return `${degree}촌`;
+  };
+
+  const getDegreeColor = (degree: number) => {
+    if (degree === 1) return { bg: 'bg-[#58A6FF]/15', text: 'text-[#58A6FF]' };
+    return { bg: 'bg-[#9B8ED9]/15', text: 'text-[#9B8ED9]' };
+  };
+
   const handleReply = async () => {
     if (!selectedMessage || !replyContent.trim()) return;
 
     setIsSending(true);
+    setReplyError('');
 
-    // 답장 메세지 생성
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      fromUserId: currentUserId,
-      toUserId: selectedMessage.fromUserId,
-      content: replyContent.trim(),
-      createdAt: new Date(),
-      isRead: true,
-    };
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
 
-    // 시뮬레이션 딜레이
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await sendMessageToUser(
+      currentUserId,
+      selectedMessage.fromUserId,
+      replyContent.trim(),
+      isDemoMode
+    );
 
-    addMessage(newMessage);
-    setReplyContent('');
-    setShowReplyInput(false);
-    setSelectedMessage(null);
-    setActiveTab('sent');
+    if (result.success) {
+      setReplyContent('');
+      setShowReplyInput(false);
+      setSelectedMessage(null);
+      setActiveTab('sent');
+    } else {
+      setReplyError(result.error || '답장 전송에 실패했습니다.');
+    }
+
     setIsSending(false);
   };
 
@@ -190,7 +169,7 @@ export default function MessagesPage() {
           >
             <ArrowLeft size={22} className="text-[#8B949E]" />
           </button>
-          <h1 className="text-lg font-bold text-white">메세지</h1>
+          <h1 className="text-lg font-bold text-white">쪽지함</h1>
         </div>
 
         {/* Tabs */}
@@ -206,7 +185,7 @@ export default function MessagesPage() {
             `}
           >
             <Inbox size={16} />
-            받은 메세지
+            받은 쪽지
             {unreadCount > 0 && (
               <span className="w-5 h-5 bg-[#FF6B8A] text-white text-xs rounded-full flex items-center justify-center">
                 {unreadCount}
@@ -224,7 +203,7 @@ export default function MessagesPage() {
             `}
           >
             <Send size={16} />
-            보낸 메세지
+            보낸 쪽지
           </button>
         </div>
       </div>
@@ -236,6 +215,7 @@ export default function MessagesPage() {
             {displayMessages.map((message) => {
               const otherUserId = activeTab === 'received' ? message.fromUserId : message.toUserId;
               const otherUser = getUserInfo(otherUserId);
+              const degreeStyle = getDegreeColor(message.connectionDegree);
 
               return (
                 <motion.button
@@ -258,9 +238,15 @@ export default function MessagesPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`font-medium ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#C9D1D9]'}`}>
-                        {otherUser?.name || '알 수 없음'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#C9D1D9]'}`}>
+                          {otherUser?.name || '알 수 없음'}
+                        </span>
+                        {/* 촌수 뱃지 */}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${degreeStyle.bg} ${degreeStyle.text}`}>
+                          {getDegreeLabel(message.connectionDegree)}
+                        </span>
+                      </div>
                       <span className="text-sm text-[#484F58]">
                         {formatMessageTime(message.createdAt)}
                       </span>
@@ -294,10 +280,10 @@ export default function MessagesPage() {
           <div className="text-center py-16">
             <MessageCircle size={48} className="text-[#484F58] mx-auto mb-4" />
             <p className="text-[#8B949E]">
-              {activeTab === 'received' ? '받은 메세지가 없습니다' : '보낸 메세지가 없습니다'}
+              {activeTab === 'received' ? '받은 쪽지가 없습니다' : '보낸 쪽지가 없습니다'}
             </p>
             <p className="text-[#484F58] text-base mt-2">
-              인맥에게 메세지를 보내보세요
+              1촌 또는 2촌(인맥의 인맥)에게 쪽지를 보내보세요
             </p>
           </div>
         )}
@@ -315,6 +301,7 @@ export default function MessagesPage() {
                 setSelectedMessage(null);
                 setShowReplyInput(false);
                 setReplyContent('');
+                setReplyError('');
               }}
               className="fixed inset-0 bg-[#0D1117]/60 backdrop-blur-sm z-40"
             />
@@ -334,6 +321,7 @@ export default function MessagesPage() {
                     : selectedMessage.toUserId;
                   const otherUser = getUserInfo(otherUserId);
                   const isReceived = selectedMessage.toUserId === currentUserId;
+                  const degreeStyle = getDegreeColor(selectedMessage.connectionDegree);
 
                   return (
                     <>
@@ -352,17 +340,21 @@ export default function MessagesPage() {
                         </div>
                       </div>
 
-                      {/* Direction */}
+                      {/* Direction + Degree */}
                       <div className="flex items-center gap-2 mb-4">
                         {isReceived ? (
                           <span className="text-sm px-3 py-1.5 rounded-full bg-[#58A6FF]/20 text-[#58A6FF]">
-                            받은 메세지
+                            받은 쪽지
                           </span>
                         ) : (
                           <span className="text-sm px-3 py-1.5 rounded-full bg-[#1F6FEB]/20 text-[#1F6FEB]">
-                            보낸 메세지
+                            보낸 쪽지
                           </span>
                         )}
+                        <span className={`text-sm px-3 py-1.5 rounded-full font-medium ${degreeStyle.bg} ${degreeStyle.text}`}>
+                          <Users size={12} className="inline mr-1" />
+                          {getDegreeLabel(selectedMessage.connectionDegree)}
+                        </span>
                         <span className="text-sm text-[#484F58]">
                           {format(selectedMessage.createdAt, 'yyyy년 M월 d일 a h:mm', { locale: ko })}
                         </span>
@@ -385,12 +377,19 @@ export default function MessagesPage() {
                                 className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-xl py-4 px-5 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                                 rows={3}
                                 autoFocus
+                                maxLength={500}
                               />
+                              {replyError && (
+                                <div className="px-3 py-2 bg-[#F85149]/10 border border-[#F85149]/30 rounded-lg">
+                                  <p className="text-sm text-[#F85149]">{replyError}</p>
+                                </div>
+                              )}
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => {
                                     setShowReplyInput(false);
                                     setReplyContent('');
+                                    setReplyError('');
                                   }}
                                   className="flex-1 py-3 bg-[#1C2333] text-[#8B949E] font-medium rounded-xl border border-[#30363D]"
                                 >
@@ -406,7 +405,7 @@ export default function MessagesPage() {
                                   ) : (
                                     <>
                                       <Send size={16} />
-                                      보내기
+                                      답장 보내기
                                     </>
                                   )}
                                 </button>

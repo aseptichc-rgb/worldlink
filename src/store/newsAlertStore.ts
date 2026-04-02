@@ -336,6 +336,32 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
         isLoading: false,
       });
 
+      // 모니터링 중인 그룹의 뉴스를 groupNewsItems/localStorage에도 저장하여
+      // 페이지 이동 후에도 이전 뉴스가 유지되도록 함
+      const currentGroupId = get().monitoringGroupId;
+      if (currentGroupId) {
+        const updatedGroupNewsItems = { ...get().groupNewsItems, [currentGroupId]: mergedNews };
+        const updatedGroupNewsMap = { ...get().groupNewsMap, [currentGroupId]: unreadCount };
+
+        // allGroupNews 업데이트: 이 그룹의 새 뉴스를 반영
+        const mergedIds = new Set(mergedNews.map(n => n.id));
+        const otherNews = get().allGroupNews.filter(n => !mergedIds.has(n.id));
+        const updatedAllGroupNews = [...mergedNews, ...otherNews];
+
+        set({
+          groupNewsItems: updatedGroupNewsItems,
+          groupNewsMap: updatedGroupNewsMap,
+          allGroupNews: updatedAllGroupNews,
+        });
+
+        saveCachedGroupNews(
+          updatedGroupNewsMap,
+          updatedGroupNewsItems,
+          updatedAllGroupNews,
+          Array.from(get().latestNewsIds),
+        );
+      }
+
       // FCM 푸시 알림 전송
       if (!isDemoMode() && unreadCount > 0) {
         sendPushNotification(
@@ -427,6 +453,21 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
             groupNewsItems[gid].push(newsItem);
             if (!readIds.has(newsItem.id)) {
               groupNewsMap[gid] = (groupNewsMap[gid] || 0) + 1;
+            }
+          }
+        }
+      }
+
+      // 이전 groupNewsItems에서 매핑되지 않은 뉴스도 유지 (이전 뉴스 보존)
+      const prevGroupNewsItems = get().groupNewsItems;
+      for (const group of groups) {
+        const prevItems = prevGroupNewsItems[group.id] || [];
+        const currentIds = new Set(groupNewsItems[group.id].map(n => n.id));
+        for (const item of prevItems) {
+          if (!currentIds.has(item.id)) {
+            groupNewsItems[group.id].push(item);
+            if (!readIds.has(item.id)) {
+              groupNewsMap[group.id] = (groupNewsMap[group.id] || 0) + 1;
             }
           }
         }

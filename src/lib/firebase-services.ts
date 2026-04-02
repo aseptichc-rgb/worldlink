@@ -1814,3 +1814,133 @@ export const debugUserConnections = async (userId: string): Promise<{
 
   return { total: connections.length, byMethod, visibleInNetwork, managedGroupMembers };
 };
+
+// ==================== MESSAGE (쪽지) SERVICES ====================
+
+export interface FirestoreMessage {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  content: string;
+  connectionDegree: number; // 1 = 1촌, 2 = 2촌
+  isRead: boolean;
+  createdAt: Date;
+}
+
+// 2촌 이내 연결 여부 확인 (1촌 또는 2촌이면 true)
+export const getConnectionDegree = async (fromUserId: string, toUserId: string): Promise<number> => {
+  // 1촌 확인
+  const isFirst = await isFirstDegreeConnection(fromUserId, toUserId);
+  if (isFirst) return 1;
+
+  // 2촌 확인: 내 1촌 목록과 상대 1촌 목록의 교집합이 있으면 2촌
+  const [myConnections, theirConnections] = await Promise.all([
+    getDirectConnections(fromUserId),
+    getDirectConnections(toUserId),
+  ]);
+
+  const myConnIds = new Set(
+    myConnections.map(c => c.fromUserId === fromUserId ? c.toUserId : c.fromUserId)
+  );
+  const theirConnIds = theirConnections.map(c =>
+    c.fromUserId === toUserId ? c.toUserId : c.fromUserId
+  );
+
+  for (const id of theirConnIds) {
+    if (myConnIds.has(id)) return 2;
+  }
+
+  return 0; // 연결되지 않음
+};
+
+// 쪽지 보내기 (1촌 또는 2촌만 가능)
+export const sendMessage = async (
+  fromUserId: string,
+  toUserId: string,
+  content: string,
+  connectionDegree: number
+): Promise<FirestoreMessage> => {
+  const msgRef = doc(collection(db, 'messages'));
+  const now = serverTimestamp();
+
+  const messageData = {
+    id: msgRef.id,
+    fromUserId,
+    toUserId,
+    content,
+    connectionDegree,
+    isRead: false,
+    createdAt: now,
+  };
+
+  await setDoc(msgRef, messageData);
+
+  return {
+    ...messageData,
+    createdAt: new Date(),
+  };
+};
+
+// 받은 쪽지 조회
+export const getReceivedMessages = async (userId: string): Promise<FirestoreMessage[]> => {
+  try {
+    const messagesRef = collection(db, 'messages');
+    const q = query(
+      messagesRef,
+      where('toUserId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      } as FirestoreMessage;
+    });
+  } catch (err) {
+    console.warn('[getReceivedMessages] Failed:', err);
+    return [];
+  }
+};
+
+// 보낸 쪽지 조회
+export const getSentMessages = async (userId: string): Promise<FirestoreMessage[]> => {
+  try {
+    const messagesRef = collection(db, 'messages');
+    const q = query(
+      messagesRef,
+      where('fromUserId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      } as FirestoreMessage;
+    });
+  } catch (err) {
+    console.warn('[getSentMessages] Failed:', err);
+    return [];
+  }
+};
+
+// 쪽지 읽음 처리
+export const markMessageAsRead = async (messageId: string): Promise<void> => {
+  const msgRef = doc(db, 'messages', messageId);
+  await updateDoc(msgRef, { isRead: true });
+};
+
+// 쪽지 삭제
+export const deleteMessage = async (messageId: string): Promise<void> => {
+  const msgRef = doc(db, 'messages', messageId);
+  await deleteDoc(msgRef);
+};

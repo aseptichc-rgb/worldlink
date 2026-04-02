@@ -15,10 +15,11 @@ import {
   UserPlus,
   MessageCircle,
   Share2,
+  Phone,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useCardStore } from '@/store/cardStore';
-import { getUser, getUserConnectionsWithDetails } from '@/lib/firebase-services';
+import { getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { demoUsers, demoConnections } from '@/lib/demo-data';
 import { User } from '@/types';
 import Avatar from '@/components/ui/Avatar';
@@ -31,6 +32,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
   const { savedCards } = useCardStore();
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [connectionCount, setConnectionCount] = useState(0);
+  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -101,6 +103,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
 
     loadUserData();
   }, [userId, savedCards]);
+
+  // 현재 사용자와 대상 사용자 간 인맥 여부 확인
+  useEffect(() => {
+    const checkConnectionStatus = async () => {
+      if (!currentUser || currentUser.id === userId) return;
+      try {
+        const connections = await getDirectConnections(currentUser.id);
+        const connected = connections.some(
+          conn => conn.fromUserId === userId || conn.toUserId === userId
+        );
+        setIsConnected(connected);
+      } catch {
+        // ignore
+      }
+    };
+    checkConnectionStatus();
+  }, [currentUser, userId]);
 
   const isMyProfile = currentUser?.id === userId;
 
@@ -254,7 +273,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
         )}
 
         {/* 상세 정보 */}
-        {(targetUser.industry || targetUser.companySize || targetUser.positionLevel || targetUser.category || targetUser.email) && (
+        {(targetUser.industry || targetUser.companySize || targetUser.positionLevel || targetUser.category || targetUser.email || (isConnected && targetUser.phone)) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -321,6 +340,18 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
                   <p className="text-sm text-[#F0F6FC]">{targetUser.email}</p>
                 </div>
               </div>
+            )}
+
+            {isConnected && targetUser.phone && (
+              <a href={`tel:${targetUser.phone}`} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#3FB950]/10 flex items-center justify-center">
+                  <Phone size={16} className="text-[#3FB950]" />
+                </div>
+                <div>
+                  <p className="text-xs text-[#484F58]">전화번호</p>
+                  <p className="text-sm text-[#F0F6FC]">{targetUser.phone}</p>
+                </div>
+              </a>
             )}
           </motion.div>
         )}
