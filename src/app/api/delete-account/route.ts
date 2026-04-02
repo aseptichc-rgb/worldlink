@@ -21,27 +21,45 @@ function getAdminApp() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, secret } = await request.json();
+    const { email, name, secret } = await request.json();
 
     if (secret !== 'temp-delete-2026') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!email && !name) {
+      return NextResponse.json({ error: 'email 또는 name 중 하나는 필수입니다.' }, { status: 400 });
     }
 
     const app = getAdminApp();
     const adminAuth = getAuth(app);
     const adminDb = getFirestore(app);
 
+    // 이름으로 검색하는 경우 먼저 이메일 찾기
+    let targetEmail = email;
+    if (!targetEmail && name) {
+      const nameSnap = await adminDb.collection('users').where('name', '==', name).get();
+      if (nameSnap.empty) {
+        return NextResponse.json({ error: `이름 '${name}'에 해당하는 사용자를 찾을 수 없습니다.` }, { status: 404 });
+      }
+      if (nameSnap.size > 1) {
+        const users = nameSnap.docs.map(d => ({ id: d.id, name: d.data().name, email: d.data().email }));
+        return NextResponse.json({ error: `이름 '${name}'에 해당하는 사용자가 ${nameSnap.size}명입니다. email을 지정해주세요.`, users }, { status: 400 });
+      }
+      targetEmail = nameSnap.docs[0].data().email;
+    }
+
     // 1. Firebase Auth에서 유저 찾기
     let uid: string;
     try {
-      const userRecord = await adminAuth.getUserByEmail(email);
+      const userRecord = await adminAuth.getUserByEmail(targetEmail);
       uid = userRecord.uid;
     } catch (e: any) {
       return NextResponse.json({ error: `Auth user not found: ${e.message}` }, { status: 404 });
     }
 
     // 2. Firestore users 컬렉션에서 삭제
-    const usersSnap = await adminDb.collection('users').where('email', '==', email).get();
+    const usersSnap = await adminDb.collection('users').where('email', '==', targetEmail).get();
     const firestoreUid = usersSnap.empty ? null : usersSnap.docs[0].id;
     const deleteId = firestoreUid || uid;
 
@@ -93,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      deleted: { email, authUid: uid, firestoreDoc: firestoreUid, usersDeleted: deletedUsers, connections: deletedConns, groupsUpdated: updatedGroups },
+      deleted: { email: targetEmail, name: name || null, authUid: uid, firestoreDoc: firestoreUid, usersDeleted: deletedUsers, connections: deletedConns, groupsUpdated: updatedGroups },
     });
   } catch (err: any) {
     console.error('Delete account error:', err);
