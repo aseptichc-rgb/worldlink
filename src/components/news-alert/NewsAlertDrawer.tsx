@@ -75,9 +75,8 @@ export default function NewsAlertDrawer({ groupName }: NewsAlertDrawerProps) {
     return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
   };
 
-  const handleNewsClick = (newsId: string, link: string) => {
+  const handleNewsClick = (newsId: string) => {
     markAsRead(newsId);
-    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -175,10 +174,13 @@ export default function NewsAlertDrawer({ groupName }: NewsAlertDrawerProps) {
                   {news.map((item) => {
                     const isRead = readNewsIds.has(item.id);
                     return (
-                      <button
+                      <a
                         key={item.id}
-                        onClick={() => handleNewsClick(item.id, item.link)}
-                        className={`w-full text-left px-5 py-4 transition-colors hover:bg-[#161B22] ${
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => handleNewsClick(item.id)}
+                        className={`block w-full text-left px-5 py-4 transition-colors hover:bg-[#161B22] ${
                           isRead ? 'opacity-60' : ''
                         }`}
                       >
@@ -210,7 +212,7 @@ export default function NewsAlertDrawer({ groupName }: NewsAlertDrawerProps) {
                           </div>
                           <ExternalLink size={14} className="text-[#484F58] shrink-0 mt-1" />
                         </div>
-                      </button>
+                      </a>
                     );
                   })}
                 </div>

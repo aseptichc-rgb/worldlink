@@ -142,11 +142,8 @@ export default function ManagedGroupsPage() {
     });
   };
 
-  const handleNewsClick = (newsId: string, link: string) => {
+  const handleNewsClick = (newsId: string) => {
     markAsRead(newsId);
-    if (link && link !== '#') {
-      window.open(link, '_blank', 'noopener,noreferrer');
-    }
   };
 
   const formatTime = (dateString: string) => {
@@ -335,10 +332,13 @@ export default function ManagedGroupsPage() {
                     const renderNewsItem = (item: typeof newsItems[0], i: number, isFirst: boolean) => {
                       const isRead = readNewsIds.has(item.id);
                       return (
-                        <button
+                        <a
                           key={item.id}
-                          onClick={() => handleNewsClick(item.id, item.link)}
-                          className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-2.5 ${
+                          href={item.link && item.link !== '#' ? item.link : undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => handleNewsClick(item.id)}
+                          className={`block w-full text-left px-4 py-3 transition-colors flex items-start gap-2.5 ${
                             !isFirst ? 'border-t border-[#21262D]' : ''
                           } ${isRead ? 'hover:bg-[#161B22]/50' : 'hover:bg-[#161B22]'}`}
                         >
@@ -362,7 +362,7 @@ export default function ManagedGroupsPage() {
                             </div>
                           </div>
                           <ExternalLink size={12} className={`shrink-0 mt-1 ${isRead ? 'text-[#30363D]' : 'text-[#484F58]'}`} />
-                        </button>
+                        </a>
                       );
                     };
 
