@@ -632,6 +632,7 @@ export const isFirstDegreeConnection = async (currentUserId: string, targetUserI
 
 import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs, getDemoCompatibleId, ensureUserInDemoNetwork } from './demo-data';
 import { DEMO_NAME_CATEGORY_MAP } from './demo-seed-data';
+import { inferCategory } from './category-utils';
 
 // 이름 → 카테고리 매핑 (Firestore에 category가 없는 기존 데이터 호환용)
 const NAME_CATEGORY_MAP: Record<string, string> = {
@@ -686,7 +687,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     keywords: currentUser.keywords,
     degree: 0,
     connectionCount: 0,
-    category: currentUser.category || NAME_CATEGORY_MAP[currentUser.name],
+    category: currentUser.category || NAME_CATEGORY_MAP[currentUser.name] || inferCategory(currentUser),
   });
   userMap.set(currentUser.id, currentUser);
 
@@ -715,7 +716,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
         keywords: connectedUser.keywords,
         degree: 1,
         connectionCount: 0,
-        category: connectedUser.category || NAME_CATEGORY_MAP[connectedUser.name],
+        category: connectedUser.category || NAME_CATEGORY_MAP[connectedUser.name] || inferCategory(connectedUser),
       });
 
       edges.push({
@@ -760,9 +761,15 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     node.connectionCount = filteredEdges.filter(
       edge => edge.source === node.id || edge.target === node.id
     ).length;
-    // category fallback: Firestore에 category가 없으면 이름으로 매핑
+    // category fallback: Firestore에 category가 없으면 이름 매핑 → 자동 추론
     if (!node.category) {
       node.category = NAME_CATEGORY_MAP[node.name];
+    }
+    if (!node.category) {
+      const userData = userMap.get(node.id);
+      if (userData) {
+        node.category = inferCategory(userData);
+      }
     }
   });
 

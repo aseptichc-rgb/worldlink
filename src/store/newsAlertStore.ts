@@ -288,7 +288,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
   intervalId: null,
   isDrawerOpen: false,
 
-  searchNews: async (members, timeRange = '1d') => {
+  searchNews: async (members, timeRange = '6m') => {
     set({ isLoading: true, error: null });
 
     try {
@@ -380,7 +380,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
     }
   },
 
-  searchNewsForAllGroups: async (groups, timeRange = '1d') => {
+  searchNewsForAllGroups: async (groups, timeRange = '6m') => {
     if (groups.length === 0) {
       set({ groupNewsMap: {}, groupNewsItems: {}, allGroupNews: [], totalGroupUnread: 0 });
       saveCachedGroupNews({}, {}, [], []);

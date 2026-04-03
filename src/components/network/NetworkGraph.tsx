@@ -7,6 +7,7 @@ import { useGroupStore } from '@/store/groupStore';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { NetworkNode, NodeGroup } from '@/types';
 import { Plus, Minus, Maximize2, RotateCcw, Home } from 'lucide-react';
+import { CATEGORY_COLORS } from '@/lib/category-utils';
 
 interface GraphNode extends NetworkNode {
   x?: number;
@@ -56,18 +57,7 @@ const COLORS = {
   textDimmed: 'rgba(139, 148, 158, 0.3)',
 };
 
-// 카테고리별 색상 매핑
-const CATEGORY_COLORS: { [key: string]: string } = {
-  '의료기기': '#4A90E2',    // 파랑
-  '솔루션': '#9B59B6',      // 보라
-  '투자': '#E74C3C',        // 빨강
-  '바이오': '#2ECC71',      // 초록
-  '제약': '#F39C12',        // 주황
-  '법률': '#1ABC9C',        // 청록
-  '의료기관': '#3498DB',    // 하늘
-  '비즈니스': '#E67E22',    // 진한 주황
-  '특허': '#16A085',        // 진한 청록
-};
+// 카테고리별 색상은 category-utils.ts에서 임포트
 
 // 노드 크기 상수 — 계층별 크기 차별화 (시각적 위계)
 const NODE_SIZES = {
