@@ -208,10 +208,19 @@ export async function POST(request: NextRequest) {
 
     allNews.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
+    // 동일 소속(memberCompany)당 가장 최신 기사 하나만 유지
+    const seenCompanies = new Set<string>();
+    const deduped = allNews.filter(item => {
+      if (!item.memberCompany) return true;
+      if (seenCompanies.has(item.memberCompany)) return false;
+      seenCompanies.add(item.memberCompany);
+      return true;
+    });
+
     return NextResponse.json({
       success: true,
-      news: allNews.slice(0, 500),
-      totalCount: Math.min(allNews.length, 500),
+      news: deduped.slice(0, 500),
+      totalCount: Math.min(deduped.length, 500),
       searchedAt: new Date().toISOString(),
     });
   } catch (error) {
