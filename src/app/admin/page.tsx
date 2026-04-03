@@ -26,18 +26,7 @@ import {
 } from '@/lib/admin-services';
 import { onAuthChange, getUser } from '@/lib/firebase-services';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  '의료기관': '#58A6FF',
-  '의료기기': '#1F6FEB',
-  '솔루션': '#7EE0FF',
-  '제약': '#3FB950',
-  '바이오': '#A371F7',
-  '투자': '#FF6B8A',
-  '법률': '#D29922',
-  '비즈니스': '#F97316',
-  '특허': '#EC4899',
-  '미분류': '#484F58',
-};
+import { CATEGORY_COLORS } from '@/lib/category-utils';
 
 const containerVariants = {
   hidden: { opacity: 0 },

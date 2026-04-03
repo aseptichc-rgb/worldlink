@@ -81,9 +81,13 @@ export const getDemoCompatibleId = (user: { id: string; name?: string; email?: s
   return match ? match.id : user.id;
 };
 
-// 실제 사용자를 데모 네트워크에 동적으로 추가 (아직 없는 경우)
+// 실제 사용자를 데모 네트워크에 동적으로 추가 (데모 모드에서만)
 export const ensureUserInDemoNetwork = (userId: string): void => {
   if (!demoConnections[userId]) {
+    // 데모 모드가 아니면 실제 유저를 데모 네트워크에 오염시키지 않음
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (!isDemoMode) return;
+
     // 데모 계정의 연결 목록을 기반으로 연결 (모든 멤버가 아닌 현실적 수준)
     const demoAccountId = DEMO_MEMBERS[DEMO_ACCOUNT_INDEX].id;
     const demoAccountConns = demoConnections[demoAccountId] || [];

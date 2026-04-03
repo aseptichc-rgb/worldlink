@@ -37,7 +37,7 @@ import { useConnectionRequestStore } from '@/store/connectionRequestStore';
 import { useMemoStore } from '@/store/memoStore';
 import { useGroupStore } from '@/store/groupStore';
 import { useAuthStore } from '@/store/authStore';
-import { useMessageStore, Message } from '@/store/messageStore';
+import { useMessageStore } from '@/store/messageStore';
 import { useInteractionStore } from '@/store/interactionStore';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
@@ -52,7 +52,7 @@ export default function ProfileSheet() {
   const { getMemo, setMemo, deleteMemo } = useMemoStore();
   const { getGroupsForNode, removeNodeFromGroup, openGroupAssignModal } = useGroupStore();
   const { user: currentUser } = useAuthStore();
-  const { addMessage } = useMessageStore();
+  const { sendMessageToUser } = useMessageStore();
 
   const [connectionPath, setConnectionPath] = useState<User[]>([]);
   const [isLoadingPath, setIsLoadingPath] = useState(false);
@@ -71,10 +71,44 @@ export default function ProfileSheet() {
   const { getDaysSinceLastContact, getRelationshipStatus, addInteraction } = useInteractionStore();
   const { allGroupNews, markAsRead } = useNewsAlertStore();
 
-  // 선택된 인물의 관련 뉴스
-  const memberNews = selectedNode
-    ? allGroupNews.filter(n => n.memberName === selectedNode.name)
-    : [];
+  // 선택된 인물의 관련 뉴스 (캐시 + 개별 검색)
+  const [profileNews, setProfileNews] = useState<import('@/app/api/news/route').NewsItem[]>([]);
+
+  useEffect(() => {
+    if (!selectedNode) {
+      setProfileNews([]);
+      return;
+    }
+
+    // 1) 캐시에서 먼저 확인
+    const cached = allGroupNews.filter(n => n.memberName === selectedNode.name);
+    if (cached.length > 0) {
+      setProfileNews(cached);
+      return;
+    }
+
+    // 2) 캐시에 없으면 직접 API 검색
+    const member = { name: selectedNode.name, company: selectedNode.company };
+    if (!member.name) return;
+
+    let cancelled = false;
+    fetch('/api/news', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ members: [member], timeRange: '6m' }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!cancelled && data?.news?.length > 0) {
+          setProfileNews(data.news);
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [selectedNode?.id, selectedNode?.name, selectedNode?.company, allGroupNews]);
+
+  const memberNews = profileNews;
 
   // 메시지 관련 상태
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -100,11 +134,12 @@ export default function ProfileSheet() {
       if (!currentUser) return;
 
       try {
-        if (currentUser.id.startsWith('member_') || !currentUser.id.includes('@')) {
+        const demoId = getDemoCompatibleId(currentUser);
+        const isDemoUser = demoId !== currentUser.id || currentUser.id.startsWith('member_') || currentUser.id.startsWith('demo_');
+        if (isDemoUser) {
           // 데모 사용자의 경우
-          const demoId = getDemoCompatibleId(currentUser);
-          ensureUserInDemoNetwork(currentUser.id);
-          const myConnIds = demoConnections[demoId] || demoConnections[currentUser.id] || [];
+          ensureUserInDemoNetwork(demoId);
+          const myConnIds = demoConnections[demoId] || [];
           setMyConnectionIds(new Set(myConnIds));
         } else {
           // 실제 사용자의 경우
@@ -133,6 +168,11 @@ export default function ProfileSheet() {
 
   useEffect(() => {
     let cancelled = false;
+
+    // 노드 변경 시 이전 데이터 즉시 초기화 (stale 데이터 방지)
+    setConnectionPath([]);
+    setSelectedUserData(null);
+    setTheirConnections([]);
 
     const loadConnectionPath = async () => {
       if (!selectedNode || !currentUser) return;
@@ -166,9 +206,9 @@ export default function ProfileSheet() {
 
         const fromDemoId = getDemoCompatibleId(currentUser);
         const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
-        const isDemoNode = isDemoMode || selectedNode.id.startsWith('demo_') || selectedNode.id.startsWith('member_') || !!demoConnections[selectedNode.id];
+        const isDemoNode = selectedNode.id.startsWith('demo_') || selectedNode.id.startsWith('member_');
         if (isDemoNode) {
-          ensureUserInDemoNetwork(currentUser.id);
+          ensureUserInDemoNetwork(fromDemoId);
           const pathIds = findDemoConnectionPath(fromDemoId !== currentUser.id ? fromDemoId : currentUser.id, selectedNode.id);
           const pathUsers: User[] = pathIds.map(id => {
             const demoUser = demoUsers.find(u => u.id === id);
@@ -246,43 +286,46 @@ export default function ProfileSheet() {
     }
   };
 
-  // 메시지 보내기 핸들러
+  // 메시지 보내기 핸들러 (1촌 + 2촌)
+  const [sendError, setSendError] = useState('');
   const handleSendMessage = async () => {
     if (!selectedNode || !currentUser || !messageContent.trim()) return;
 
     setIsSendingMessage(true);
+    setSendError('');
 
     const currentUserId = getDemoCompatibleId(currentUser) !== currentUser.id
       ? getDemoCompatibleId(currentUser)
       : currentUser.id;
 
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      fromUserId: currentUserId,
-      toUserId: selectedNode.id,
-      content: messageContent.trim(),
-      createdAt: new Date(),
-      isRead: false,
-    };
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
 
-    // 전송 시뮬레이션
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await sendMessageToUser(
+      currentUserId,
+      selectedNode.id,
+      messageContent.trim(),
+      isDemoMode
+    );
 
-    addMessage(newMessage);
-    addInteraction(currentUserId, selectedNode.id, 'message', messageContent.trim(), true);
-    setMessageSent(true);
-    setIsSendingMessage(false);
+    if (result.success) {
+      addInteraction(currentUserId, selectedNode.id, 'message', messageContent.trim(), true);
+      setMessageSent(true);
+      setIsSendingMessage(false);
 
-    // 2초 후 모달 닫기
-    setTimeout(() => {
-      setShowMessageModal(false);
-      setMessageContent('');
-      setMessageSent(false);
-    }, 1500);
+      setTimeout(() => {
+        setShowMessageModal(false);
+        setMessageContent('');
+        setMessageSent(false);
+      }, 1500);
+    } else {
+      setSendError(result.error || '메시지 전송에 실패했습니다.');
+      setIsSendingMessage(false);
+    }
   };
 
-  // 메시지 버튼 클릭 (1촌용)
+  // 메시지 버튼 클릭 (1촌 + 2촌)
   const handleMessageClick = () => {
+    setSendError('');
     setShowMessageModal(true);
   };
 
@@ -328,7 +371,7 @@ export default function ProfileSheet() {
       setSelectedNode(existingNode);
       setFocusedNodeId(user.id);
     } else {
-      ensureUserInDemoNetwork(currentUser.id);
+      ensureUserInDemoNetwork(currentDemoId);
       const pathIds = findDemoConnectionPath(currentDemoId !== currentUser.id ? currentDemoId : currentUser.id, user.id);
       const degree = pathIds.length > 0 ? pathIds.length - 1 : 2;
 
@@ -1038,8 +1081,35 @@ export default function ProfileSheet() {
                       leftIcon={<MessageCircle size={16} />}
                       onClick={handleMessageClick}
                     >
-                      메세지
+                      쪽지 보내기
                     </Button>
+                  </div>
+                ) : connectionDegree === 2 ? (
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      className="w-full text-sm py-3.5 sm:py-3 bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF] transition-all duration-300 touch-manipulation"
+                      leftIcon={<UserPlus size={16} />}
+                      onClick={handleConnectionRequestClick}
+                    >
+                      인맥 신청하기
+                    </Button>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="secondary"
+                        className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
+                        leftIcon={<Star size={16} />}
+                      >
+                        관심
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
+                        leftIcon={<MessageCircle size={16} />}
+                        onClick={handleMessageClick}
+                      >
+                        쪽지 보내기
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -1064,7 +1134,7 @@ export default function ProfileSheet() {
                         leftIcon={<MessageCircle size={16} />}
                         onClick={handleCoffeeChatClick}
                       >
-                        메세지
+                        커피챗
                       </Button>
                     </div>
                   </div>
@@ -1075,7 +1145,7 @@ export default function ProfileSheet() {
         </motion.div>
       )}
 
-      {/* 메시지 보내기 모달 */}
+      {/* 쪽지 보내기 모달 (1촌 + 2촌) */}
       {showMessageModal && selectedNode && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -1086,6 +1156,7 @@ export default function ProfileSheet() {
             if (!isSendingMessage) {
               setShowMessageModal(false);
               setMessageContent('');
+              setSendError('');
             }
           }}
         >
@@ -1101,9 +1172,9 @@ export default function ProfileSheet() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#58A6FF]/20 flex items-center justify-center">
                   <Check size={32} className="text-[#58A6FF]" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">메시지 전송 완료!</h3>
+                <h3 className="text-lg font-bold text-white mb-2">쪽지 전송 완료!</h3>
                 <p className="text-base text-[#8B949E]">
-                  {selectedNode.name}님에게 메시지를 보냈습니다
+                  {selectedNode.name}님에게 쪽지를 보냈습니다
                 </p>
               </div>
             ) : (
@@ -1126,6 +1197,7 @@ export default function ProfileSheet() {
                     onClick={() => {
                       setShowMessageModal(false);
                       setMessageContent('');
+                      setSendError('');
                     }}
                     className="p-2 rounded-lg hover:bg-[#363636] transition-colors"
                   >
@@ -1133,11 +1205,25 @@ export default function ProfileSheet() {
                   </button>
                 </div>
 
+                {/* 연결 거리 표시 */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                    connectionDegree === 1
+                      ? 'bg-[#58A6FF]/15 text-[#58A6FF]'
+                      : 'bg-[#9B8ED9]/15 text-[#9B8ED9]'
+                  }`}>
+                    {connectionDegree === 1 ? '1촌 인맥' : '2촌 · 인맥의 인맥'}
+                  </span>
+                </div>
+
                 <div className="mb-4">
                   <textarea
                     value={messageContent}
                     onChange={(e) => setMessageContent(e.target.value)}
-                    placeholder={`${selectedNode.name}님에게 보낼 메시지를 작성하세요...`}
+                    placeholder={connectionDegree === 2
+                      ? `${selectedNode.name}님에게 보낼 쪽지를 작성하세요...\n간단한 자기소개와 연락 목적을 적으면 좋아요!`
+                      : `${selectedNode.name}님에게 보낼 쪽지를 작성하세요...`
+                    }
                     className="w-full bg-[#121212] border border-[#363636] text-white rounded-[10px] py-3 px-4 text-base resize-none focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58] min-h-[120px]"
                     autoFocus
                     maxLength={500}
@@ -1147,13 +1233,19 @@ export default function ProfileSheet() {
                   </div>
                 </div>
 
+                {sendError && (
+                  <div className="mb-4 px-3 py-2 bg-[#F85149]/10 border border-[#F85149]/30 rounded-lg">
+                    <p className="text-sm text-[#F85149]">{sendError}</p>
+                  </div>
+                )}
+
                 <Button
                   className="w-full"
                   onClick={handleSendMessage}
                   disabled={!messageContent.trim() || isSendingMessage}
                   leftIcon={isSendingMessage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 >
-                  {isSendingMessage ? '전송 중...' : '메시지 보내기'}
+                  {isSendingMessage ? '전송 중...' : '쪽지 보내기'}
                 </Button>
               </>
             )}

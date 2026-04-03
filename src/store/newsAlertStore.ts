@@ -3,7 +3,7 @@ import { NewsItem } from '@/app/api/news/route';
 
 const STORAGE_KEY = 'nodded_news_alert';
 const CHECK_INTERVAL = 60 * 60 * 1000; // 1시간
-const CACHE_MAX_ITEMS = 200; // 캐시할 최대 뉴스 수
+const CACHE_MAX_ITEMS = 1000; // 캐시할 최대 뉴스 수 (6개월 대응)
 
 // 데모 모드 체크
 function isDemoMode(): boolean {
@@ -141,6 +141,7 @@ interface NewsAlertState {
   // Actions
   searchNews: (members: { name: string; company?: string }[], timeRange?: string) => Promise<void>;
   searchNewsForAllGroups: (groups: GroupInfo[], timeRange?: string) => Promise<void>;
+  loadCachedNewsForGroup: (groupId: string) => void;
   startMonitoring: (groupId: string, members: { name: string; company?: string }[]) => void;
   stopMonitoring: () => void;
   markAsRead: (newsId: string) => void;
@@ -168,7 +169,7 @@ function loadReadNewsIds(): Set<string> {
 function saveReadNewsIds(ids: Set<string>) {
   if (typeof window === 'undefined') return;
   try {
-    const arr = Array.from(ids).slice(-500);
+    const arr = Array.from(ids).slice(-2000);
     localStorage.setItem(`${STORAGE_KEY}_read`, JSON.stringify(arr));
   } catch {
     // ignore
@@ -225,7 +226,7 @@ function saveCachedGroupNews(
     const truncatedAllGroupNews = allGroupNews.slice(0, CACHE_MAX_ITEMS);
     const truncatedGroupNewsItems: Record<string, NewsItem[]> = {};
     for (const [gid, items] of Object.entries(groupNewsItems)) {
-      truncatedGroupNewsItems[gid] = items.slice(0, 100);
+      truncatedGroupNewsItems[gid] = items.slice(0, 500);
     }
     localStorage.setItem(
       `${STORAGE_KEY}_groupNews`,
@@ -287,7 +288,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
   intervalId: null,
   isDrawerOpen: false,
 
-  searchNews: async (members, timeRange = '1d') => {
+  searchNews: async (members, timeRange = '6m') => {
     set({ isLoading: true, error: null });
 
     try {
@@ -335,6 +336,32 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
         isLoading: false,
       });
 
+      // 모니터링 중인 그룹의 뉴스를 groupNewsItems/localStorage에도 저장하여
+      // 페이지 이동 후에도 이전 뉴스가 유지되도록 함
+      const currentGroupId = get().monitoringGroupId;
+      if (currentGroupId) {
+        const updatedGroupNewsItems = { ...get().groupNewsItems, [currentGroupId]: mergedNews };
+        const updatedGroupNewsMap = { ...get().groupNewsMap, [currentGroupId]: unreadCount };
+
+        // allGroupNews 업데이트: 이 그룹의 새 뉴스를 반영
+        const mergedIds = new Set(mergedNews.map(n => n.id));
+        const otherNews = get().allGroupNews.filter(n => !mergedIds.has(n.id));
+        const updatedAllGroupNews = [...mergedNews, ...otherNews];
+
+        set({
+          groupNewsItems: updatedGroupNewsItems,
+          groupNewsMap: updatedGroupNewsMap,
+          allGroupNews: updatedAllGroupNews,
+        });
+
+        saveCachedGroupNews(
+          updatedGroupNewsMap,
+          updatedGroupNewsItems,
+          updatedAllGroupNews,
+          Array.from(get().latestNewsIds),
+        );
+      }
+
       // FCM 푸시 알림 전송
       if (!isDemoMode() && unreadCount > 0) {
         sendPushNotification(
@@ -353,7 +380,7 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
     }
   },
 
-  searchNewsForAllGroups: async (groups, timeRange = '1d') => {
+  searchNewsForAllGroups: async (groups, timeRange = '6m') => {
     if (groups.length === 0) {
       set({ groupNewsMap: {}, groupNewsItems: {}, allGroupNews: [], totalGroupUnread: 0 });
       saveCachedGroupNews({}, {}, [], []);
@@ -431,6 +458,21 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
         }
       }
 
+      // 이전 groupNewsItems에서 매핑되지 않은 뉴스도 유지 (이전 뉴스 보존)
+      const prevGroupNewsItems = get().groupNewsItems;
+      for (const group of groups) {
+        const prevItems = prevGroupNewsItems[group.id] || [];
+        const currentIds = new Set(groupNewsItems[group.id].map(n => n.id));
+        for (const item of prevItems) {
+          if (!currentIds.has(item.id)) {
+            groupNewsItems[group.id].push(item);
+            if (!readIds.has(item.id)) {
+              groupNewsMap[group.id] = (groupNewsMap[group.id] || 0) + 1;
+            }
+          }
+        }
+      }
+
       const totalGroupUnread = Object.values(groupNewsMap).reduce((sum, c) => sum + c, 0);
       const latestIdsArr = Array.from(latestIds);
 
@@ -462,6 +504,13 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
     }
   },
 
+  loadCachedNewsForGroup: (groupId) => {
+    const cached = get().groupNewsItems[groupId] || [];
+    const readIds = get().readNewsIds;
+    const unreadCount = cached.filter(n => !readIds.has(n.id)).length;
+    set({ news: cached, newNewsCount: unreadCount });
+  },
+
   startMonitoring: (groupId, members) => {
     const { intervalId, searchNews } = get();
 
@@ -469,10 +518,10 @@ export const useNewsAlertStore = create<NewsAlertState>((set, get) => ({
       clearInterval(intervalId);
     }
 
-    searchNews(members, '1d');
+    searchNews(members, '6m');
 
     const newIntervalId = window.setInterval(() => {
-      searchNews(members, '1d');
+      searchNews(members, '6m');
     }, CHECK_INTERVAL);
 
     set({

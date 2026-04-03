@@ -24,7 +24,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useGroupStore, flushGroupSync } from '@/store/groupStore';
 import { useMessageStore, Message } from '@/store/messageStore';
-import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, getDemoNetworkGraph, getDemoRecommendations, demoConnections } from '@/lib/demo-data';
+import { demoUsers, getDemoCompatibleId, ensureUserInDemoNetwork, demoConnections } from '@/lib/demo-data';
 import { useInteractionStore } from '@/store/interactionStore';
 import { getNetworkGraph, getRecommendations, onAuthChange, getUser, logoutUser } from '@/lib/firebase-services';
 import { Recommendation } from '@/types';
@@ -51,12 +51,14 @@ export default function NetworkPage() {
     }
   }, [user, loadFromFirebase]);
 
-  // 데모 인터랙션 데이터 초기화 (데모 모드에서만)
+  // 데모 인터랙션 데이터 초기화 (데모 멤버와 매칭되는 사용자만)
   useEffect(() => {
     const isDemo = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (user && isDemo) {
       const demoId = getDemoCompatibleId(user);
-      const connIds = demoConnections[demoId] || demoConnections[user.id] || [];
+      // 실제 계정(매칭 안 되는 사용자)은 데모 인터랙션 생성하지 않음
+      if (demoId === user.id) return;
+      const connIds = demoConnections[demoId] || [];
       if (connIds.length > 0) {
         initDemoInteractions(demoId, connIds);
       }
@@ -72,6 +74,7 @@ export default function NetworkPage() {
         fromUserId: otherUsers[0]?.id || 'demo-user-2',
         toUserId: currentUserId,
         content: '안녕하세요! 프로필 보고 연락드립니다. AI 관련해서 이야기 나눠보고 싶어요.',
+        connectionDegree: 1,
         createdAt: new Date(Date.now() - 1000 * 60 * 30),
         isRead: false,
       },
@@ -80,6 +83,7 @@ export default function NetworkPage() {
         fromUserId: otherUsers[1]?.id || 'demo-user-3',
         toUserId: currentUserId,
         content: '스타트업 투자 관련해서 조언 부탁드려도 될까요?',
+        connectionDegree: 1,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
         isRead: false,
       },
@@ -116,8 +120,6 @@ export default function NetworkPage() {
 
   // Load network data (centerUserId가 바뀌면 해당 인물 중심으로 재로드)
   useEffect(() => {
-    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
-
     const loadNetworkData = async () => {
       if (!user) return;
 
@@ -136,10 +138,8 @@ export default function NetworkPage() {
             position: user.position,
             keywords: user.keywords,
           };
-          // 데모 모드에서는 Firebase 호출 없이 데모 데이터 직접 사용
-          const { nodes: fetchedNodes, edges } = isDemoMode
-            ? getDemoNetworkGraph(user.id, userInfo)
-            : await getNetworkGraph(user.id, userInfo);
+          // 항상 getNetworkGraph 사용 (내부에서 실제 연결 우선, 데모 fallback 처리)
+          const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, userInfo);
           const demoId = getDemoCompatibleId(user);
           const syncedNodes = fetchedNodes.map(node =>
             (node.id === user.id || node.id === demoId) && node.degree === 0 && user.profileImage
@@ -162,9 +162,7 @@ export default function NetworkPage() {
             keywords: targetNode.keywords,
           } : undefined;
 
-          const { nodes: fetchedNodes, edges } = isDemoMode
-            ? getDemoNetworkGraph(targetUserId, targetUserData)
-            : await getNetworkGraph(targetUserId, targetUserData);
+          const { nodes: fetchedNodes, edges } = await getNetworkGraph(targetUserId, targetUserData);
           setNodes(fetchedNodes);
           setEdges(edges);
           // 중심 인물 이름 저장 및 프로필 시트 자동 표시
@@ -179,12 +177,8 @@ export default function NetworkPage() {
 
         // Load recommendations (내 네트워크일 때만)
         if (isMyNetwork) {
-          if (isDemoMode) {
-            setRecommendations(getDemoRecommendations(user.id));
-          } else {
-            const recs = await getRecommendations(user.id, 3);
-            setRecommendations(recs);
-          }
+          const recs = await getRecommendations(user.id, 3);
+          setRecommendations(recs);
         }
       } catch (error) {
         console.error('Error loading network data:', error);
@@ -196,14 +190,15 @@ export default function NetworkPage() {
     loadNetworkData();
   }, [user, centerUserId, centerUserOriginalDegree, setNodes, setEdges, setSelectedNode, setNetworkLoading]);
 
-  // Load demo messages (데모 모드에서만)
+  // Load demo messages (데모 멤버와 매칭되는 사용자만)
   useEffect(() => {
     const isDemo = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (user && messages.length === 0 && isDemo) {
       const demoId = getDemoCompatibleId(user);
-      ensureUserInDemoNetwork(user.id);
-      const currentUserId = demoId !== user.id ? demoId : user.id;
-      const demoMessages = generateDemoMessages(currentUserId);
+      // 실제 계정은 데모 메시지/네트워크 오염 방지
+      if (demoId === user.id) return;
+      ensureUserInDemoNetwork(demoId);
+      const demoMessages = generateDemoMessages(demoId);
       setMessages(demoMessages);
     }
   }, [user, messages.length, setMessages]);

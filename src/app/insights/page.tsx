@@ -41,11 +41,13 @@ export default function InsightsPage() {
   const { nodes } = useNetworkStore();
   const { interactions, initDemoInteractions } = useInteractionStore();
 
-  // 데모 데이터 초기화
+  // 데모 데이터 초기화 (데모 멤버와 매칭되는 사용자만)
   useEffect(() => {
     if (user) {
       const demoId = getDemoCompatibleId(user);
-      const connIds = demoConnections[demoId] || demoConnections[user.id] || [];
+      const isDemoUser = demoId !== user.id || user.id.startsWith('member_') || user.id.startsWith('demo_');
+      if (!isDemoUser) return;
+      const connIds = demoConnections[demoId] || [];
       if (connIds.length > 0) {
         initDemoInteractions(demoId, connIds);
       }
@@ -58,11 +60,16 @@ export default function InsightsPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // 네트워크 노드가 없으면 데모 데이터에서 가져오기
+  // 네트워크 노드가 없으면 데모 모드에서만 데모 데이터 사용
   const effectiveNodes = useMemo(() => {
     if (nodes.length > 0) return nodes;
     if (!user) return [];
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (!isDemoMode) return [];
     const demoId = getDemoCompatibleId(user);
+    // 데모 멤버와 매칭되지 않는 실제 계정은 데모 데이터 사용하지 않음
+    const isDemoUser = demoId !== user.id || user.id.startsWith('member_') || user.id.startsWith('demo_');
+    if (!isDemoUser) return [];
     const { nodes: demoNodes } = getDemoNetworkGraph(demoId);
     return demoNodes;
   }, [nodes, user]);

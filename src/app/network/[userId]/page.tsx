@@ -40,33 +40,21 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
     const loadUserData = async () => {
       const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
 
-      // 데모 모드: demoUsers에서 사용자 찾기
-      if (isDemoMode) {
-        const demoUser = demoUsers.find(u => u.id === userId);
-        if (demoUser) {
-          setTargetUser({
-            id: demoUser.id,
-            userId: demoUser.id,
-            name: demoUser.name,
-            company: demoUser.company || '',
-            position: demoUser.position || '',
-            keywords: demoUser.keywords || [],
-            profileImage: demoUser.profileImage,
-            networkVisibility: 'connections_only',
-            qrCode: '',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-
-          // 데모 인맥 가져오기
-          const connectionIds = demoConnections[userId] || [];
-          const connectionCards: BusinessCard[] = connectionIds
-            .map(id => demoUsers.find(u => u.id === id))
-            .filter((u): u is User => u !== undefined)
-            .map(conn => ({
+      // 저장된 명함에서 사용자 찾기
+      const savedCard = savedCards.find(c => c.cardId === userId);
+      if (savedCard) {
+        setTargetUser(savedCard.card);
+        // 인맥 공개 설정 확인
+        if (savedCard.card.networkVisibility === 'private') {
+          setIsLocked(true);
+        } else {
+          // getUserConnectionsWithDetails가 데모 fallback을 내부적으로 처리
+          try {
+            const userConnections = await getUserConnectionsWithDetails(userId);
+            const connectionCards: BusinessCard[] = userConnections.map(conn => ({
               id: conn.id,
               userId: conn.id,
-              name: conn.name,
+              name: conn.name || '알 수 없음',
               company: conn.company || '',
               position: conn.position || '',
               keywords: conn.keywords || [],
@@ -76,39 +64,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               createdAt: new Date(),
               updatedAt: new Date(),
             }));
-          setConnections(connectionCards);
-          return;
-        }
-      }
-
-      // 저장된 명함에서 사용자 찾기
-      const savedCard = savedCards.find(c => c.cardId === userId);
-      if (savedCard) {
-        setTargetUser(savedCard.card);
-        // 인맥 공개 설정 확인
-        if (savedCard.card.networkVisibility === 'private') {
-          setIsLocked(true);
-        } else {
-          // 데모 모드면 demoConnections 사용, 아니면 Firebase
-          if (isDemoMode) {
-            const connectionIds = demoConnections[userId] || [];
-            const connectionCards: BusinessCard[] = connectionIds
-              .map(id => demoUsers.find(u => u.id === id))
-              .filter((u): u is User => u !== undefined)
-              .map(conn => ({
-                id: conn.id,
-                userId: conn.id,
-                name: conn.name,
-                company: conn.company || '',
-                position: conn.position || '',
-                keywords: conn.keywords || [],
-                profileImage: conn.profileImage,
-                networkVisibility: 'connections_only' as const,
-                qrCode: '',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              }));
             setConnections(connectionCards);
+          } catch {
+            // 연결 로드 실패 시 빈 배열
           }
         }
         return;
@@ -399,7 +357,8 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="p-4 rounded-xl bg-[#1C2333] border border-[#30363D]"
+                  className="p-4 rounded-xl bg-[#1C2333] border border-[#30363D] cursor-pointer hover:bg-[#1C2333]/80 transition-colors"
+                  onClick={() => router.push(`/profile/${connection.userId}`)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar
@@ -426,7 +385,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                       )}
                     </div>
                     <button
-                      onClick={() => handleRequestIntro(connection)}
+                      onClick={(e) => { e.stopPropagation(); handleRequestIntro(connection); }}
                       className="p-2 rounded-lg bg-[#58A6FF]/10 text-[#58A6FF] hover:bg-[#58A6FF]/20 transition-colors"
                     >
                       <UserPlus size={20} />

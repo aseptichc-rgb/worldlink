@@ -29,7 +29,7 @@ type OnboardingStep = 'welcome' | 'auth' | 'profile' | 'connection';
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setUser } = useAuthStore();
+  const { user: currentUser, setUser } = useAuthStore();
   const { groups, getNodesInGroup, addNodeToGroup } = useGroupStore();
 
   const [step, setStep] = useState<OnboardingStep>('auth');
@@ -58,6 +58,23 @@ function OnboardingContent() {
   useEffect(() => {
     const code = searchParams.get('code');
     if (code) {
+      // 이미 로그인된 사용자가 초대 링크를 클릭한 경우 → 바로 인맥 연결
+      if (currentUser) {
+        (async () => {
+          try {
+            const inv = await getInvitationByCode(code);
+            if (inv && inv.senderId !== currentUser.id) {
+              await createAutoConnection(inv.senderId, currentUser.id);
+              await acceptInvitation(code, currentUser.id);
+            }
+          } catch (err) {
+            console.error('Failed to process invite for logged-in user:', err);
+          }
+          router.push('/network');
+        })();
+        return;
+      }
+
       setInviteCode(code);
       // 초대 코드가 있으면 환영 화면부터 시작
       if (!initialStepSet) {
@@ -214,6 +231,12 @@ function OnboardingContent() {
     } catch (err: any) {
       console.error('Registration error:', err);
       if (err.code === 'auth/email-already-in-use') {
+        // 초대 코드가 있으면 저장 후 로그인 페이지로 이동
+        if (inviteCode) {
+          sessionStorage.setItem('pendingInviteCode', inviteCode);
+          router.push('/login?from=invite');
+          return;
+        }
         setError('이미 사용 중인 이메일입니다');
         setStep('auth');
       } else {

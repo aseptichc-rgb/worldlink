@@ -7,6 +7,7 @@ import { useGroupStore } from '@/store/groupStore';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { NetworkNode, NodeGroup } from '@/types';
 import { Plus, Minus, Maximize2, RotateCcw, Home } from 'lucide-react';
+import { CATEGORY_COLORS } from '@/lib/category-utils';
 
 interface GraphNode extends NetworkNode {
   x?: number;
@@ -56,18 +57,7 @@ const COLORS = {
   textDimmed: 'rgba(139, 148, 158, 0.3)',
 };
 
-// 카테고리별 색상 매핑
-const CATEGORY_COLORS: { [key: string]: string } = {
-  '의료기기': '#4A90E2',    // 파랑
-  '솔루션': '#9B59B6',      // 보라
-  '투자': '#E74C3C',        // 빨강
-  '바이오': '#2ECC71',      // 초록
-  '제약': '#F39C12',        // 주황
-  '법률': '#1ABC9C',        // 청록
-  '의료기관': '#3498DB',    // 하늘
-  '비즈니스': '#E67E22',    // 진한 주황
-  '특허': '#16A085',        // 진한 청록
-};
+// 카테고리별 색상은 category-utils.ts에서 임포트
 
 // 노드 크기 상수 — 계층별 크기 차별화 (시각적 위계)
 const NODE_SIZES = {
@@ -198,13 +188,8 @@ function shouldShowLabel(
   // ★ 2촌 이상은 절대 자동 표시하지 않음 (포커스/호버 시에만 별도 처리)
   if (node.degree >= 2) return false;
 
-  // ★ 1촌(degree 1) — 줌 레벨별로 엄격하게 상위 N명만 이름 표시
-  if (scale < 0.55) return rank < 3;    // 극단적 줌아웃: 3명
-  if (scale < 0.7) return rank < 5;     // 줌아웃: 5명
-  if (scale < 0.85) return rank < 8;    // 중간: 8명
-  if (scale < 1.0) return rank < 12;    // 기본 줌: 12명
-  if (scale < 1.3) return rank < 20;    // 약간 줌인: 20명
-  return true; // 많이 줌인해야 전체 표시
+  // ★ 1촌(degree 1) — 항상 이름 표시
+  return true;
 }
 
 // 노드 렌더링 모드 — full(원+이미지), dot(작은 점), hidden(안 보임)
@@ -356,7 +341,6 @@ export default function NetworkGraph() {
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [targetTransform, setTargetTransform] = useState<{ x: number; y: number; scale: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [draggedNode, setDraggedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphNode } | null>(null);
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
@@ -2154,13 +2138,8 @@ export default function NetworkGraph() {
     const y = e.clientY - rect.top;
     const node = getNodeAtPosition(x, y);
 
-    if (node) {
-      setDraggedNode(node);
-      node.fx = node.x;
-      node.fy = node.y;
-    } else {
-      setIsDragging(true);
-    }
+    // 노드 클릭 여부와 관계없이 항상 캔버스 패닝
+    setIsDragging(true);
 
     lastPosRef.current = { x: e.clientX, y: e.clientY };
 
@@ -2178,17 +2157,7 @@ export default function NetworkGraph() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 월드 좌표 변환 (드래그에 사용)
-    const worldX = (x - transform.x) / transform.scale;
-    const worldY = (y - transform.y) / transform.scale;
-
-    if (draggedNode) {
-      draggedNode.fx = worldX;
-      draggedNode.fy = worldY;
-      setTooltip(null);
-      // 드래그 중에는 fish-eye 비활성화
-      fisheyeFocusRef.current.active = false;
-    } else if (isDragging) {
+    if (isDragging) {
       const dx = e.clientX - lastPosRef.current.x;
       const dy = e.clientY - lastPosRef.current.y;
       setTransform(prev => ({
@@ -2231,11 +2200,6 @@ export default function NetworkGraph() {
   };
 
   const handleMouseUp = () => {
-    if (draggedNode) {
-      draggedNode.x = draggedNode.fx ?? draggedNode.x;
-      draggedNode.y = draggedNode.fy ?? draggedNode.y;
-      setDraggedNode(null);
-    }
     setIsDragging(false);
   };
 
@@ -2269,20 +2233,14 @@ export default function NetworkGraph() {
       // Fish-eye 비활성화: 노드 움직임으로 클릭이 어려워지는 문제 방지
       fisheyeFocusRef.current.active = false;
 
-      if (node) {
-        setDraggedNode(node);
-        node.fx = node.x;
-        node.fy = node.y;
-      } else {
-        setIsDragging(true);
-      }
+      // 노드 터치 여부와 관계없이 항상 패닝 시작 (노드 드래그 비활성화)
+      setIsDragging(true);
 
       lastPosRef.current = { x: touch.clientX, y: touch.clientY };
       touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     } else if (e.touches.length === 2) {
       // 핀치 줌 시작 - 드래그 중지
       setIsDragging(false);
-      setDraggedNode(null);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastPinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
@@ -2300,14 +2258,7 @@ export default function NetworkGraph() {
     if (e.touches.length === 1 && !lastPinchDistRef.current) {
       const touch = e.touches[0];
 
-      if (draggedNode) {
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        draggedNode.fx = (x - transform.x) / transform.scale;
-        draggedNode.fy = (y - transform.y) / transform.scale;
-      } else if (isDragging) {
+      if (isDragging) {
         const dx = touch.clientX - lastPosRef.current.x;
         const dy = touch.clientY - lastPosRef.current.y;
         setTransform(prev => ({
@@ -2392,6 +2343,7 @@ export default function NetworkGraph() {
           } else {
             const node = getNodeAtPosition(x, y);
             if (node) {
+              // 탭 시 프로필 표시 (더블탭 recenter 없음)
               if (focusedNodeId === node.id) {
                 setFocusedNodeId(null);
                 setSelectedNode(null);
@@ -2400,38 +2352,21 @@ export default function NetworkGraph() {
                   next.delete(node.id);
                   return next;
                 });
-                lastClickTimeRef.current = 0;
-                lastClickNodeRef.current = null;
               } else if (node.degree !== 0) {
-                // 싱글탭=expand 토글, 더블탭=recenter
-                const now = Date.now();
-                const isDoubleTap = lastClickNodeRef.current === node.id && (now - lastClickTimeRef.current) < 300;
-
-                if (isDoubleTap) {
-                  lastClickTimeRef.current = 0;
-                  lastClickNodeRef.current = null;
-                  setExpandedNodeIds(new Set());
-                  setCenterUserId(node.id, node.degree);
-                } else {
-                  lastClickTimeRef.current = now;
-                  lastClickNodeRef.current = node.id;
-                  focusOnNode(node);
-                  setSelectedNode(node);
-                  setExpandedNodeIds(prev => {
-                    const next = new Set(prev);
-                    if (next.has(node.id)) {
-                      next.delete(node.id);
-                    } else {
-                      next.clear();
-                      next.add(node.id);
-                    }
-                    return next;
-                  });
-                }
-              } else {
-                // 중앙 노드 터치
                 focusOnNode(node);
-                // 다른 인물의 네트워크를 보고 있을 때는 원래 촌수로 프로필 표시
+                setSelectedNode(node);
+                setExpandedNodeIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(node.id)) {
+                    next.delete(node.id);
+                  } else {
+                    next.clear();
+                    next.add(node.id);
+                  }
+                  return next;
+                });
+              } else {
+                focusOnNode(node);
                 if (centerUserId && centerUserOriginalDegree != null) {
                   setSelectedNode({ ...node, degree: centerUserOriginalDegree });
                 } else {
@@ -2449,11 +2384,6 @@ export default function NetworkGraph() {
       }
     }
 
-    if (draggedNode) {
-      draggedNode.x = draggedNode.fx ?? draggedNode.x;
-      draggedNode.y = draggedNode.fy ?? draggedNode.y;
-      setDraggedNode(null);
-    }
     setIsDragging(false);
     touchStartPosRef.current = null;
 
@@ -2555,23 +2485,8 @@ export default function NetworkGraph() {
         return;
       }
 
-      // degree 0이 아닌 노드: 싱글클릭=expand 토글, 더블클릭=recenter
+      // degree 0이 아닌 노드: 클릭=expand 토글 + 포커스
       if (node.degree !== 0) {
-        const now = Date.now();
-        const isDoubleClick = lastClickNodeRef.current === node.id && (now - lastClickTimeRef.current) < 300;
-
-        if (isDoubleClick) {
-          // 더블클릭: 해당 인물 중심으로 그래프 재로드
-          lastClickTimeRef.current = 0;
-          lastClickNodeRef.current = null;
-          setExpandedNodeIds(new Set());
-          setCenterUserId(node.id, node.degree);
-          return;
-        }
-
-        // 싱글클릭: degree 2 자식 expand/collapse 토글 + 포커스
-        lastClickTimeRef.current = now;
-        lastClickNodeRef.current = node.id;
         focusOnNode(node);
         setSelectedNode(node);
         setExpandedNodeIds(prev => {

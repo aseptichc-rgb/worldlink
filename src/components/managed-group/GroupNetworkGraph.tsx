@@ -25,17 +25,10 @@ interface GroupNetworkGraphProps {
   onMemberTap?: (member: ManagedGroupMember & { user?: User }) => void;
 }
 
-// Category colors - 스크린샷과 유사하게
+// Category colors - category-utils.ts에서 임포트
+import { CATEGORY_COLORS as SHARED_CATEGORY_COLORS } from '@/lib/category-utils';
 const CATEGORY_COLORS: Record<string, string> = {
-  '의료기기': '#58A6FF',
-  '솔루션': '#79C0FF',
-  '투자': '#F85149',
-  '법률': '#FFA657',
-  '특허': '#A5854E',
-  '바이오': '#3FB950',
-  '의료기관': '#56D364',
-  '비즈니스': '#DB8B00',
-  '제약': '#A371F7',
+  ...SHARED_CATEGORY_COLORS,
   'default': '#8B949E',
 };
 

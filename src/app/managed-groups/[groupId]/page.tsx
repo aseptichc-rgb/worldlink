@@ -85,15 +85,20 @@ export default function ManagedGroupDetailPage() {
     const loadMembersData = async () => {
       const loaded = await Promise.all(
         selectedGroup.members.map(async (member) => {
-          // 데모 모드: 로컬 데모 유저 데이터 사용
-          if (isDemoMode) {
-            const demoUser = demoUsers.find(u => u.id === member.userId);
-            return { ...member, user: demoUser || undefined };
-          }
           try {
+            // Firestore 우선 조회, 실패 시 데모 모드에서만 데모 데이터 사용
             const userData = await getUser(member.userId);
-            return { ...member, user: userData || undefined };
+            if (userData) return { ...member, user: userData };
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return { ...member, user: demoUser || undefined };
+            }
+            return { ...member, user: undefined };
           } catch {
+            if (isDemoMode) {
+              const demoUser = demoUsers.find(u => u.id === member.userId);
+              return { ...member, user: demoUser || undefined };
+            }
             return { ...member, user: undefined };
           }
         })
@@ -202,12 +207,12 @@ export default function ManagedGroupDetailPage() {
 
   // 목록에서 멤버 클릭 시 프로필 페이지로 이동
   const handleMemberClick = (member: MemberInfo) => {
-    router.push(`/network/${member.userId}`);
+    router.push(`/profile/${member.userId}`);
   };
 
   // 네트워크 그래프에서 노드 클릭 시 프로필 페이지로 이동
   const handleNodeClick = (member: ManagedGroupMember & { user?: User }) => {
-    router.push(`/network/${member.userId}`);
+    router.push(`/profile/${member.userId}`);
   };
 
   return (
@@ -566,6 +571,23 @@ export default function ManagedGroupDetailPage() {
               onRoleEdit={canEditRoles ? handleMemberTap : undefined}
             />
           </motion.div>
+
+          {/* Invite Friends Button */}
+          {canInvite && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <button
+                onClick={openInviteModal}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#58A6FF]/10 text-[#58A6FF] text-sm font-semibold rounded-2xl border border-[#58A6FF]/20 hover:bg-[#58A6FF]/20 active:scale-[0.98] transition-all"
+              >
+                <UserPlus size={18} />
+                친구를 이 모임에 초대하기
+              </button>
+            </motion.div>
+          )}
 
           {/* Danger Zone */}
           <motion.div

@@ -387,24 +387,30 @@ export const getSentInvitations = async (userId: string): Promise<Invitation[]> 
 // 초대 코드로 초대 정보 조회 (가입 시 연결용)
 export const getInvitationByCode = async (code: string): Promise<Invitation | null> => {
   const invitationsRef = collection(db, 'invitations');
-  const q = query(
-    invitationsRef,
-    where('inviteCode', '==', code.toUpperCase()),
-    where('status', '==', 'pending'),
-    limit(1)
-  );
 
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) return null;
+  // pending 또는 sent 상태 모두 검색 (기존 사용자 초대 수락 지원)
+  for (const status of ['pending', 'sent'] as const) {
+    const q = query(
+      invitationsRef,
+      where('inviteCode', '==', code.toUpperCase()),
+      where('status', '==', status),
+      limit(1)
+    );
 
-  const doc = snapshot.docs[0];
-  const data = doc.data();
-  return {
-    ...data,
-    id: doc.id,
-    sentAt: data.sentAt?.toDate() || new Date(),
-    acceptedAt: data.acceptedAt?.toDate(),
-  } as Invitation;
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        sentAt: data.sentAt?.toDate() || new Date(),
+        acceptedAt: data.acceptedAt?.toDate(),
+      } as Invitation;
+    }
+  }
+
+  return null;
 };
 
 // 초대 수락 처리 (가입 완료 시)
@@ -565,11 +571,17 @@ export const getUserConnectionsWithDetails = async (userId: string): Promise<Use
   const connections = await getDirectConnections(userId);
 
   if (connections.length === 0) {
-    // Firebase에 연결이 없으면 데모 데이터 사용
-    const { demoConnections, demoUsers, getDemoCompatibleId: getCompId, ensureUserInDemoNetwork: ensureUser } = await import('./demo-data');
-    const demoId = getCompId({ id: userId });
+    // 데모 모드가 아니면 빈 배열 반환 (실제 사용자에게 데모 데이터 노출 방지)
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (!isDemoMode) return [];
+
+    // 데모 멤버만 데모 인맥 반환 (실제 계정은 빈 배열)
+    const isDemoUser = userId.startsWith('member_') || userId.startsWith('demo_');
+    if (!isDemoUser) return [];
+
+    const { demoConnections, demoUsers, ensureUserInDemoNetwork: ensureUser } = await import('./demo-data');
     ensureUser(userId);
-    const demoConnectionIds = demoConnections[demoId] || demoConnections[userId] || [];
+    const demoConnectionIds = demoConnections[userId] || [];
 
     return demoUsers.filter(user => demoConnectionIds.includes(user.id));
   }
@@ -620,6 +632,7 @@ export const isFirstDegreeConnection = async (currentUserId: string, targetUserI
 
 import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs, getDemoCompatibleId, ensureUserInDemoNetwork } from './demo-data';
 import { DEMO_NAME_CATEGORY_MAP } from './demo-seed-data';
+import { inferCategory } from './category-utils';
 
 // 이름 → 카테고리 매핑 (Firestore에 category가 없는 기존 데이터 호환용)
 const NAME_CATEGORY_MAP: Record<string, string> = {
@@ -627,21 +640,23 @@ const NAME_CATEGORY_MAP: Record<string, string> = {
 };
 
 export const getNetworkGraph = async (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
+  // 데모 모드에서 매칭되는 사용자는 항상 데모 네트워크 사용
+  const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+  if (isDemoMode) {
+    const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
+    if (demoId !== userId) {
+      // 데모 멤버와 매칭되는 사용자만 데모 네트워크 표시
+      return getDemoNetworkGraph(demoId, userData);
+    }
+  }
+
   // 먼저 Firebase에서 실제 연결 데이터 확인
   const directConnections = await getDirectConnections(userId);
 
-  console.log('[getNetworkGraph] userId:', userId);
-  console.log('[getNetworkGraph] directConnections:', directConnections.length, directConnections);
-
-  // 실제 연결이 없으면 빈 네트워크 반환 (데모 모드가 아닌 경우)
+  // 실제 연결이 없으면 빈 네트워크 반환
   if (directConnections.length === 0) {
-    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (isDemoMode) {
-      const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
-      if (demoId !== userId) {
-        return getDemoNetworkGraph(demoId, userData);
-      }
-      return getDemoNetworkGraph(userId, userData);
+      // 데모 모드인데 매칭 안 되는 실제 계정 → 데모 인맥 표시하지 않음
     }
     // 실제 사용자인데 연결이 없으면 본인 노드만 반환
     const centerNode: NetworkNode = {
@@ -676,15 +691,13 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     keywords: currentUser.keywords,
     degree: 0,
     connectionCount: 0,
-    category: currentUser.category || NAME_CATEGORY_MAP[currentUser.name],
+    category: currentUser.category || NAME_CATEGORY_MAP[currentUser.name] || inferCategory(currentUser),
   });
   userMap.set(currentUser.id, currentUser);
 
   // Get 1st degree connections (parallel fetch) - 중복 제거, 데모 사용자 제외, 직접 연결만 표시
-  const VISIBLE_METHODS = new Set(['invite', 'contact_sync', 'search']);
   const firstDegreeIds = new Set<string>();
   directConnections.forEach(conn => {
-    if (!VISIBLE_METHODS.has(conn.method)) return;
     const connectedId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
     if (!connectedId.startsWith('demo_')) {
       firstDegreeIds.add(connectedId);
@@ -707,7 +720,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
         keywords: connectedUser.keywords,
         degree: 1,
         connectionCount: 0,
-        category: connectedUser.category || NAME_CATEGORY_MAP[connectedUser.name],
+        category: connectedUser.category || NAME_CATEGORY_MAP[connectedUser.name] || inferCategory(connectedUser),
       });
 
       edges.push({
@@ -752,20 +765,23 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     node.connectionCount = filteredEdges.filter(
       edge => edge.source === node.id || edge.target === node.id
     ).length;
-    // category fallback: Firestore에 category가 없으면 이름으로 매핑
+    // category fallback: Firestore에 category가 없으면 이름 매핑 → 자동 추론
     if (!node.category) {
       node.category = NAME_CATEGORY_MAP[node.name];
     }
+    if (!node.category) {
+      const userData = userMap.get(node.id);
+      if (userData) {
+        node.category = inferCategory(userData);
+      }
+    }
   });
-
-  console.log('[getNetworkGraph] Removed duplicates:', duplicateIds.size, 'nodes');
 
   // importedContacts 추가 (가져온 연락처)
   const userDoc = await getDoc(doc(db, 'users', userId));
   const importedContacts = userDoc.data()?.importedContacts || [];
 
   if (importedContacts.length > 0) {
-    console.log('[getNetworkGraph] Adding imported contacts:', importedContacts.length);
 
     // 이미 추가된 이름 집합 (중복 방지)
     const existingNames = new Set(filteredNodes.map(n => n.name));
@@ -799,7 +815,6 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
       });
     }
 
-    console.log('[getNetworkGraph] Total nodes after imports:', filteredNodes.length);
   }
 
   return { nodes: filteredNodes, edges: filteredEdges };
@@ -826,7 +841,6 @@ export const findConnectionPath = async (fromUserId: string, toUserId: string): 
 
     const connections = await getDirectConnections(userId);
     for (const conn of connections) {
-      if (!['invite', 'contact_sync', 'search'].includes(conn.method)) continue;
       const nextUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
       if (!visited.has(nextUserId)) {
         queue.push({ userId: nextUserId, path: [...path, nextUserId] });
@@ -917,10 +931,12 @@ export const getPendingCoffeeChatRequests = async (userId: string): Promise<Coff
 // ==================== RECOMMENDATION SERVICES ====================
 
 export const getRecommendations = async (userId: string, count: number = 3): Promise<Recommendation[]> => {
-  // 실제 연결이 없으면 데모 추천 데이터 사용
+  // 실제 연결이 없으면 데모 모드에서만 데모 추천 데이터 사용
   const directConnections = await getDirectConnections(userId);
   if (directConnections.length === 0) {
-    return getDemoRecs(userId).slice(0, count);
+    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+    if (isDemoMode) return getDemoRecs(userId).slice(0, count);
+    return [];
   }
 
   const currentUser = await getUser(userId);
@@ -1030,13 +1046,57 @@ export const getPublicCard = async (cardId: string): Promise<{
 
 // ==================== STORAGE SERVICES ====================
 
+const MAX_IMAGE_SIZE = 800; // 최대 가로/세로 px
+const IMAGE_QUALITY = 0.7; // JPEG 압축 품질 (0~1)
+
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+
+      // 리사이징: 긴 변이 MAX_IMAGE_SIZE를 초과하면 비율 유지 축소
+      if (width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE) {
+        if (width > height) {
+          height = Math.round(height * (MAX_IMAGE_SIZE / width));
+          width = MAX_IMAGE_SIZE;
+        } else {
+          width = Math.round(width * (MAX_IMAGE_SIZE / height));
+          height = MAX_IMAGE_SIZE;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context 생성 실패'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('이미지 압축 실패'));
+        },
+        'image/jpeg',
+        IMAGE_QUALITY
+      );
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export const uploadProfileImage = async (userId: string, file: File): Promise<string> => {
-  // 파일명에 타임스탬프를 추가하여 매번 고유한 URL 생성 (브라우저 캐시 무효화)
+  // 클라이언트에서 이미지 압축/리사이징 후 업로드
+  const compressed = await compressImage(file);
+
   const timestamp = Date.now();
-  const extension = file.name.split('.').pop() || 'jpg';
-  const fileName = `profile_${timestamp}.${extension}`;
+  const fileName = `profile_${timestamp}.jpg`;
   const storageRef = ref(storage, `profiles/${userId}/${fileName}`);
-  await uploadBytes(storageRef, file);
+  await uploadBytes(storageRef, compressed);
   return getDownloadURL(storageRef);
 };
 
@@ -1433,7 +1493,7 @@ export const addMemberToManagedGroup = async (
     for (const existingMember of group.members) {
       if (existingMember.userId !== userId) {
         const connRef = doc(collection(db, 'connections'));
-        // 초대자와의 연결은 invite 타입 (네트워크에 표시됨), 나머지는 managed_group (네트워크에서 제외)
+        // 초대자와의 연결은 invite 타입, 나머지는 managed_group (둘 다 네트워크에 표시됨)
         const method = inviterId && existingMember.userId === inviterId ? 'invite' : 'managed_group';
         batch.set(connRef, {
           id: connRef.id,
@@ -1746,14 +1806,12 @@ export const debugUserConnections = async (userId: string): Promise<{
 
   for (const conn of connections) {
     byMethod[conn.method] = (byMethod[conn.method] || 0) + 1;
-    if (conn.method !== 'managed_group') {
-      visibleInNetwork.push({
-        id: conn.id,
-        fromUserId: conn.fromUserId,
-        toUserId: conn.toUserId,
-        method: conn.method,
-      });
-    }
+    visibleInNetwork.push({
+      id: conn.id,
+      fromUserId: conn.fromUserId,
+      toUserId: conn.toUserId,
+      method: conn.method,
+    });
   }
 
   // 사용자가 속한 관리 모임 정보
@@ -1766,4 +1824,134 @@ export const debugUserConnections = async (userId: string): Promise<{
   });
 
   return { total: connections.length, byMethod, visibleInNetwork, managedGroupMembers };
+};
+
+// ==================== MESSAGE (쪽지) SERVICES ====================
+
+export interface FirestoreMessage {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  content: string;
+  connectionDegree: number; // 1 = 1촌, 2 = 2촌
+  isRead: boolean;
+  createdAt: Date;
+}
+
+// 2촌 이내 연결 여부 확인 (1촌 또는 2촌이면 true)
+export const getConnectionDegree = async (fromUserId: string, toUserId: string): Promise<number> => {
+  // 1촌 확인
+  const isFirst = await isFirstDegreeConnection(fromUserId, toUserId);
+  if (isFirst) return 1;
+
+  // 2촌 확인: 내 1촌 목록과 상대 1촌 목록의 교집합이 있으면 2촌
+  const [myConnections, theirConnections] = await Promise.all([
+    getDirectConnections(fromUserId),
+    getDirectConnections(toUserId),
+  ]);
+
+  const myConnIds = new Set(
+    myConnections.map(c => c.fromUserId === fromUserId ? c.toUserId : c.fromUserId)
+  );
+  const theirConnIds = theirConnections.map(c =>
+    c.fromUserId === toUserId ? c.toUserId : c.fromUserId
+  );
+
+  for (const id of theirConnIds) {
+    if (myConnIds.has(id)) return 2;
+  }
+
+  return 0; // 연결되지 않음
+};
+
+// 쪽지 보내기 (1촌 또는 2촌만 가능)
+export const sendMessage = async (
+  fromUserId: string,
+  toUserId: string,
+  content: string,
+  connectionDegree: number
+): Promise<FirestoreMessage> => {
+  const msgRef = doc(collection(db, 'messages'));
+  const now = serverTimestamp();
+
+  const messageData = {
+    id: msgRef.id,
+    fromUserId,
+    toUserId,
+    content,
+    connectionDegree,
+    isRead: false,
+    createdAt: now,
+  };
+
+  await setDoc(msgRef, messageData);
+
+  return {
+    ...messageData,
+    createdAt: new Date(),
+  };
+};
+
+// 받은 쪽지 조회
+export const getReceivedMessages = async (userId: string): Promise<FirestoreMessage[]> => {
+  try {
+    const messagesRef = collection(db, 'messages');
+    const q = query(
+      messagesRef,
+      where('toUserId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      } as FirestoreMessage;
+    });
+  } catch (err) {
+    console.warn('[getReceivedMessages] Failed:', err);
+    return [];
+  }
+};
+
+// 보낸 쪽지 조회
+export const getSentMessages = async (userId: string): Promise<FirestoreMessage[]> => {
+  try {
+    const messagesRef = collection(db, 'messages');
+    const q = query(
+      messagesRef,
+      where('fromUserId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      } as FirestoreMessage;
+    });
+  } catch (err) {
+    console.warn('[getSentMessages] Failed:', err);
+    return [];
+  }
+};
+
+// 쪽지 읽음 처리
+export const markMessageAsRead = async (messageId: string): Promise<void> => {
+  const msgRef = doc(db, 'messages', messageId);
+  await updateDoc(msgRef, { isRead: true });
+};
+
+// 쪽지 삭제
+export const deleteMessage = async (messageId: string): Promise<void> => {
+  const msgRef = doc(db, 'messages', messageId);
+  await deleteDoc(msgRef);
 };
