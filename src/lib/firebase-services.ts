@@ -640,19 +640,23 @@ const NAME_CATEGORY_MAP: Record<string, string> = {
 };
 
 export const getNetworkGraph = async (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
+  // 데모 모드에서 매칭되는 사용자는 항상 데모 네트워크 사용
+  const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
+  if (isDemoMode) {
+    const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
+    if (demoId !== userId) {
+      // 데모 멤버와 매칭되는 사용자만 데모 네트워크 표시
+      return getDemoNetworkGraph(demoId, userData);
+    }
+  }
+
   // 먼저 Firebase에서 실제 연결 데이터 확인
   const directConnections = await getDirectConnections(userId);
 
-  // 실제 연결이 없으면 빈 네트워크 반환 (데모 모드가 아닌 경우)
+  // 실제 연결이 없으면 빈 네트워크 반환
   if (directConnections.length === 0) {
-    const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
     if (isDemoMode) {
-      const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
-      if (demoId !== userId) {
-        // 데모 멤버와 매칭되는 사용자만 데모 네트워크 표시
-        return getDemoNetworkGraph(demoId, userData);
-      }
-      // 매칭되지 않는 실제 계정은 데모 인맥 표시하지 않음 → 본인 노드만 반환
+      // 데모 모드인데 매칭 안 되는 실제 계정 → 데모 인맥 표시하지 않음
     }
     // 실제 사용자인데 연결이 없으면 본인 노드만 반환
     const centerNode: NetworkNode = {

@@ -96,20 +96,19 @@ function parseBingNewsRSS(xml: string, query: string, memberName?: string, membe
 }
 
 function filterByExactMention(items: NewsItem[], memberName?: string, memberCompany?: string): NewsItem[] {
-  if (!memberName && !memberCompany) return items;
+  if (!memberName) return items;
 
   return items.filter(item => {
     const text = `${item.title} ${item.description}`;
+    const hasName = text.includes(memberName);
+    if (!hasName) return false;
 
-    const hasName = memberName ? text.includes(memberName) : false;
-    const hasCompany = memberCompany
-      ? text.includes(memberCompany) || text.includes(memberCompany.split(/\s+/)[0])
-      : false;
+    // 소속이 있으면 소속도 기사에 포함되어야 함
+    if (memberCompany) {
+      const companyShort = memberCompany.split(/\s+/)[0];
+      return text.includes(memberCompany) || text.includes(companyShort);
+    }
 
-    // 이름 또는 소속 중 하나라도 일치하면 통과
-    if (memberName && memberCompany) return hasName || hasCompany;
-    if (memberName) return hasName;
-    if (memberCompany) return hasCompany;
     return true;
   });
 }

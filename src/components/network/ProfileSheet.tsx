@@ -71,10 +71,44 @@ export default function ProfileSheet() {
   const { getDaysSinceLastContact, getRelationshipStatus, addInteraction } = useInteractionStore();
   const { allGroupNews, markAsRead } = useNewsAlertStore();
 
-  // 선택된 인물의 관련 뉴스
-  const memberNews = selectedNode
-    ? allGroupNews.filter(n => n.memberName === selectedNode.name)
-    : [];
+  // 선택된 인물의 관련 뉴스 (캐시 + 개별 검색)
+  const [profileNews, setProfileNews] = useState<import('@/app/api/news/route').NewsItem[]>([]);
+
+  useEffect(() => {
+    if (!selectedNode) {
+      setProfileNews([]);
+      return;
+    }
+
+    // 1) 캐시에서 먼저 확인
+    const cached = allGroupNews.filter(n => n.memberName === selectedNode.name);
+    if (cached.length > 0) {
+      setProfileNews(cached);
+      return;
+    }
+
+    // 2) 캐시에 없으면 직접 API 검색
+    const member = { name: selectedNode.name, company: selectedNode.company };
+    if (!member.name) return;
+
+    let cancelled = false;
+    fetch('/api/news', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ members: [member], timeRange: '6m' }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!cancelled && data?.news?.length > 0) {
+          setProfileNews(data.news);
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [selectedNode?.id, selectedNode?.name, selectedNode?.company, allGroupNews]);
+
+  const memberNews = profileNews;
 
   // 메시지 관련 상태
   const [showMessageModal, setShowMessageModal] = useState(false);
