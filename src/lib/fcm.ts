@@ -30,50 +30,59 @@ export async function requestNotificationPermission(userId: string): Promise<str
 
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
-    console.log('알림 권한 거부됨');
-    return null;
+    throw new Error(
+      permission === 'denied'
+        ? '알림 권한이 차단되어 있습니다. 브라우저 설정에서 알림을 허용해주세요.'
+        : '알림 권한이 거부되었습니다.'
+    );
   }
 
   const msg = getMessagingInstance();
-  if (!msg) return null;
-
-  try {
-    // 서비스 워커 등록 후 활성화 대기
-    const sw = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-
-    // 서비스 워커가 active 상태가 될 때까지 대기
-    if (!sw.active) {
-      await new Promise<void>((resolve) => {
-        const worker = sw.installing || sw.waiting;
-        if (!worker) { resolve(); return; }
-        worker.addEventListener('statechange', () => {
-          if (worker.state === 'activated') resolve();
-        });
-      });
-    }
-
-    const token = await getToken(msg, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: sw,
-    });
-
-    if (token && db) {
-      // Firestore에 토큰 저장
-      await setDoc(doc(db, 'fcmTokens', userId), {
-        token,
-        updatedAt: new Date().toISOString(),
-        platform: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-      }, { merge: true });
-
-      // 푸시 알림 전송 시 유저 식별용
-      localStorage.setItem('nodded_fcm_user_id', userId);
-    }
-
-    return token;
-  } catch (err) {
-    console.error('FCM 토큰 발급 실패:', err);
-    return null;
+  if (!msg) {
+    throw new Error('이 브라우저에서는 푸시 알림이 지원되지 않습니다.');
   }
+
+  const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+  if (!vapidKey) {
+    throw new Error('푸시 알림 설정(VAPID Key)이 누락되었습니다. 관리자에게 문의하세요.');
+  }
+
+  // 서비스 워커 등록 후 활성화 대기
+  const sw = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+  if (!sw.active) {
+    await new Promise<void>((resolve, reject) => {
+      const worker = sw.installing || sw.waiting;
+      if (!worker) { resolve(); return; }
+      const timeout = setTimeout(() => reject(new Error('서비스 워커 활성화 시간 초과')), 10000);
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'activated') {
+          clearTimeout(timeout);
+          resolve();
+        }
+      });
+    });
+  }
+
+  const token = await getToken(msg, {
+    vapidKey,
+    serviceWorkerRegistration: sw,
+  });
+
+  if (!token) {
+    throw new Error('FCM 토큰 발급에 실패했습니다. 잠시 후 다시 시도해주세요.');
+  }
+
+  if (db) {
+    await setDoc(doc(db, 'fcmTokens', userId), {
+      token,
+      updatedAt: new Date().toISOString(),
+      platform: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+    }, { merge: true });
+  }
+
+  localStorage.setItem('nodded_fcm_user_id', userId);
+  return token;
 }
 
 /**

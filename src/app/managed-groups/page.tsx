@@ -43,8 +43,9 @@ export default function ManagedGroupsPage() {
       const { requestNotificationPermission } = await import('@/lib/fcm');
       const token = await requestNotificationPermission(user.id);
       setPushEnabled(!!token);
-    } catch (err) {
+    } catch (err: any) {
       console.error('푸시 알림 설정 실패:', err);
+      alert(err?.message || '푸시 알림 설정에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setPushRequesting(false);
     }
