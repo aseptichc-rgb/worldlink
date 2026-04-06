@@ -44,6 +44,7 @@ import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
+import MiniNetworkPreview from '@/components/network/MiniNetworkPreview';
 import { User, NetworkNode } from '@/types';
 
 export default function ProfileSheet() {
@@ -973,84 +974,25 @@ export default function ProfileSheet() {
                         <span className="text-[#58A6FF]">({theirConnections.length})</span>
                       </h3>
                       {connectionDegree === 1 ? (
-                        <div className="space-y-4">
-                          {/* 분야별로 그룹화하여 표시 */}
-                          {(() => {
-                            // industry 기준으로 그룹화
-                            const groupedByIndustry = theirConnections.reduce((acc, user) => {
-                              const industry = user.industry || '기타';
-                              if (!acc[industry]) {
-                                acc[industry] = [];
-                              }
-                              acc[industry].push(user);
-                              return acc;
-                            }, {} as Record<string, User[]>);
-
-                            const sortedIndustries = Object.keys(groupedByIndustry).sort((a, b) => {
-                              if (a === '기타') return 1;
-                              if (b === '기타') return -1;
-                              return groupedByIndustry[b].length - groupedByIndustry[a].length;
-                            });
-
-                            return sortedIndustries.map((industry) => (
-                              <div key={industry} className="info-card">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-2 h-2 rounded-full bg-[#58A6FF]" />
-                                  <span className="text-sm font-medium text-[#8B949E]">
-                                    {industry}
-                                  </span>
-                                  <span className="text-[10px] text-[#484F58]">
-                                    ({groupedByIndustry[industry].length}명)
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-5 gap-3">
-                                  {groupedByIndustry[industry].slice(0, 10).map((user, idx) => {
-                                    const isMutualConnection = myConnectionIds.has(user.id);
-                                    return (
-                                    <button
-                                      key={`${user.id}-${idx}`}
-                                      onClick={() => handleConnectionClick(user)}
-                                      className="flex flex-col items-center hover:opacity-80 transition-all duration-200 cursor-pointer group"
-                                    >
-                                      <div className="relative">
-                                        <Avatar
-                                          src={user.profileImage}
-                                          name={user.name}
-                                          size="sm"
-                                        />
-                                        {isMutualConnection && (
-                                          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#FFB800] flex items-center justify-center" title="공통 인맥">
-                                            <Users size={8} className="text-[#121212]" />
-                                          </div>
-                                        )}
-                                        <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#58A6FF]/50 transition-colors" />
-                                      </div>
-                                      <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#FFB800] font-medium' : 'text-[#8B949E]'}`}>
-                                        {user.name?.slice(0, 4) || '?'}
-                                      </span>
-                                    </button>
-                                    );
-                                  })}
-                                </div>
-                                {groupedByIndustry[industry].length > 10 && (
-                                  <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#363636]/50">
-                                    +{groupedByIndustry[industry].length - 10}명 더
-                                  </p>
-                                )}
-                              </div>
-                            ));
-                          })()}
-                        </div>
+                        <MiniNetworkPreview
+                          centerName={selectedNode.name}
+                          centerImage={selectedNode.profileImage}
+                          connections={theirConnections}
+                          myConnectionIds={myConnectionIds}
+                          onConnectionClick={handleConnectionClick}
+                          onViewFullNetwork={handleViewNetwork}
+                        />
                       ) : (
-                        <div className="info-card relative overflow-hidden">
-                          {/* 흐린 아바타 배경 */}
-                          <div className="grid grid-cols-5 gap-3 opacity-20 blur-[2px]">
-                            {Array.from({ length: Math.min(10, theirConnections.length) }).map((_, idx) => (
-                              <div key={idx} className="flex flex-col items-center">
-                                <div className="w-8 h-8 rounded-full bg-[#484F58]" />
-                                <div className="w-10 h-2 mt-1.5 rounded bg-[#484F58]" />
-                              </div>
-                            ))}
+                        <div className="relative overflow-hidden rounded-xl">
+                          <div className="opacity-20 blur-[3px] pointer-events-none">
+                            <MiniNetworkPreview
+                              centerName={selectedNode.name}
+                              centerImage={selectedNode.profileImage}
+                              connections={theirConnections}
+                              myConnectionIds={myConnectionIds}
+                              onConnectionClick={() => {}}
+                              onViewFullNetwork={() => {}}
+                            />
                           </div>
                           {/* 잠금 오버레이 */}
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525]/70 backdrop-blur-[1px]">
