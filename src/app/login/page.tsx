@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { loginWithEmail, getUser, getInvitationByCode, acceptInvitation, createAutoConnection } from '@/lib/firebase-services';
 import { useAuthStore } from '@/store/authStore';
-import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX } from '@/lib/demo-seed-data';
+import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX, getDemoProfileImage } from '@/lib/demo-seed-data';
 
 const STORAGE_KEY = 'nodded_saved_credentials';
 
@@ -57,7 +57,7 @@ function LoginContent() {
       bio: demo.bio,
       keywords: demo.keywords,
       category: demo.category,
-      profileImage: `/faces/${demo.name}.jpg`,
+      profileImage: getDemoProfileImage(demo.id),
       inviteCode: 'DEMO-001',
       invitesRemaining: 999,
       coffeeStatus: 'available' as const,
