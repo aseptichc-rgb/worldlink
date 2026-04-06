@@ -630,7 +630,7 @@ export const isFirstDegreeConnection = async (currentUserId: string, targetUserI
 
 // ==================== NETWORK GRAPH SERVICES ====================
 
-import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs, getDemoCompatibleId, ensureUserInDemoNetwork } from './demo-data';
+import { getDemoNetworkGraph, getDemoRecommendations as getDemoRecs, getDemoCompatibleId, ensureUserInDemoNetwork, findMatchingMember } from './demo-data';
 import { DEMO_NAME_CATEGORY_MAP } from './demo-seed-data';
 import { inferCategory } from './category-utils';
 
@@ -644,8 +644,8 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
   const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
   if (isDemoMode) {
     const demoId = getDemoCompatibleId({ id: userId, name: userData?.name });
-    if (demoId !== userId) {
-      // 데모 멤버와 매칭되는 사용자만 데모 네트워크 표시
+    const isMatchedDemo = findMatchingMember({ id: userId, name: userData?.name }) !== null;
+    if (isMatchedDemo) {
       return getDemoNetworkGraph(demoId, userData);
     }
   }

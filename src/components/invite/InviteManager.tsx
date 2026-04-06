@@ -680,14 +680,23 @@ export function InviteManager({
                       <div className="space-y-2.5">
                         <button
                           onClick={handlePickPhoneContacts}
-                          className="w-full flex items-center gap-3.5 p-3.5 bg-[#252525] border border-[#363636] rounded-xl hover:border-[#58A6FF] hover:bg-[#2a2a2a] transition-all text-left"
+                          disabled={!contactPickerSupported}
+                          className={`w-full flex items-center gap-3.5 p-3.5 bg-[#252525] border border-[#363636] rounded-xl transition-all text-left ${
+                            contactPickerSupported
+                              ? "hover:border-[#58A6FF] hover:bg-[#2a2a2a] cursor-pointer"
+                              : "opacity-50 cursor-not-allowed"
+                          }`}
                         >
                           <div className="w-10 h-10 rounded-full bg-[#58A6FF]/15 flex items-center justify-center shrink-0">
                             <Smartphone size={20} className="text-[#58A6FF]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-white font-medium text-[15px]">스마트폰 주소록</p>
-                            <p className="text-xs text-[#8B949E]">기기에 저장된 연락처에서 선택</p>
+                            <p className="text-xs text-[#8B949E]">
+                              {contactPickerSupported
+                                ? "기기에 저장된 연락처에서 선택"
+                                : "Android Chrome에서만 사용 가능"}
+                            </p>
                           </div>
                           <ChevronRight size={18} className="text-[#484F58] shrink-0" />
                         </button>

@@ -64,6 +64,26 @@ export function InstallPrompt() {
 
   const handleInstallClick = async () => {
     if (isIOS) {
+      // iOS: navigator.share()로 공유 시트를 직접 열어서
+      // 사용자가 "홈 화면에 추가"를 바로 찾을 수 있게 함
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Nodded - 비즈니스 네트워크",
+            text: "Nodded를 홈 화면에 추가하세요",
+            url: window.location.origin,
+          });
+          setShowInstallBanner(false);
+          return;
+        } catch (err) {
+          // 사용자가 공유 시트를 닫은 경우 → 가이드 표시
+          if ((err as Error).name === "AbortError") {
+            setShowIOSGuide(true);
+            return;
+          }
+        }
+      }
+      // navigator.share 미지원 시 가이드 표시
       setShowIOSGuide(true);
       return;
     }
@@ -133,7 +153,7 @@ export function InstallPrompt() {
                   className="w-full mt-3 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  {isIOS ? "설치 방법 보기" : "지금 설치하기"}
+                  {isIOS ? "홈 화면에 추가" : "지금 설치하기"}
                 </button>
               </div>
             </div>
@@ -165,9 +185,12 @@ export function InstallPrompt() {
               </div>
 
               <div className="px-6 pb-8">
-                <h2 className="text-xl font-bold text-white text-center mb-6">
+                <h2 className="text-xl font-bold text-white text-center mb-4">
                   홈 화면에 추가하기
                 </h2>
+                <p className="text-gray-400 text-center text-sm mb-6">
+                  Safari 브라우저에서만 설치할 수 있어요
+                </p>
 
                 {/* 단계별 가이드 */}
                 <div className="space-y-4">
@@ -182,7 +205,10 @@ export function InstallPrompt() {
                       </p>
                       <div className="mt-2 flex items-center gap-2 text-gray-400">
                         <Share className="w-5 h-5" />
-                        <span className="text-base">공유 아이콘을 찾아주세요</span>
+                        <span className="text-base">
+                          Safari 하단 중앙의{" "}
+                          <Share className="w-4 h-4 inline" /> 아이콘
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -199,34 +225,40 @@ export function InstallPrompt() {
                       <div className="mt-2 flex items-center gap-2 text-gray-400">
                         <Plus className="w-5 h-5" />
                         <span className="text-base">
-                          스크롤해서 찾아주세요
+                          아래로 스크롤하면 찾을 수 있어요
                         </span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Step 3 */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      3
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium">
-                        &quot;추가&quot; 버튼 탭하기
-                      </p>
-                      <p className="text-gray-400 text-base mt-1">
-                        홈 화면에서 바로 NODDED를 실행할 수 있어요
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
-                {/* 확인 버튼 */}
+                {/* 공유 시트 열기 버튼 */}
+                <button
+                  onClick={async () => {
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({
+                          title: "Nodded - 비즈니스 네트워크",
+                          text: "Nodded를 홈 화면에 추가하세요",
+                          url: window.location.origin,
+                        });
+                        handleDismiss();
+                      } catch {
+                        // 사용자가 닫은 경우 무시
+                      }
+                    }
+                  }}
+                  className="w-full mt-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Share className="w-4 h-4" />
+                  공유 시트 열기
+                </button>
+
                 <button
                   onClick={handleDismiss}
-                  className="w-full mt-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-colors"
+                  className="w-full mt-2 py-3 bg-gray-800 hover:bg-gray-700 text-gray-400 font-medium rounded-xl transition-colors"
                 >
-                  확인했어요
+                  나중에 하기
                 </button>
               </div>
             </motion.div>

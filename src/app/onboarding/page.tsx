@@ -22,7 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
 import { User as UserType, Invitation } from '@/types';
 import { Mail, Lock, ArrowRight, User, Users, Check, X, Shield, Eye, EyeOff, Sparkles, Handshake } from 'lucide-react';
-import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX } from '@/lib/demo-seed-data';
+import { DEMO_MEMBERS, DEMO_ACCOUNT_INDEX, getDemoProfileImage } from '@/lib/demo-seed-data';
 
 type OnboardingStep = 'welcome' | 'auth' | 'profile' | 'connection';
 
@@ -753,7 +753,7 @@ function OnboardingContent() {
                 bio: demo.bio,
                 keywords: demo.keywords,
                 category: demo.category,
-                profileImage: `/faces/${demo.id}.jpg`,
+                profileImage: getDemoProfileImage(demo.id),
                 inviteCode: 'DEMO-001',
                 invitesRemaining: 999,
                 coffeeStatus: 'available' as const,

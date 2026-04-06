@@ -27,6 +27,7 @@ import {
   Clock,
   CalendarPlus,
   Newspaper,
+  Share2,
 } from 'lucide-react';
 import { Avatar, Tag, Button } from '@/components/ui';
 import InteractionLogModal from '@/components/interaction/InteractionLogModal';
@@ -49,7 +50,7 @@ import OpportunityPanel from '@/components/network/OpportunityPanel';
 import { User, NetworkNode } from '@/types';
 
 export default function ProfileSheet() {
-  const { selectedNode, setSelectedNode, setFocusedNodeId, nodes } = useNetworkStore();
+  const { selectedNode, setSelectedNode, setFocusedNodeId, setCenterUserId, nodes } = useNetworkStore();
   const { openRequestModal } = useCoffeeChatStore();
   const { openRequestModal: openConnectionRequestModal } = useConnectionRequestStore();
   const { getMemo, setMemo, deleteMemo } = useMemoStore();
@@ -335,6 +336,13 @@ export default function ProfileSheet() {
   const handleConnectionRequestClick = () => {
     if (selectedNode) {
       openConnectionRequestModal(selectedNode.id);
+    }
+  };
+
+  // 이 인물의 인맥 네트워크 보기
+  const handleViewNetwork = () => {
+    if (selectedNode && selectedNode.degree !== 0) {
+      setCenterUserId(selectedNode.id, selectedNode.degree);
     }
   };
 
@@ -1165,21 +1173,33 @@ export default function ProfileSheet() {
                 style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
               >
                 {connectionDegree === 1 ? (
-                  <div className="flex gap-3">
-                    <Button
-                      variant="secondary"
-                      className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
-                      leftIcon={<Star size={16} />}
-                    >
-                      관심
-                    </Button>
-                    <Button
-                      className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
-                      leftIcon={<MessageCircle size={16} />}
-                      onClick={handleMessageClick}
-                    >
-                      쪽지 보내기
-                    </Button>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex gap-3">
+                      <Button
+                        variant="secondary"
+                        className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
+                        leftIcon={<Star size={16} />}
+                      >
+                        관심
+                      </Button>
+                      <Button
+                        className="flex-1 text-sm py-3 sm:py-2.5 touch-manipulation"
+                        leftIcon={<MessageCircle size={16} />}
+                        onClick={handleMessageClick}
+                      >
+                        쪽지 보내기
+                      </Button>
+                    </div>
+                    {!selectedNode.isImported && (
+                      <Button
+                        variant="secondary"
+                        className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
+                        leftIcon={<Share2 size={16} />}
+                        onClick={handleViewNetwork}
+                      >
+                        {selectedNode.name}님의 인맥 보기
+                      </Button>
+                    )}
                   </div>
                 ) : connectionDegree === 2 ? (
                   <div className="flex flex-col gap-3">
@@ -1207,6 +1227,16 @@ export default function ProfileSheet() {
                         쪽지 보내기
                       </Button>
                     </div>
+                    {!selectedNode.isImported && (
+                      <Button
+                        variant="secondary"
+                        className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
+                        leftIcon={<Share2 size={16} />}
+                        onClick={handleViewNetwork}
+                      >
+                        {selectedNode.name}님의 인맥 보기
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -1234,6 +1264,16 @@ export default function ProfileSheet() {
                         커피챗
                       </Button>
                     </div>
+                    {!selectedNode.isImported && (
+                      <Button
+                        variant="secondary"
+                        className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
+                        leftIcon={<Share2 size={16} />}
+                        onClick={handleViewNetwork}
+                      >
+                        {selectedNode.name}님의 인맥 보기
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

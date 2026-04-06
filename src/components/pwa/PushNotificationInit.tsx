@@ -21,7 +21,9 @@ export default function PushNotificationInit() {
     // 이미 권한이 허용된 경우 자동으로 토큰 등록
     if (Notification.permission === 'granted') {
       import('@/lib/fcm').then(({ requestNotificationPermission }) => {
-        requestNotificationPermission(user.id);
+        requestNotificationPermission(user.id).catch((err) => {
+          console.warn('자동 FCM 토큰 등록 실패:', err?.message);
+        });
       });
     }
   }, [isAuthenticated, user?.id]);

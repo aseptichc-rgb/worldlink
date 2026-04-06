@@ -84,10 +84,9 @@ function getProfileImage(src: string): HTMLImageElement | null {
   return null;
 }
 
-// 프로필 이미지 URL 결정 (profileImage 없으면 /faces/{name}.jpg 폴백)
+// 프로필 이미지 URL 결정
 function resolveProfileImageUrl(user?: User): string | null {
   if (user?.profileImage) return user.profileImage;
-  if (user?.name) return `/faces/${user.name}.jpg`;
   return null;
 }
 
