@@ -9,6 +9,7 @@ import {
   DEMO_GROUPS,
   DEMO_COFFEE_SLOTS,
   DEMO_COFFEE_REQUESTS,
+  getDemoProfileImage,
 } from '@/lib/demo-seed-data';
 
 // Firebase Admin 초기화
@@ -76,7 +77,7 @@ export async function POST() {
           bio: member.bio,
           keywords: member.keywords,
           category: member.category,
-          profileImage: `/faces/${member.name}.jpg`,
+          profileImage: getDemoProfileImage(member.id),
           inviteCode: `INV-${member.id.split('_')[1]?.padStart(3, '0') || '000'}`,
           invitesRemaining: 999,
           coffeeStatus: 'available',

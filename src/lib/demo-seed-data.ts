@@ -205,6 +205,65 @@ export const DEMO_MEMBERS: DemoMember[] = [
 ];
 
 // =============================================================================
+// 성별 분류 및 프로필 이미지 매핑
+// =============================================================================
+const MALE_IDS = new Set([
+  'demo_1', 'demo_2', 'demo_4', 'demo_6', 'demo_8', 'demo_10',       // 투자/금융
+  'demo_11', 'demo_13', 'demo_15', 'demo_17', 'demo_19',              // IT/기술
+  'demo_22', 'demo_24', 'demo_26', 'demo_28', 'demo_30',              // 헬스케어/바이오
+  'demo_32', 'demo_34', 'demo_36', 'demo_39',                         // 법률/특허
+  'demo_42', 'demo_44', 'demo_46', 'demo_48', 'demo_49',              // 미디어/콘텐츠
+  'demo_51', 'demo_53', 'demo_55', 'demo_57', 'demo_59',              // 교육/연구
+  'demo_61', 'demo_63', 'demo_65', 'demo_67', 'demo_69',              // 제조/에너지
+  'demo_71', 'demo_73', 'demo_75', 'demo_77', 'demo_79', 'demo_80',   // 공공/정책
+  'demo_82', 'demo_84', 'demo_86', 'demo_89', 'demo_90',              // 디자인/건축
+  'demo_91', 'demo_93', 'demo_96', 'demo_98',                         // F&B/라이프스타일
+]);
+
+const MALE_IMAGES = [
+  'man_01', 'man_02', 'man_03', 'man_04', 'man_05',
+  'man_06', 'man_07', 'man_08', 'man_09', 'man_10',
+  'man_11', 'man_12', 'man_13', 'man_14', 'man_15',
+  'man_16', 'man_17', 'man_18', 'man_19', 'man_20',
+  'man_21', 'man_22', 'man_23', 'man_24', 'man_25',
+  'man_27', 'man_28', 'man_29', 'man_30',
+];
+
+const FEMALE_IMAGES = [
+  'woman_01', 'woman_02', 'woman_03', 'woman_04', 'woman_05',
+  'woman_06', 'woman_07', 'woman_08', 'woman_09', 'woman_10',
+  'woman_11', 'woman_12', 'woman_13', 'woman_14', 'woman_15',
+  'woman_16', 'woman_17', 'woman_18', 'woman_19', 'woman_20',
+  'woman_21', 'woman_22', 'woman_23', 'woman_24', 'woman_25',
+  'woman_26', 'woman_27', 'woman_28', 'woman_29', 'woman_30',
+  'woman_61',
+];
+
+// 멤버 ID → 프로필 이미지 경로 매핑 생성
+const _profileImageMap = new Map<string, string>();
+let _maleIdx = 0;
+let _femaleIdx = 0;
+for (const m of DEMO_MEMBERS) {
+  if (MALE_IDS.has(m.id)) {
+    _profileImageMap.set(m.id, `/faces/${MALE_IMAGES[_maleIdx % MALE_IMAGES.length]}.png`);
+    _maleIdx++;
+  } else {
+    _profileImageMap.set(m.id, `/faces/${FEMALE_IMAGES[_femaleIdx % FEMALE_IMAGES.length]}.png`);
+    _femaleIdx++;
+  }
+}
+
+/** 데모 멤버 ID로 프로필 이미지 경로 반환 */
+export const getDemoProfileImage = (id: string): string =>
+  _profileImageMap.get(id) || '/faces/man_01.png';
+
+/** 데모 멤버 이름으로 프로필 이미지 경로 반환 */
+export const getDemoProfileImageByName = (name: string): string => {
+  const member = DEMO_MEMBERS.find(m => m.name === name);
+  return member ? getDemoProfileImage(member.id) : '/faces/man_01.png';
+};
+
+// =============================================================================
 // 결정적 연결 생성 (Seeded PRNG)
 // =============================================================================
 function seededRandom(seed: number): () => number {

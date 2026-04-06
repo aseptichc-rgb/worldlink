@@ -64,10 +64,24 @@ export async function requestNotificationPermission(userId: string): Promise<str
     });
   }
 
-  const token = await getToken(msg, {
-    vapidKey,
-    serviceWorkerRegistration: sw,
-  });
+  let token: string;
+  try {
+    token = await getToken(msg, {
+      vapidKey,
+      serviceWorkerRegistration: sw,
+    });
+  } catch (e: any) {
+    // 기존 서비스 워커 캐시가 남아있을 수 있으므로 갱신 후 재시도
+    if (e?.message?.includes('installations') || e?.code === 'messaging/token-subscribe-failed') {
+      await sw.update();
+      token = await getToken(msg, {
+        vapidKey,
+        serviceWorkerRegistration: sw,
+      });
+    } else {
+      throw e;
+    }
+  }
 
   if (!token) {
     throw new Error('FCM 토큰 발급에 실패했습니다. 잠시 후 다시 시도해주세요.');

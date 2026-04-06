@@ -1,5 +1,5 @@
 import { User, NetworkNode, NetworkEdge, Recommendation } from '@/types';
-import { DEMO_MEMBERS, generateDemoConnections, buildConnectionMap, DEMO_ACCOUNT_INDEX } from './demo-seed-data';
+import { DEMO_MEMBERS, generateDemoConnections, buildConnectionMap, DEMO_ACCOUNT_INDEX, getDemoProfileImage } from './demo-seed-data';
 
 // =============================================================================
 // 100명의 다양한 분야 데모 멤버 데이터 (demo-seed-data.ts 기반)
@@ -19,7 +19,7 @@ export const demoUsers: User[] = DEMO_MEMBERS.map(m => ({
   bio: m.bio,
   keywords: m.keywords,
   category: m.category,
-  profileImage: `/faces/${m.id}.jpg`,
+  profileImage: getDemoProfileImage(m.id),
   inviteCode: `INV-${m.id.split('_')[1]?.padStart(3, '0') || '000'}`,
   invitesRemaining: 999,
   coffeeStatus: 'available' as const,

@@ -96,20 +96,17 @@ function parseBingNewsRSS(xml: string, query: string, memberName?: string, membe
 }
 
 function filterByExactMention(items: NewsItem[], memberName?: string, memberCompany?: string): NewsItem[] {
-  if (!memberName) return items;
+  // 이름과 소속이 모두 있어야 검색 가능
+  if (!memberName || !memberCompany) return [];
 
   return items.filter(item => {
     const text = `${item.title} ${item.description}`;
     const hasName = text.includes(memberName);
     if (!hasName) return false;
 
-    // 소속이 있으면 소속도 기사에 포함되어야 함
-    if (memberCompany) {
-      const companyShort = memberCompany.split(/\s+/)[0];
-      return text.includes(memberCompany) || text.includes(companyShort);
-    }
-
-    return true;
+    // 소속도 반드시 기사에 포함되어야 함
+    const companyShort = memberCompany.split(/\s+/)[0];
+    return text.includes(memberCompany) || text.includes(companyShort);
   });
 }
 
@@ -156,15 +153,11 @@ export async function POST(request: NextRequest) {
 
     for (const member of members) {
       const { name, company } = member;
-      if (!name) continue;
+      // 이름과 소속이 모두 있어야 검색
+      if (!name || !company) continue;
 
-      let query: string;
-      if (company) {
-        const companyShort = company.split(/\s+/)[0];
-        query = `${name} ${companyShort}`;
-      } else {
-        query = name;
-      }
+      const companyShort = company.split(/\s+/)[0];
+      const query = `${name} ${companyShort}`;
 
       if (!searchedQueries.has(query)) {
         searchedQueries.add(query);
