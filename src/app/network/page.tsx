@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown, Upload, BarChart3, Plus, Zap, X, Building, Trash2 } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, MessageCircle, Mail, LogOut, ArrowLeft, Users, Shield, Crown, Upload, BarChart3, Plus, Zap, X, Building, Trash2, Grid3X3, Network } from 'lucide-react';
 import NetworkGraph from '@/components/network/NetworkGraph';
 import ProfileSheet from '@/components/network/ProfileSheet';
+import CategoryDashboard from '@/components/network/CategoryDashboard';
 import SearchBar from '@/components/network/SearchBar';
 import CoffeeChatModal from '@/components/coffee-chat/CoffeeChatModal';
 import ConnectionRequestModal from '@/components/connection/ConnectionRequestModal';
@@ -32,12 +33,13 @@ import { Recommendation } from '@/types';
 export default function NetworkPage() {
   const router = useRouter();
   const { user, setUser, isAuthenticated, isLoading: authLoading, setLoading, logout } = useAuthStore();
-  const { setNodes, setEdges, setSelectedNode, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, centerUserOriginalDegree, setCenterUserId } = useNetworkStore();
+  const { setNodes, setEdges, setSelectedNode, setLoading: setNetworkLoading, isLoading: networkLoading, centerUserId, centerUserOriginalDegree, setCenterUserId, setCategoryFilter, categoryFilter } = useNetworkStore();
   const { messages, setMessages } = useMessageStore();
   const { groups, toggleGroupPanel, loadFromFirebase, clearGroups } = useGroupStore();
   const { initDemoInteractions } = useInteractionStore();
 
   const [showMenu, setShowMenu] = useState(false);
+  const [viewMode, setViewMode] = useState<'graph' | 'category'>('graph');
   const [centerUserName, setCenterUserName] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [showQuickCapture, setShowQuickCapture] = useState(false);
@@ -228,9 +230,21 @@ export default function NetworkPage() {
       <div className="stars-bg" />
 
       {/* Network Graph - Full Screen */}
-      <div className="network-container">
-        <NetworkGraph />
-      </div>
+      {viewMode === 'graph' && (
+        <div className="network-container">
+          <NetworkGraph />
+        </div>
+      )}
+
+      {/* Category Dashboard */}
+      {viewMode === 'category' && (
+        <CategoryDashboard
+          onCategorySelect={(category) => {
+            setCategoryFilter(category);
+            setViewMode('graph');
+          }}
+        />
+      )}
 
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
@@ -250,6 +264,30 @@ export default function NetworkPage() {
                 className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#30363D]/80 transition-all duration-200 group"
               >
                 <Menu size={20} className="text-[#484F58] group-hover:text-white transition-colors" />
+              </button>
+            )}
+
+            {/* 뷰 토글 (그래프 / 카테고리) - 자기 네트워크일 때만 */}
+            {(!centerUserId || centerUserId === user.id) && (
+              <button
+                onClick={() => {
+                  if (viewMode === 'category') {
+                    setCategoryFilter(null);
+                    setViewMode('graph');
+                  } else {
+                    setViewMode('category');
+                  }
+                }}
+                className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group ${
+                  viewMode === 'category' ? 'bg-[#58A6FF]/20' : 'hover:bg-[#30363D]/80'
+                }`}
+                title={viewMode === 'graph' ? '분야별 보기' : '그래프 보기'}
+              >
+                {viewMode === 'graph' ? (
+                  <Grid3X3 size={18} className="text-[#484F58] group-hover:text-[#58A6FF] transition-colors" />
+                ) : (
+                  <Network size={18} className="text-[#58A6FF] transition-colors" />
+                )}
               </button>
             )}
 
@@ -316,6 +354,19 @@ export default function NetworkPage() {
         </div>
       )} */}
 
+
+      {/* Category Filter Active Indicator */}
+      {categoryFilter && viewMode === 'graph' && (
+        <div className="fixed top-[88px] left-5 z-25">
+          <button
+            onClick={() => setCategoryFilter(null)}
+            className="flex items-center gap-2 bg-[#161B22]/90 backdrop-blur-xl border border-[#58A6FF]/30 rounded-full px-3 py-1.5 text-xs text-[#58A6FF] hover:bg-[#58A6FF]/10 transition-colors"
+          >
+            <span>{categoryFilter}</span>
+            <X size={12} />
+          </button>
+        </div>
+      )}
 
       {/* Network Stats + Relationship Reminders */}
       <div className="fixed bottom-20 left-4 z-20 flex flex-col gap-2">

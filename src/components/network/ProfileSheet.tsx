@@ -43,6 +43,9 @@ import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { findConnectionPath, getUser, getUserConnectionsWithDetails, getDirectConnections } from '@/lib/firebase-services';
 import { findDemoConnectionPath, demoUsers, demoConnections, getDemoCompatibleId, ensureUserInDemoNetwork } from '@/lib/demo-data';
 import { getDisplayInfo } from '@/lib/privacy-utils';
+import { CATEGORY_COLORS, inferCategory } from '@/lib/category-utils';
+import MiniNetworkViz from '@/components/network/MiniNetworkViz';
+import OpportunityPanel from '@/components/network/OpportunityPanel';
 import { User, NetworkNode } from '@/types';
 
 export default function ProfileSheet() {
@@ -966,38 +969,71 @@ export default function ProfileSheet() {
                       </h3>
                       {connectionDegree === 1 ? (
                         <div className="space-y-4">
+                          {/* 미니 네트워크 시각화 */}
+                          <div className="info-card flex flex-col items-center py-4">
+                            <MiniNetworkViz
+                              connections={theirConnections}
+                              myConnectionIds={myConnectionIds}
+                              centerName={selectedNode.name}
+                              centerImage={selectedNode.profileImage}
+                              onNodeClick={(user) => handleConnectionClick(user)}
+                            />
+                            {/* 요약 문구 */}
+                            {(() => {
+                              const unknownCount = theirConnections.filter(u => !myConnectionIds.has(u.id)).length;
+                              const categorySet = new Set(theirConnections.filter(u => !myConnectionIds.has(u.id)).map(u => inferCategory(u)));
+                              if (unknownCount === 0) return null;
+                              return (
+                                <p className="text-[11px] text-[#8B949E] mt-3 text-center">
+                                  이 인맥을 통해 <span className="text-[#58A6FF] font-semibold">{categorySet.size}개 분야</span>의 <span className="text-[#58A6FF] font-semibold">{unknownCount}명</span>을 새로 만날 수 있어요
+                                </p>
+                              );
+                            })()}
+                          </div>
+
                           {/* 분야별로 그룹화하여 표시 */}
                           {(() => {
-                            // industry 기준으로 그룹화
-                            const groupedByIndustry = theirConnections.reduce((acc, user) => {
-                              const industry = user.industry || '기타';
-                              if (!acc[industry]) {
-                                acc[industry] = [];
+                            // category 기준으로 그룹화 (inferCategory 사용)
+                            const groupedByCategory = theirConnections.reduce((acc, user) => {
+                              const category = inferCategory(user);
+                              if (!acc[category]) {
+                                acc[category] = [];
                               }
-                              acc[industry].push(user);
+                              acc[category].push(user);
                               return acc;
                             }, {} as Record<string, User[]>);
 
-                            const sortedIndustries = Object.keys(groupedByIndustry).sort((a, b) => {
+                            const sortedCategories = Object.keys(groupedByCategory).sort((a, b) => {
                               if (a === '기타') return 1;
                               if (b === '기타') return -1;
-                              return groupedByIndustry[b].length - groupedByIndustry[a].length;
+                              return groupedByCategory[b].length - groupedByCategory[a].length;
                             });
 
-                            return sortedIndustries.map((industry) => (
-                              <div key={industry} className="info-card">
+                            return sortedCategories.map((category) => {
+                              const users = groupedByCategory[category];
+                              const newCount = users.filter(u => !myConnectionIds.has(u.id)).length;
+                              const catColor = CATEGORY_COLORS[category] || CATEGORY_COLORS['기타'];
+
+                              return (
+                              <div key={category} className="info-card">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-2 h-2 rounded-full bg-[#58A6FF]" />
+                                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: catColor }} />
                                   <span className="text-sm font-medium text-[#8B949E]">
-                                    {industry}
+                                    {category}
                                   </span>
                                   <span className="text-[10px] text-[#484F58]">
-                                    ({groupedByIndustry[industry].length}명)
+                                    ({users.length}명)
                                   </span>
+                                  {newCount > 0 && (
+                                    <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${catColor}15`, color: catColor }}>
+                                      새 인맥 {newCount}명
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="grid grid-cols-5 gap-3">
-                                  {groupedByIndustry[industry].slice(0, 10).map((user, idx) => {
+                                  {users.slice(0, 10).map((user, idx) => {
                                     const isMutualConnection = myConnectionIds.has(user.id);
+                                    const isNewOpportunity = !isMutualConnection;
                                     return (
                                     <button
                                       key={`${user.id}-${idx}`}
@@ -1015,6 +1051,11 @@ export default function ProfileSheet() {
                                             <Users size={8} className="text-[#121212]" />
                                           </div>
                                         )}
+                                        {isNewOpportunity && (
+                                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center" style={{ backgroundColor: catColor }} title="새로운 인맥">
+                                            <span className="text-[6px] text-white font-bold">N</span>
+                                          </div>
+                                        )}
                                         <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-[#58A6FF]/50 transition-colors" />
                                       </div>
                                       <span className={`text-[10px] mt-1.5 max-w-[48px] truncate text-center ${isMutualConnection ? 'text-[#FFB800] font-medium' : 'text-[#8B949E]'}`}>
@@ -1024,37 +1065,93 @@ export default function ProfileSheet() {
                                     );
                                   })}
                                 </div>
-                                {groupedByIndustry[industry].length > 10 && (
+                                {users.length > 10 && (
                                   <p className="text-[10px] text-[#484F58] text-center mt-3 pt-3 border-t border-[#363636]/50">
-                                    +{groupedByIndustry[industry].length - 10}명 더
+                                    +{users.length - 10}명 더
                                   </p>
                                 )}
                               </div>
-                            ));
+                              );
+                            });
                           })()}
+
+                          {/* 네트워크 확장 기회 패널 */}
+                          <OpportunityPanel
+                            theirConnections={theirConnections}
+                            myConnectionIds={myConnectionIds}
+                            personName={selectedNode.name}
+                          />
                         </div>
                       ) : (
                         <div className="info-card relative overflow-hidden">
-                          {/* 흐린 아바타 배경 */}
-                          <div className="grid grid-cols-5 gap-3 opacity-20 blur-[2px]">
-                            {Array.from({ length: Math.min(10, theirConnections.length) }).map((_, idx) => (
-                              <div key={idx} className="flex flex-col items-center">
-                                <div className="w-8 h-8 rounded-full bg-[#484F58]" />
-                                <div className="w-10 h-2 mt-1.5 rounded bg-[#484F58]" />
-                              </div>
-                            ))}
+                          {/* 카테고리 아크 실루엣 (호기심 유발) */}
+                          <div className="flex justify-center py-3 mb-2">
+                            <svg width="160" height="160" viewBox="0 0 160 160">
+                              {(() => {
+                                // 카테고리별 대략적 분포 시각화 (잠금 상태)
+                                const total = theirConnections.length || 1;
+                                const grouped: Record<string, number> = {};
+                                theirConnections.forEach(u => {
+                                  const cat = inferCategory(u);
+                                  grouped[cat] = (grouped[cat] || 0) + 1;
+                                });
+                                const cats = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+                                let angle = -Math.PI / 2;
+                                return cats.map(([cat, count], i) => {
+                                  const sweep = (count / total) * Math.PI * 2;
+                                  const color = CATEGORY_COLORS[cat] || CATEGORY_COLORS['기타'];
+                                  const r = 65;
+                                  const x1 = 80 + Math.cos(angle) * r;
+                                  const y1 = 80 + Math.sin(angle) * r;
+                                  const x2 = 80 + Math.cos(angle + sweep) * r;
+                                  const y2 = 80 + Math.sin(angle + sweep) * r;
+                                  const largeArc = sweep > Math.PI ? 1 : 0;
+                                  const path = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+                                  angle += sweep;
+                                  return (
+                                    <path
+                                      key={i}
+                                      d={path}
+                                      fill="none"
+                                      stroke={color}
+                                      strokeWidth="4"
+                                      strokeLinecap="round"
+                                      opacity={0.2}
+                                    />
+                                  );
+                                });
+                              })()}
+                              <circle cx="80" cy="80" r="20" fill="#1E1E1E" stroke="#30363D" strokeWidth="1" />
+                              <text x="80" y="76" textAnchor="middle" fill="#8B949E" fontSize="18" fontWeight="700">
+                                {theirConnections.length}
+                              </text>
+                              <text x="80" y="90" textAnchor="middle" fill="#484F58" fontSize="9">
+                                명의 인맥
+                              </text>
+                            </svg>
                           </div>
-                          {/* 잠금 오버레이 */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525]/70 backdrop-blur-[1px]">
-                            <div className="flex items-center gap-2 text-[#8B949E] mb-2">
-                              <Users size={18} />
-                              <span className="text-xl font-bold text-white">{theirConnections.length}</span>
-                              <span className="text-base">명</span>
-                            </div>
-                            <p className="text-sm text-[#484F58]">
-                              1촌과 연결하면 볼 수 있어요
-                            </p>
+                          {/* 카테고리 분포 힌트 */}
+                          <div className="flex flex-wrap justify-center gap-1.5 mb-3 px-2">
+                            {(() => {
+                              const grouped: Record<string, number> = {};
+                              theirConnections.forEach(u => {
+                                const cat = inferCategory(u);
+                                grouped[cat] = (grouped[cat] || 0) + 1;
+                              });
+                              return Object.entries(grouped)
+                                .sort((a, b) => b[1] - a[1])
+                                .slice(0, 5)
+                                .map(([cat, count]) => (
+                                  <span key={cat} className="flex items-center gap-1 text-[10px] text-[#484F58] bg-[#1E1E1E] px-2 py-1 rounded-full">
+                                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat] || '#8B949E', opacity: 0.5 }} />
+                                    {cat}
+                                  </span>
+                                ));
+                            })()}
                           </div>
+                          <p className="text-sm text-[#484F58] text-center pb-1">
+                            1촌과 연결하면 볼 수 있어요
+                          </p>
                         </div>
                       )}
                     </section>

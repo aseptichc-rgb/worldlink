@@ -10,6 +10,7 @@ interface NetworkState {
   centerUserOriginalDegree: number | null; // 중심 인물의 로그인 사용자 기준 촌수
   highlightedKeyword: string | null;
   searchFilters: SearchFilters;
+  categoryFilter: string | null; // 카테고리 필터 (null이면 전체)
   isLoading: boolean;
   setNodes: (nodes: NetworkNode[]) => void;
   setEdges: (edges: NetworkEdge[]) => void;
@@ -18,6 +19,7 @@ interface NetworkState {
   setCenterUserId: (userId: string | null, originalDegree?: number) => void;
   setHighlightedKeyword: (keyword: string | null) => void;
   setSearchFilters: (filters: SearchFilters) => void;
+  setCategoryFilter: (category: string | null) => void;
   setLoading: (loading: boolean) => void;
   updateNodeProfileImage: (nodeId: string, profileImage: string) => void;
   resetNetwork: () => void;
@@ -32,6 +34,7 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   centerUserOriginalDegree: null,
   highlightedKeyword: null,
   searchFilters: {},
+  categoryFilter: null,
   isLoading: false,
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
@@ -40,6 +43,7 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   setCenterUserId: (centerUserId, originalDegree) => set({ centerUserId, centerUserOriginalDegree: originalDegree ?? null, selectedNode: null, focusedNodeId: null }),
   setHighlightedKeyword: (highlightedKeyword) => set({ highlightedKeyword }),
   setSearchFilters: (searchFilters) => set({ searchFilters }),
+  setCategoryFilter: (categoryFilter) => set({ categoryFilter }),
   setLoading: (isLoading) => set({ isLoading }),
   updateNodeProfileImage: (nodeId, profileImage) => set((state) => ({
     nodes: state.nodes.map(node =>
@@ -57,6 +61,7 @@ export const useNetworkStore = create<NetworkState>((set) => ({
     centerUserId: null,
     centerUserOriginalDegree: null,
     highlightedKeyword: null,
-    searchFilters: {}
+    searchFilters: {},
+    categoryFilter: null,
   }),
 }));

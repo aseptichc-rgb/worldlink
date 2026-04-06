@@ -7,7 +7,7 @@ import { useGroupStore } from '@/store/groupStore';
 import { useNewsAlertStore } from '@/store/newsAlertStore';
 import { NetworkNode, NodeGroup } from '@/types';
 import { Plus, Minus, Maximize2, RotateCcw, Home } from 'lucide-react';
-import { CATEGORY_COLORS } from '@/lib/category-utils';
+import { CATEGORY_COLORS, inferCategory } from '@/lib/category-utils';
 
 interface GraphNode extends NetworkNode {
   x?: number;
@@ -314,6 +314,7 @@ export default function NetworkGraph() {
     setCenterUserId,
     centerUserId,
     centerUserOriginalDegree,
+    categoryFilter,
   } = useNetworkStore();
 
   const {
@@ -1836,7 +1837,8 @@ export default function NetworkGraph() {
 
       const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
-      const isDimmed = false;
+      const isCategoryDimmed = !!(categoryFilter && node.degree !== 0 && inferCategory(node) !== categoryFilter);
+      const isDimmed = isCategoryDimmed;
       const rank = importanceRankMap.get(node.id) || 999;
 
       // 새로 나타나는 노드: 페이드인
@@ -1994,7 +1996,7 @@ export default function NetworkGraph() {
     }
 
     ctx.restore();
-  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, drawGroupBadges, getGroupsForNode, getNodeSize, activeGroupFilter, getNodesInGroup, allMemberships, allGroups, dimensions.width, dimensions.height, nodesWithNews]);
+  }, [transform, highlightedKeyword, hoveredNode, focusedNodeId, getConnectedNodeIds, getVisibleNodeIds, isEdgeVisible, drawNode, drawNodeLabel, drawGroupBadges, getGroupsForNode, getNodeSize, activeGroupFilter, getNodesInGroup, allMemberships, allGroups, dimensions.width, dimensions.height, nodesWithNews, categoryFilter]);
 
   // Smooth animation to target transform
   useEffect(() => {

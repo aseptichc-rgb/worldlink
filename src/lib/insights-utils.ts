@@ -127,3 +127,39 @@ export function getWeakeningRelationships(
     .filter(r => r.status === 'cold' || r.status === 'dormant')
     .sort((a, b) => b.daysSince - a.daysSince);
 }
+
+/** 상대방 네트워크를 통한 확장 기회 계산 */
+export function calculateNetworkExpansion(
+  myCategoryCounts: Record<string, number>,
+  theirNewCategoryCounts: Record<string, number>
+): {
+  gaps: Array<{ category: string; myCount: number; theirNewCount: number }>;
+  totalNewReach: number;
+  diversityIncrease: number;
+} {
+  const myCategories = Object.keys(myCategoryCounts).filter(k => myCategoryCounts[k] > 0).length;
+  const totalNew = Object.values(theirNewCategoryCounts).reduce((a, b) => a + b, 0);
+
+  // 내가 약한데 상대방이 강한 분야 찾기
+  const gaps = Object.entries(theirNewCategoryCounts)
+    .filter(([, count]) => count > 0)
+    .map(([category, theirNewCount]) => ({
+      category,
+      myCount: myCategoryCounts[category] || 0,
+      theirNewCount,
+    }))
+    .sort((a, b) => {
+      // 내가 0인 분야 우선, 그 다음 상대방 인맥 수 내림차순
+      if (a.myCount === 0 && b.myCount > 0) return -1;
+      if (a.myCount > 0 && b.myCount === 0) return 1;
+      return b.theirNewCount - a.theirNewCount;
+    });
+
+  // 다양성 증가율: 새로 추가되는 카테고리 수 기반
+  const newCategories = gaps.filter(g => g.myCount === 0).length;
+  const diversityIncrease = myCategories > 0
+    ? Math.round((newCategories / myCategories) * 100)
+    : newCategories > 0 ? 100 : 0;
+
+  return { gaps, totalNewReach: totalNew, diversityIncrease };
+}

@@ -222,3 +222,34 @@ export function inferCategory(user: {
 export function getCategoryColor(category: string): string {
   return CATEGORY_COLORS[category] || CATEGORY_COLORS['기타'];
 }
+
+/** 노드 배열에서 카테고리별 수 집계 */
+export function getCategoryCounts(
+  nodes: Array<{ category?: string; industry?: string; keywords?: string[]; position?: string; company?: string; degree?: number }>
+): Record<CategoryName, number> {
+  const counts = {} as Record<CategoryName, number>;
+  for (const cat of [...CATEGORIES, '기타' as const]) {
+    counts[cat] = 0;
+  }
+  nodes.forEach(node => {
+    if (node.degree !== undefined && node.degree !== 1) return; // 1촌만 집계
+    const cat = inferCategory(node);
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+  return counts;
+}
+
+/** 사용자 배열을 카테고리별로 그룹화 */
+export function categorizeUsers<T extends { category?: string; industry?: string; keywords?: string[]; position?: string; company?: string }>(
+  users: T[]
+): Record<CategoryName, T[]> {
+  const grouped = {} as Record<CategoryName, T[]>;
+  for (const cat of [...CATEGORIES, '기타' as const]) {
+    grouped[cat] = [];
+  }
+  users.forEach(user => {
+    const cat = inferCategory(user);
+    grouped[cat].push(user);
+  });
+  return grouped;
+}
