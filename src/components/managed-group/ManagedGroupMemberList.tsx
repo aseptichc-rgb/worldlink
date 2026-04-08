@@ -188,7 +188,7 @@ export default function ManagedGroupMemberList({
                 )}
               </div>
               <p className="text-xs text-[#8B949E] truncate">
-                {[info.user?.company, info.user?.position].filter(Boolean).join(' · ') || '정보 없음'}
+                {[info.user?.institution, info.user?.position].filter(Boolean).join(' · ') || '정보 없음'}
               </p>
             </div>
 

@@ -262,11 +262,11 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
         ctx.fillText(labelText, node.x, labelY);
 
         // 회사 정보
-        if (node.user.company) {
+        if (node.user.institution) {
           ctx.font = '10px -apple-system, BlinkMacSystemFont, Pretendard, sans-serif';
           const companyY = labelY + 18;
           ctx.fillStyle = '#8B949E';
-          ctx.fillText(node.user.company, node.x, companyY);
+          ctx.fillText(node.user.institution, node.x, companyY);
         }
       }
     }
@@ -401,7 +401,7 @@ export default function MyNetworkVisualization({ userId, userName, userImage }: 
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-semibold">{selectedNode.user.name}</h4>
                   <p className="text-[#8B949E] text-base truncate">
-                    {selectedNode.user.company} · {selectedNode.user.position}
+                    {selectedNode.user.institution} · {selectedNode.user.position}
                   </p>
                 </div>
                 <button

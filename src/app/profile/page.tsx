@@ -17,13 +17,22 @@ import {
   Mail,
   Search,
   Loader2,
+  BookOpen,
+  Award,
+  ExternalLink,
+  Quote,
 } from 'lucide-react';
+import type { User } from '@/types';
 import { Avatar, Input, Tag, Card } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { InviteManager } from '@/components/invite/InviteManager';
+import PaperCard from '@/components/papers/PaperCard';
+import AchievementTimeline from '@/components/profile/AchievementTimeline';
 import { useAuthStore } from '@/store/authStore';
 import { useNetworkStore } from '@/store/networkStore';
+import { usePaperStore } from '@/store/paperStore';
 import { flushGroupSync } from '@/store/groupStore';
+import { getCategoryColor, getFieldLabel } from '@/lib/category-utils';
 import {
   updateUser,
   uploadProfileImage,
@@ -33,10 +42,26 @@ import {
   savePublicCard,
 } from '@/lib/firebase-services';
 
+// localStorage에서 복원된 유저가 이전 형식일 수 있으므로 안전 기본값 적용
+function safeUser(u: User | null): User | null {
+  if (!u) return u;
+  const raw = u as any;
+  return {
+    ...u,
+    researchInterests: u.researchInterests || raw.keywords || [],
+    researchKeywords: u.researchKeywords || [],
+    researchField: u.researchField || raw.category,
+    institution: u.institution || raw.company || '',
+    meetingStatus: u.meetingStatus || raw.coffeeStatus || 'available',
+  };
+}
+
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, setUser, logout, setLoading } = useAuthStore();
+  const { user: rawUser, setUser, logout, setLoading } = useAuthStore();
+  const user = safeUser(rawUser);
   const { updateNodeProfileImage } = useNetworkStore();
+  const { papers, toggleFeatured, removePaper, achievements, addAchievement, removeAchievement } = usePaperStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
@@ -56,7 +81,7 @@ export default function ProfilePage() {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
         setUser(userData);
-        setEditedUser(userData);
+        setEditedUser(safeUser(userData));
       } else {
         setUser(null);
         router.push('/onboarding');
@@ -91,13 +116,13 @@ export default function ProfilePage() {
         savePublicCard({
           id: user.id,
           name: user.name,
-          company: user.company,
+          institution: user.institution,
           position: user.position,
           email: user.email,
           phone: user.phone,
           bio: user.bio,
           profileImage: imageUrl,
-          keywords: user.keywords,
+          researchInterests: user.researchInterests,
         }),
       ]);
 
@@ -120,23 +145,23 @@ export default function ProfilePage() {
       if (!isDemoMode) {
         await updateUser(user.id, {
           name: editedUser.name,
-          company: editedUser.company,
+          institution: editedUser.institution,
           position: editedUser.position,
           bio: editedUser.bio,
-          keywords: editedUser.keywords,
+          researchInterests: editedUser.researchInterests,
         });
 
-        // 공개 명함도 자동 업데이트 (QR 코드 스캔 시 최신 정보 표시)
+        // 공개 프로필 카드도 자동 업데이트 (QR 코드 스캔 시 최신 정보 표시)
         await savePublicCard({
           id: editedUser.id,
           name: editedUser.name,
-          company: editedUser.company,
+          institution: editedUser.institution,
           position: editedUser.position,
           email: editedUser.email,
           phone: editedUser.phone,
           bio: editedUser.bio,
           profileImage: editedUser.profileImage,
-          keywords: editedUser.keywords,
+          researchInterests: editedUser.researchInterests,
         });
       }
 
@@ -150,33 +175,33 @@ export default function ProfilePage() {
   };
 
   const addKeyword = async () => {
-    if (!editedUser || !user || !newKeyword.trim() || editedUser.keywords.length >= 5) return;
+    if (!editedUser || !user || !newKeyword.trim() || editedUser.researchInterests.length >= 5) return;
     const keyword = newKeyword.trim().replace(/^#/, '');
-    if (!editedUser.keywords.includes(keyword)) {
-      const newKeywords = [...editedUser.keywords, keyword];
+    if (!editedUser.researchInterests.includes(keyword)) {
+      const newKeywords = [...editedUser.researchInterests, keyword];
       setEditedUser({
         ...editedUser,
-        keywords: newKeywords,
+        researchInterests: newKeywords,
       });
       setNewKeyword('');
 
       if (isDemoMode) {
-        setUser({ ...user, keywords: newKeywords });
+        setUser({ ...user, researchInterests: newKeywords });
       } else {
         try {
-          await updateUser(user.id, { keywords: newKeywords });
+          await updateUser(user.id, { researchInterests: newKeywords });
           await savePublicCard({
             id: user.id,
             name: editedUser.name,
-            company: editedUser.company,
+            institution: editedUser.institution,
             position: editedUser.position,
             email: editedUser.email,
             phone: editedUser.phone,
             bio: editedUser.bio,
             profileImage: editedUser.profileImage,
-            keywords: newKeywords,
+            researchInterests: newKeywords,
           });
-          setUser({ ...user, keywords: newKeywords });
+          setUser({ ...user, researchInterests: newKeywords });
         } catch (error) {
           console.error('Error saving keyword:', error);
         }
@@ -188,29 +213,29 @@ export default function ProfilePage() {
 
   const removeKeyword = async (keyword: string) => {
     if (!editedUser || !user) return;
-    const newKeywords = editedUser.keywords.filter(k => k !== keyword);
+    const newKeywords = editedUser.researchInterests.filter(k => k !== keyword);
     setEditedUser({
       ...editedUser,
-      keywords: newKeywords,
+      researchInterests: newKeywords,
     });
 
     if (isDemoMode) {
-      setUser({ ...user, keywords: newKeywords });
+      setUser({ ...user, researchInterests: newKeywords });
     } else {
       try {
-        await updateUser(user.id, { keywords: newKeywords });
+        await updateUser(user.id, { researchInterests: newKeywords });
         await savePublicCard({
           id: user.id,
           name: editedUser.name,
-          company: editedUser.company,
+          institution: editedUser.institution,
           position: editedUser.position,
           email: editedUser.email,
           phone: editedUser.phone,
           bio: editedUser.bio,
           profileImage: editedUser.profileImage,
-          keywords: newKeywords,
+          researchInterests: newKeywords,
         });
-        setUser({ ...user, keywords: newKeywords });
+        setUser({ ...user, researchInterests: newKeywords });
       } catch (error) {
         console.error('Error removing keyword:', error);
       }
@@ -312,9 +337,9 @@ export default function ProfilePage() {
             {isEditing ? (
               <div className="flex gap-3 justify-center mb-6">
                 <Input
-                  value={editedUser.company}
-                  onChange={(e) => setEditedUser({ ...editedUser, company: e.target.value })}
-                  placeholder="회사"
+                  value={editedUser.institution}
+                  onChange={(e) => setEditedUser({ ...editedUser, institution: e.target.value })}
+                  placeholder="소속 기관"
                   className="w-1/2 text-center"
                 />
                 <Input
@@ -326,7 +351,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="text-base text-[#8B949E] mb-6">
-                {editedUser.company} · {editedUser.position}
+                {editedUser.institution} · {editedUser.position}
               </p>
             )}
           </motion.div>
@@ -355,14 +380,14 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* 관심 키워드 - 항상 편집 가능 */}
+          {/* 연구 관심사 - 항상 편집 가능 */}
           <div className="border-t border-[rgba(255,255,255,0.06)] pt-6 mb-6 px-2">
             <div className="flex items-center justify-between mb-4 px-1">
-              <h3 className="text-base font-medium text-[#8B949E]">관심 키워드</h3>
-              <span className="text-sm text-[#484F58]">{editedUser.keywords.length}/5</span>
+              <h3 className="text-base font-medium text-[#8B949E]">연구 관심사</h3>
+              <span className="text-sm text-[#484F58]">{editedUser.researchInterests.length}/5</span>
             </div>
             <div className="flex flex-wrap gap-3 mb-4 px-1">
-              {editedUser.keywords.map((keyword) => (
+              {editedUser.researchInterests.map((keyword) => (
                 <Tag
                   key={keyword}
                   label={keyword}
@@ -370,18 +395,18 @@ export default function ProfilePage() {
                   onRemove={() => removeKeyword(keyword)}
                 />
               ))}
-              {editedUser.keywords.length === 0 && (
-                <p className="text-[#484F58] text-base">키워드를 추가해보세요</p>
+              {editedUser.researchInterests.length === 0 && (
+                <p className="text-[#484F58] text-base">연구 관심사를 추가해보세요</p>
               )}
             </div>
-            {editedUser.keywords.length < 5 && (
+            {editedUser.researchInterests.length < 5 && (
               <div className="flex items-center gap-3">
                 <input
                   type="text"
                   value={newKeyword}
                   onChange={(e) => setNewKeyword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
-                  placeholder="키워드 입력 (예: AI, 스타트업)"
+                  placeholder="연구 관심사 입력 (예: 강화학습, 단백질)"
                   maxLength={20}
                   className="
                     flex-1 bg-[#252525] text-white text-base
@@ -421,7 +446,7 @@ export default function ProfilePage() {
                   <p className="text-[#8B949E] text-sm mt-1">
                     {user.privacySettings?.allowProfileDiscovery
                       ? (user.privacySettings?.allowGlobalSearch ? '검색 허용 · 네트워크 공개' : '검색 비허용 · 네트워크 공개')
-                      : '비공개 모드'}
+                    : '비공개 모드'}
                   </p>
                 </div>
               </div>
@@ -429,6 +454,117 @@ export default function ProfilePage() {
             </button>
           </div>
         </Card>
+
+        {/* Research Metrics */}
+        {(() => {
+          const myPapers = papers.filter(p => p.researcherId === user.id);
+          const totalCitations = myPapers.reduce((sum, p) => sum + (p.citationCount || 0), 0);
+          const fieldColor = user.researchField ? getCategoryColor(user.researchField) : '#0EA5E9';
+          const fieldLabel = user.researchField ? getFieldLabel(user.researchField) : '';
+          const featuredPapers = myPapers.filter(p => p.isFeatured);
+          const myAchievements = achievements.filter(a => a.researcherId === user.id || a.researcherId === '');
+          return (
+            <>
+              {/* Research Field Badge + External Links */}
+              <div className="flex items-center gap-2 flex-wrap mb-4">
+                {fieldLabel && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: `${fieldColor}15`, color: fieldColor }}>
+                    {fieldLabel}
+                  </span>
+                )}
+                {user.orcid && (
+                  <a href={`https://orcid.org/${user.orcid}`} target="_blank" rel="noopener noreferrer"
+                    className="px-2 py-1 rounded-md bg-[#A6CE39]/10 text-[#A6CE39] text-xs flex items-center gap-1">
+                    ORCID <ExternalLink size={10} />
+                  </a>
+                )}
+                {user.googleScholarId && (
+                  <a href={`https://scholar.google.com/citations?user=${user.googleScholarId}`} target="_blank" rel="noopener noreferrer"
+                    className="px-2 py-1 rounded-md bg-[#4285F4]/10 text-[#4285F4] text-xs flex items-center gap-1">
+                    Google Scholar <ExternalLink size={10} />
+                  </a>
+                )}
+              </div>
+
+              {/* Metrics Cards */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-[#1E1E1E] border border-[#30363D] text-center">
+                  <p className="text-xl font-bold text-[#F0F6FC]">{user.hIndex || myPapers.length}</p>
+                  <p className="text-[10px] text-[#8B949E] mt-0.5">{user.hIndex ? 'h-index' : '논문'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#1E1E1E] border border-[#30363D] text-center">
+                  <p className="text-xl font-bold text-[#F59E0B]">{user.totalCitations || totalCitations}</p>
+                  <p className="text-[10px] text-[#8B949E] mt-0.5">인용</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#1E1E1E] border border-[#30363D] text-center">
+                  <p className="text-xl font-bold text-[#0EA5E9]">{user.totalPublications || myPapers.length}</p>
+                  <p className="text-[10px] text-[#8B949E] mt-0.5">출판</p>
+                </div>
+              </div>
+
+              {/* Featured Papers */}
+              {featuredPapers.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-[#F59E0B] flex items-center gap-1.5">
+                      <BookOpen size={14} />
+                      대표 논문
+                    </h3>
+                    <button onClick={() => router.push('/papers')} className="text-xs text-[#0EA5E9]">
+                      전체 보기
+                    </button>
+                  </div>
+                  <div className="space-y-2.5">
+                    {featuredPapers.slice(0, 3).map(p => (
+                      <PaperCard key={p.id} paper={p} compact />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All Papers Link (if no featured but has papers) */}
+              {featuredPapers.length === 0 && myPapers.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-[#8B949E] flex items-center gap-1.5">
+                      <BookOpen size={14} />
+                      최근 논문
+                    </h3>
+                    <button onClick={() => router.push('/papers')} className="text-xs text-[#0EA5E9]">
+                      전체 보기
+                    </button>
+                  </div>
+                  <div className="space-y-2.5">
+                    {myPapers.slice(0, 2).map(p => (
+                      <PaperCard key={p.id} paper={p} compact />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add Paper Button (if no papers) */}
+              {myPapers.length === 0 && (
+                <button
+                  onClick={() => router.push('/papers')}
+                  className="w-full mb-6 p-4 rounded-xl border border-dashed border-[#30363D] text-[#8B949E] text-sm flex items-center justify-center gap-2 hover:border-[#0EA5E9]/30 hover:text-[#0EA5E9] transition-colors"
+                >
+                  <BookOpen size={16} />
+                  논문 등록하기
+                </button>
+              )}
+
+              {/* Achievements */}
+              <div className="mb-6">
+                <AchievementTimeline
+                  achievements={myAchievements}
+                  editable
+                  onAdd={(ach) => addAchievement({ ...ach, researcherId: user.id })}
+                  onRemove={removeAchievement}
+                />
+              </div>
+            </>
+          );
+        })()}
 
         {/* Invite Manager */}
         <div className="mb-8">
@@ -501,7 +637,7 @@ export default function ProfilePage() {
                           allowGlobalSearch: newAllowDiscovery ? (user.privacySettings?.allowGlobalSearch ?? false) : false,
                           displaySettings: {
                             nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
-                            companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                            institutionDisplay: (user.privacySettings?.displaySettings?.institutionDisplay || 'department') as 'full' | 'department' | 'hidden',
                             positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
                             emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                           },
@@ -548,7 +684,7 @@ export default function ProfilePage() {
                             allowGlobalSearch: newAllowGlobalSearch,
                             displaySettings: {
                               nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
-                              companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                              institutionDisplay: (user.privacySettings?.displaySettings?.institutionDisplay || 'department') as 'full' | 'department' | 'hidden',
                               positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
                               emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                             },
@@ -578,7 +714,7 @@ export default function ProfilePage() {
                         </div>
                         <p className="text-[#8B949E] text-base leading-relaxed">
                           {user.privacySettings?.allowGlobalSearch
-                            ? '다른 회원들이 이름이나 키워드로 나를 검색할 수 있습니다.'
+                            ? '다른 회원들이 이름이나 연구 관심사로 나를 검색할 수 있습니다.'
                             : '검색에 노출되지 않습니다. 네트워크 탐색에서만 발견됩니다.'}
                         </p>
                       </div>
@@ -611,7 +747,7 @@ export default function ProfilePage() {
                                   allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: option.value as 'full' | 'partial',
-                                    companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                                    institutionDisplay: (user.privacySettings?.displaySettings?.institutionDisplay || 'department') as 'full' | 'department' | 'hidden',
                                     positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
                                     emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                                   },
@@ -637,20 +773,19 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* 회사 표시 설정 */}
+                    {/* 소속 기관 표시 설정 */}
                     <div className="p-5 bg-[#252525] border border-[#363636] rounded-lg">
                       <div className="flex items-center gap-2.5 mb-4">
                         <Building2 size={16} className="text-[#1F6FEB]" />
-                        <h4 className="text-white font-medium text-base">회사 표시</h4>
+                        <h4 className="text-white font-medium text-base">소속 기관 표시</h4>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         {[
-                          { value: 'industry', label: '업종만', example: user.industry || 'IT/소프트웨어' },
-                          { value: 'size', label: '규모만', example: user.companySize === 'startup' ? '스타트업' : user.companySize === 'sme' ? '중소기업' : user.companySize === 'enterprise' ? '대기업' : '프리랜서' },
-                          { value: 'full', label: '회사명 공개', example: user.company || '회사명' },
+                          { value: 'full', label: '기관명 공개', example: user.institution || '소속 기관' },
+                          { value: 'department', label: '학과만', example: user.department || '학과' },
                           { value: 'hidden', label: '비공개', example: '표시 안 함' },
                         ].map((option) => {
-                          const isSelected = user.privacySettings?.displaySettings?.companyDisplay === option.value;
+                          const isSelected = user.privacySettings?.displaySettings?.institutionDisplay === option.value;
                           return (
                             <button
                               key={option.value}
@@ -661,7 +796,7 @@ export default function ProfilePage() {
                                   allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
-                                    companyDisplay: option.value as 'full' | 'industry' | 'size' | 'hidden',
+                                    institutionDisplay: option.value as 'full' | 'department' | 'hidden',
                                     positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
                                     emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                                   },
@@ -695,7 +830,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         {[
-                          { value: 'level', label: '직급 수준', example: user.positionLevel === 'entry' ? '사원급' : user.positionLevel === 'staff' ? '실무자급' : user.positionLevel === 'manager' ? '관리자급' : '임원급' },
+                          { value: 'level', label: '직급 수준', example: user.degree === 'professor' ? '교수급' : user.degree === 'postdoc' ? '박사후연구원' : user.degree === 'phd' ? '박사과정' : '연구원' },
                           { value: 'full', label: '전체 공개', example: user.position || '직책' },
                           { value: 'hidden', label: '비공개', example: '표시 안 함' },
                         ].map((option) => {
@@ -710,7 +845,7 @@ export default function ProfilePage() {
                                   allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
-                                    companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                                    institutionDisplay: (user.privacySettings?.displaySettings?.institutionDisplay || 'department') as 'full' | 'department' | 'hidden',
                                     positionDisplay: option.value as 'full' | 'level' | 'hidden',
                                     emailDisplay: (user.privacySettings?.displaySettings?.emailDisplay || 'hidden') as 'full' | 'partial' | 'hidden',
                                   },
@@ -759,7 +894,7 @@ export default function ProfilePage() {
                                   allowGlobalSearch: user.privacySettings?.allowGlobalSearch ?? false,
                                   displaySettings: {
                                     nameDisplay: (user.privacySettings?.displaySettings?.nameDisplay || 'partial') as 'full' | 'partial',
-                                    companyDisplay: (user.privacySettings?.displaySettings?.companyDisplay || 'industry') as 'full' | 'industry' | 'size' | 'hidden',
+                                    institutionDisplay: (user.privacySettings?.displaySettings?.institutionDisplay || 'department') as 'full' | 'department' | 'hidden',
                                     positionDisplay: (user.privacySettings?.displaySettings?.positionDisplay || 'level') as 'full' | 'level' | 'hidden',
                                     emailDisplay: option.value as 'full' | 'partial' | 'hidden',
                                   },
@@ -805,26 +940,21 @@ export default function ProfilePage() {
                             {(() => {
                               const parts = [];
                               const ds = user.privacySettings?.displaySettings;
-                              if (ds?.companyDisplay !== 'hidden') {
-                                if (ds?.companyDisplay === 'industry') {
-                                  parts.push(user.industry || 'IT/소프트웨어');
-                                } else if (ds?.companyDisplay === 'size') {
-                                  const sizeLabels: Record<string, string> = {
-                                    startup: '스타트업', sme: '중소기업', enterprise: '대기업', freelance: '프리랜서'
-                                  };
-                                  parts.push(sizeLabels[user.companySize || ''] || '기업');
+                              if (ds?.institutionDisplay !== 'hidden') {
+                                if (ds?.institutionDisplay === 'department') {
+                                  parts.push(user.department || '학과');
                                 } else {
-                                  parts.push(user.company || '회사명');
+                                  parts.push(user.institution || '소속 기관');
                                 }
                               }
                               if (ds?.positionDisplay !== 'hidden') {
                                 if (ds?.positionDisplay === 'level') {
                                   const levelLabels: Record<string, string> = {
-                                    entry: '사원급', staff: '실무자급', manager: '관리자급', executive: '임원급'
+                                    professor: '교수급', postdoc: '박사후연구원', phd: '박사과정', master: '석사과정', bachelor: '학부생'
                                   };
-                                  parts.push(levelLabels[user.positionLevel || ''] || '실무자급');
+                                  parts.push(levelLabels[user.degree || ''] || '연구원');
                                 } else {
-                                  parts.push(user.position || '직책');
+                                  parts.push(user.position || '직위');
                                 }
                               }
                               return parts.length > 0 ? parts.join(' · ') : '비공개';

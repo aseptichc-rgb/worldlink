@@ -13,7 +13,7 @@ const TYPE_CONFIG: Record<InteractionType, { icon: typeof Handshake; label: stri
   meeting: { icon: Handshake, label: '만남', color: '#58A6FF' },
   call: { icon: Phone, label: '전화', color: '#3FB950' },
   message: { icon: MessageCircle, label: '메시지', color: '#D29922' },
-  coffee_chat: { icon: Coffee, label: '커피챗', color: '#FF6B8A' },
+  research_meeting: { icon: Coffee, label: '커피챗', color: '#FF6B8A' },
   memo: { icon: StickyNote, label: '메모', color: '#8B949E' },
   other: { icon: FileText, label: '기타', color: '#A371F7' },
 };

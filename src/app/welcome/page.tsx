@@ -35,7 +35,7 @@ type WelcomeStep = 'greeting' | 'photo' | 'card-ocr' | 'card-form' | 'keywords' 
 
 interface CardInfo {
   name: string;
-  company: string;
+  institution: string;
   position: string;
   phone: string;
   email: string;
@@ -57,7 +57,7 @@ function WelcomeContent() {
   const [cardImage, setCardImage] = useState<string | null>(null);
   const [cardInfo, setCardInfo] = useState<CardInfo>({
     name: user?.name || '',
-    company: user?.company || '',
+    institution: user?.institution || '',
     position: user?.position || '',
     phone: user?.phone || '',
     email: user?.email || '',
@@ -66,7 +66,7 @@ function WelcomeContent() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Keywords
-  const [keywords, setKeywords] = useState<string[]>(user?.keywords || []);
+  const [keywords, setKeywords] = useState<string[]>(user?.researchInterests || []);
   const [newKeyword, setNewKeyword] = useState('');
 
   const suggestedKeywords = [
@@ -153,7 +153,7 @@ function WelcomeContent() {
   const parseBusinessCardText = useCallback((text: string): CardInfo => {
     const cleanedText = text.replace(/[|}{[\]<>]/g, '').replace(/\s{2,}/g, ' ');
     const lines = cleanedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    const info: CardInfo = { name: '', company: '', position: '', phone: '', email: '' };
+    const info: CardInfo = { name: '', institution: '', position: '', phone: '', email: '' };
 
     // 이메일
     const emailMatch = cleanedText.match(/[a-zA-Z0-9._%+\-]+\s*@\s*[a-zA-Z0-9.\-]+\.\s*[a-zA-Z]{2,}/);
@@ -240,12 +240,13 @@ function WelcomeContent() {
     ];
     for (const line of textLines) {
       if (line === info.name || line === info.position) continue;
-      if (companyKeywords.some(kw => line.includes(kw))) { info.company = line; break; }
+      if (companyKeywords.some(kw => line.includes(kw))) { info.institution = line; break; }
+
     }
-    if (!info.company) {
+    if (!info.institution) {
       for (const line of textLines) {
         if (line === info.name || line === info.position) continue;
-        if (line.length >= 2 && line.length <= 30) { info.company = line; break; }
+        if (line.length >= 2 && line.length <= 30) { info.institution = line; break; }
       }
     }
 
@@ -258,12 +259,12 @@ function WelcomeContent() {
       const processedImage = await preprocessImage(imageData);
       const result = await Tesseract.recognize(processedImage, 'kor+eng', { logger: () => {} });
       const parsed = parseBusinessCardText(result.data.text);
-      const fieldCount = [parsed.name, parsed.company, parsed.phone, parsed.email].filter(v => v.length > 0).length;
+      const fieldCount = [parsed.name, parsed.institution, parsed.phone, parsed.email].filter(v => v.length > 0).length;
 
       if (fieldCount < 2) {
         const fallbackResult = await Tesseract.recognize(imageData, 'kor+eng', { logger: () => {} });
         const fallbackParsed = parseBusinessCardText(fallbackResult.data.text);
-        const fallbackCount = [fallbackParsed.name, fallbackParsed.company, fallbackParsed.phone, fallbackParsed.email].filter(v => v.length > 0).length;
+        const fallbackCount = [fallbackParsed.name, fallbackParsed.institution, fallbackParsed.phone, fallbackParsed.email].filter(v => v.length > 0).length;
         setCardInfo(prev => ({
           ...prev,
           ...(fallbackCount > fieldCount ? fallbackParsed : parsed),
@@ -314,7 +315,7 @@ function WelcomeContent() {
     try {
       const updates: Partial<UserType> = {};
       if (cardInfo.name) updates.name = cardInfo.name;
-      if (cardInfo.company) updates.company = cardInfo.company;
+      if (cardInfo.institution) updates.institution = cardInfo.institution;
       if (cardInfo.position) updates.position = cardInfo.position;
       if (cardInfo.phone) updates.phone = cardInfo.phone;
 
@@ -345,8 +346,8 @@ function WelcomeContent() {
   const handleSaveKeywords = async () => {
     if (!user) return;
     try {
-      await updateUser(user.id, { keywords });
-      setUser({ ...user, keywords });
+      await updateUser(user.id, { researchInterests: keywords });
+      setUser({ ...user, researchInterests: keywords });
       setStep('done');
       setTimeout(() => router.push('/card'), 2000);
     } catch (err) {
@@ -639,8 +640,8 @@ function WelcomeContent() {
                     <Building2 size={12} /> 회사
                   </label>
                   <input
-                    value={cardInfo.company}
-                    onChange={(e) => setCardInfo({ ...cardInfo, company: e.target.value })}
+                    value={cardInfo.institution}
+                    onChange={(e) => setCardInfo({ ...cardInfo, institution: e.target.value })}
                     placeholder="회사명"
                     className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2.5 px-3 text-base focus:outline-none focus:border-[#58A6FF] placeholder:text-[#484F58]"
                   />

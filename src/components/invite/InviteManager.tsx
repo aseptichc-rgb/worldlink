@@ -332,7 +332,7 @@ export function InviteManager({
       if (selectedMethod === "email") {
         const subject = encodeURIComponent(`${userName}님이 NODDED에 초대했습니다`);
         const body = encodeURIComponent(
-          `안녕하세요!\n\n${userName}님이 NODDED에 초대했습니다.\n\nNODDED는 신뢰 기반 비즈니스 네트워킹 플랫폼입니다.\n아래 링크를 통해 가입해주세요:\n\n${inviteLink}\n\n초대 코드: ${invitation.inviteCode}`
+          `안녕하세요!\n\n${userName}님이 NODDED에 초대했습니다.\n\nNODDED는 신뢰 기반 연구자 네트워킹 플랫폼입니다.\n아래 링크를 통해 가입해주세요:\n\n${inviteLink}\n\n초대 코드: ${invitation.inviteCode}`
         );
         window.open(`mailto:${email}?subject=${subject}&body=${body}`);
       } else if (selectedMethod === "kakao") {
@@ -346,7 +346,7 @@ export function InviteManager({
         } catch {
           // SDK 로드 실패 시 클립보드 폴백
           await copyToClipboard(
-            `${userName}님이 NODDED에 초대했습니다!\n\n비즈니스 네트워킹의 새로운 방법을 경험해보세요.\n\n${inviteLink}`
+            `${userName}님이 NODDED에 초대했습니다!\n\n연구자 네트워킹의 새로운 방법을 경험해보세요.\n\n${inviteLink}`
           );
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);

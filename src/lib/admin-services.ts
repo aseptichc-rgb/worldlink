@@ -97,7 +97,7 @@ export const getInvitationStats = async (): Promise<{
 export const getKeywordDistribution = (users: User[]): [string, number][] => {
   const keywordMap = new Map<string, number>();
   users.forEach(user => {
-    user.keywords?.forEach(kw => {
+    user.researchInterests?.forEach(kw => {
       keywordMap.set(kw, (keywordMap.get(kw) || 0) + 1);
     });
   });
@@ -107,7 +107,7 @@ export const getKeywordDistribution = (users: User[]): [string, number][] => {
 export const getCategoryDistribution = (users: User[]): [string, number][] => {
   const categoryMap = new Map<string, number>();
   users.forEach(user => {
-    const cat = user.category || '미분류';
+    const cat = user.researchField || '미분류';
     categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
   });
   return [...categoryMap.entries()].sort((a, b) => b[1] - a[1]);

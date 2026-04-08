@@ -92,7 +92,7 @@ export default function ProfileSheet() {
     }
 
     // 2) 캐시에 없으면 직접 API 검색
-    const member = { name: selectedNode.name, company: selectedNode.company };
+    const member = { name: selectedNode.name, institution: selectedNode.institution };
     if (!member.name) return;
 
     let cancelled = false;
@@ -110,7 +110,7 @@ export default function ProfileSheet() {
       .catch(() => {});
 
     return () => { cancelled = true; };
-  }, [selectedNode?.id, selectedNode?.name, selectedNode?.company, allGroupNews]);
+  }, [selectedNode?.id, selectedNode?.name, selectedNode?.institution, allGroupNews]);
 
   const memberNews = profileNews;
 
@@ -183,31 +183,6 @@ export default function ProfileSheet() {
 
       setIsLoadingPath(true);
       try {
-        // 가져온 연락처인 경우: 노드 정보를 직접 사용
-        if (selectedNode.isImported) {
-          const importedUserData: User = {
-            id: selectedNode.id,
-            name: selectedNode.name,
-            email: selectedNode.email || '',
-            phone: selectedNode.phone,
-            company: selectedNode.company,
-            position: selectedNode.position,
-            keywords: selectedNode.keywords || [],
-            inviteCode: '',
-            invitesRemaining: 0,
-            coffeeStatus: 'available' as const,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-
-          if (cancelled) return;
-          setConnectionPath([currentUser, importedUserData]);
-          setSelectedUserData(importedUserData);
-          setTheirConnections([]);
-          setIsLoadingPath(false);
-          return;
-        }
-
         const fromDemoId = getDemoCompatibleId(currentUser);
         const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
         const isDemoNode = selectedNode.id.startsWith('demo_') || selectedNode.id.startsWith('member_');
@@ -217,7 +192,7 @@ export default function ProfileSheet() {
           const pathUsers: User[] = pathIds.map(id => {
             const demoUser = demoUsers.find(u => u.id === id);
             if (demoUser) return demoUser;
-            return { id, name: '나', email: '', inviteCode: '', invitesRemaining: 0, coffeeStatus: 'available' as const, keywords: [], createdAt: new Date(), updatedAt: new Date() };
+            return { id, name: '나', email: '', inviteCode: '', invitesRemaining: 0, meetingStatus: 'available' as const, researchInterests: [], researchKeywords: [], createdAt: new Date(), updatedAt: new Date() };
           });
           if (cancelled) return;
           setConnectionPath(pathUsers);
@@ -389,10 +364,10 @@ export default function ProfileSheet() {
       const newNode: NetworkNode = {
         id: user.id,
         name: user.name,
-        company: user.company || '',
+        institution: user.institution || '',
         position: user.position || '',
         profileImage: user.profileImage,
-        keywords: user.keywords || [],
+        researchInterests: user.researchInterests || [],
         degree: degree,
         connectionCount: demoConnections[user.id]?.length || 0,
       };
@@ -446,13 +421,9 @@ export default function ProfileSheet() {
                         src={selectedNode.profileImage}
                         name={selectedNode.name}
                         size="xl"
-                        hasGlow={connectionDegree === 1 && !selectedNode.isImported}
+                        hasGlow={connectionDegree === 1}
                       />
-                      {selectedNode.isImported ? (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#3FB950] flex items-center justify-center">
-                          <Upload size={10} className="text-[#121212]" />
-                        </div>
-                      ) : connectionDegree === 1 && (
+                      {connectionDegree === 1 && (
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#58A6FF] flex items-center justify-center">
                           <Link2 size={12} className="text-[#121212]" />
                         </div>
@@ -461,12 +432,12 @@ export default function ProfileSheet() {
                     <div className="flex-1 min-w-0 pt-1">
                       {/* 1촌이거나 가져온 연락처면 전체 정보, 아니면 비식별화된 정보 표시 */}
                       {(() => {
-                        const isConnected = (connectionDegree === 1 && myConnectionMethods.get(selectedNode.id) !== 'managed_group') || !!selectedNode.isImported;
+                        const isConnected = (connectionDegree === 1 && myConnectionMethods.get(selectedNode.id) !== 'managed_group');
                         const displayInfo = selectedUserData
                           ? getDisplayInfo(selectedUserData, isConnected)
                           : {
                               name: isConnected ? selectedNode.name : `${selectedNode.name?.[0] || '?'}*님`,
-                              company: isConnected ? selectedNode.company : null,
+                              company: isConnected ? selectedNode.institution : null,
                               position: isConnected ? selectedNode.position : null,
                               isPublic: true
                             };
@@ -505,38 +476,6 @@ export default function ProfileSheet() {
                       .map(u => u.id)
                       .filter(id => myConnectionIds.has(id)).length;
 
-                    // 가져온 연락처인 경우 다른 뱃지 표시
-                    if (selectedNode.isImported) {
-                      // 내가 가져온 연락처인 경우에만 전화번호/이메일 표시
-                      const isMyImportedContact = currentUser?.id === selectedNode.importedByUserId;
-
-                      return (
-                        <div className="mt-5">
-                          <div className="flex items-center gap-2 px-3 py-2 bg-[#3FB950]/10 rounded-lg border border-[#3FB950]/30 mb-3">
-                            <Upload size={14} className="text-[#3FB950]" />
-                            <span className="text-sm text-[#3FB950]">가져온 연락처</span>
-                          </div>
-                          {isMyImportedContact && selectedNode.phone && (
-                            <div className="flex items-center gap-2 text-[#8B949E] text-sm mb-1">
-                              <Phone size={14} className="text-[#58A6FF]" />
-                              <span>{selectedNode.phone}</span>
-                            </div>
-                          )}
-                          {isMyImportedContact && selectedNode.email && (
-                            <div className="flex items-center gap-2 text-[#8B949E] text-sm">
-                              <Mail size={14} className="text-[#58A6FF]" />
-                              <span>{selectedNode.email}</span>
-                            </div>
-                          )}
-                          {!isMyImportedContact && (
-                            <div className="text-[#484F58] text-sm">
-                              연락처 소유자만 개인정보 열람 가능
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
                     return (
                       <div className="flex items-center gap-3 mt-5">
                         <div className="stat-badge flex-1">
@@ -569,7 +508,7 @@ export default function ProfileSheet() {
 
                 <div className="px-5 pb-5 space-y-5">
                   {/* Contact Info - 1촌(모임 자동연결 제외) 또는 가져온 연락처에게 표시 */}
-                  {((connectionDegree === 1 && myConnectionMethods.get(selectedNode.id) !== 'managed_group') || selectedNode.isImported) && selectedUserData && (selectedUserData.email || selectedUserData.phone) && (
+                  {(connectionDegree === 1 && myConnectionMethods.get(selectedNode.id) !== 'managed_group') && selectedUserData && (selectedUserData.email) && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Mail size={12} />
@@ -585,17 +524,6 @@ export default function ProfileSheet() {
                               <Mail size={14} className="text-[#58A6FF]" />
                             </div>
                             <span className="truncate">{selectedUserData.email}</span>
-                          </a>
-                        )}
-                        {selectedUserData.phone && (
-                          <a
-                            href={`tel:${selectedUserData.phone}`}
-                            className="flex items-center gap-3 text-base text-[#8B949E] hover:text-[#58A6FF] transition-colors group"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-[#363636] flex items-center justify-center group-hover:bg-[#58A6FF]/10 transition-colors">
-                              <Phone size={14} className="text-[#58A6FF]" />
-                            </div>
-                            <span>{selectedUserData.phone}</span>
                           </a>
                         )}
                       </div>
@@ -665,15 +593,15 @@ export default function ProfileSheet() {
                   </section>
 
                   {/* Keywords & Tags */}
-                  {selectedNode.keywords.length > 0 && (
+                  {selectedNode.researchInterests.length > 0 && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Hash size={12} />
                         {selectedNode.name}님은
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {selectedNode.keywords.filter(k => k && k.trim() !== '').map((keyword, idx) => {
-                          const isMatching = currentUser?.keywords.includes(keyword);
+                        {selectedNode.researchInterests.filter(k => k && k.trim() !== '').map((keyword, idx) => {
+                          const isMatching = currentUser?.researchInterests?.includes(keyword);
                           return (
                             <Tag
                               key={`${keyword}-${idx}`}
@@ -744,7 +672,7 @@ export default function ProfileSheet() {
                   )}
 
                   {/* Memo - 1촌 또는 가져온 연락처에게 메모 남기기 가능 */}
-                  {(connectionDegree === 1 || selectedNode.isImported) && (
+                  {connectionDegree === 1 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
@@ -836,7 +764,7 @@ export default function ProfileSheet() {
                   )}
 
                   {/* 연락 기록 - 1촌 또는 가져온 연락처에게 표시 */}
-                  {(connectionDegree === 1 || selectedNode.isImported) && (
+                  {connectionDegree === 1 && (
                     <section>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider">
@@ -1190,16 +1118,14 @@ export default function ProfileSheet() {
                         쪽지 보내기
                       </Button>
                     </div>
-                    {!selectedNode.isImported && (
-                      <Button
-                        variant="secondary"
-                        className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
-                        leftIcon={<Share2 size={16} />}
-                        onClick={handleViewNetwork}
-                      >
-                        {selectedNode.name}님의 인맥 보기
-                      </Button>
-                    )}
+                    <Button
+                      variant="secondary"
+                      className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
+                      leftIcon={<Share2 size={16} />}
+                      onClick={handleViewNetwork}
+                    >
+                      {selectedNode.name}님의 인맥 보기
+                    </Button>
                   </div>
                 ) : connectionDegree === 2 ? (
                   <div className="flex flex-col gap-3">
@@ -1227,16 +1153,14 @@ export default function ProfileSheet() {
                         쪽지 보내기
                       </Button>
                     </div>
-                    {!selectedNode.isImported && (
-                      <Button
-                        variant="secondary"
-                        className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
-                        leftIcon={<Share2 size={16} />}
-                        onClick={handleViewNetwork}
-                      >
-                        {selectedNode.name}님의 인맥 보기
-                      </Button>
-                    )}
+                    <Button
+                      variant="secondary"
+                      className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
+                      leftIcon={<Share2 size={16} />}
+                      onClick={handleViewNetwork}
+                    >
+                      {selectedNode.name}님의 인맥 보기
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -1264,16 +1188,14 @@ export default function ProfileSheet() {
                         커피챗
                       </Button>
                     </div>
-                    {!selectedNode.isImported && (
-                      <Button
-                        variant="secondary"
-                        className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
-                        leftIcon={<Share2 size={16} />}
-                        onClick={handleViewNetwork}
-                      >
-                        {selectedNode.name}님의 인맥 보기
-                      </Button>
-                    )}
+                    <Button
+                      variant="secondary"
+                      className="w-full text-sm py-3 sm:py-2.5 touch-manipulation border-[#58A6FF]/30 text-[#58A6FF] hover:bg-[#58A6FF]/10"
+                      leftIcon={<Share2 size={16} />}
+                      onClick={handleViewNetwork}
+                    >
+                      {selectedNode.name}님의 인맥 보기
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1326,7 +1248,7 @@ export default function ProfileSheet() {
                     <div>
                       <h3 className="font-bold text-white">{selectedNode.name}</h3>
                       <p className="text-sm text-[#8B949E]">
-                        {selectedNode.company} · {selectedNode.position}
+                        {selectedNode.institution} · {selectedNode.position}
                       </p>
                     </div>
                   </div>

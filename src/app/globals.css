@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 :root {
-  /* ===== Deep Space & Neon Blue Palette ===== */
+  /* ===== ResearchNexus Academic Palette ===== */
   --color-deep-black: #121212;
   --color-deep-navy: #121212;
   --color-dark-navy: #1E1E1E;
@@ -11,20 +11,22 @@
   --color-panel-bg: rgba(30, 30, 30, 0.95);
 
   /* Node Colors */
-  --color-node-core: #58A6FF;
-  --color-node-primary: #1F6FEB;
-  --color-node-secondary: #58A6FF;
-  --color-node-tertiary: #7EE0FF;
+  --color-node-core: #0EA5E9;
+  --color-node-primary: #0284C7;
+  --color-node-secondary: #0EA5E9;
+  --color-node-tertiary: #10B981;
 
   /* Accent Colors */
-  --color-cyan: #58A6FF;
-  --color-cyan-glow: rgba(88, 166, 255, 0.25);
-  --color-accent: #7EE0FF;
-  --color-accent-glow: rgba(126, 224, 255, 0.25);
-  --color-purple: #1F6FEB;
-  --color-purple-glow: rgba(31, 111, 235, 0.25);
+  --color-cyan: #0EA5E9;
+  --color-cyan-glow: rgba(14, 165, 233, 0.25);
+  --color-accent: #10B981;
+  --color-accent-glow: rgba(16, 185, 129, 0.25);
+  --color-purple: #0284C7;
+  --color-purple-glow: rgba(2, 132, 199, 0.25);
   --color-pink: #FF6B8A;
   --color-green: #3FB950;
+  --color-citation: #F59E0B;
+  --color-citation-glow: rgba(245, 158, 11, 0.25);
 
   /* Interaction Colors */
   --color-hover: #58A6FF;

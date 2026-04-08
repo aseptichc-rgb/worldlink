@@ -1,14 +1,14 @@
 {
-  "name": "Nodded - 신뢰 기반 비즈니스 네트워크",
-  "short_name": "Nodded",
-  "description": "단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다. 초대 기반 폐쇄형 비즈니스 인맥 플랫폼",
+  "name": "ResearchNexus - 연구를 연결하다, 지식을 확장하다",
+  "short_name": "ResearchNexus",
+  "description": "논문과 연구 관심사 기반으로 연구자를 연결하는 네트워킹 플랫폼. 공동 연구의 기회를 발견하세요.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
-  "theme_color": "#00E5FF",
+  "theme_color": "#0EA5E9",
   "orientation": "portrait",
-  "categories": ["business", "social", "productivity"],
+  "categories": ["education", "social", "productivity"],
   "lang": "ko",
   "dir": "ltr",
   "icons": [
@@ -67,28 +67,28 @@
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "네트워크 시각화"
+      "label": "연구 네트워크 시각화"
     },
     {
       "src": "/screenshots/screenshot-2.png",
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "프로필 및 연결"
+      "label": "연구자 프로필 및 논문"
     }
   ],
   "shortcuts": [
     {
       "name": "내 네트워크",
       "short_name": "네트워크",
-      "description": "내 비즈니스 네트워크 보기",
+      "description": "연구 협업 네트워크 보기",
       "url": "/network",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
       "name": "메시지",
       "short_name": "메시지",
-      "description": "메시지 확인",
+      "description": "연구 협업 메시지 확인",
       "url": "/messages",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }

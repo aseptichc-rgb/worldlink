@@ -281,7 +281,7 @@ function invalidateNodeImageCache(nodeId: string, newImageUrl: string | undefine
 
 // 시맨틱 줌 레벨 상수
 const ZOOM_CLUSTER_THRESHOLD = 0.7;   // 이하: 클러스터 뷰
-const ZOOM_DETAIL_THRESHOLD = 1.4;    // 이상: 상세 뷰 (회사/직책 추가)
+const ZOOM_DETAIL_THRESHOLD = 1.4;    // 이상: 상세 뷰 (소속 기관/직책 추가)
 const PROFILE_IMAGE_ZOOM_THRESHOLD = 0.5; // 프로필 이미지를 더 낮은 줌에서부터 표시
 
 export default function NetworkGraph() {
@@ -443,7 +443,7 @@ export default function NetworkGraph() {
     // Group degree 1 nodes by category
     const categoriesMap = new Map<string, NetworkNode[]>();
     degree1Nodes.forEach(node => {
-      const category = node.category || '기타';
+      const category = node.researchField || '기타';
       if (!categoriesMap.has(category)) {
         categoriesMap.set(category, []);
       }
@@ -486,7 +486,7 @@ export default function NetworkGraph() {
         y = centerY;
       } else if (node.degree === 1) {
         // 카테고리 섹터 내 라디얼(극좌표) 배치
-        const category = node.category || '기타';
+        const category = node.researchField || '기타';
         const categoryInfo = categoryAngles.get(category);
 
         if (categoryInfo) {
@@ -522,7 +522,7 @@ export default function NetworkGraph() {
           const parentNodeId = parentId === node.id ? targetId : parentId;
           const parentNode = degree1Nodes.find(n => n.id === parentNodeId);
           if (parentNode) {
-            parentCategory = parentNode.category || '기타';
+            parentCategory = parentNode.researchField || '기타';
           }
         }
 
@@ -541,7 +541,7 @@ export default function NetworkGraph() {
             const tId = typeof edge.target === 'string' ? edge.target : (edge.target as GraphNode).id;
             const pNodeId = pId === n.id ? tId : pId;
             const pNode = degree1Nodes.find(nd => nd.id === pNodeId);
-            return pNode && (pNode.category || '기타') === parentCategory;
+            return pNode && (pNode.researchField || '기타') === parentCategory;
           });
 
           const idxInCategory = deg2InSameCategory.findIndex(n => n.id === node.id);
@@ -557,7 +557,7 @@ export default function NetworkGraph() {
             : usableStart + (idxInCategory / (totalInCategory - 1)) * usableSpan;
 
           // 카테고리 내 1차 노드 최대 반경 + 추가 간격
-          const catDeg1Nodes = nodesRef.current.filter(n => n.category === (node.category || '기타') && n.degree === 1);
+          const catDeg1Nodes = nodesRef.current.filter(n => n.researchField === (node.researchField || '기타') && n.degree === 1);
           let maxDeg1Radius = LAYOUT.baseRadius;
           for (const d1 of catDeg1Nodes) {
             const dist = Math.sqrt(((d1.x || centerX) - centerX) ** 2 + ((d1.y || centerY) - centerY) ** 2);
@@ -882,7 +882,7 @@ export default function NetworkGraph() {
       return isDimmed ? 'rgba(0, 217, 255, 0.3)' : COLORS.nodeCore;
     }
 
-    const category = node.category || '기타';
+    const category = node.researchField || '기타';
     const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
 
     if (isDimmed) {
@@ -932,7 +932,7 @@ export default function NetworkGraph() {
         gradient.addColorStop(0, 'rgba(0, 229, 255, 0.5)');
       } else {
         // Use category color for glow
-        const category = node.category || '기타';
+        const category = node.researchField || '기타';
         const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
         const r = parseInt(categoryColor.slice(1, 3), 16);
         const g = parseInt(categoryColor.slice(3, 5), 16);
@@ -961,7 +961,7 @@ export default function NetworkGraph() {
       ctx.fillStyle = COLORS.focused;
     } else if (isConnected) {
       // 연결된 노드: 카테고리 색상으로 밝게 채우기
-      const category = node.category || '기타';
+      const category = node.researchField || '기타';
       const catColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
       const cr = parseInt(catColor.slice(1, 3), 16);
       const cg = parseInt(catColor.slice(3, 5), 16);
@@ -975,13 +975,7 @@ export default function NetworkGraph() {
     // 3. Border (카테고리별 색상)
     ctx.lineWidth = isHovered ? 3 : isFocused ? 4 : isMutual ? 3 : 2;
 
-    // 가져온 연락처는 점선 테두리
-    if (node.isImported && !isDimmed) {
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = COLORS.nodeImported;
-      ctx.stroke();
-      ctx.setLineDash([]);
-    } else {
+    {
       if (isDimmed) {
         ctx.strokeStyle = 'rgba(33, 38, 45, 0.15)';
       } else if (isMutual) {
@@ -996,7 +990,7 @@ export default function NetworkGraph() {
         ctx.strokeStyle = COLORS.nodeCore;
       } else {
         // Use category color for border
-        const category = node.category || '기타';
+        const category = node.researchField || '기타';
         ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
       }
       ctx.stroke();
@@ -1063,7 +1057,7 @@ export default function NetworkGraph() {
         } else if (node.degree === 0) {
           ctx.strokeStyle = COLORS.nodeCore;
         } else {
-          const category = node.category || '기타';
+          const category = node.researchField || '기타';
           ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
         }
         ctx.stroke();
@@ -1095,7 +1089,7 @@ export default function NetworkGraph() {
         ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(30, 30, 50, 0.85)';
         ctx.fill();
-        const category = node.category || '기타';
+        const category = node.researchField || '기타';
         ctx.strokeStyle = CATEGORY_COLORS[category] || COLORS.nodePrimary;
         ctx.lineWidth = 1.5;
         ctx.stroke();
@@ -1223,13 +1217,13 @@ export default function NetworkGraph() {
       ctx.font = `${isFocused || node.degree === 0 ? 'bold' : '500'} ${fontSize}px -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif`;
     }
 
-    // 상세 뷰: 회사명 + 직책 표시
+    // 상세 뷰: 소속 기관 + 직책 표시
     if (transform.scale >= ZOOM_DETAIL_THRESHOLD && !isDimmed && node.degree !== 0) {
       const detailFadeStart = ZOOM_DETAIL_THRESHOLD;
       const detailFadeEnd = ZOOM_DETAIL_THRESHOLD + 0.3;
       const detailAlpha = Math.min(1, (transform.scale - detailFadeStart) / (detailFadeEnd - detailFadeStart));
 
-      const companyText = node.company || '';
+      const companyText = node.institution || '';
       const positionText = node.position || '';
       if (companyText || positionText) {
         ctx.save();
@@ -1422,7 +1416,7 @@ export default function NetworkGraph() {
             const dy = node.y - prev.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 15) {
-              const category = node.category || '기타';
+              const category = node.researchField || '기타';
               const catColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
               const cr = parseInt(catColor.slice(1, 3), 16);
               const cg = parseInt(catColor.slice(3, 5), 16);
@@ -1509,7 +1503,7 @@ export default function NetworkGraph() {
         const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
 
         let cx = 0, cy = 0;
-        const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+        const catGraphNodes = nodesRef.current.filter(n => n.researchField === category && n.degree === 1);
         if (catGraphNodes.length > 0) {
           catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
           cx /= catGraphNodes.length;
@@ -1638,7 +1632,7 @@ export default function NetworkGraph() {
       const categoryColor = CATEGORY_COLORS[category] || COLORS.nodePrimary;
 
       // 카테고리 노드들의 최대 반경 기반으로 라벨 위치 계산
-      const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+      const catGraphNodes = nodesRef.current.filter(n => n.researchField === category && n.degree === 1);
       let maxDist = 280;
       catGraphNodes.forEach(n => {
         const dist = Math.sqrt(((n.x || 0) - centerX) ** 2 + ((n.y || 0) - centerY) ** 2);
@@ -1716,14 +1710,7 @@ export default function NetworkGraph() {
         ctx.moveTo(sPos.nx, sPos.ny);
         ctx.lineTo(tPos.nx, tPos.ny);
 
-        // 가져온 연락처와의 연결은 녹색 점선
-        const isImportedEdge = source.isImported || target.isImported;
-
-        if (isImportedEdge) {
-          ctx.strokeStyle = COLORS.edgeImported;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([3, 3]);
-        } else if (edge.degree === 1) {
+        if (edge.degree === 1) {
           ctx.strokeStyle = 'rgba(74, 144, 226, 0.4)';
           ctx.lineWidth = 1.5;
           ctx.setLineDash([]);
@@ -1773,7 +1760,7 @@ export default function NetworkGraph() {
           ctx.globalAlpha = 0.35;
           ctx.beginPath();
           ctx.arc(node.x || 0, node.y || 0, 4, 0, Math.PI * 2);
-          ctx.fillStyle = CATEGORY_COLORS[node.category || '기타'] || COLORS.nodePrimary;
+          ctx.fillStyle = CATEGORY_COLORS[node.researchField || '기타'] || COLORS.nodePrimary;
           ctx.fill();
           ctx.restore();
         }
@@ -1790,7 +1777,7 @@ export default function NetworkGraph() {
         const nx = node.x || 0;
         const ny = node.y || 0;
         const dotRadius = 5 * depthSc;
-        const catColor = CATEGORY_COLORS[node.category || '기타'] || COLORS.nodePrimary;
+        const catColor = CATEGORY_COLORS[node.researchField || '기타'] || COLORS.nodePrimary;
 
         // 작은 글로우
         const glowGrad = ctx.createRadialGradient(nx, ny, dotRadius, nx, ny, dotRadius * 3);
@@ -1835,7 +1822,7 @@ export default function NetworkGraph() {
       const isConnectedToFocused = connectedNodeIds.has(node.id);
       if (hasFocusedNode && isConnectedToFocused) continue;
 
-      const isHighlighted = !!(highlightedKeyword && node.keywords.includes(highlightedKeyword));
+      const isHighlighted = !!(highlightedKeyword && node.researchInterests.includes(highlightedKeyword));
       const isHovered = hoveredNode?.id === node.id;
       const isCategoryDimmed = !!(categoryFilter && node.degree !== 0 && inferCategory(node) !== categoryFilter);
       const isDimmed = isCategoryDimmed;
@@ -2328,7 +2315,7 @@ export default function NetworkGraph() {
           if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
             const category = getClusterAtPosition(x, y);
             if (category) {
-              const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+              const catGraphNodes = nodesRef.current.filter(n => n.researchField === category && n.degree === 1);
               if (catGraphNodes.length > 0) {
                 let cx = 0, cy = 0;
                 catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
@@ -2423,7 +2410,7 @@ export default function NetworkGraph() {
     const categoryAngles = categoryAnglesRef.current;
 
     for (const [category, info] of categoryAngles) {
-      const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+      const catGraphNodes = nodesRef.current.filter(n => n.researchField === category && n.degree === 1);
       if (catGraphNodes.length === 0) continue;
 
       let cx = 0, cy = 0;
@@ -2452,7 +2439,7 @@ export default function NetworkGraph() {
     if (transform.scale < ZOOM_CLUSTER_THRESHOLD) {
       const category = getClusterAtPosition(x, y);
       if (category) {
-        const catGraphNodes = nodesRef.current.filter(n => n.category === category && n.degree === 1);
+        const catGraphNodes = nodesRef.current.filter(n => n.researchField === category && n.degree === 1);
         if (catGraphNodes.length > 0) {
           let cx = 0, cy = 0;
           catGraphNodes.forEach(n => { cx += (n.x || 0); cy += (n.y || 0); });
@@ -2598,7 +2585,7 @@ export default function NetworkGraph() {
           >
             <div className="bg-[#151922]/95 backdrop-blur-xl border border-[#30363D] rounded-xl px-4 py-3 shadow-2xl">
               <div className="text-base font-semibold text-white mb-1">{tooltip.node.name}</div>
-              <div className="text-sm text-[#8B949E]">{tooltip.node.company}</div>
+              <div className="text-sm text-[#8B949E]">{tooltip.node.institution}</div>
               <div className="text-sm text-[#8B949E]">{tooltip.node.position}</div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFB800]/20 text-[#FFB800]">

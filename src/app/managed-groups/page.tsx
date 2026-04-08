@@ -71,17 +71,17 @@ export default function ManagedGroupsPage() {
           group.members.map(async (member) => {
             try {
               const userData = await getUser(member.userId);
-              if (userData) return { name: userData.name, company: userData.company };
+              if (userData) return { name: userData.name, institution: userData.institution };
               // Firestore에 없으면 데모 모드에서만 데모 데이터 사용
               if (isDemoMode) {
                 const demoUser = demoUsers.find(u => u.id === member.userId);
-                return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
+                return demoUser ? { name: demoUser.name, institution: demoUser.institution } : null;
               }
               return null;
             } catch {
               if (isDemoMode) {
                 const demoUser = demoUsers.find(u => u.id === member.userId);
-                return demoUser ? { name: demoUser.name, company: demoUser.company } : null;
+                return demoUser ? { name: demoUser.name, institution: demoUser.institution } : null;
               }
               return null;
             }
@@ -90,7 +90,7 @@ export default function ManagedGroupsPage() {
         const members = memberResults.filter((m): m is NonNullable<typeof m> => m !== null);
 
         if (members.length === 0 && group.name) {
-          members.push({ name: group.name, company: undefined });
+          members.push({ name: group.name, institution: undefined });
         }
 
         return { id: group.id, members };

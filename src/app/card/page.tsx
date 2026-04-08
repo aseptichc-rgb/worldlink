@@ -38,7 +38,7 @@ export default function MyCardPage() {
   const [showSettings, setShowSettings] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // 명함이 없으면 자동 생성, 있으면 user 데이터와 동기화
+  // 프로필 카드가 없으면 자동 생성, 있으면 user 데이터와 동기화
   useEffect(() => {
     if (user) {
       if (!myCard) {
@@ -48,11 +48,11 @@ export default function MyCardPage() {
           name: user.name,
           email: user.email,
           phone: user.phone,
-          company: user.company,
+          institution: user.institution,
           position: user.position,
           bio: user.bio,
           profileImage: user.profileImage,
-          keywords: user.keywords || [],
+          researchInterests: user.researchInterests || [],
           networkVisibility: 'connections_only',
           qrCode: `nexus://card/${user.id}`,
           createdAt: new Date(),
@@ -60,27 +60,27 @@ export default function MyCardPage() {
         };
         setMyCard(newCard);
       } else {
-        // user 데이터가 변경되면 명함도 동기화
+        // user 데이터가 변경되면 프로필 카드도 동기화
         const needsUpdate =
           myCard.name !== user.name ||
           myCard.email !== user.email ||
           myCard.phone !== user.phone ||
-          myCard.company !== user.company ||
+          myCard.institution !== user.institution ||
           myCard.position !== user.position ||
           myCard.bio !== user.bio ||
           myCard.profileImage !== user.profileImage ||
-          JSON.stringify(myCard.keywords) !== JSON.stringify(user.keywords || []);
+          JSON.stringify(myCard.researchInterests) !== JSON.stringify(user.researchInterests || []);
 
         if (needsUpdate) {
           updateMyCard({
             name: user.name,
             email: user.email,
             phone: user.phone,
-            company: user.company,
+            institution: user.institution,
             position: user.position,
             bio: user.bio,
             profileImage: user.profileImage,
-            keywords: user.keywords || [],
+            researchInterests: user.researchInterests || [],
             updatedAt: new Date(),
           });
         }
@@ -88,22 +88,22 @@ export default function MyCardPage() {
     }
   }, [user, myCard, setMyCard, updateMyCard]);
 
-  // Firebase에 공개 명함 데이터 저장 + QR 코드 생성
+  // Firebase에 공개 프로필 카드 데이터 저장 + QR 코드 생성
   useEffect(() => {
     if (myCard && typeof window !== 'undefined') {
-      // 데모 모드가 아닐 때만 Firebase에 공개 명함 저장
+      // 데모 모드가 아닐 때만 Firebase에 공개 프로필 카드 저장
       const isDemoMode = localStorage.getItem('nodded_demo_mode') === 'true';
       if (!isDemoMode) {
         savePublicCard({
           id: myCard.id,
           name: myCard.name,
-          company: myCard.company,
+          institution: myCard.institution,
           position: myCard.position,
           email: myCard.email,
           phone: myCard.phone,
           bio: myCard.bio,
           profileImage: myCard.profileImage,
-          keywords: myCard.keywords,
+          researchInterests: myCard.researchInterests,
         }).catch(console.error);
       }
 
@@ -139,8 +139,8 @@ export default function MyCardPage() {
     if (myCard && navigator.share) {
       try {
         await navigator.share({
-          title: `${myCard.name}의 명함`,
-          text: `${myCard.name} | ${myCard.position} @ ${myCard.company}`,
+          title: `${myCard.name}의 프로필 카드`,
+          text: `${myCard.name} | ${myCard.position} @ ${myCard.institution}`,
           url: getShareUrl(),
         });
       } catch (err) {
@@ -162,7 +162,7 @@ export default function MyCardPage() {
 
   const visibilityOptions = [
     { value: 'public', label: '전체 공개', icon: Globe, desc: '누구나 내 인맥을 볼 수 있음' },
-    { value: 'connections_only', label: '1촌만', icon: UserCheck, desc: '명함 교환한 사람만' },
+    { value: 'connections_only', label: '1촌만', icon: UserCheck, desc: '프로필 카드 교환한 사람만' },
     { value: 'private', label: '비공개', icon: Lock, desc: '아무도 볼 수 없음' },
   ] as const;
 
@@ -188,7 +188,7 @@ export default function MyCardPage() {
           >
             <ArrowLeft size={24} className="text-white" />
           </button>
-          <h1 className="text-lg font-semibold text-white">내 명함</h1>
+          <h1 className="text-lg font-semibold text-white">내 프로필 카드</h1>
           <button
             onClick={() => setShowSettings(true)}
             className="p-2.5 -mr-2 rounded-lg active:bg-[#30363D] touch-manipulation"
@@ -199,7 +199,7 @@ export default function MyCardPage() {
       </div>
 
       <div className="px-5 py-6 space-y-7">
-        {/* 명함 카드 */}
+        {/* 프로필 카드 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -226,19 +226,19 @@ export default function MyCardPage() {
                     <span className="text-base">{myCard.position}</span>
                   </div>
                 )}
-                {myCard.company && (
+                {myCard.institution && (
                   <div className="flex items-center gap-2.5 text-[#8B949E]">
                     <Building2 size={14} className="flex-shrink-0" />
-                    <span className="text-base">{myCard.company}</span>
+                    <span className="text-base">{myCard.institution}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* 키워드 태그 */}
-            {myCard.keywords && myCard.keywords.length > 0 && (
+            {/* 연구 관심사 태그 */}
+            {myCard.researchInterests && myCard.researchInterests.length > 0 && (
               <div className="flex flex-wrap gap-2.5 mb-7 mt-1">
-                {myCard.keywords.slice(0, 5).map((keyword, idx) => (
+                {myCard.researchInterests.slice(0, 5).map((keyword, idx) => (
                   <span
                     key={idx}
                     className="px-4 py-2.5 text-sm font-medium rounded-lg bg-[#7EE0FF]/10 text-[#7EE0FF]"
@@ -265,7 +265,7 @@ export default function MyCardPage() {
                 </div>
               )}
               <p className="mt-5 text-base text-[#8B949E]">
-                QR 코드를 스캔하면 명함을 저장할 수 있어요
+                QR 코드를 스캔하면 프로필 카드를 저장할 수 있어요
               </p>
             </div>
           </div>
@@ -360,7 +360,7 @@ export default function MyCardPage() {
 
               <h3 className="text-lg font-semibold text-white mb-3">인맥 공개 범위</h3>
               <p className="text-sm sm:text-base text-[#8B949E] mb-5 leading-relaxed">
-                내 명함을 받은 사람이 내 인맥을 얼마나 볼 수 있을지 설정하세요
+                내 프로필 카드를 받은 사람이 내 인맥을 얼마나 볼 수 있을지 설정하세요
               </p>
 
               <div className="space-y-3">

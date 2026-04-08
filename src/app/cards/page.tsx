@@ -45,9 +45,9 @@ export default function CardsPage() {
       const card = saved.card;
       return (
         card.name.toLowerCase().includes(query) ||
-        card.company?.toLowerCase().includes(query) ||
+        card.institution?.toLowerCase().includes(query) ||
         card.position?.toLowerCase().includes(query) ||
-        card.keywords?.some(k => k.toLowerCase().includes(query)) ||
+        card.researchInterests?.some(k => k.toLowerCase().includes(query)) ||
         saved.memo?.toLowerCase().includes(query)
       );
     });
@@ -81,14 +81,14 @@ export default function CardsPage() {
     return formatDistanceToNow(new Date(date), { addSuffix: true, locale: ko });
   };
 
-  // 비로그인 사용자도 로컬에 저장된 명함 볼 수 있음
+  // 비로그인 사용자도 로컬에 저장된 프로필 카드 볼 수 있음
 
   return (
     <div className="min-h-screen bg-[#0D1117] pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#0D1117]/80 backdrop-blur-xl border-b border-[#30363D]">
         <div className="px-5 py-4">
-          <h1 className="text-lg font-semibold text-white mb-4">명함첩</h1>
+          <h1 className="text-lg font-semibold text-white mb-4">프로필 카드첩</h1>
 
           {/* 검색바 */}
           <div className="relative">
@@ -97,7 +97,7 @@ export default function CardsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="이름, 회사, 키워드로 검색"
+              placeholder="이름, 소속 기관, 연구 관심사로 검색"
               className="w-full pl-11 pr-5 py-3 rounded-xl bg-[#1C2333] border border-[#30363D] text-white placeholder:text-[#484F58] focus:outline-none focus:border-[#58A6FF]"
             />
           </div>
@@ -108,7 +108,7 @@ export default function CardsPage() {
         {/* 카드 수 */}
         <div className="flex items-center justify-between mb-5">
           <span className="text-base text-[#8B949E]">
-            총 {filteredCards.length}개의 명함
+            총 {filteredCards.length}개의 프로필 카드
           </span>
           <button className="flex items-center gap-1 text-base text-[#8B949E]">
             <Filter size={16} />
@@ -116,17 +116,17 @@ export default function CardsPage() {
           </button>
         </div>
 
-        {/* 명함 목록 */}
+        {/* 프로필 카드 목록 */}
         {filteredCards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-20 h-20 rounded-full bg-[#1C2333] flex items-center justify-center mb-4">
               <Users size={32} className="text-[#484F58]" />
             </div>
             <p className="text-[#8B949E] text-center">
-              {searchQuery ? '검색 결과가 없습니다' : '저장된 명함이 없습니다'}
+              {searchQuery ? '검색 결과가 없습니다' : '저장된 프로필 카드가 없습니다'}
             </p>
             <p className="text-base text-[#484F58] mt-1">
-              {!searchQuery && 'QR 코드를 스캔해서 명함을 저장해보세요'}
+              {!searchQuery && 'QR 코드를 스캔해서 프로필 카드를 저장해보세요'}
             </p>
           </div>
         ) : (
@@ -139,15 +139,15 @@ export default function CardsPage() {
                 transition={{ delay: index * 0.05 }}
                 className="relative p-5 rounded-xl bg-[#1C2333] border border-[#30363D]"
               >
-                {/* 명함 이미지 썸네일 */}
-                {saved.cardImage && (
+                {/* 프로필 카드 이미지 썸네일 */}
+                {(saved as any).cardImage && (
                   <button
-                    onClick={() => setShowImageModal(saved.cardImage!)}
+                    onClick={() => setShowImageModal((saved as any).cardImage!)}
                     className="w-full mb-3 relative group"
                   >
                     <img
-                      src={saved.cardImage}
-                      alt="명함 이미지"
+                      src={(saved as any).cardImage}
+                      alt="프로필 카드 이미지"
                       className="w-full h-24 object-cover rounded-lg border border-[#30363D]"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg flex items-center justify-center">
@@ -173,24 +173,24 @@ export default function CardsPage() {
                       <h3 className="font-semibold text-white">{saved.card.name}</h3>
                     </button>
 
-                    {(saved.card.position || saved.card.company) && (
+                    {(saved.card.position || saved.card.institution) && (
                       <div className="flex items-center gap-2 text-base text-[#8B949E] mt-1">
                         {saved.card.position && (
                           <span>{saved.card.position}</span>
                         )}
-                        {saved.card.position && saved.card.company && (
+                        {saved.card.position && saved.card.institution && (
                           <span className="text-[#484F58]">@</span>
                         )}
-                        {saved.card.company && (
-                          <span>{saved.card.company}</span>
+                        {saved.card.institution && (
+                          <span>{saved.card.institution}</span>
                         )}
                       </div>
                     )}
 
-                    {/* 키워드 */}
-                    {saved.card.keywords && saved.card.keywords.length > 0 && (
+                    {/* 연구 관심사 */}
+                    {saved.card.researchInterests && saved.card.researchInterests.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2.5">
-                        {saved.card.keywords.slice(0, 3).map((keyword, idx) => (
+                        {saved.card.researchInterests.slice(0, 3).map((keyword, idx) => (
                           <span
                             key={idx}
                             className="px-3 py-1.5 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
@@ -198,9 +198,9 @@ export default function CardsPage() {
                             {keyword}
                           </span>
                         ))}
-                        {saved.card.keywords.length > 3 && (
+                        {saved.card.researchInterests.length > 3 && (
                           <span className="px-2.5 py-1 text-sm text-[#484F58]">
-                            +{saved.card.keywords.length - 3}
+                            +{saved.card.researchInterests.length - 3}
                           </span>
                         )}
                       </div>
@@ -256,7 +256,7 @@ export default function CardsPage() {
                       className="absolute inset-0 rounded-lg bg-[#161B22]/95 backdrop-blur-sm flex items-center justify-center"
                     >
                       <div className="text-center">
-                        <p className="text-white mb-4">명함을 삭제하시겠습니까?</p>
+                        <p className="text-white mb-4">프로필 카드를 삭제하시겠습니까?</p>
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => setShowDeleteConfirm(null)}
@@ -317,7 +317,7 @@ export default function CardsPage() {
                 <div>
                   <p className="font-medium text-white">{selectedCard.card.name}</p>
                   <p className="text-base text-[#8B949E] mt-0.5">
-                    {selectedCard.card.position} @ {selectedCard.card.company}
+                    {selectedCard.card.position} @ {selectedCard.card.institution}
                   </p>
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function CardsPage() {
         )}
       </AnimatePresence>
 
-      {/* 명함 이미지 모달 */}
+      {/* 프로필 카드 이미지 모달 */}
       <AnimatePresence>
         {showImageModal && (
           <motion.div
@@ -365,7 +365,7 @@ export default function CardsPage() {
               </button>
               <img
                 src={showImageModal}
-                alt="명함 이미지"
+                alt="프로필 카드 이미지"
                 className="w-full rounded-xl border border-[#30363D]"
               />
             </motion.div>

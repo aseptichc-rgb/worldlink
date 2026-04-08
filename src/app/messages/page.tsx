@@ -252,7 +252,7 @@ export default function MessagesPage() {
                       </span>
                     </div>
                     <p className="text-base text-[#8B949E] truncate">
-                      {otherUser?.company} · {otherUser?.position}
+                      {otherUser?.institution} · {otherUser?.position}
                     </p>
                     <p className={`text-base mt-2 truncate ${!message.isRead && activeTab === 'received' ? 'text-white' : 'text-[#8B949E]'}`}>
                       {message.content}
@@ -335,7 +335,7 @@ export default function MessagesPage() {
                         <div>
                           <h3 className="font-bold text-white">{otherUser?.name}</h3>
                           <p className="text-base text-[#8B949E]">
-                            {otherUser?.company} · {otherUser?.position}
+                            {otherUser?.institution} · {otherUser?.position}
                           </p>
                         </div>
                       </div>

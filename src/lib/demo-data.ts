@@ -14,20 +14,21 @@ export const demoUsers: User[] = DEMO_MEMBERS.map(m => ({
   id: m.id,
   name: m.name,
   email: m.email,
-  company: m.company,
+  institution: m.company,
   position: m.position,
   bio: m.bio,
-  keywords: m.keywords,
-  category: m.category,
+  researchInterests: m.keywords,
+  researchKeywords: m.keywords,
+  researchField: m.category as User['researchField'],
   profileImage: getDemoProfileImage(m.id),
   inviteCode: `INV-${m.id.split('_')[1]?.padStart(3, '0') || '000'}`,
   invitesRemaining: 999,
-  coffeeStatus: 'available' as const,
+  meetingStatus: 'available' as const,
   privacySettings: {
     allowProfileDiscovery: true,
     displaySettings: {
       nameDisplay: 'full' as const,
-      companyDisplay: 'full' as const,
+      institutionDisplay: 'full' as const,
       positionDisplay: 'full' as const,
     },
   },
@@ -102,7 +103,7 @@ export const ensureUserInDemoNetwork = (userId: string): void => {
 };
 
 // 네트워크 그래프
-export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
+export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; profileImage?: string; institution?: string; position?: string; researchInterests?: string[] }): { nodes: NetworkNode[]; edges: NetworkEdge[] } => {
   let currentUser = demoUsers.find(u => u.id === userId) || demoUsers.find(u => u.name === userId);
 
   // 실제 사용자를 데모 네트워크에 추가
@@ -114,12 +115,13 @@ export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; 
         name: userData.name || '나',
         email: '',
         profileImage: userData.profileImage,
-        company: userData.company,
+        institution: userData.institution,
         position: userData.position,
-        keywords: userData.keywords || [],
+        researchInterests: userData.researchInterests || [],
+        researchKeywords: userData.researchInterests || [],
         inviteCode: '',
         invitesRemaining: 0,
-        coffeeStatus: 'available' as const,
+        meetingStatus: 'available' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -138,12 +140,12 @@ export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; 
       id: currentUser.id,
       name: currentUser.name,
       profileImage: currentUser.profileImage,
-      company: currentUser.company,
+      institution: currentUser.institution,
       position: currentUser.position,
-      keywords: currentUser.keywords,
+      researchInterests: currentUser.researchInterests,
       degree: 0,
       connectionCount: userConnections.length,
-      category: getMemberCategory(currentUser.id),
+      researchField: getMemberCategory(currentUser.id) as NetworkNode['researchField'],
     },
   ];
 
@@ -158,12 +160,12 @@ export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; 
         id: connUser.id,
         name: connUser.name,
         profileImage: connUser.profileImage,
-        company: connUser.company,
+        institution: connUser.institution,
         position: connUser.position,
-        keywords: connUser.keywords,
+        researchInterests: connUser.researchInterests,
         degree: 1,
         connectionCount: (demoConnections[connUser.id] || []).length,
-        category: getMemberCategory(connUser.id),
+        researchField: getMemberCategory(connUser.id) as NetworkNode['researchField'],
       });
     }
   });
@@ -180,12 +182,12 @@ export const getDemoNetworkGraph = (userId: string, userData?: { name?: string; 
             id: secondUser.id,
             name: secondUser.name,
             profileImage: secondUser.profileImage,
-            company: secondUser.company,
+            institution: secondUser.institution,
             position: secondUser.position,
-            keywords: secondUser.keywords,
+            researchInterests: secondUser.researchInterests,
             degree: 2,
             connectionCount: (demoConnections[secondUser.id] || []).length,
-            category: getMemberCategory(secondUser.id),
+            researchField: getMemberCategory(secondUser.id) as NetworkNode['researchField'],
           });
         }
       }
@@ -297,14 +299,14 @@ export const getDemoMatches = (userId: string): DemoMatch[] => {
   const usedIds = new Set<string>();
 
   const matchPairs: Array<{ cat1: string; cat2: string; reason: string; benefit: string }> = [
-    { cat1: 'IT/기술', cat2: '투자/금융', reason: 'AI 스타트업 대표와 VC 투자자를 연결하면 투자 유치 기회가 생깁니다', benefit: '투자 유치 & 포트폴리오 확장' },
-    { cat1: '헬스케어/바이오', cat2: '법률/특허', reason: '바이오 연구자와 특허 전문 변리사를 연결하면 기술 보호가 가능합니다', benefit: '기술특허 확보 & IP 전략' },
-    { cat1: '미디어/콘텐츠', cat2: 'F&B/라이프스타일', reason: '콘텐츠 제작자와 F&B 브랜드를 연결하면 브랜드 콘텐츠 협업이 가능합니다', benefit: '브랜드 콘텐츠 & 마케팅 시너지' },
+    { cat1: 'computer-science', cat2: 'artificial-intelligence', reason: '분산시스템 전문가와 AI 연구자를 연결하면 대규모 모델 학습 인프라 공동 연구가 가능합니다', benefit: '공동 연구 & 논문 공저' },
+    { cat1: 'biology', cat2: 'medicine', reason: '유전체학 연구자와 임상의학 연구자를 연결하면 중개 연구 시너지가 발생합니다', benefit: '중개연구 & 임상 적용' },
+    { cat1: 'physics', cat2: 'engineering', reason: '양자물리 이론 연구자와 반도체 공학자를 연결하면 양자소자 실용화가 가능합니다', benefit: '이론-응용 연계 & 기술 상용화' },
   ];
 
   for (const pair of matchPairs) {
-    const p1 = connUsers.find(u => u.category === pair.cat1 && !usedIds.has(u.id));
-    const p2 = connUsers.find(u => u.category === pair.cat2 && !usedIds.has(u.id));
+    const p1 = connUsers.find(u => u.researchField === pair.cat1 && !usedIds.has(u.id));
+    const p2 = connUsers.find(u => u.researchField === pair.cat2 && !usedIds.has(u.id));
     if (p1 && p2) {
       usedIds.add(p1.id);
       usedIds.add(p2.id);

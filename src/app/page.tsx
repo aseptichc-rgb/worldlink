@@ -57,9 +57,9 @@ export default function Home() {
         <motion.div
           animate={{
             boxShadow: [
-              '0 0 60px rgba(0, 229, 255, 0.3)',
-              '0 0 100px rgba(124, 77, 255, 0.3)',
-              '0 0 60px rgba(0, 229, 255, 0.3)',
+              '0 0 60px rgba(14, 165, 233, 0.3)',
+              '0 0 100px rgba(16, 185, 129, 0.3)',
+              '0 0 60px rgba(14, 165, 233, 0.3)',
             ],
           }}
           transition={{ duration: 3, repeat: Infinity }}
@@ -73,7 +73,7 @@ export default function Home() {
             transition={{ duration: 3, repeat: Infinity }}
             className="text-6xl md:text-8xl font-bold gradient-text"
           >
-            NODDED
+            ResearchNexus
           </motion.h1>
         </motion.div>
 
@@ -83,7 +83,7 @@ export default function Home() {
           transition={{ delay: 0.5 }}
           className="text-[#8B949E] text-lg md:text-xl mb-4"
         >
-          신뢰 기반 비즈니스 네트워크
+          연구를 연결하다, 지식을 확장하다
         </motion.p>
 
         <motion.p
@@ -92,7 +92,7 @@ export default function Home() {
           transition={{ delay: 1 }}
           className="text-[#484F58] text-base"
         >
-          단순한 주소록을 넘어, 비즈니스 기회의 지도를 그리다
+          논문과 연구 관심사 기반으로 연구자를 연결하는 플랫폼
         </motion.p>
 
         {/* Loading indicator */}

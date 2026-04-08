@@ -60,7 +60,7 @@ export default function GroupInviteModal() {
     return connections.filter(
       (c) =>
         c.name?.toLowerCase().includes(q) ||
-        c.company?.toLowerCase().includes(q) ||
+        c.institution?.toLowerCase().includes(q) ||
         c.position?.toLowerCase().includes(q)
     );
   }, [connections, searchQuery]);
@@ -239,7 +239,7 @@ export default function GroupInviteModal() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="이름, 회사, 직함으로 검색"
+                        placeholder="이름, 소속 기관, 직함으로 검색"
                         className="w-full pl-9 pr-4 py-2 bg-[#0D1117] border border-[#30363D] rounded-xl text-sm text-white placeholder-[#484F58] focus:outline-none focus:border-[#58A6FF]"
                       />
                     </div>
@@ -315,7 +315,7 @@ export default function GroupInviteModal() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm text-[#F0F6FC] font-medium truncate">{conn.name}</p>
                                 <p className="text-xs text-[#8B949E] truncate">
-                                  {[conn.company, conn.position].filter(Boolean).join(' · ') || '정보 없음'}
+                                  {[conn.institution, conn.position].filter(Boolean).join(' · ') || '정보 없음'}
                                 </p>
                               </div>
 
@@ -436,7 +436,7 @@ export default function GroupInviteModal() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white truncate">{node.name}</p>
                           <p className="text-xs text-[#8B949E] truncate">
-                            {node.company} {node.position && `· ${node.position}`}
+                            {node.institution} {node.position && `· ${node.position}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-[#3FB950]">

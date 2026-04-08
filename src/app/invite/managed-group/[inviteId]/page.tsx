@@ -188,7 +188,7 @@ export default function ManagedGroupInvitePage() {
                 <div>
                   <p className="text-sm text-[#F0F6FC] font-medium">{inviter.name}님의 초대</p>
                   <p className="text-xs text-[#8B949E]">
-                    {[inviter.company, inviter.position].filter(Boolean).join(' · ')}
+                    {[inviter.institution, inviter.position].filter(Boolean).join(' · ')}
                   </p>
                 </div>
               </div>

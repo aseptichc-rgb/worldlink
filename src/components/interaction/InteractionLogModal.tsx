@@ -19,7 +19,7 @@ const INTERACTION_OPTIONS: Array<{ type: InteractionType; icon: typeof Handshake
   { type: 'meeting', icon: Handshake, label: '만남', color: '#58A6FF' },
   { type: 'call', icon: Phone, label: '전화', color: '#3FB950' },
   { type: 'message', icon: MessageCircle, label: '메시지', color: '#D29922' },
-  { type: 'coffee_chat', icon: Coffee, label: '커피챗', color: '#FF6B8A' },
+  { type: 'research_meeting', icon: Coffee, label: '커피챗', color: '#FF6B8A' },
   { type: 'other', icon: FileText, label: '기타', color: '#A371F7' },
 ];
 

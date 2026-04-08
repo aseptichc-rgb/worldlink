@@ -36,7 +36,7 @@ export default function NewsAlertButton({
     .filter(m => m.user?.name)
     .map(m => ({
       name: m.user!.name,
-      company: m.user?.company,
+      company: m.user?.institution,
     }));
 
   // 페이지 진입 시 캐시된 뉴스 로드 (자동 검색 없음)

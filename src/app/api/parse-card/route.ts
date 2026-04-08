@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         name: parsed.name || '',
-        company: parsed.company || '',
+        institution: parsed.company || '',
         position: parsed.position || '',
         phone: formatPhoneNumber(parsed.phone || ''),
         email: parsed.email || '',
@@ -102,7 +102,7 @@ ${ocrText}
 
     return NextResponse.json({
       name: parsed.name || '',
-      company: parsed.company || '',
+      institution: parsed.company || '',
       position: parsed.position || '',
       phone: formatPhoneNumber(parsed.phone || ''),
       email: parsed.email || '',

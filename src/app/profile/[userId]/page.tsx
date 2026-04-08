@@ -58,21 +58,22 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
         // fallback below
       }
 
-      // 2. 저장된 명함에서 찾기
+      // 2. 저장된 프로필 카드에서 찾기
       const savedCard = savedCards.find(c => c.cardId === userId);
       if (savedCard) {
         setTargetUser({
           id: savedCard.card.userId,
           name: savedCard.card.name,
           email: savedCard.card.email || '',
-          company: savedCard.card.company,
+          institution: savedCard.card.institution,
           position: savedCard.card.position,
           bio: savedCard.card.bio,
           profileImage: savedCard.card.profileImage,
-          keywords: savedCard.card.keywords || [],
+          researchInterests: savedCard.card.researchInterests || [],
+          researchKeywords: [],
           inviteCode: '',
           invitesRemaining: 0,
-          coffeeStatus: 'available',
+          meetingStatus: 'available',
           createdAt: new Date(),
           updatedAt: new Date(),
         } as User);
@@ -123,41 +124,21 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
 
   const isMyProfile = currentUser?.id === userId;
 
-  const coffeeStatusLabel = (status?: string) => {
+  const meetingStatusLabel = (status?: string) => {
     switch (status) {
-      case 'available': return '커피챗 가능';
+      case 'available': return '미팅 가능';
       case 'busy': return '바쁨';
       case 'pending': return '대기 중';
       default: return '';
     }
   };
 
-  const coffeeStatusColor = (status?: string) => {
+  const meetingStatusColor = (status?: string) => {
     switch (status) {
       case 'available': return 'text-[#3FB950] bg-[#3FB950]/10';
       case 'busy': return 'text-[#F85149] bg-[#F85149]/10';
       case 'pending': return 'text-[#D29922] bg-[#D29922]/10';
       default: return 'text-[#8B949E] bg-[#8B949E]/10';
-    }
-  };
-
-  const companySizeLabel = (size?: string) => {
-    switch (size) {
-      case 'startup': return '스타트업';
-      case 'sme': return '중소기업';
-      case 'enterprise': return '대기업';
-      case 'freelance': return '프리랜서';
-      default: return '';
-    }
-  };
-
-  const positionLevelLabel = (level?: string) => {
-    switch (level) {
-      case 'entry': return '사원급';
-      case 'staff': return '대리/과장급';
-      case 'manager': return '부장/이사급';
-      case 'executive': return '임원/대표급';
-      default: return '';
     }
   };
 
@@ -217,8 +198,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
             />
             <h2 className="text-2xl font-bold text-white mt-4">{targetUser.name}</h2>
 
-            {/* 직함 & 회사 */}
-            {(targetUser.position || targetUser.company) && (
+            {/* 직함 & 소속 기관 */}
+            {(targetUser.position || targetUser.institution) && (
               <div className="mt-2 space-y-1">
                 {targetUser.position && (
                   <div className="flex items-center justify-center gap-2 text-[#8B949E]">
@@ -226,28 +207,28 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
                     <span>{targetUser.position}</span>
                   </div>
                 )}
-                {targetUser.company && (
+                {targetUser.institution && (
                   <div className="flex items-center justify-center gap-2 text-[#8B949E]">
                     <Building2 size={14} />
-                    <span>{targetUser.company}</span>
+                    <span>{targetUser.institution}</span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* 커피챗 상태 */}
-            {targetUser.coffeeStatus && (
-              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full mt-3 text-sm ${coffeeStatusColor(targetUser.coffeeStatus)}`}>
+            {/* 미팅 상태 */}
+            {targetUser.meetingStatus && (
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full mt-3 text-sm ${meetingStatusColor(targetUser.meetingStatus)}`}>
                 <Coffee size={14} />
-                <span>{coffeeStatusLabel(targetUser.coffeeStatus)}</span>
+                <span>{meetingStatusLabel(targetUser.meetingStatus)}</span>
               </div>
             )}
           </div>
 
-          {/* 키워드 */}
-          {targetUser.keywords && targetUser.keywords.length > 0 && (
+          {/* 연구 관심사 */}
+          {targetUser.researchInterests && targetUser.researchInterests.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2 mt-5 pt-4 border-t border-[#30363D]">
-              {targetUser.keywords.map((keyword, idx) => (
+              {targetUser.researchInterests.map((keyword, idx) => (
                 <span
                   key={idx}
                   className="px-3 py-1 text-sm rounded-full bg-[#58A6FF]/10 text-[#58A6FF]"
@@ -273,7 +254,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
         )}
 
         {/* 상세 정보 */}
-        {(targetUser.industry || targetUser.companySize || targetUser.positionLevel || targetUser.category || targetUser.email || (isConnected && targetUser.phone)) && (
+        {(targetUser.researchField || targetUser.email || (isConnected && targetUser.phone)) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -282,50 +263,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
           >
             <h3 className="text-sm font-semibold text-[#8B949E] mb-1">상세 정보</h3>
 
-            {targetUser.industry && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#1F6FEB]/10 flex items-center justify-center">
-                  <Layers size={16} className="text-[#1F6FEB]" />
-                </div>
-                <div>
-                  <p className="text-xs text-[#484F58]">업종</p>
-                  <p className="text-sm text-[#F0F6FC]">{targetUser.industry}</p>
-                </div>
-              </div>
-            )}
-
-            {targetUser.companySize && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#3FB950]/10 flex items-center justify-center">
-                  <Building2 size={16} className="text-[#3FB950]" />
-                </div>
-                <div>
-                  <p className="text-xs text-[#484F58]">회사 규모</p>
-                  <p className="text-sm text-[#F0F6FC]">{companySizeLabel(targetUser.companySize)}</p>
-                </div>
-              </div>
-            )}
-
-            {targetUser.positionLevel && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#D29922]/10 flex items-center justify-center">
-                  <Briefcase size={16} className="text-[#D29922]" />
-                </div>
-                <div>
-                  <p className="text-xs text-[#484F58]">직급</p>
-                  <p className="text-sm text-[#F0F6FC]">{positionLevelLabel(targetUser.positionLevel)}</p>
-                </div>
-              </div>
-            )}
-
-            {targetUser.category && (
+            {targetUser.researchField && (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#BC8CFF]/10 flex items-center justify-center">
                   <Hash size={16} className="text-[#BC8CFF]" />
                 </div>
                 <div>
-                  <p className="text-xs text-[#484F58]">분야</p>
-                  <p className="text-sm text-[#F0F6FC]">{targetUser.category}</p>
+                  <p className="text-xs text-[#484F58]">연구 분야</p>
+                  <p className="text-sm text-[#F0F6FC]">{targetUser.researchField}</p>
                 </div>
               </div>
             )}

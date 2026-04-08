@@ -1,14 +1,6 @@
 // 개인정보 비식별화 유틸리티
 import { User, PrivacySettings } from '@/types';
 
-// 회사 규모 한글 변환
-const companySizeLabels: Record<string, string> = {
-  startup: '스타트업',
-  sme: '중소기업',
-  enterprise: '대기업',
-  freelance: '프리랜서',
-};
-
 // 직급 수준 한글 변환
 const positionLevelLabels: Record<string, string> = {
   entry: '사원급',
@@ -39,29 +31,25 @@ export function anonymizeName(
 }
 
 /**
- * 회사 정보를 비식별화하여 반환
+ * 기관 정보를 비식별화하여 반환
  * @param user 사용자 정보
  * @param displayMode 표시 모드
- * @returns 비식별화된 회사 정보
+ * @returns 비식별화된 기관 정보
  */
-export function anonymizeCompany(
-  user: Pick<User, 'company' | 'companySize' | 'industry'>,
-  displayMode: 'full' | 'industry' | 'size' | 'hidden' = 'industry'
+export function anonymizeInstitution(
+  user: Pick<User, 'institution' | 'department'>,
+  displayMode: 'full' | 'department' | 'hidden' = 'department'
 ): string | null {
   if (displayMode === 'hidden') {
     return null;
   }
 
   if (displayMode === 'full') {
-    return user.company || null;
+    return user.institution || null;
   }
 
-  if (displayMode === 'industry') {
-    return user.industry || 'IT/소프트웨어';
-  }
-
-  if (displayMode === 'size') {
-    return companySizeLabels[user.companySize || ''] || '기업';
+  if (displayMode === 'department') {
+    return user.department || user.institution || null;
   }
 
   return null;
@@ -74,7 +62,7 @@ export function anonymizeCompany(
  * @returns 비식별화된 직책 정보
  */
 export function anonymizePosition(
-  user: Pick<User, 'position' | 'positionLevel'>,
+  user: Pick<User, 'position'>,
   displayMode: 'full' | 'level' | 'hidden' = 'level'
 ): string | null {
   if (displayMode === 'hidden') {
@@ -86,7 +74,8 @@ export function anonymizePosition(
   }
 
   if (displayMode === 'level') {
-    return positionLevelLabels[user.positionLevel || ''] || '실무자급';
+    // position 자체를 수준별로 매핑하거나 그대로 반환
+    return user.position || '실무자급';
   }
 
   return null;
@@ -113,7 +102,7 @@ export function getDisplayInfo(
   if (viewerIsConnected) {
     return {
       name: user.name,
-      company: user.company || null,
+      company: user.institution || null,
       position: user.position || null,
       isPublic: true,
     };
@@ -134,7 +123,7 @@ export function getDisplayInfo(
 
   return {
     name: anonymizeName(user.name, displaySettings.nameDisplay),
-    company: anonymizeCompany(user, displaySettings.companyDisplay),
+    company: anonymizeInstitution(user, displaySettings.institutionDisplay),
     position: anonymizePosition(user, displaySettings.positionDisplay),
     isPublic: true,
   };
@@ -170,7 +159,7 @@ export function getDefaultPrivacySettings(): PrivacySettings {
     allowProfileDiscovery: false,
     displaySettings: {
       nameDisplay: 'partial',
-      companyDisplay: 'industry',
+      institutionDisplay: 'department',
       positionDisplay: 'level',
     },
     consentedAt: undefined,

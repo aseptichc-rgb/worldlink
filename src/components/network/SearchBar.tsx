@@ -100,14 +100,13 @@ export default function SearchBar() {
           if (userId !== currentUserId) {
             const user = demoUsers.find(u => u.id === userId);
             if (user) {
-              // 이름, 회사, 직책, 키워드, 자기소개, 카테고리, 업종으로 검색 (각 단어를 OR로 매칭)
+              // 이름, 소속 기관, 직책, 연구 관심사, 자기소개, 연구 분야로 검색 (각 단어를 OR로 매칭)
               const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
-              const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
+              const companyMatch = queryWords.some(w => user.institution?.toLowerCase().includes(w)) ?? false;
               const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
-              const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+              const keywordMatch = user.researchInterests.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
               const bioMatch = queryWords.some(w => user.bio?.toLowerCase().includes(w)) ?? false;
-              const categoryMatch = queryWords.some(w => user.category?.toLowerCase().includes(w)) ?? false;
-              const industryMatch = queryWords.some(w => user.industry?.toLowerCase().includes(w)) ?? false;
+              const categoryMatch = queryWords.some(w => user.researchField?.toLowerCase().includes(w)) ?? false;
 
               // 메모 검색 (나만의 메모)
               const userMemo = memos[userId];
@@ -117,22 +116,21 @@ export default function SearchBar() {
               // 매칭된 필드 추적
               const matchedFields: string[] = [];
               if (nameMatch) matchedFields.push('이름');
-              if (companyMatch) matchedFields.push('회사');
+              if (companyMatch) matchedFields.push('소속 기관');
               if (positionMatch) matchedFields.push('직책');
-              if (keywordMatch) matchedFields.push('키워드');
+              if (keywordMatch) matchedFields.push('연구 관심사');
               if (bioMatch) matchedFields.push('자기소개');
-              if (categoryMatch) matchedFields.push('분야');
-              if (industryMatch) matchedFields.push('업종');
+              if (categoryMatch) matchedFields.push('연구 분야');
               if (memoMatch) matchedFields.push('메모');
 
               if (matchedFields.length > 0) {
                 results.push({
                   id: user.id,
                   name: user.name,
-                  company: user.company ?? "",
+                  company: user.institution ?? "",
                   position: user.position ?? "",
                   profileImage: user.profileImage,
-                  keywords: user.keywords,
+                  keywords: user.researchInterests,
                   degree: degree,
                   path: path,
                   memoMatch: memoMatchContent,
@@ -165,15 +163,15 @@ export default function SearchBar() {
         visited.add(node.id);
 
         const nameMatch = queryWords.some(w => node.name.toLowerCase().includes(w));
-        const companyMatch = queryWords.some(w => node.company?.toLowerCase().includes(w)) ?? false;
+        const companyMatch = queryWords.some(w => node.institution?.toLowerCase().includes(w)) ?? false;
         const positionMatch = queryWords.some(w => node.position?.toLowerCase().includes(w)) ?? false;
-        const keywordMatch = node.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
-        const categoryMatch = queryWords.some(w => node.category?.toLowerCase().includes(w)) ?? false;
+        const keywordMatch = node.researchInterests.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+        const categoryMatch = queryWords.some(w => node.researchField?.toLowerCase().includes(w)) ?? false;
 
         // 노드에 대응하는 demoUser가 있으면 bio도 검색
         const demoUser = demoUsers.find(u => u.id === node.id);
         const bioMatch = demoUser ? (queryWords.some(w => demoUser.bio?.toLowerCase().includes(w)) ?? false) : false;
-        const industryMatch = demoUser ? (queryWords.some(w => demoUser.industry?.toLowerCase().includes(w)) ?? false) : false;
+        const industryMatch = demoUser ? (queryWords.some(w => demoUser.researchField?.toLowerCase().includes(w)) ?? false) : false;
 
         // 메모 검색
         const userMemo = memos[node.id];
@@ -182,22 +180,22 @@ export default function SearchBar() {
 
         const matchedFields: string[] = [];
         if (nameMatch) matchedFields.push('이름');
-        if (companyMatch) matchedFields.push('회사');
+        if (companyMatch) matchedFields.push('소속 기관');
         if (positionMatch) matchedFields.push('직책');
-        if (keywordMatch) matchedFields.push('키워드');
+        if (keywordMatch) matchedFields.push('연구 관심사');
         if (bioMatch) matchedFields.push('자기소개');
-        if (categoryMatch) matchedFields.push('분야');
-        if (industryMatch) matchedFields.push('업종');
+        if (categoryMatch) matchedFields.push('연구 분야');
+        if (industryMatch) matchedFields.push('연구 분야');
         if (memoMatch) matchedFields.push('메모');
 
         if (matchedFields.length > 0) {
           results.push({
             id: node.id,
             name: node.name,
-            company: node.company ?? "",
+            company: node.institution ?? "",
             position: node.position ?? "",
             profileImage: node.profileImage,
-            keywords: node.keywords,
+            keywords: node.researchInterests,
             degree: node.degree,
             path: [],
             memoMatch: memoMatchContent,
@@ -214,32 +212,30 @@ export default function SearchBar() {
         // 전체 공개 설정 확인
         if (!user.privacySettings?.allowProfileDiscovery) continue;
 
-        // 키워드 매칭 검색 (이름, 회사, 직책, 키워드, 자기소개, 카테고리, 업종 - 각 단어 OR 매칭)
+        // 연구 관심사 매칭 검색 (이름, 소속 기관, 직책, 연구 관심사, 자기소개, 연구 분야 - 각 단어 OR 매칭)
         const nameMatch = queryWords.some(w => user.name.toLowerCase().includes(w));
-        const companyMatch = queryWords.some(w => user.company?.toLowerCase().includes(w)) ?? false;
+        const companyMatch = queryWords.some(w => user.institution?.toLowerCase().includes(w)) ?? false;
         const positionMatch = queryWords.some(w => user.position?.toLowerCase().includes(w)) ?? false;
-        const keywordMatch = user.keywords.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
+        const keywordMatch = user.researchInterests.some(k => queryWords.some(w => k.toLowerCase().includes(w)));
         const bioMatch = queryWords.some(w => user.bio?.toLowerCase().includes(w)) ?? false;
-        const categoryMatch = queryWords.some(w => user.category?.toLowerCase().includes(w)) ?? false;
-        const industryMatch = queryWords.some(w => user.industry?.toLowerCase().includes(w)) ?? false;
+        const categoryMatch = queryWords.some(w => user.researchField?.toLowerCase().includes(w)) ?? false;
 
         const matchedFields: string[] = [];
         if (nameMatch) matchedFields.push('이름');
-        if (companyMatch) matchedFields.push('회사');
+        if (companyMatch) matchedFields.push('소속 기관');
         if (positionMatch) matchedFields.push('직책');
-        if (keywordMatch) matchedFields.push('키워드');
+        if (keywordMatch) matchedFields.push('연구 관심사');
         if (bioMatch) matchedFields.push('자기소개');
-        if (categoryMatch) matchedFields.push('분야');
-        if (industryMatch) matchedFields.push('업종');
+        if (categoryMatch) matchedFields.push('연구 분야');
 
         if (matchedFields.length > 0) {
           results.push({
             id: user.id,
             name: user.name,
-            company: user.company ?? "",
+            company: user.institution ?? "",
             position: user.position ?? "",
             profileImage: user.profileImage,
-            keywords: user.keywords,
+            keywords: user.researchInterests,
             degree: -1, // 연결되지 않은 전체 공개 사용자 표시
             path: [],
             matchedFields,
@@ -264,7 +260,7 @@ export default function SearchBar() {
       const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
       const allKeywords = new Set<string>();
       nodes.forEach(node => {
-        node.keywords.forEach(k => {
+        node.researchInterests.forEach(k => {
           if (queryWords.some(w => k.toLowerCase().includes(w))) {
             allKeywords.add(k);
           }
@@ -300,11 +296,11 @@ export default function SearchBar() {
         memberMap.set(u.id, {
           id: u.id,
           name: u.name,
-          company: u.company || '',
+          company: u.institution || '',
           position: u.position || '',
           bio: u.bio || '',
-          keywords: u.keywords,
-          category: u.category || '',
+          keywords: u.researchInterests,
+          category: u.researchField || '',
         });
       }
     }
@@ -316,11 +312,11 @@ export default function SearchBar() {
         memberMap.set(node.id, {
           id: node.id,
           name: node.name,
-          company: node.company || '',
+          company: node.institution || '',
           position: node.position || '',
           bio: demoUser?.bio || '',
-          keywords: node.keywords,
-          category: node.category || '',
+          keywords: node.researchInterests,
+          category: node.researchField || '',
         });
       }
     }
@@ -399,10 +395,10 @@ export default function SearchBar() {
       const newNode: NetworkNode = {
         id: person.id,
         name: person.degree === -1 ? `${person.name[0]}*님` : person.name,
-        company: person.company,
+        institution: person.company,
         position: person.position,
         profileImage: person.degree === -1 ? undefined : person.profileImage,
-        keywords: person.keywords,
+        researchInterests: person.keywords,
         degree: displayDegree,
         connectionCount: demoConnections[person.id]?.length || 0,
       };
@@ -472,7 +468,7 @@ export default function SearchBar() {
               }
             }
           }}
-          placeholder="이름, 회사, 직책, 분야 등 검색"
+          placeholder="이름, 소속 기관, 직책, 연구 분야 등 검색"
           className="
             flex-1 min-w-0 bg-transparent text-white
             py-1
@@ -599,7 +595,7 @@ export default function SearchBar() {
                     {aiResponse.results.length === 0 ? (
                       <div className="p-3 text-center">
                         <p className="text-sm text-[#8B949E]">네트워크에서 관련 인물을 찾지 못했습니다</p>
-                        <p className="text-xs text-[#484F58] mt-1">다른 키워드로 검색해보세요</p>
+                        <p className="text-xs text-[#484F58] mt-1">다른 연구 관심사로 검색해보세요</p>
                       </div>
                     ) : (
                     <div className="space-y-1.5">
@@ -611,10 +607,10 @@ export default function SearchBar() {
                         const personResult: PersonResult = {
                           id: member.id,
                           name: member.name,
-                          company: member.company ?? '',
+                          company: member.institution ?? '',
                           position: member.position ?? '',
                           profileImage: member.profileImage,
-                          keywords: member.keywords,
+                          keywords: member.researchInterests,
                           degree: connectionDegree,
                           path: connectionPath,
                         };
@@ -668,7 +664,7 @@ export default function SearchBar() {
                               </div>
                               <div className="flex items-center gap-1 text-xs text-[#8B949E]">
                                 <Building size={12} />
-                                <span className="truncate">{member.company}</span>
+                                <span className="truncate">{member.institution}</span>
                                 <span className="mx-0.5">·</span>
                                 <span className="truncate">{member.position}</span>
                               </div>
@@ -781,7 +777,7 @@ export default function SearchBar() {
                         )}
                         {person.degree === -1 && (
                           <div className="flex items-center gap-1 text-[10px] text-[#10B981] mt-1">
-                            <span>키워드 매칭으로 검색됨</span>
+                            <span>연구 관심사 매칭으로 검색됨</span>
                           </div>
                         )}
                         {person.matchedFields && person.matchedFields.length > 0 && (
@@ -815,7 +811,7 @@ export default function SearchBar() {
               <div className="px-3 py-2.5">
                 <p className="text-xs text-[#8B949E] mb-2 px-1 flex items-center gap-1.5">
                   <Hash size={14} />
-                  키워드
+                  연구 관심사
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {keywordSuggestions.map((keyword) => (
@@ -832,7 +828,7 @@ export default function SearchBar() {
               </div>
             ) : !query ? (
               <div className="px-3 py-2.5">
-                <p className="text-xs text-[#8B949E] mb-2 px-1">인기 키워드</p>
+                <p className="text-xs text-[#8B949E] mb-2 px-1">인기 연구 관심사</p>
                 <div className="flex flex-wrap gap-1.5">
                   {popularKeywords.map((keyword) => (
                     <button
