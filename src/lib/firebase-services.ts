@@ -688,7 +688,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     profileImage: currentUser.profileImage,
     institution: currentUser.institution,
     position: currentUser.position,
-    researchInterests: currentUser.researchInterests,
+    researchInterests: currentUser.researchInterests || [],
     degree: 0,
     connectionCount: 0,
     researchField: currentUser.researchField || NAME_CATEGORY_MAP[currentUser.name] as any || inferCategory(currentUser),
@@ -717,7 +717,7 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
         profileImage: connectedUser.profileImage,
         institution: connectedUser.institution,
         position: connectedUser.position,
-        researchInterests: connectedUser.researchInterests,
+        researchInterests: connectedUser.researchInterests || [],
         degree: 1,
         connectionCount: 0,
         researchField: connectedUser.researchField || NAME_CATEGORY_MAP[connectedUser.name] as any || inferCategory(connectedUser),
@@ -949,8 +949,8 @@ export const getRecommendations = async (userId: string, count: number = 3): Pro
 
   for (const node of secondDegreeNodes) {
     // Calculate interest overlap (intersection / union)
-    const userInterests = new Set(currentUser.researchInterests.map(k => k.toLowerCase()));
-    const nodeInterests = new Set(node.researchInterests.map(k => k.toLowerCase()));
+    const userInterests = new Set((currentUser.researchInterests || []).map(k => k.toLowerCase()));
+    const nodeInterests = new Set((node.researchInterests || []).map(k => k.toLowerCase()));
     const intersection = [...userInterests].filter(k => nodeInterests.has(k)).length;
     const union = new Set([...userInterests, ...nodeInterests]).size;
     const interestOverlap = union > 0 ? intersection / union : 0;

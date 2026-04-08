@@ -593,14 +593,14 @@ export default function ProfileSheet() {
                   </section>
 
                   {/* Keywords & Tags */}
-                  {selectedNode.researchInterests.length > 0 && (
+                  {(selectedNode.researchInterests?.length ?? 0) > 0 && (
                     <section>
                       <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8B949E] uppercase tracking-wider mb-3">
                         <Hash size={12} />
                         {selectedNode.name}님은
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {selectedNode.researchInterests.filter(k => k && k.trim() !== '').map((keyword, idx) => {
+                        {(selectedNode.researchInterests || []).filter(k => k && k.trim() !== '').map((keyword, idx) => {
                           const isMatching = currentUser?.researchInterests?.includes(keyword);
                           return (
                             <Tag
@@ -940,15 +940,15 @@ export default function ProfileSheet() {
                             }, {} as Record<string, User[]>);
 
                             const sortedCategories = Object.keys(groupedByCategory).sort((a, b) => {
-                              if (a === '기타') return 1;
-                              if (b === '기타') return -1;
+                              if (a === 'other') return 1;
+                              if (b === 'other') return -1;
                               return groupedByCategory[b].length - groupedByCategory[a].length;
                             });
 
                             return sortedCategories.map((category) => {
                               const users = groupedByCategory[category];
                               const newCount = users.filter(u => !myConnectionIds.has(u.id)).length;
-                              const catColor = CATEGORY_COLORS[category] || CATEGORY_COLORS['기타'];
+                              const catColor = CATEGORY_COLORS[category] || CATEGORY_COLORS['other'];
 
                               return (
                               <div key={category} className="info-card">
@@ -1035,7 +1035,7 @@ export default function ProfileSheet() {
                                 let angle = -Math.PI / 2;
                                 return cats.map(([cat, count], i) => {
                                   const sweep = (count / total) * Math.PI * 2;
-                                  const color = CATEGORY_COLORS[cat] || CATEGORY_COLORS['기타'];
+                                  const color = CATEGORY_COLORS[cat] || CATEGORY_COLORS['other'];
                                   const r = 65;
                                   const x1 = 80 + Math.cos(angle) * r;
                                   const y1 = 80 + Math.sin(angle) * r;

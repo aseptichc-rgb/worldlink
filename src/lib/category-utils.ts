@@ -304,7 +304,7 @@ export function getCategoryCounts(
   nodes: Array<{ category?: string; industry?: string; keywords?: string[]; position?: string; company?: string; degree?: number }>
 ): Record<CategoryName, number> {
   const counts = {} as Record<CategoryName, number>;
-  for (const cat of [...CATEGORIES, '기타' as const]) {
+  for (const cat of CATEGORIES) {
     counts[cat] = 0;
   }
   nodes.forEach(node => {
@@ -320,7 +320,7 @@ export function categorizeUsers<T extends { category?: string; industry?: string
   users: T[]
 ): Record<CategoryName, T[]> {
   const grouped = {} as Record<CategoryName, T[]>;
-  for (const cat of [...CATEGORIES, '기타' as const]) {
+  for (const cat of CATEGORIES) {
     grouped[cat] = [];
   }
   users.forEach(user => {
