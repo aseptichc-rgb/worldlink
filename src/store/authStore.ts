@@ -13,6 +13,20 @@ interface AuthState {
   logout: () => void;
 }
 
+// localStorage에서 복원된 유저가 이전 형식(keywords/company)일 수 있으므로 안전 기본값 적용
+function normalizeUser(u: User | null): User | null {
+  if (!u) return null;
+  const raw = u as any;
+  return {
+    ...u,
+    researchInterests: u.researchInterests || raw.keywords || [],
+    researchKeywords: u.researchKeywords || [],
+    institution: u.institution || raw.company || '',
+    researchField: u.researchField || raw.category,
+    meetingStatus: u.meetingStatus || raw.coffeeStatus || 'available',
+  };
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -20,7 +34,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: true,
       inviteCode: null,
-      setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
+      setUser: (user) => set({ user: normalizeUser(user), isAuthenticated: !!user, isLoading: false }),
       setLoading: (isLoading) => set({ isLoading }),
       setInviteCode: (inviteCode) => set({ inviteCode }),
       logout: () => {

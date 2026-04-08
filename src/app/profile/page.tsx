@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Quote,
 } from 'lucide-react';
+import type { User } from '@/types';
 import { Avatar, Input, Tag, Card } from '@/components/ui';
 import BottomNav from '@/components/ui/BottomNav';
 import { InviteManager } from '@/components/invite/InviteManager';
@@ -41,9 +42,24 @@ import {
   savePublicCard,
 } from '@/lib/firebase-services';
 
+// localStorage에서 복원된 유저가 이전 형식일 수 있으므로 안전 기본값 적용
+function safeUser(u: User | null): User | null {
+  if (!u) return u;
+  const raw = u as any;
+  return {
+    ...u,
+    researchInterests: u.researchInterests || raw.keywords || [],
+    researchKeywords: u.researchKeywords || [],
+    researchField: u.researchField || raw.category,
+    institution: u.institution || raw.company || '',
+    meetingStatus: u.meetingStatus || raw.coffeeStatus || 'available',
+  };
+}
+
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, setUser, logout, setLoading } = useAuthStore();
+  const { user: rawUser, setUser, logout, setLoading } = useAuthStore();
+  const user = safeUser(rawUser);
   const { updateNodeProfileImage } = useNetworkStore();
   const { papers, toggleFeatured, removePaper, achievements, addAchievement, removeAchievement } = usePaperStore();
 
@@ -65,7 +81,7 @@ export default function ProfilePage() {
       if (firebaseUser) {
         const userData = await getUser(firebaseUser.uid);
         setUser(userData);
-        setEditedUser(userData);
+        setEditedUser(safeUser(userData));
       } else {
         setUser(null);
         router.push('/onboarding');
