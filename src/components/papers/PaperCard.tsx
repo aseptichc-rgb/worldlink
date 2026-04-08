@@ -97,21 +97,22 @@ export default function PaperCard({ paper, onToggleFeatured, onDelete, onClick, 
           {fieldLabel}
         </span>
 
-        {/* DOI link */}
-        {paper.doi && (
+        {/* 논문 링크 (DOI 우선, 없으면 pdfUrl) */}
+        {(paper.doi || paper.pdfUrl) && (
           <a
-            href={`https://doi.org/${paper.doi}`}
+            href={paper.doi ? `https://doi.org/${paper.doi}` : paper.pdfUrl!}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="ml-auto text-[#8B949E] hover:text-[#0EA5E9] transition-colors"
+            className="ml-auto flex items-center gap-1 text-xs text-[#0EA5E9] hover:text-[#0EA5E9]/80 transition-colors"
           >
-            <ExternalLink size={14} />
+            <ExternalLink size={12} />
+            <span>논문 보기</span>
           </a>
         )}
 
-        {/* PDF link */}
-        {paper.pdfUrl && (
+        {/* 별도 PDF 링크 (DOI와 pdfUrl 둘 다 있을 때만) */}
+        {paper.doi && paper.pdfUrl && paper.pdfUrl !== `https://doi.org/${paper.doi}` && (
           <a
             href={paper.pdfUrl}
             target="_blank"

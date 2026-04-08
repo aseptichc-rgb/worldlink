@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, X, Loader2, ExternalLink } from 'lucide-react';
+import { Link2, Loader2, Sparkles, Plus, X } from 'lucide-react';
 import type { Paper, PaperAuthor, ResearchField } from '@/types';
 import { FIELD_LABELS } from '@/lib/category-utils';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,10 +13,22 @@ interface PaperUploadFormProps {
   onCancel: () => void;
 }
 
+/** 링크에서 DOI를 추출하는 헬퍼 */
+function extractDoi(input: string): string | null {
+  // doi.org URL
+  const doiUrlMatch = input.match(/doi\.org\/(.+)/i);
+  if (doiUrlMatch) return doiUrlMatch[1].trim();
+  // 10.xxxx/xxxxx 패턴
+  const doiMatch = input.match(/(10\.\d{4,}\/[^\s]+)/);
+  if (doiMatch) return doiMatch[1].trim();
+  return null;
+}
+
 export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: PaperUploadFormProps) {
-  const [doi, setDoi] = useState('');
-  const [isLookingUp, setIsLookingUp] = useState(false);
-  const [lookupError, setLookupError] = useState('');
+  const [link, setLink] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [step, setStep] = useState<'link' | 'detail'>('link');
   const [tagInput, setTagInput] = useState('');
 
   const [form, setForm] = useState({
@@ -24,15 +36,10 @@ export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: Pa
     authors: [] as PaperAuthor[],
     abstract: '',
     journal: '',
-    venue: '',
     year: new Date().getFullYear(),
-    month: undefined as number | undefined,
-    volume: '',
-    issue: '',
-    pages: '',
     doi: '',
-    arxivId: '',
     pdfUrl: '',
+    link: '',
     tags: [] as string[],
     researchField: 'other' as ResearchField,
     citationCount: 0,
@@ -40,65 +47,55 @@ export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: Pa
     isFeatured: false,
   });
 
-  const [authorInput, setAuthorInput] = useState({ name: '', affiliation: '' });
+  // 링크 붙여넣기 → DOI 추출 → CrossRef 자동 조회
+  const handleLinkSubmit = async () => {
+    const url = link.trim();
+    if (!url) return;
 
-  // DOI lookup via CrossRef
-  const handleDoiLookup = async () => {
-    if (!doi.trim()) return;
-    setIsLookingUp(true);
-    setLookupError('');
+    setIsLoading(true);
+    setError('');
 
-    try {
-      const res = await fetch('/api/paper-lookup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doi: doi.trim() }),
-      });
-      const data = await res.json();
+    const doi = extractDoi(url);
 
-      if (data.success && data.data) {
-        const p = data.data;
-        setForm(prev => ({
-          ...prev,
-          title: p.title || prev.title,
-          authors: (p.authors || []).map((a: { name: string; affiliation?: string }) => ({
-            name: a.name,
-            affiliation: a.affiliation,
-          })),
-          abstract: p.abstract || prev.abstract,
-          journal: p.journal || prev.journal,
-          year: p.year || prev.year,
-          month: p.month,
-          volume: p.volume || prev.volume,
-          issue: p.issue || prev.issue,
-          pages: p.pages || prev.pages,
-          doi: p.doi || doi.trim(),
-          citationCount: p.citationCount || 0,
-        }));
-      } else {
-        setLookupError(data.error || '논문을 찾을 수 없습니다.');
+    if (doi) {
+      // DOI가 있으면 CrossRef에서 메타데이터 가져오기
+      try {
+        const res = await fetch('/api/paper-lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doi }),
+        });
+        const data = await res.json();
+
+        if (data.success && data.data) {
+          const p = data.data;
+          setForm(prev => ({
+            ...prev,
+            title: p.title || '',
+            authors: (p.authors || []).map((a: { name: string; affiliation?: string }) => ({
+              name: a.name,
+              affiliation: a.affiliation,
+            })),
+            abstract: p.abstract || '',
+            journal: p.journal || '',
+            year: p.year || prev.year,
+            doi: p.doi || doi,
+            citationCount: p.citationCount || 0,
+            link: url,
+          }));
+          setStep('detail');
+          setIsLoading(false);
+          return;
+        }
+      } catch {
+        // CrossRef 실패 시 수동 입력으로
       }
-    } catch {
-      setLookupError('조회 중 오류가 발생했습니다.');
-    } finally {
-      setIsLookingUp(false);
     }
-  };
 
-  const addAuthor = () => {
-    if (!authorInput.name.trim()) return;
-    setForm(prev => ({
-      ...prev,
-      authors: [...prev.authors, { name: authorInput.name.trim(), affiliation: authorInput.affiliation.trim() || undefined }],
-    }));
-    setAuthorInput({ name: '', affiliation: '' });
-  };
-
-  const removeAuthor = (index: number) => {
-    setForm(prev => ({
-      ...prev,
-      authors: prev.authors.filter((_, i) => i !== index),
-    }));
+    // DOI가 없거나 조회 실패 → 링크만 저장하고 수동 입력
+    setForm(prev => ({ ...prev, link: url, pdfUrl: url }));
+    setStep('detail');
+    setIsLoading(false);
   };
 
   const addTag = () => {
@@ -107,10 +104,6 @@ export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: Pa
       setForm(prev => ({ ...prev, tags: [...prev.tags, tag] }));
     }
     setTagInput('');
-  };
-
-  const removeTag = (tag: string) => {
-    setForm(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   };
 
   const handleSubmit = () => {
@@ -123,15 +116,9 @@ export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: Pa
       authors: form.authors,
       abstract: form.abstract.trim() || undefined,
       journal: form.journal.trim() || undefined,
-      venue: form.venue.trim() || undefined,
       year: form.year,
-      month: form.month,
-      volume: form.volume.trim() || undefined,
-      issue: form.issue.trim() || undefined,
-      pages: form.pages.trim() || undefined,
       doi: form.doi.trim() || undefined,
-      arxivId: form.arxivId.trim() || undefined,
-      pdfUrl: form.pdfUrl.trim() || undefined,
+      pdfUrl: form.link || form.pdfUrl || undefined,
       tags: form.tags,
       researchField: form.researchField,
       citationCount: form.citationCount,
@@ -145,196 +132,176 @@ export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: Pa
     onSubmit(paper);
   };
 
-  return (
-    <div className="space-y-6">
-      {/* DOI Lookup */}
-      <div className="p-4 rounded-xl bg-[#0EA5E9]/5 border border-[#0EA5E9]/20">
-        <h3 className="text-sm font-semibold text-[#0EA5E9] mb-2">DOI로 자동 입력</h3>
-        <div className="flex gap-2">
-          <input
-            value={doi}
-            onChange={(e) => setDoi(e.target.value)}
-            placeholder="10.1234/example.2024"
-            className="flex-1 px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-            onKeyDown={(e) => e.key === 'Enter' && handleDoiLookup()}
-          />
-          <button
-            onClick={handleDoiLookup}
-            disabled={isLookingUp || !doi.trim()}
-            className="px-4 py-2.5 rounded-lg bg-[#0EA5E9] text-white text-sm font-medium disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {isLookingUp ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-            조회
-          </button>
+  // Step 1: 링크 입력
+  if (step === 'link') {
+    return (
+      <div className="space-y-5">
+        <div className="text-center py-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#0EA5E9]/10 flex items-center justify-center mx-auto mb-3">
+            <Link2 size={24} className="text-[#0EA5E9]" />
+          </div>
+          <h3 className="text-lg font-bold text-[#F0F6FC]">논문 링크 등록</h3>
+          <p className="text-sm text-[#8B949E] mt-1">
+            논문 링크를 붙여넣으세요. DOI 링크면 자동으로 정보를 가져옵니다.
+          </p>
         </div>
-        {lookupError && <p className="text-xs text-[#F85149] mt-2">{lookupError}</p>}
+
+        <div>
+          <input
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder="https://doi.org/10.1234/... 또는 논문 URL"
+            className="w-full px-4 py-3.5 rounded-xl bg-[#252525] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9] placeholder:text-[#484F58]"
+            onKeyDown={(e) => e.key === 'Enter' && handleLinkSubmit()}
+            autoFocus
+          />
+          <div className="flex gap-2 mt-2 flex-wrap">
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-[#484F58]">DOI 링크</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-[#484F58]">Google Scholar</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-[#484F58]">arXiv</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-[#484F58]">직접 URL</span>
+          </div>
+        </div>
+
+        {error && <p className="text-xs text-[#F85149]">{error}</p>}
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onCancel} className="flex-1 py-3 rounded-xl bg-[#252525] text-[#8B949E] font-medium text-sm">
+            취소
+          </button>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLinkSubmit}
+            disabled={!link.trim() || isLoading}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] text-white font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <><Loader2 size={16} className="animate-spin" /> 조회 중...</>
+            ) : (
+              <><Sparkles size={16} /> 다음</>
+            )}
+          </motion.button>
+        </div>
+
+        {/* 링크 없이 직접 입력 */}
+        <button
+          onClick={() => setStep('detail')}
+          className="w-full text-center text-xs text-[#484F58] hover:text-[#8B949E] transition-colors py-2"
+        >
+          링크 없이 직접 입력하기
+        </button>
       </div>
+    );
+  }
+
+  // Step 2: 상세 정보 (자동 채워진 상태 또는 수동)
+  return (
+    <div className="space-y-4">
+      {/* 자동 조회 성공 표시 */}
+      {form.doi && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#3FB950]/10 border border-[#3FB950]/20">
+          <Sparkles size={14} className="text-[#3FB950]" />
+          <span className="text-xs text-[#3FB950]">DOI에서 논문 정보를 자동으로 가져왔습니다</span>
+        </div>
+      )}
+
+      {/* 링크 표시 */}
+      {form.link && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#252525] border border-[#30363D]">
+          <Link2 size={12} className="text-[#0EA5E9] flex-shrink-0" />
+          <span className="text-xs text-[#8B949E] truncate">{form.link}</span>
+        </div>
+      )}
 
       {/* Title */}
       <div>
-        <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">논문 제목 *</label>
+        <label className="text-xs font-medium text-[#8B949E] mb-1 block">논문 제목 *</label>
         <input
           value={form.title}
           onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-          placeholder="논문 제목을 입력하세요"
-          className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
+          placeholder="논문 제목"
+          className="w-full px-3 py-2.5 rounded-lg bg-[#252525] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
           style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}
         />
       </div>
 
-      {/* Authors */}
+      {/* Authors (read-only if auto-filled, or editable) */}
+      {form.authors.length > 0 && (
+        <div>
+          <label className="text-xs font-medium text-[#8B949E] mb-1 block">저자</label>
+          <p className="text-sm text-[#F0F6FC]">
+            {form.authors.map(a => a.name).join(', ')}
+          </p>
+        </div>
+      )}
+
+      {/* Journal + Year */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-2">
+          <label className="text-xs font-medium text-[#8B949E] mb-1 block">학술지/학회</label>
+          <input
+            value={form.journal}
+            onChange={(e) => setForm(prev => ({ ...prev, journal: e.target.value }))}
+            placeholder="Nature, NeurIPS..."
+            className="w-full px-3 py-2.5 rounded-lg bg-[#252525] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-[#8B949E] mb-1 block">연도</label>
+          <input
+            type="number"
+            value={form.year}
+            onChange={(e) => setForm(prev => ({ ...prev, year: parseInt(e.target.value) || new Date().getFullYear() }))}
+            className="w-full px-3 py-2.5 rounded-lg bg-[#252525] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
+          />
+        </div>
+      </div>
+
+      {/* Research Field */}
       <div>
-        <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">저자</label>
-        {form.authors.length > 0 && (
+        <label className="text-xs font-medium text-[#8B949E] mb-1 block">연구 분야</label>
+        <select
+          value={form.researchField}
+          onChange={(e) => setForm(prev => ({ ...prev, researchField: e.target.value as ResearchField }))}
+          className="w-full px-3 py-2.5 rounded-lg bg-[#252525] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
+        >
+          {Object.entries(FIELD_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Tags */}
+      <div>
+        <label className="text-xs font-medium text-[#8B949E] mb-1 block">태그 (선택)</label>
+        {form.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
-            {form.authors.map((a, i) => (
-              <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#252525] text-xs text-[#F0F6FC]">
-                {a.name}
-                {a.affiliation && <span className="text-[#8B949E]">({a.affiliation})</span>}
-                <button onClick={() => removeAuthor(i)} className="text-[#484F58] hover:text-[#F85149]">
-                  <X size={12} />
-                </button>
+            {form.tags.map(tag => (
+              <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#1E1E1E] text-xs text-[#8B949E]">
+                {tag}
+                <button onClick={() => setForm(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }))}><X size={10} /></button>
               </span>
             ))}
           </div>
         )}
         <div className="flex gap-2">
           <input
-            value={authorInput.name}
-            onChange={(e) => setAuthorInput(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="저자명"
-            className="flex-1 px-3 py-2 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          />
-          <input
-            value={authorInput.affiliation}
-            onChange={(e) => setAuthorInput(prev => ({ ...prev, affiliation: e.target.value }))}
-            placeholder="소속 (선택)"
-            className="flex-1 px-3 py-2 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          />
-          <button onClick={addAuthor} className="p-2 rounded-lg bg-[#252525] text-[#8B949E] hover:text-[#0EA5E9]">
-            <Plus size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Journal/Venue + Year */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">학술지</label>
-          <input
-            value={form.journal}
-            onChange={(e) => setForm(prev => ({ ...prev, journal: e.target.value }))}
-            placeholder="Nature, Science..."
-            className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">출판 연도</label>
-          <input
-            type="number"
-            value={form.year}
-            onChange={(e) => setForm(prev => ({ ...prev, year: parseInt(e.target.value) || new Date().getFullYear() }))}
-            className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          />
-        </div>
-      </div>
-
-      {/* Abstract */}
-      <div>
-        <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">초록</label>
-        <textarea
-          value={form.abstract}
-          onChange={(e) => setForm(prev => ({ ...prev, abstract: e.target.value }))}
-          placeholder="논문 초록을 입력하세요"
-          rows={3}
-          className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9] resize-none"
-        />
-      </div>
-
-      {/* Research Field + Status */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">연구 분야</label>
-          <select
-            value={form.researchField}
-            onChange={(e) => setForm(prev => ({ ...prev, researchField: e.target.value as ResearchField }))}
-            className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          >
-            {Object.entries(FIELD_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">상태</label>
-          <select
-            value={form.status}
-            onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value as Paper['status'] }))}
-            className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          >
-            <option value="published">출판</option>
-            <option value="preprint">프리프린트</option>
-            <option value="under-review">심사 중</option>
-            <option value="accepted">게재 확정</option>
-            <option value="draft">초안</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Tags */}
-      <div>
-        <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">태그</label>
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {form.tags.map(tag => (
-            <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#252525] text-xs text-[#8B949E]">
-              {tag}
-              <button onClick={() => removeTag(tag)} className="hover:text-[#F85149]"><X size={12} /></button>
-            </span>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             placeholder="태그 추가"
-            className="flex-1 px-3 py-2 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
+            className="flex-1 px-3 py-2 rounded-lg bg-[#252525] border border-[#30363D] text-[#F0F6FC] text-xs focus:outline-none focus:border-[#0EA5E9]"
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
           />
-          <button onClick={addTag} className="p-2 rounded-lg bg-[#252525] text-[#8B949E] hover:text-[#0EA5E9]">
-            <Plus size={16} />
+          <button onClick={addTag} className="px-2 rounded-lg bg-[#1E1E1E] text-[#8B949E] hover:text-[#0EA5E9]">
+            <Plus size={14} />
           </button>
-        </div>
-      </div>
-
-      {/* PDF URL + arXiv */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">PDF URL</label>
-          <input
-            value={form.pdfUrl}
-            onChange={(e) => setForm(prev => ({ ...prev, pdfUrl: e.target.value }))}
-            placeholder="https://..."
-            className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-[#F0F6FC] mb-1.5 block">arXiv ID</label>
-          <input
-            value={form.arxivId}
-            onChange={(e) => setForm(prev => ({ ...prev, arxivId: e.target.value }))}
-            placeholder="2301.12345"
-            className="w-full px-3 py-2.5 rounded-lg bg-[#1E1E1E] border border-[#30363D] text-[#F0F6FC] text-sm focus:outline-none focus:border-[#0EA5E9]"
-          />
         </div>
       </div>
 
       {/* Buttons */}
       <div className="flex gap-3 pt-2">
-        <button
-          onClick={onCancel}
-          className="flex-1 py-3 rounded-xl bg-[#252525] text-[#8B949E] font-medium text-sm"
-        >
-          취소
+        <button onClick={() => setStep('link')} className="flex-1 py-3 rounded-xl bg-[#252525] text-[#8B949E] font-medium text-sm">
+          이전
         </button>
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -342,7 +309,7 @@ export default function PaperUploadForm({ researcherId, onSubmit, onCancel }: Pa
           disabled={!form.title.trim()}
           className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#0284C7] to-[#0EA5E9] text-white font-medium text-sm disabled:opacity-50"
         >
-          논문 등록
+          등록 완료
         </motion.button>
       </div>
     </div>
