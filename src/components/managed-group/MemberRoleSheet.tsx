@@ -120,7 +120,7 @@ export default function MemberRoleSheet({
           <div>
             <p className="text-base font-bold text-[#F0F6FC]">{name}</p>
             <p className="text-xs text-[#8B949E]">
-              {[member.user?.company, member.user?.position].filter(Boolean).join(' · ') || '정보 없음'}
+              {[member.user?.institution, member.user?.position].filter(Boolean).join(' · ') || '정보 없음'}
             </p>
           </div>
         </div>

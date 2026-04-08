@@ -266,7 +266,7 @@ export default function GroupDetailPanel() {
                               {node.name}
                             </p>
                             <p className="text-xs text-[#8B949E] truncate">
-                              {node.company} {node.position && `· ${node.position}`}
+                              {node.institution} {node.position && `· ${node.position}`}
                             </p>
                           </div>
                         </button>

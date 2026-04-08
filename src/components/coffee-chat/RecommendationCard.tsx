@@ -54,7 +54,7 @@ export default function RecommendationCard({ recommendation, index }: Recommenda
 
             {/* Keywords */}
             <div className="flex flex-wrap gap-1.5 mt-3">
-              {recommendation.user.keywords.slice(0, 3).map((keyword) => (
+              {recommendation.user.researchInterests.slice(0, 3).map((keyword) => (
                 <Tag
                   key={keyword}
                   label={keyword}

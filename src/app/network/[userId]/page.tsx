@@ -40,7 +40,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
     const loadUserData = async () => {
       const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
 
-      // 저장된 명함에서 사용자 찾기
+      // 저장된 프로필 카드에서 사용자 찾기
       const savedCard = savedCards.find(c => c.cardId === userId);
       if (savedCard) {
         setTargetUser(savedCard.card);
@@ -55,9 +55,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               id: conn.id,
               userId: conn.id,
               name: conn.name || '알 수 없음',
-              company: conn.company || '',
+              institution: conn.institution || '',
               position: conn.position || '',
-              keywords: conn.keywords || [],
+              researchInterests: conn.researchInterests || [],
               profileImage: conn.profileImage,
               networkVisibility: 'connections_only' as const,
               qrCode: '',
@@ -81,9 +81,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
             id: userData.id,
             userId: userData.id,
             name: userData.name || '사용자',
-            company: userData.company || '',
+            institution: userData.institution || '',
             position: userData.position || '',
-            keywords: userData.keywords || [],
+            researchInterests: userData.researchInterests || [],
             profileImage: userData.profileImage,
             networkVisibility: 'connections_only',
             qrCode: '',
@@ -100,9 +100,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                 id: conn.id,
                 userId: conn.id,
                 name: conn.name || '알 수 없음',
-                company: conn.company || '',
+                institution: conn.institution || '',
                 position: conn.position || '',
-                keywords: conn.keywords || [],
+                researchInterests: conn.researchInterests || [],
                 profileImage: conn.profileImage,
                 networkVisibility: 'connections_only',
                 qrCode: '',
@@ -120,9 +120,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   id: conn.id,
                   userId: conn.id,
                   name: conn.name,
-                  company: conn.company || '',
+                  institution: conn.institution || '',
                   position: conn.position || '',
-                  keywords: conn.keywords || [],
+                  researchInterests: conn.researchInterests || [],
                   profileImage: conn.profileImage,
                   networkVisibility: 'connections_only' as const,
                   qrCode: '',
@@ -141,9 +141,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   id: conn.id,
                   userId: conn.id,
                   name: conn.name,
-                  company: conn.company || '',
+                  institution: conn.institution || '',
                   position: conn.position || '',
-                  keywords: conn.keywords || [],
+                  researchInterests: conn.researchInterests || [],
                   profileImage: conn.profileImage,
                   networkVisibility: 'connections_only' as const,
                   qrCode: '',
@@ -167,9 +167,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
             id: demoUser.id,
             userId: demoUser.id,
             name: demoUser.name,
-            company: demoUser.company || '',
+            institution: demoUser.institution || '',
             position: demoUser.position || '',
-            keywords: demoUser.keywords || [],
+            researchInterests: demoUser.researchInterests || [],
             profileImage: demoUser.profileImage,
             networkVisibility: 'connections_only',
             qrCode: '',
@@ -185,9 +185,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
               id: conn.id,
               userId: conn.id,
               name: conn.name,
-              company: conn.company || '',
+              institution: conn.institution || '',
               position: conn.position || '',
-              keywords: conn.keywords || [],
+              researchInterests: conn.researchInterests || [],
               profileImage: conn.profileImage,
               networkVisibility: 'connections_only' as const,
               qrCode: '',
@@ -204,9 +204,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
         id: userId,
         userId: userId,
         name: '알 수 없는 사용자',
-        company: '',
+        institution: '',
         position: '',
-        keywords: [],
+        researchInterests: [],
         networkVisibility: 'connections_only',
         qrCode: '',
         createdAt: new Date(),
@@ -249,9 +249,9 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
   };
 
   const purposes = [
-    { value: 'business', label: '비즈니스 협업' },
-    { value: 'collaboration', label: '프로젝트 협업' },
-    { value: 'hiring', label: '채용/이직' },
+    { value: 'collaboration', label: '연구 협업' },
+    { value: 'mentoring', label: '멘토링' },
+    { value: 'grant-proposal', label: '연구비 제안' },
     { value: 'networking', label: '네트워킹' },
     { value: 'other', label: '기타' },
   ] as const;
@@ -301,19 +301,19 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                   <span className="text-base">{targetUser.position}</span>
                 </div>
               )}
-              {targetUser.company && (
+              {targetUser.institution && (
                 <div className="flex items-center gap-2 text-[#8B949E]">
                   <Building2 size={14} />
-                  <span className="text-base">{targetUser.company}</span>
+                  <span className="text-base">{targetUser.institution}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* 키워드 */}
-          {targetUser.keywords && targetUser.keywords.length > 0 && (
+          {/* 연구 관심사 */}
+          {targetUser.researchInterests && targetUser.researchInterests.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#30363D]">
-              {targetUser.keywords.map((keyword, idx) => (
+              {targetUser.researchInterests.map((keyword, idx) => (
                 <span
                   key={idx}
                   className="px-3 py-1 text-sm rounded-full bg-[#58A6FF]/10 text-[#58A6FF]"
@@ -369,11 +369,11 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-white">{connection.name}</h4>
                       <p className="text-base text-[#8B949E]">
-                        {connection.position} @ {connection.company}
+                        {connection.position} @ {connection.institution}
                       </p>
-                      {connection.keywords && connection.keywords.length > 0 && (
+                      {connection.researchInterests && connection.researchInterests.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {connection.keywords.slice(0, 2).map((keyword, idx) => (
+                          {connection.researchInterests.slice(0, 2).map((keyword, idx) => (
                             <span
                               key={idx}
                               className="px-2 py-0.5 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]"
@@ -462,7 +462,7 @@ export default function UserNetworkPage({ params }: { params: Promise<{ userId: 
                       <div>
                         <p className="font-medium text-white">{selectedConnection.name}</p>
                         <p className="text-base text-[#8B949E]">
-                          {selectedConnection.position} @ {selectedConnection.company}
+                          {selectedConnection.position} @ {selectedConnection.institution}
                         </p>
                       </div>
                     </div>

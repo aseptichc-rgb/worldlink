@@ -5,10 +5,10 @@ import { verifyAuthToken } from '@/lib/firebase-admin';
 interface MemberInput {
   id: string;
   name: string;
-  company: string;
+  institution: string;
   position: string;
-  keywords: string[];
-  category: string;
+  researchInterests: string[];
+  researchField: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     const membersContext = (members as MemberInput[]).map(m =>
-      `[${m.id}] ${m.name} | ${m.company} | ${m.position} | 키워드: ${m.keywords.join(', ')} | 분야: ${m.category}`
+      `[${m.id}] ${m.name} | ${m.institution} | ${m.position} | 연구관심사: ${m.researchInterests.join(', ')} | 분야: ${m.researchField}`
     ).join('\n');
 
     const genAI = new GoogleGenerativeAI(apiKey);

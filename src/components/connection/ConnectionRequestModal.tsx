@@ -41,7 +41,7 @@ export default function ConnectionRequestModal() {
       const pathUsers: User[] = pathIds.map(id => {
         const demoUser = demoUsers.find(u => u.id === id);
         if (demoUser) return demoUser;
-        return { id, name: '나', email: '', inviteCode: '', invitesRemaining: 0, coffeeStatus: 'available' as const, keywords: [], createdAt: new Date(), updatedAt: new Date() };
+        return { id, name: '나', email: '', inviteCode: '', invitesRemaining: 0, meetingStatus: 'available' as const, researchInterests: [], researchKeywords: [], createdAt: new Date(), updatedAt: new Date() };
       });
       setConnectionPath(pathUsers);
     }
@@ -136,7 +136,7 @@ export default function ConnectionRequestModal() {
               </h3>
               <div className="flex items-center justify-center gap-2 text-base text-[#8B949E]">
                 <Building size={14} />
-                <span>{targetUser?.company}</span>
+                <span>{targetUser?.institution}</span>
                 <span>·</span>
                 <Briefcase size={14} />
                 <span>{targetUser?.position}</span>

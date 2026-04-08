@@ -137,10 +137,10 @@ export default function AdminPage() {
     return users.filter(u =>
       u.name.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
-      u.company?.toLowerCase().includes(q) ||
+      u.institution?.toLowerCase().includes(q) ||
       u.position?.toLowerCase().includes(q) ||
-      u.category?.toLowerCase().includes(q) ||
-      u.keywords?.some(k => k.toLowerCase().includes(q))
+      u.researchField?.toLowerCase().includes(q) ||
+      u.researchInterests?.some(k => k.toLowerCase().includes(q))
     );
   }, [users, searchQuery]);
 
@@ -492,19 +492,19 @@ export default function AdminPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium text-sm truncate">{user.name}</p>
                       <p className="text-[#8B949E] text-xs truncate">
-                        {[user.company, user.position].filter(Boolean).join(' · ') || '정보 없음'}
+                        {[user.institution, user.position].filter(Boolean).join(' · ') || '정보 없음'}
                       </p>
                     </div>
-                    {user.category && (
+                    {user.researchField && (
                       <span
                         className="text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0"
                         style={{
-                          color: CATEGORY_COLORS[user.category] || '#8B949E',
-                          borderColor: `${CATEGORY_COLORS[user.category] || '#8B949E'}30`,
-                          backgroundColor: `${CATEGORY_COLORS[user.category] || '#8B949E'}10`,
+                          color: CATEGORY_COLORS[user.researchField] || '#8B949E',
+                          borderColor: `${CATEGORY_COLORS[user.researchField] || '#8B949E'}30`,
+                          backgroundColor: `${CATEGORY_COLORS[user.researchField] || '#8B949E'}10`,
                         }}
                       >
-                        {user.category}
+                        {user.researchField}
                       </span>
                     )}
                     <span className="text-[11px] text-[#484F58] whitespace-nowrap flex-shrink-0">
@@ -532,7 +532,7 @@ export default function AdminPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484F58]" size={18} />
               <input
                 type="text"
-                placeholder="이름, 이메일, 회사, 키워드로 검색..."
+                placeholder="이름, 이메일, 기관, 연구 관심사로 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-[#1C2333] border border-[#30363D] rounded-xl text-white placeholder-[#484F58] text-sm focus:outline-none focus:border-[#58A6FF]/50 transition-colors"
@@ -545,9 +545,9 @@ export default function AdminPage() {
                   <tr className="border-b border-[#30363D]">
                     <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">회원</th>
                     <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">이메일</th>
-                    <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">회사 / 직책</th>
-                    <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">분야</th>
-                    <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">키워드</th>
+                    <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">기관 / 직위</th>
+                    <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">연구 분야</th>
+                    <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">연구 관심사</th>
                     <th className="text-left py-3 px-3 text-xs text-[#8B949E] font-medium">가입일</th>
                   </tr>
                 </thead>
@@ -568,23 +568,23 @@ export default function AdminPage() {
                       </td>
                       <td className="py-3 px-3">
                         <p className="text-xs text-[#C9D1D9] truncate max-w-[160px]">
-                          {user.company || '-'}
+                          {user.institution || '-'}
                         </p>
                         <p className="text-[11px] text-[#484F58] truncate max-w-[160px]">
                           {user.position || ''}
                         </p>
                       </td>
                       <td className="py-3 px-3">
-                        {user.category ? (
+                        {user.researchField ? (
                           <span
                             className="text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap"
                             style={{
-                              color: CATEGORY_COLORS[user.category] || '#8B949E',
-                              borderColor: `${CATEGORY_COLORS[user.category] || '#8B949E'}30`,
-                              backgroundColor: `${CATEGORY_COLORS[user.category] || '#8B949E'}10`,
+                              color: CATEGORY_COLORS[user.researchField] || '#8B949E',
+                              borderColor: `${CATEGORY_COLORS[user.researchField] || '#8B949E'}30`,
+                              backgroundColor: `${CATEGORY_COLORS[user.researchField] || '#8B949E'}10`,
                             }}
                           >
-                            {user.category}
+                            {user.researchField}
                           </span>
                         ) : (
                           <span className="text-xs text-[#484F58]">-</span>
@@ -592,13 +592,13 @@ export default function AdminPage() {
                       </td>
                       <td className="py-3 px-3">
                         <div className="flex flex-wrap gap-1 max-w-[200px]">
-                          {user.keywords?.slice(0, 3).map(kw => (
+                          {user.researchInterests?.slice(0, 3).map(kw => (
                             <span key={kw} className="text-[10px] px-1.5 py-0.5 bg-[#1C2333] text-[#8B949E] rounded">
                               {kw}
                             </span>
                           ))}
-                          {(user.keywords?.length || 0) > 3 && (
-                            <span className="text-[10px] text-[#484F58]">+{user.keywords!.length - 3}</span>
+                          {(user.researchInterests?.length || 0) > 3 && (
+                            <span className="text-[10px] text-[#484F58]">+{user.researchInterests!.length - 3}</span>
                           )}
                         </div>
                       </td>

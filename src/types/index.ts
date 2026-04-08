@@ -1,87 +1,181 @@
-// 개인정보 공개 설정 타입
+// =============================================================================
+// ResearchNexus - 연구자 인맥 소개 플랫폼 타입 정의
+// =============================================================================
+
+// ==================== 연구 분야 ====================
+
+export type ResearchField =
+  | 'computer-science'
+  | 'artificial-intelligence'
+  | 'biology'
+  | 'medicine'
+  | 'physics'
+  | 'chemistry'
+  | 'mathematics'
+  | 'engineering'
+  | 'social-sciences'
+  | 'economics'
+  | 'humanities'
+  | 'environmental-science'
+  | 'materials-science'
+  | 'neuroscience'
+  | 'interdisciplinary'
+  | 'other';
+
+// ==================== 개인정보 공개 설정 ====================
+
 export interface PrivacySettings {
-  // 등록 현황 공개 동의 (네트워크에 표시되기 위한 필수 조건)
   allowProfileDiscovery: boolean;
-  // 전체 검색 허용 (다른 회원이 키워드/이름으로 검색 가능)
   allowGlobalSearch?: boolean;
-  // 공개 범위 설정
   displaySettings: {
-    // 이름 표시 방식: 'full' = 전체, 'partial' = 성씨만 (예: 김*님)
     nameDisplay: 'full' | 'partial';
-    // 회사 표시 방식: 'full' = 회사명, 'industry' = 업종만 (예: IT/통신), 'size' = 규모만 (예: 대기업)
-    companyDisplay: 'full' | 'industry' | 'size' | 'hidden';
-    // 직책 표시 방식: 'full' = 전체, 'level' = 직급 수준 (예: 실무자급, 관리자급)
+    // 기관 표시: 'full' = 기관명, 'department' = 학과만, 'hidden' = 비공개
+    institutionDisplay: 'full' | 'department' | 'hidden';
     positionDisplay: 'full' | 'level' | 'hidden';
-    // 이메일 표시 방식: 'full' = 전체 공개, 'partial' = 부분 공개 (예: u***@example.com), 'hidden' = 비공개
     emailDisplay?: 'full' | 'partial' | 'hidden';
   };
-  // 동의 일시
   consentedAt?: Date;
-  // 마지막 수정 일시
   updatedAt?: Date;
 }
 
-// 구독 플랜 타입
+// ==================== 구독 ====================
+
 export type SubscriptionPlan = 'free' | 'premium';
 
-// 구독 정보 타입
 export interface Subscription {
   plan: SubscriptionPlan;
-  // 구독 시작일
   startedAt?: Date;
-  // 구독 만료일 (premium인 경우)
   expiresAt?: Date;
-  // 자동 갱신 여부
   autoRenew?: boolean;
-  // 결제 방법
   paymentMethod?: 'card' | 'kakao' | 'apple' | 'google';
-  // 마지막 결제일
   lastPaymentAt?: Date;
 }
 
-// User Types
+// ==================== 연구자 (User 대체) ====================
+
 export interface User {
   id: string;
   name: string;
   email: string;
   phone?: string;
-  phoneHash?: string;
   profileImage?: string;
-  company?: string;
-  position?: string;
-  // 회사 규모 (비식별화 표시용)
-  companySize?: 'startup' | 'sme' | 'enterprise' | 'freelance';
-  // 업종 (비식별화 표시용)
-  industry?: string;
-  // 직급 수준 (비식별화 표시용)
-  positionLevel?: 'entry' | 'staff' | 'manager' | 'executive';
+
+  // 학술 신원
+  institution?: string;          // 소속 기관 (대학, 연구소)
+  department?: string;           // 학과/부서
+  position?: string;             // 직위 (조교수, 박사과정 등)
+  degree?: 'bachelor' | 'master' | 'phd' | 'postdoc' | 'professor';
+
+  // 외부 프로필 링크
+  orcid?: string;
+  googleScholarId?: string;
+  researchGateUrl?: string;
+  personalWebsite?: string;
+
+  // 연구 정보
+  researchInterests: string[];   // 연구 관심사 (예: 강화학습, 단백질 구조)
+  researchKeywords: string[];    // 세부 키워드 태그
+  researchField?: ResearchField; // 주요 연구 분야
   bio?: string;
-  keywords: string[];
-  category?: string; // 분야/카테고리 (예: 의료기기, 솔루션, 투자 등)
+
+  // 연구 지표
+  hIndex?: number;
+  totalCitations?: number;
+  totalPublications?: number;
+
+  // 플랫폼 메커니즘
   inviteCode: string;
   invitesRemaining: number;
   invitedBy?: string;
-  coffeeStatus: 'available' | 'busy' | 'pending';
-  // 개인정보 공개 설정
+  meetingStatus: 'available' | 'busy' | 'pending';
+
   privacySettings?: PrivacySettings;
-  // 구독 정보
   subscription?: Subscription;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Connection Types
+// ==================== 논문 (Paper) ====================
+
+export interface PaperAuthor {
+  name: string;
+  researcherId?: string;       // 플랫폼 내 사용자 ID (없으면 null)
+  isCorresponding?: boolean;
+  affiliation?: string;
+}
+
+export interface Paper {
+  id: string;
+  researcherId: string;        // 등록한 연구자 ID
+
+  // 서지 정보
+  title: string;
+  authors: PaperAuthor[];
+  abstract?: string;
+  journal?: string;            // 학술지명
+  venue?: string;              // 학회/워크숍명
+  year: number;
+  month?: number;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+
+  // 식별자
+  doi?: string;
+  arxivId?: string;
+  pmid?: string;               // PubMed ID
+
+  // 콘텐츠
+  pdfUrl?: string;
+  thumbnailUrl?: string;
+  tags: string[];
+  researchField: ResearchField;
+
+  // 지표
+  citationCount?: number;
+
+  // 협업 추적
+  coAuthorIds: string[];       // 플랫폼 내 공저자 ID 목록
+
+  // 상태
+  status: 'published' | 'preprint' | 'under-review' | 'accepted' | 'draft';
+  isFeatured: boolean;         // 프로필 상단 고정 여부
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ==================== 연구 업적 (Achievement) ====================
+
+export type AchievementType = 'award' | 'grant' | 'patent' | 'invited-talk' | 'fellowship' | 'editorial' | 'other';
+
+export interface Achievement {
+  id: string;
+  researcherId: string;
+  type: AchievementType;
+  title: string;
+  description?: string;
+  organization?: string;       // 수여 기관
+  year: number;
+  amount?: string;             // 그랜트 금액 등
+  url?: string;
+  createdAt: Date;
+}
+
+// ==================== 연결 (Connection) ====================
+
 export interface Connection {
   id: string;
   fromUserId: string;
   toUserId: string;
   status: 'pending' | 'accepted' | 'rejected';
-  method: 'invite' | 'contact_sync' | 'search' | 'managed_group';
+  method: 'invite' | 'coauthor' | 'search' | 'lab';
   createdAt: Date;
   acceptedAt?: Date;
 }
 
-// Invite Code Types
+// ==================== 초대 코드 ====================
+
 export interface InviteCode {
   code: string;
   createdBy: string;
@@ -91,7 +185,8 @@ export interface InviteCode {
   isValid: boolean;
 }
 
-// Invitation Types (초대 발송 기록)
+// ==================== 초대 발송 기록 ====================
+
 export interface Invitation {
   id: string;
   senderId: string;
@@ -106,32 +201,36 @@ export interface Invitation {
   connectionId?: string;
 }
 
-// Keyword Types
+// ==================== 키워드 ====================
+
 export interface Keyword {
   id: string;
   tag: string;
-  category?: string;
+  researchField?: ResearchField;
   useCount: number;
 }
 
-// Coffee Chat Types
+// ==================== 연구 미팅 (Coffee Chat 대체) ====================
+
 export interface TimeSlot {
   id: string;
   userId: string;
-  dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  startTime: string; // HH:mm format
+  dayOfWeek: number;
+  startTime: string;
   endTime: string;
   isRecurring: boolean;
   specificDate?: Date;
   isAvailable: boolean;
 }
 
+export type MeetingPurpose = 'paper-discussion' | 'collaboration' | 'methodology' | 'mentoring' | 'grant-proposal';
+
 export interface CoffeeChatRequest {
   id: string;
   fromUserId: string;
   toUserId: string;
   slotId: string;
-  purpose: 'collaboration' | 'hiring' | 'insight' | 'networking';
+  purpose: MeetingPurpose;
   message: string;
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   scheduledDate: Date;
@@ -139,30 +238,33 @@ export interface CoffeeChatRequest {
   respondedAt?: Date;
 }
 
-// Network Graph Types
+// ==================== 네트워크 그래프 ====================
+
 export interface NetworkNode {
   id: string;
   name: string;
   profileImage?: string;
-  company?: string;
+  institution?: string;          // company → institution
   position?: string;
-  keywords: string[];
-  degree: number; // 1 = direct connection, 2 = friend of friend
+  researchInterests: string[];   // keywords → researchInterests
+  degree: number;                // 1 = 직접 연결, 2 = 간접 연결
   connectionCount: number;
-  category?: string; // 분야/카테고리 (예: 의료기기, 솔루션, 투자 등)
-  isImported?: boolean; // 가져온 연락처 여부
-  importedByUserId?: string; // 가져온 연락처를 소유한 사용자 ID
-  phone?: string; // 가져온 연락처의 전화번호
-  email?: string; // 가져온 연락처의 이메일
+  researchField?: ResearchField; // category → researchField
+  hIndex?: number;               // 노드 크기 결정용
+  isCoAuthor?: boolean;          // 공저 관계 여부
+  coAuthorPaperCount?: number;   // 공저 논문 수
+  email?: string;
 }
 
 export interface NetworkEdge {
   source: string;
   target: string;
   degree: number;
+  isCoAuthor?: boolean;          // 공저 관계 엣지 강조용
 }
 
-// Custom Group Types (사용자 정의 그룹)
+// ==================== 사용자 정의 그룹 ====================
+
 export interface NodeGroup {
   id: string;
   name: string;
@@ -178,7 +280,6 @@ export interface GroupMembership {
   addedAt: Date;
 }
 
-// 그룹 내 연결 (그룹 멤버들 간의 자동 연결)
 export interface GroupConnection {
   groupId: string;
   sourceNodeId: string;
@@ -191,19 +292,22 @@ export interface NetworkGraph {
   edges: NetworkEdge[];
 }
 
-// Recommendation Types
+// ==================== 추천 / 매칭 ====================
+
 export interface Recommendation {
   userId: string;
   user: User;
   score: number;
-  keywordMatch: number;
-  proximityScore: number;
+  interestOverlap: number;      // keywordMatch → interestOverlap
+  fieldRelevance: number;        // proximityScore → fieldRelevance
   mutualConnections: number;
   connectionPath: string[];
+  sharedTopics?: string[];       // 공통 연구 토픽
   reason: string;
 }
 
-// API Response Types
+// ==================== API 응답 ====================
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -211,12 +315,14 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-// Search Types
+// ==================== 검색 ====================
+
 export interface SearchFilters {
-  keywords?: string[];
-  company?: string;
+  researchInterests?: string[];  // keywords → researchInterests
+  institution?: string;          // company → institution
   degree?: number;
-  coffeeStatus?: 'available' | 'busy' | 'pending';
+  researchField?: ResearchField;
+  meetingStatus?: 'available' | 'busy' | 'pending';
 }
 
 export interface SearchResult {
@@ -225,47 +331,51 @@ export interface SearchResult {
   hasMore: boolean;
 }
 
-// Business Card Types (QR 명함)
+// ==================== 학술 프로필 카드 (BusinessCard 대체) ====================
+
 export interface BusinessCard {
   id: string;
   userId: string;
   name: string;
   email?: string;
   phone?: string;
-  company?: string;
+  institution?: string;          // company → institution
+  department?: string;
   position?: string;
   bio?: string;
   profileImage?: string;
-  keywords: string[];
-  // 인맥 공개 설정
+  researchInterests: string[];   // keywords → researchInterests
+  researchField?: ResearchField;
+  hIndex?: number;
+  featuredPaperTitles?: string[];
+  orcid?: string;
   networkVisibility: 'public' | 'connections_only' | 'private';
-  // QR 코드용 고유 식별자
   qrCode: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// 저장된 명함 (내가 받은 명함)
+// 저장된 프로필 카드
 export interface SavedCard {
   id: string;
-  ownerId: string; // 명함을 저장한 사용자
-  cardId: string; // 저장된 명함의 ID
-  card: BusinessCard; // 명함 정보
-  cardImage?: string; // 촬영한 명함 이미지 (base64 또는 URL)
-  memo?: string; // 메모
-  tags?: string[]; // 커스텀 태그
+  ownerId: string;
+  cardId: string;
+  card: BusinessCard;
+  memo?: string;
+  tags?: string[];
   savedAt: Date;
   lastViewedAt?: Date;
 }
 
-// 소개 요청
+// ==================== 소개 요청 ====================
+
 export interface IntroductionRequest {
   id: string;
-  requesterId: string; // 요청자
-  introducerId: string; // 소개해주는 사람 (중간 연결자)
-  targetId: string; // 소개받고 싶은 사람
-  message: string; // 요청 메시지
-  purpose: 'business' | 'collaboration' | 'hiring' | 'networking' | 'other';
+  requesterId: string;
+  introducerId: string;
+  targetId: string;
+  message: string;
+  purpose: 'collaboration' | 'mentoring' | 'grant-proposal' | 'networking' | 'other';
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   requesterCard?: BusinessCard;
   createdAt: Date;
@@ -273,44 +383,60 @@ export interface IntroductionRequest {
   completedAt?: Date;
 }
 
-// ==================== 나의 모임 (Managed Group) ====================
+// ==================== 연구실 (ManagedGroup 대체) ====================
 
-export type ManagedGroupRole = 'admin' | 'president' | 'executive' | 'member';
+export type LabRole = 'pi' | 'co-pi' | 'postdoc' | 'phd-student' | 'masters-student' | 'researcher' | 'collaborator'
+  | 'admin' | 'president' | 'executive' | 'member'; // 기존 호환용
+// 기존 코드 호환용 alias
+export type ManagedGroupRole = LabRole;
 
-export interface ManagedGroupMember {
+export interface LabMember {
   userId: string;
-  role: ManagedGroupRole;
-  title?: string;            // 커스텀 직책 (예: 부회장, 감사, 총무, 재무부회장)
+  role: LabRole;
+  title?: string;
   joinedAt: Date;
 }
+// 기존 코드 호환용 alias
+export type ManagedGroupMember = LabMember;
 
-export interface ManagedGroupSettings {
-  autoConnect: boolean;       // 가입 시 기존 멤버와 자동 인맥 연결
-  allowMemberInvite: boolean; // 멤버도 초대 가능 여부
+export interface LabSettings {
+  autoConnect: boolean;
+  allowMemberInvite: boolean;
+  isPublic?: boolean;
+  acceptingMembers?: boolean;
 }
+// 기존 코드 호환용 alias
+export type ManagedGroupSettings = LabSettings;
 
-export interface ManagedGroup {
+export interface ResearchLab {
   id: string;
   name: string;
   description?: string;
+  institution?: string;
+  department?: string;
+  researchFields?: ResearchField[];
   color: string;
   icon: string;
-  ownerId: string;           // 그룹장 userId
-  members: ManagedGroupMember[];
-  memberUserIds: string[];   // Firestore array-contains 쿼리용 비정규화 필드
-  settings: ManagedGroupSettings;
+  piId: string;                  // 지도교수 / PI
+  ownerId: string;               // piId alias (기존 코드 호환용)
+  members: LabMember[];
+  memberUserIds: string[];
+  settings: LabSettings;
+  websiteUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
+// 기존 코드 호환용 alias
+export type ManagedGroup = ResearchLab;
 
 // ==================== 인터랙션 & 관계 관리 ====================
 
-export type InteractionType = 'meeting' | 'call' | 'message' | 'coffee_chat' | 'memo' | 'other';
+export type InteractionType = 'meeting' | 'call' | 'message' | 'research_meeting' | 'memo' | 'other';
 
 export interface Interaction {
   id: string;
-  userId: string;        // 기록하는 사용자
-  targetUserId: string;  // 대상 인물
+  userId: string;
+  targetUserId: string;
   type: InteractionType;
   note?: string;
   nextAction?: string;
@@ -324,16 +450,16 @@ export type RelationshipStatus = 'active' | 'warm' | 'cold' | 'dormant';
 export interface QuickCapture {
   id: string;
   name: string;
-  company?: string;
+  institution?: string;          // company → institution
   memo?: string;
   photo?: string;
   createdAt: Date;
   convertedToContactId?: string;
 }
 
-// ==================== 나의 모임 초대 ====================
+// ==================== 연구실 초대 (ManagedGroupInvite 대체) ====================
 
-export interface ManagedGroupInvite {
+export interface LabInvite {
   id: string;
   groupId: string;
   groupName: string;
@@ -343,4 +469,25 @@ export interface ManagedGroupInvite {
   useCount: number;
   createdAt: Date;
   expiresAt?: Date;
+}
+// 기존 코드 호환용 alias
+export type ManagedGroupInvite = LabInvite;
+
+// ==================== 협업 기회 (신규) ====================
+
+export type CollaborationType = 'co-authoring' | 'grant-proposal' | 'data-sharing' | 'postdoc-position' | 'consulting' | 'other';
+
+export interface CollaborationOpportunity {
+  id: string;
+  postedBy: string;
+  title: string;
+  description: string;
+  type: CollaborationType;
+  researchFields: ResearchField[];
+  requiredSkills: string[];
+  deadline?: Date;
+  isOpen: boolean;
+  applicantIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }

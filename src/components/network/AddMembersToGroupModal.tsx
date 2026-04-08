@@ -191,9 +191,9 @@ export default function AddMembersToGroupModal() {
     return availableNodes.filter(
       (n) =>
         n.name.toLowerCase().includes(query) ||
-        n.company?.toLowerCase().includes(query) ||
+        n.institution?.toLowerCase().includes(query) ||
         n.position?.toLowerCase().includes(query) ||
-        n.keywords.some((k) => k.toLowerCase().includes(query))
+        n.researchInterests.some((k) => k.toLowerCase().includes(query))
     );
   }, [availableNodes, searchQuery]);
 
@@ -213,13 +213,13 @@ export default function AddMembersToGroupModal() {
       // 검색 허용 설정 확인
       if (!user.privacySettings?.allowProfileDiscovery) return false;
 
-      // 자연어 검색: 이름, 회사, 직책, 키워드, bio 모두 검색
+      // 자연어 검색: 이름, 소속 기관, 직책, 연구 관심사, bio 모두 검색
       return (
         user.name.toLowerCase().includes(query) ||
-        user.company?.toLowerCase().includes(query) ||
+        user.institution?.toLowerCase().includes(query) ||
         user.position?.toLowerCase().includes(query) ||
         user.bio?.toLowerCase().includes(query) ||
-        user.keywords.some((k) => k.toLowerCase().includes(query))
+        user.researchInterests.some((k) => k.toLowerCase().includes(query))
       );
     });
   }, [searchQuery, availableNodes, existingMemberIds]);
@@ -420,7 +420,7 @@ export default function AddMembersToGroupModal() {
                                   )}
                                 </div>
                                 <p className="text-xs text-[#8B949E]">
-                                  {node.company} {node.position && `· ${node.position}`}
+                                  {node.institution} {node.position && `· ${node.position}`}
                                 </p>
                                 <div className="mt-1.5 p-2 bg-[#A78BFA]/5 rounded-lg border border-[#A78BFA]/10">
                                   <p className="text-xs text-[#C4B5FD] leading-relaxed">
@@ -433,7 +433,7 @@ export default function AddMembersToGroupModal() {
                         })
                       ) : (
                         <p className="text-sm text-[#8B949E] py-2 text-center">
-                          관련된 추천 인맥이 없습니다. 다른 키워드로 검색해보세요.
+                          관련된 추천 인맥이 없습니다. 다른 연구 관심사로 검색해보세요.
                         </p>
                       )}
                     </div>
@@ -508,7 +508,7 @@ export default function AddMembersToGroupModal() {
                               </span>
                             </div>
                             <p className="text-xs text-[#8B949E] truncate">
-                              {node.company} {node.position && `· ${node.position}`}
+                              {node.institution} {node.position && `· ${node.position}`}
                             </p>
                           </div>
                         </button>
@@ -556,7 +556,7 @@ export default function AddMembersToGroupModal() {
                               </span>
                             </div>
                             <p className="text-xs text-[#8B949E] truncate">
-                              {user.company} {user.position && `· ${user.position}`}
+                              {user.institution} {user.position && `· ${user.position}`}
                             </p>
                           </div>
                         </button>
@@ -596,7 +596,7 @@ export default function AddMembersToGroupModal() {
                     </>
                   ) : (
                     <p className="text-[#8B949E] text-sm">
-                      이름, 회사, 키워드로 검색하거나<br />
+                      이름, 소속 기관, 연구 관심사로 검색하거나<br />
                       AI에게 추천을 요청해보세요
                     </p>
                   )}

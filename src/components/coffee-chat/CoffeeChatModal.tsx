@@ -127,9 +127,9 @@ export default function CoffeeChatModal() {
               <h3 className="text-lg font-bold text-white">
                 {targetUser?.name}님께 메세지 보내기
               </h3>
-              {targetUser?.company && (
+              {targetUser?.institution && (
                 <p className="text-base text-[#8B949E] mt-2">
-                  {targetUser.company} · {targetUser.position}
+                  {targetUser.institution} · {targetUser.position}
                 </p>
               )}
             </div>

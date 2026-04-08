@@ -13,7 +13,7 @@ interface MemberNode extends ManagedGroupMember {
   vy: number;
   ring: number; // 0=president, 1=executive/admin, 2=member
   radius: number;
-  category?: string;
+  researchField?: string;
 }
 
 interface GroupNetworkGraphProps {
@@ -193,11 +193,10 @@ export default function GroupNetworkGraph({
     const categoryColors = Object.keys(CATEGORY_COLORS).filter(k => k !== 'default');
 
     outerRing.forEach((m, idx) => {
-      let cat = m.user?.category || m.user?.industry;
-      // 분야 정보가 없으면 색상 팔레트를 순환하며 분배
-      if (!cat) {
-        cat = categoryColors[idx % categoryColors.length];
-      }
+      let cat: string = m.user?.researchField
+        // 분야 정보가 없으면 색상 팔레트를 순환하며 분배
+        || categoryColors[idx % categoryColors.length]
+        || 'default';
       if (!categoryMap.has(cat)) categoryMap.set(cat, []);
       categoryMap.get(cat)!.push({ ...m, assignedCategory: cat } as typeof m & { assignedCategory: string });
     });
@@ -215,7 +214,7 @@ export default function GroupNetworkGraph({
         vy: 0,
         ring: 0,
         radius: isMobile ? 40 : NODE_SIZES[0],
-        category: (centerMember.user as any)?.category,
+        researchField: (centerMember.user as any)?.researchField,
       });
     }
 
@@ -231,7 +230,7 @@ export default function GroupNetworkGraph({
         vy: 0,
         ring: 1,
         radius: isMobile ? 32 : NODE_SIZES[1],
-        category: (member.user as any)?.category,
+        researchField: (member.user as any)?.researchField,
       });
     });
 
@@ -277,7 +276,7 @@ export default function GroupNetworkGraph({
           vy: 0,
           ring: 2,
           radius: nodeSize,
-          category: assignedCat,
+          researchField: assignedCat,
         });
       });
     });
@@ -463,7 +462,7 @@ export default function GroupNetworkGraph({
 
         // 각 분야별 중심과 최대 거리 계산
         memberNodes.forEach(node => {
-          const cat = node.category || 'default';
+          const cat = node.researchField || 'default';
           if (!categoryData.has(cat)) {
             categoryData.set(cat, { sumX: 0, sumY: 0, maxDist: 0, count: 0 });
           }
@@ -525,7 +524,7 @@ export default function GroupNetworkGraph({
       // 분야별 그룹핑
       const categoryGroups = new Map<string, MemberNode[]>();
       memberNodes.forEach(node => {
-        const cat = node.category || 'default';
+        const cat = node.researchField || 'default';
         if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
         categoryGroups.get(cat)!.push(node);
       });
@@ -547,7 +546,7 @@ export default function GroupNetworkGraph({
           }
         });
 
-        const catColor = CATEGORY_COLORS[member.category || 'default'] || CATEGORY_COLORS['default'];
+        const catColor = CATEGORY_COLORS[member.researchField || 'default'] || CATEGORY_COLORS['default'];
 
         ctx.beginPath();
         ctx.moveTo(closestCore.x, closestCore.y);
@@ -585,7 +584,7 @@ export default function GroupNetworkGraph({
           borderColor = '#FFA657'; // 회장단 - 오렌지
         } else {
           // 일반 멤버 - 분야별 색상
-          borderColor = CATEGORY_COLORS[node.category || 'default'] || CATEGORY_COLORS['default'];
+          borderColor = CATEGORY_COLORS[node.researchField || 'default'] || CATEGORY_COLORS['default'];
         }
 
         // Glow - 모든 노드에 분야별 색상 글로우 적용

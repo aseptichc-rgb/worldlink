@@ -74,14 +74,14 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
     }
   }, []);
 
-  // 명함 데이터 로드 (Firebase에서 가져오기)
+  // 프로필 카드 데이터 로드 (Firebase에서 가져오기)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadCard = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     let firebaseError = false;
 
-    // 1. Firebase에서 공개 명함 조회
+    // 1. Firebase에서 공개 프로필 카드 조회
     try {
       const publicCard = await getPublicCard(cardId);
       if (publicCard) {
@@ -89,13 +89,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
           id: publicCard.id,
           userId: publicCard.id,
           name: publicCard.name,
-          company: publicCard.company,
+          institution: publicCard.institution,
           position: publicCard.position,
           email: publicCard.email,
           phone: publicCard.phone,
           bio: publicCard.bio,
           profileImage: publicCard.profileImage,
-          keywords: publicCard.keywords || [],
+          researchInterests: publicCard.researchInterests || [],
           networkVisibility: 'connections_only',
           qrCode: '',
           createdAt: new Date(),
@@ -113,30 +113,30 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
     try {
       const userData = await getUser(cardId);
       if (userData) {
-        // 찾은 데이터로 공개 명함 자동 생성
+        // 찾은 데이터로 공개 프로필 카드 자동 생성
         savePublicCard({
           id: userData.id,
           name: userData.name,
-          company: userData.company,
+          institution: userData.institution,
           position: userData.position,
           email: userData.email,
           phone: userData.phone,
           bio: userData.bio,
           profileImage: userData.profileImage,
-          keywords: userData.keywords,
+          researchInterests: userData.researchInterests,
         }).catch(() => {});
 
         setCard({
           id: userData.id,
           userId: userData.id,
           name: userData.name,
-          company: userData.company,
+          institution: userData.institution,
           position: userData.position,
           email: userData.email,
           phone: userData.phone,
           bio: userData.bio,
           profileImage: userData.profileImage,
-          keywords: userData.keywords || [],
+          researchInterests: userData.researchInterests || [],
           networkVisibility: 'connections_only',
           qrCode: '',
           createdAt: new Date(),
@@ -160,13 +160,13 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
           id: parsed.id,
           userId: parsed.id,
           name: parsed.name,
-          company: parsed.company,
+          institution: parsed.institution,
           position: parsed.position,
           email: parsed.email,
           phone: parsed.phone,
           bio: parsed.bio,
           profileImage: parsed.profileImage,
-          keywords: parsed.keywords || [],
+          researchInterests: parsed.researchInterests || [],
           networkVisibility: 'connections_only',
           qrCode: '',
           createdAt: new Date(),
@@ -261,8 +261,8 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
     if (card && navigator.share) {
       try {
         await navigator.share({
-          title: `${card.name}의 명함`,
-          text: `${card.name} | ${card.position} @ ${card.company}`,
+          title: `${card.name}의 프로필 카드`,
+          text: `${card.name} | ${card.position} @ ${card.institution}`,
           url: window.location.href,
         });
       } catch {
@@ -313,7 +313,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
             </>
           ) : (
             <>
-              <h1 className="text-xl font-semibold text-white mb-2">명함을 찾을 수 없습니다</h1>
+              <h1 className="text-xl font-semibold text-white mb-2">프로필 카드를 찾을 수 없습니다</h1>
               <p className="text-[#8B949E] mb-6">QR 코드가 유효하지 않거나 만료되었습니다</p>
               <button
                 onClick={() => router.push('/')}
@@ -346,7 +346,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
       </div>
 
       <div className="p-4 pb-32 space-y-6">
-        {/* 명함 카드 */}
+        {/* 프로필 카드 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -373,10 +373,10 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                     <span className="text-base">{card.position}</span>
                   </div>
                 )}
-                {card.company && (
+                {card.institution && (
                   <div className="flex items-center gap-2 text-[#8B949E]">
                     <Building2 size={14} />
-                    <span className="text-base">{card.company}</span>
+                    <span className="text-base">{card.institution}</span>
                   </div>
                 )}
               </div>
@@ -407,10 +407,10 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               </p>
             )}
 
-            {/* 키워드 태그 */}
-            {card.keywords && card.keywords.length > 0 && (
+            {/* 연구 관심사 태그 */}
+            {card.researchInterests && card.researchInterests.length > 0 && (
               <div className="flex flex-wrap gap-3 px-1">
-                {card.keywords.slice(0, 6).map((keyword, idx) => (
+                {card.researchInterests.slice(0, 6).map((keyword, idx) => (
                   <span
                     key={idx}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium rounded-lg bg-[#58A6FF]/10 text-[#58A6FF]"
@@ -453,7 +453,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 ) : (
                   <>
                     <p className="text-sm text-[#8B949E] mb-3">
-                      홈 화면에 추가하면 언제든 명함을 확인할 수 있어요
+                      홈 화면에 추가하면 언제든 프로필 카드를 확인할 수 있어요
                     </p>
                     <button
                       onClick={handleInstallPwa}
@@ -481,8 +481,8 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                 <UserPlus size={20} className="text-[#3FB950]" />
               </div>
               <div>
-                <p className="text-base font-medium text-[#3FB950]">명함이 저장되었습니다!</p>
-                <p className="text-sm text-[#8B949E]">내 명함첩에서 확인할 수 있어요</p>
+                <p className="text-base font-medium text-[#3FB950]">프로필 카드가 저장되었습니다!</p>
+                <p className="text-sm text-[#8B949E]">내 프로필 카드첩에서 확인할 수 있어요</p>
               </div>
             </div>
           </motion.div>
@@ -499,7 +499,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
               className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#58A6FF] text-[#0D1117] font-semibold rounded-xl"
             >
               <Plus size={20} />
-              명함 저장하기
+              프로필 카드 저장
             </motion.button>
           ) : (
             <motion.button
@@ -549,12 +549,12 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                   <MessageCircle size={28} className="text-[#58A6FF]" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  {authAction === 'message' ? '메시지를 보내시겠어요?' : '명함을 저장하시겠어요?'}
+                  {authAction === 'message' ? '메시지를 보내시겠어요?' : '프로필 카드를 저장하시겠어요?'}
                 </h3>
                 <p className="text-base text-[#8B949E]">
                   {authAction === 'message'
                     ? '메시지를 보내려면 간단한 가입이 필요해요'
-                    : '내 명함을 만들고 네트워크를 확장해보세요'}
+                    : '내 프로필 카드를 만들고 네트워크를 확장해보세요'}
                 </p>
               </div>
 
@@ -612,7 +612,7 @@ export default function PublicCardViewPage({ params }: { params: Promise<{ cardI
                   홈 화면에 추가하시겠어요?
                 </h3>
                 <p className="text-base text-[#8B949E]">
-                  앱처럼 사용하고 언제든 {card.name}님의 명함을 확인하세요
+                  앱처럼 사용하고 언제든 {card.name}님의 프로필 카드를 확인하세요
                 </p>
               </div>
 

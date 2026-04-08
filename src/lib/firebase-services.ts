@@ -141,7 +141,7 @@ export const searchUsersByKeyword = async (keywords: string[]): Promise<User[]> 
   const usersRef = collection(db, 'users');
   const q = query(
     usersRef,
-    where('keywords', 'array-contains-any', keywords),
+    where('researchInterests', 'array-contains-any', keywords),
     limit(50)
   );
 
@@ -639,7 +639,7 @@ const NAME_CATEGORY_MAP: Record<string, string> = {
   ...DEMO_NAME_CATEGORY_MAP,
 };
 
-export const getNetworkGraph = async (userId: string, userData?: { name?: string; profileImage?: string; company?: string; position?: string; keywords?: string[] }): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
+export const getNetworkGraph = async (userId: string, userData?: { name?: string; profileImage?: string; institution?: string; position?: string; researchInterests?: string[] }): Promise<{ nodes: NetworkNode[]; edges: NetworkEdge[] }> => {
   // 데모 모드에서 매칭되는 사용자는 항상 데모 네트워크 사용
   const isDemoMode = typeof window !== 'undefined' && localStorage.getItem('nodded_demo_mode') === 'true';
   if (isDemoMode) {
@@ -663,11 +663,11 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
       id: userId,
       name: userData?.name || '나',
       profileImage: userData?.profileImage,
-      company: userData?.company,
+      institution: userData?.institution,
       position: userData?.position,
-      keywords: userData?.keywords || [],
+      researchInterests: userData?.researchInterests || [],
       degree: 0,
-      category: '',
+      researchField: undefined,
       connectionCount: 0,
     };
     return { nodes: [centerNode], edges: [] };
@@ -686,12 +686,12 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     id: currentUser.id,
     name: currentUser.name,
     profileImage: currentUser.profileImage,
-    company: currentUser.company,
+    institution: currentUser.institution,
     position: currentUser.position,
-    keywords: currentUser.keywords,
+    researchInterests: currentUser.researchInterests,
     degree: 0,
     connectionCount: 0,
-    category: currentUser.category || NAME_CATEGORY_MAP[currentUser.name] || inferCategory(currentUser),
+    researchField: currentUser.researchField || NAME_CATEGORY_MAP[currentUser.name] as any || inferCategory(currentUser),
   });
   userMap.set(currentUser.id, currentUser);
 
@@ -715,12 +715,12 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
         id: connectedUser.id,
         name: connectedUser.name,
         profileImage: connectedUser.profileImage,
-        company: connectedUser.company,
+        institution: connectedUser.institution,
         position: connectedUser.position,
-        keywords: connectedUser.keywords,
+        researchInterests: connectedUser.researchInterests,
         degree: 1,
         connectionCount: 0,
-        category: connectedUser.category || NAME_CATEGORY_MAP[connectedUser.name] || inferCategory(connectedUser),
+        researchField: connectedUser.researchField || NAME_CATEGORY_MAP[connectedUser.name] as any || inferCategory(connectedUser),
       });
 
       edges.push({
@@ -760,19 +760,19 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
     edge => !duplicateIds.has(edge.source) && !duplicateIds.has(edge.target)
   );
 
-  // Update connection counts and ensure category
+  // Update connection counts and ensure researchField
   filteredNodes.forEach(node => {
     node.connectionCount = filteredEdges.filter(
       edge => edge.source === node.id || edge.target === node.id
     ).length;
-    // category fallback: Firestore에 category가 없으면 이름 매핑 → 자동 추론
-    if (!node.category) {
-      node.category = NAME_CATEGORY_MAP[node.name];
+    // researchField fallback: Firestore에 researchField가 없으면 이름 매핑 → 자동 추론
+    if (!node.researchField) {
+      node.researchField = NAME_CATEGORY_MAP[node.name] as any;
     }
-    if (!node.category) {
+    if (!node.researchField) {
       const userData = userMap.get(node.id);
       if (userData) {
-        node.category = inferCategory(userData);
+        node.researchField = inferCategory(userData);
       }
     }
   });
@@ -793,14 +793,11 @@ export const getNetworkGraph = async (userId: string, userData?: { name?: string
       const importedNode: NetworkNode = {
         id: contact.id || `imported_${contact.phone?.replace(/[^0-9]/g, '') || Date.now()}`,
         name: contact.name,
-        company: contact.company,
+        institution: contact.company,
         position: contact.position,
-        keywords: [],
+        researchInterests: [],
         degree: 1,
         connectionCount: 0,
-        isImported: true,
-        importedByUserId: userId,
-        phone: contact.phone,
         email: contact.email,
       };
 
@@ -951,21 +948,21 @@ export const getRecommendations = async (userId: string, count: number = 3): Pro
   const recommendations: Recommendation[] = [];
 
   for (const node of secondDegreeNodes) {
-    // Calculate keyword match (intersection / union)
-    const userKeywords = new Set(currentUser.keywords.map(k => k.toLowerCase()));
-    const nodeKeywords = new Set(node.keywords.map(k => k.toLowerCase()));
-    const intersection = [...userKeywords].filter(k => nodeKeywords.has(k)).length;
-    const union = new Set([...userKeywords, ...nodeKeywords]).size;
-    const keywordMatch = union > 0 ? intersection / union : 0;
+    // Calculate interest overlap (intersection / union)
+    const userInterests = new Set(currentUser.researchInterests.map(k => k.toLowerCase()));
+    const nodeInterests = new Set(node.researchInterests.map(k => k.toLowerCase()));
+    const intersection = [...userInterests].filter(k => nodeInterests.has(k)).length;
+    const union = new Set([...userInterests, ...nodeInterests]).size;
+    const interestOverlap = union > 0 ? intersection / union : 0;
 
-    // Proximity score (inverse of degree)
-    const proximityScore = 1 / node.degree;
+    // Field relevance (inverse of degree)
+    const fieldRelevance = 1 / node.degree;
 
     // Get mutual connections count
     const mutualConnections = node.connectionCount;
 
     // Calculate total score: S = 0.6K + 0.4P (simplified from the original formula)
-    const score = 0.6 * keywordMatch + 0.4 * proximityScore;
+    const score = 0.6 * interestOverlap + 0.4 * fieldRelevance;
 
     // Get connection path
     const connectionPath = await findConnectionPath(userId, node.id);
@@ -976,11 +973,11 @@ export const getRecommendations = async (userId: string, count: number = 3): Pro
         userId: node.id,
         user: nodeUser,
         score,
-        keywordMatch,
-        proximityScore,
+        interestOverlap,
+        fieldRelevance,
         mutualConnections,
         connectionPath,
-        reason: keywordMatch > 0
+        reason: interestOverlap > 0
           ? `${currentUser.name}님과 관심사가 비슷합니다`
           : `${mutualConnections}명의 공통 인맥이 있습니다`,
       });
@@ -998,13 +995,13 @@ export const getRecommendations = async (userId: string, count: number = 3): Pro
 export const savePublicCard = async (card: {
   id: string;
   name: string;
-  company?: string;
+  institution?: string;
   position?: string;
   email?: string;
   phone?: string;
   bio?: string;
   profileImage?: string;
-  keywords: string[];
+  researchInterests: string[];
 }): Promise<void> => {
   const cardRef = doc(db, 'publicCards', card.id);
   const cleanedData = Object.fromEntries(
@@ -1019,13 +1016,13 @@ export const savePublicCard = async (card: {
 export const getPublicCard = async (cardId: string): Promise<{
   id: string;
   name: string;
-  company?: string;
+  institution?: string;
   position?: string;
   email?: string;
   phone?: string;
   bio?: string;
   profileImage?: string;
-  keywords: string[];
+  researchInterests: string[];
 } | null> => {
   const cardRef = doc(db, 'publicCards', cardId);
   const cardSnap = await getDoc(cardRef);
@@ -1034,13 +1031,13 @@ export const getPublicCard = async (cardId: string): Promise<{
   return {
     id: cardSnap.id,
     name: data.name,
-    company: data.company,
+    institution: data.institution,
     position: data.position,
     email: data.email,
     phone: data.phone,
     bio: data.bio,
     profileImage: data.profileImage,
-    keywords: data.keywords || [],
+    researchInterests: data.researchInterests || [],
   };
 };
 
@@ -1324,6 +1321,7 @@ const parseManagedGroupDoc = (docSnap: any): ManagedGroup => {
     description: data.description,
     color: data.color,
     icon: data.icon,
+    piId: data.piId || data.ownerId,
     ownerId: data.ownerId,
     members: uniqueMembers,
     memberUserIds: uniqueMemberUserIds,
@@ -1347,6 +1345,7 @@ export const createManagedGroup = async (
     description: data.description || '',
     color: data.color,
     icon: data.icon,
+    piId: ownerId,
     ownerId,
     members: [{ userId: ownerId, role: 'president', joinedAt: now }],
     memberUserIds: [ownerId],
@@ -1493,8 +1492,8 @@ export const addMemberToManagedGroup = async (
     for (const existingMember of group.members) {
       if (existingMember.userId !== userId) {
         const connRef = doc(collection(db, 'connections'));
-        // 초대자와의 연결은 invite 타입, 나머지는 managed_group (둘 다 네트워크에 표시됨)
-        const method = inviterId && existingMember.userId === inviterId ? 'invite' : 'managed_group';
+        // 초대자와의 연결은 invite 타입, 나머지는 lab (둘 다 네트워크에 표시됨)
+        const method = inviterId && existingMember.userId === inviterId ? 'invite' : 'lab';
         batch.set(connRef, {
           id: connRef.id,
           fromUserId: userId,
@@ -1762,7 +1761,7 @@ export const migrateGroupConnectionMethods = async (): Promise<{ fixed: number; 
         const conn = connDoc.data();
         const otherUserId = conn.fromUserId === userId ? conn.toUserId : conn.fromUserId;
         if (conn.method === 'invite' && memberSet.has(otherUserId)) {
-          batch.update(connDoc.ref, { method: 'managed_group' });
+          batch.update(connDoc.ref, { method: 'lab' });
           batchCount++;
           alreadyFixed.add(connDoc.id);
         }

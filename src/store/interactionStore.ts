@@ -29,7 +29,7 @@ interface InteractionState {
   }>;
 
   // Quick Capture actions
-  addQuickCapture: (name: string, company?: string, memo?: string) => void;
+  addQuickCapture: (name: string, institution?: string, memo?: string) => void;
   removeQuickCapture: (id: string) => void;
 
   // Demo
@@ -45,12 +45,12 @@ function seededRandom(seed: number) {
   };
 }
 
-const INTERACTION_TYPES: InteractionType[] = ['meeting', 'call', 'message', 'coffee_chat', 'other'];
+const INTERACTION_TYPES: InteractionType[] = ['meeting', 'call', 'message', 'research_meeting', 'other'];
 const DEMO_NOTES: Record<InteractionType, string[]> = {
   meeting: ['점심 미팅', '오피스 방문', '세미나에서 만남', '네트워킹 행사', '프로젝트 미팅'],
   call: ['투자 관련 통화', '근황 통화', '협업 논의', '조언 요청', '인사 전화'],
   message: ['카카오톡 안부', '이메일 회신', '링크드인 메시지', '자료 공유'],
-  coffee_chat: ['커피챗 미팅', '1:1 대화', '오프라인 만남'],
+  research_meeting: ['커피챗 미팅', '1:1 대화', '오프라인 만남'],
   memo: ['메모 업데이트'],
   other: ['소개 연결', '행사 초대', '선물 전달'],
 };
@@ -137,11 +137,11 @@ export const useInteractionStore = create<InteractionState>()(
         return reminders;
       },
 
-      addQuickCapture: (name, company, memo) => {
+      addQuickCapture: (name, institution, memo) => {
         const capture: QuickCapture = {
           id: `qc-${Date.now()}`,
           name,
-          company,
+          institution,
           memo,
           createdAt: new Date(),
         };

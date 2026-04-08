@@ -23,9 +23,9 @@ export default function SmartMatchCard({ nodes }: SmartMatchCardProps) {
 
   const getPersonInfo = (userId: string) => {
     const node = nodes.find(n => n.id === userId);
-    if (node) return { name: node.name, company: node.company, profileImage: node.profileImage };
+    if (node) return { name: node.name, company: node.institution, profileImage: node.profileImage };
     const demo = demoUsers.find(u => u.id === userId);
-    if (demo) return { name: demo.name, company: demo.company, profileImage: demo.profileImage };
+    if (demo) return { name: demo.name, company: demo.institution, profileImage: demo.profileImage };
     return { name: '알 수 없음', company: '', profileImage: undefined };
   };
 

@@ -16,7 +16,7 @@ export interface PrivacyConsentData {
   allowProfileDiscovery: boolean;
   displaySettings: {
     nameDisplay: 'full' | 'partial';
-    companyDisplay: 'full' | 'industry' | 'size' | 'hidden';
+    institutionDisplay: 'full' | 'department' | 'hidden';
     positionDisplay: 'full' | 'level' | 'hidden';
   };
 }
@@ -24,63 +24,41 @@ export interface PrivacyConsentData {
 export interface ProfileData {
   name: string;
   phone: string;
-  company: string;
+  institution: string;
+  department: string;
   position: string;
-  // 회사 규모 (비식별화 표시용)
-  companySize?: 'startup' | 'sme' | 'enterprise' | 'freelance';
-  // 업종 (비식별화 표시용)
-  industry?: string;
-  // 직급 수준 (비식별화 표시용)
-  positionLevel?: 'entry' | 'staff' | 'manager' | 'executive';
+  degree: string;
+  orcid: string;
   bio: string;
-  keywords: string[];
+  researchInterests: string[];
   profileImage?: File;
-  // 개인정보 공개 동의
   privacyConsent: PrivacyConsentData;
 }
 
 const suggestedKeywords = [
-  '스타트업', 'SaaS', 'AI', '마케팅', '투자', '개발',
-  'UX디자인', 'PM', '세일즈', '콘텐츠', '브랜딩', 'B2B',
-  'Web3', '핀테크', '이커머스', '헬스케어', '에듀테크', 'HR'
+  'AI', '머신러닝', '자연어처리', '컴퓨터비전', '데이터사이언스', '로보틱스',
+  '신경과학', '생명공학', '재료과학', '양자컴퓨팅', '기후변화', '유전공학',
+  '나노기술', '약학', '천문학', '경제학', '심리학', '사회학'
 ];
 
-const industryOptions = [
-  'IT/소프트웨어', '금융/핀테크', '제조업', '유통/물류', '의료/헬스케어',
-  '교육', '미디어/엔터테인먼트', '컨설팅', '마케팅/광고', '기타'
-];
-
-const companySizeOptions = [
-  { value: 'startup', label: '스타트업 (1-50명)' },
-  { value: 'sme', label: '중소기업 (51-300명)' },
-  { value: 'enterprise', label: '대기업 (300명+)' },
-  { value: 'freelance', label: '프리랜서/1인 기업' },
-];
-
-const positionLevelOptions = [
-  { value: 'entry', label: '사원/주니어급' },
-  { value: 'staff', label: '실무자/시니어급' },
-  { value: 'manager', label: '관리자/팀장급' },
-  { value: 'executive', label: '임원/C-Level' },
-];
 
 export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileSetupProps) {
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<ProfileData>({
     name: '',
     phone: '',
-    company: '',
+    institution: '',
+    department: '',
     position: '',
-    companySize: undefined,
-    industry: undefined,
-    positionLevel: undefined,
+    degree: '',
+    orcid: '',
     bio: '',
-    keywords: [],
+    researchInterests: [],
     privacyConsent: {
       allowProfileDiscovery: false,
       displaySettings: {
         nameDisplay: 'partial',
-        companyDisplay: 'industry',
+        institutionDisplay: 'full',
         positionDisplay: 'full',
       },
     },
@@ -98,7 +76,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
           setPopularKeywords(keywords);
         }
       } catch (error) {
-        // 인기 키워드 로드 실패 시 기본 키워드 사용
+        // 인기 연구 관심사 로드 실패 시 기본 연구 관심사 사용
       }
     };
     loadKeywords();
@@ -120,10 +98,10 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
     const cleanKeyword = keyword.trim().replace(/^#/, '');
     if (
       cleanKeyword &&
-      !profile.keywords.includes(cleanKeyword) &&
-      profile.keywords.length < 5
+      !profile.researchInterests.includes(cleanKeyword) &&
+      profile.researchInterests.length < 5
     ) {
-      setProfile({ ...profile, keywords: [...profile.keywords, cleanKeyword] });
+      setProfile({ ...profile, researchInterests: [...profile.researchInterests, cleanKeyword] });
       setKeywordInput('');
     }
   };
@@ -131,7 +109,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
   const removeKeyword = (keyword: string) => {
     setProfile({
       ...profile,
-      keywords: profile.keywords.filter((k) => k !== keyword),
+      researchInterests: profile.researchInterests.filter((k) => k !== keyword),
     });
   };
 
@@ -146,8 +124,8 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
     } else if (!/^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$/.test(profile.phone.replace(/-/g, ''))) {
       newErrors.phone = '올바른 전화번호 형식이 아닙니다';
     }
-    if (!profile.company.trim()) {
-      newErrors.company = '소속을 입력해주세요';
+    if (!profile.institution.trim()) {
+      newErrors.institution = '소속 기관을 입력해주세요';
     }
 
 
@@ -156,8 +134,8 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
   };
 
   const validateStep2 = () => {
-    if (profile.keywords.length === 0) {
-      setErrors({ keywords: '최소 1개의 키워드를 선택해주세요' });
+    if (profile.researchInterests.length === 0) {
+      setErrors({ researchInterests: '최소 1개의 연구 관심사를 선택해주세요' });
       return false;
     }
     setErrors({});
@@ -177,7 +155,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
   const filteredSuggestions = (popularKeywords.length > 0 ? popularKeywords : suggestedKeywords)
     .filter(
       (k) =>
-        !profile.keywords.includes(k) &&
+        !profile.researchInterests.includes(k) &&
         (keywordInput === '' || k.toLowerCase().includes(keywordInput.toLowerCase()))
     )
     .slice(0, 8);
@@ -261,19 +239,58 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
             />
 
             <Input
-              label="소속"
-              placeholder="회사명 또는 소속 기관"
-              value={profile.company}
-              onChange={(e) => setProfile({ ...profile, company: e.target.value })}
-              error={errors.company}
+              label="소속 기관"
+              placeholder="대학교, 연구소, 기관명"
+              value={profile.institution}
+              onChange={(e) => setProfile({ ...profile, institution: e.target.value })}
+              error={errors.institution}
             />
 
             <Input
-              label="직함"
-              placeholder="예: CEO, 개발팀장, 프리랜서 디자이너"
+              label="학과/부서"
+              placeholder="예: 컴퓨터공학과, AI연구실"
+              value={profile.department}
+              onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+            />
+
+            <Input
+              label="직위"
+              placeholder="예: 조교수, 박사과정, 연구원"
               value={profile.position}
               onChange={(e) => setProfile({ ...profile, position: e.target.value })}
               error={errors.position}
+            />
+
+            <div>
+              <label className="block text-base font-medium text-[#8B949E] mb-3">학위</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'bachelor', label: '학사' },
+                  { value: 'master', label: '석사' },
+                  { value: 'phd', label: '박사' },
+                  { value: 'postdoc', label: '포닥' },
+                  { value: 'professor', label: '교수' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setProfile({ ...profile, degree: opt.value })}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      profile.degree === opt.value
+                        ? 'bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/30'
+                        : 'bg-[#252525] text-[#8B949E] border border-[#30363D]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Input
+              label="ORCID (선택)"
+              placeholder="0000-0000-0000-0000"
+              value={profile.orcid}
+              onChange={(e) => setProfile({ ...profile, orcid: e.target.value })}
             />
 
             <div>
@@ -330,17 +347,17 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
             className="space-y-6"
           >
             <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold text-white mb-3">관심 키워드</h2>
+              <h2 className="text-2xl font-bold text-white mb-3">연구 관심사</h2>
               <p className="text-[#8B949E]">
-                나를 표현하는 키워드를 선택해주세요 (1~5개)
+                나를 표현하는 연구 관심사를 선택해주세요 (1~5개)
               </p>
             </div>
 
             {/* Selected Keywords */}
             <div className="min-h-[60px] p-5 bg-[#161B22] border border-[#30363D] rounded-lg">
-              {profile.keywords.length > 0 ? (
+              {profile.researchInterests.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {profile.keywords.map((keyword) => (
+                  {profile.researchInterests.map((keyword) => (
                     <Tag
                       key={keyword}
                       label={keyword}
@@ -351,19 +368,19 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                 </div>
               ) : (
                 <p className="text-[#484F58] text-base text-center">
-                  아래에서 키워드를 선택하거나 직접 입력하세요
+                  아래에서 연구 관심사를 선택하거나 직접 입력하세요
                 </p>
               )}
             </div>
 
-            {errors.keywords && (
-              <p className="text-[#FF6B8A] text-base">{errors.keywords}</p>
+            {errors.researchInterests && (
+              <p className="text-[#FF6B8A] text-base">{errors.researchInterests}</p>
             )}
 
             {/* Keyword Input */}
             <div className="relative">
               <Input
-                placeholder="키워드 검색 또는 직접 입력"
+                placeholder="연구 관심사 검색 또는 직접 입력"
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -386,7 +403,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
 
             {/* Suggested Keywords */}
             <div>
-              <p className="text-base text-[#8B949E] mb-4">추천 키워드</p>
+              <p className="text-base text-[#8B949E] mb-4">추천 연구 관심사</p>
               <div className="flex flex-wrap gap-2.5">
                 {filteredSuggestions.map((keyword) => (
                   <Tag
@@ -411,7 +428,7 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                 onClick={handleNext}
                 className="flex-[2] bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] hover:from-[#58A6FF] hover:to-[#8B7EFF]"
                 size="lg"
-                disabled={profile.keywords.length === 0}
+                disabled={profile.researchInterests.length === 0}
               >
                 다음
               </Button>
@@ -529,43 +546,17 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                     </div>
                   </div>
 
-                  {/* 회사 표시 설정 */}
+                  {/* 소속 기관 표시 설정 */}
                   <div className="p-5 bg-[#161B22] border border-[#30363D] rounded-lg">
                     <div className="flex items-center gap-2.5 mb-4">
                       <Building2 size={16} className="text-[#1F6FEB]" />
-                      <h4 className="text-white font-medium text-base">회사 표시</h4>
+                      <h4 className="text-white font-medium text-base">소속 기관 표시</h4>
                     </div>
                     <div className="space-y-3">
-                      {/* 업종/규모 선택이 없으면 먼저 선택하도록 안내 */}
-                      {(!profile.industry || !profile.companySize) && (
-                        <div className="mb-3 space-y-2">
-                          <select
-                            value={profile.industry || ''}
-                            onChange={(e) => setProfile({ ...profile, industry: e.target.value })}
-                            className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#58A6FF]"
-                          >
-                            <option value="">업종 선택</option>
-                            {industryOptions.map((industry) => (
-                              <option key={industry} value={industry}>{industry}</option>
-                            ))}
-                          </select>
-                          <select
-                            value={profile.companySize || ''}
-                            onChange={(e) => setProfile({ ...profile, companySize: e.target.value as ProfileData['companySize'] })}
-                            className="w-full bg-[#1C2333] border border-[#30363D] text-white rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-[#58A6FF]"
-                          >
-                            <option value="">회사 규모 선택</option>
-                            {companySizeOptions.map((size) => (
-                              <option key={size.value} value={size.value}>{size.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         {[
-                          { value: 'industry', label: '업종만', example: profile.industry || 'IT/소프트웨어' },
-                          { value: 'size', label: '규모만', example: companySizeOptions.find(s => s.value === profile.companySize)?.label?.split(' ')[0] || '대기업' },
-                          { value: 'full', label: '회사명 공개', example: profile.company || '회사명' },
+                          { value: 'full', label: '전체 공개', example: profile.institution || '기관명' },
+                          { value: 'department', label: '학과/부서만', example: '컴퓨터공학과' },
                           { value: 'hidden', label: '비공개', example: '표시 안 함' },
                         ].map((option) => (
                           <button
@@ -577,13 +568,13 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                                 ...profile.privacyConsent,
                                 displaySettings: {
                                   ...profile.privacyConsent.displaySettings,
-                                  companyDisplay: option.value as 'full' | 'industry' | 'size' | 'hidden'
+                                  institutionDisplay: option.value as 'full' | 'department' | 'hidden'
                                 }
                               }
                             })}
                             className={`
                               p-4 rounded-lg border transition-all text-left
-                              ${profile.privacyConsent.displaySettings.companyDisplay === option.value
+                              ${profile.privacyConsent.displaySettings.institutionDisplay === option.value
                                 ? 'bg-[#58A6FF]/10 border-[#58A6FF] text-[#58A6FF]'
                                 : 'bg-[#1C2333] border-[#30363D] text-[#8B949E] hover:border-[#484F58]'}
                             `}
@@ -664,13 +655,11 @@ export default function ProfileSetup({ onComplete, isLoading, onBack }: ProfileS
                         <p className="text-[#8B949E] text-sm">
                           {(() => {
                             const parts = [];
-                            if (profile.privacyConsent.displaySettings.companyDisplay !== 'hidden') {
-                              if (profile.privacyConsent.displaySettings.companyDisplay === 'industry') {
-                                parts.push(profile.industry || 'IT/소프트웨어');
-                              } else if (profile.privacyConsent.displaySettings.companyDisplay === 'size') {
-                                parts.push(companySizeOptions.find(s => s.value === profile.companySize)?.label?.split(' ')[0] || '대기업');
+                            if (profile.privacyConsent.displaySettings.institutionDisplay !== 'hidden') {
+                              if (profile.privacyConsent.displaySettings.institutionDisplay === 'department') {
+                                parts.push('학과/부서');
                               } else {
-                                parts.push(profile.company || '회사명');
+                                parts.push(profile.institution || '소속 기관');
                               }
                             }
                             if (profile.privacyConsent.displaySettings.positionDisplay !== 'hidden') {

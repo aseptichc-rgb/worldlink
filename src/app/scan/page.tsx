@@ -170,9 +170,9 @@ export default function ScanPage() {
           const card: BusinessCard = {
             id: parsed.id, userId: parsed.id,
             name: parsed.name, email: parsed.email, phone: parsed.phone,
-            company: parsed.company, position: parsed.position,
+            institution: parsed.institution, position: parsed.position,
             bio: parsed.bio, profileImage: parsed.profileImage,
-            keywords: parsed.keywords || [],
+            researchInterests: parsed.researchInterests || [],
             networkVisibility: 'connections_only', qrCode: data,
             createdAt: new Date(), updatedAt: new Date(),
           };
@@ -188,15 +188,15 @@ export default function ScanPage() {
       if (parsed.type === 'nexus_card') {
         const card: BusinessCard = {
           id: parsed.id, userId: parsed.id,
-          name: parsed.name, company: parsed.company, position: parsed.position,
-          keywords: parsed.keywords || [],
+          name: parsed.name, institution: parsed.institution, position: parsed.position,
+          researchInterests: parsed.researchInterests || [],
           networkVisibility: 'connections_only', qrCode: data,
           createdAt: new Date(), updatedAt: new Date(),
         };
         setScannedCard(card);
         setViewState('qr-result');
       } else {
-        setError('올바른 NODDED 명함 QR 코드가 아닙니다.');
+        setError('올바른 NODDED 프로필 카드 QR 코드가 아닙니다.');
       }
     } catch {
       setError('QR 코드를 인식할 수 없습니다.');
@@ -206,7 +206,7 @@ export default function ScanPage() {
   const handleSaveQrCard = () => {
     if (!scannedCard) return;
     const alreadySaved = savedCards.some(c => c.cardId === scannedCard.id);
-    if (alreadySaved) { setError('이미 저장된 명함입니다.'); return; }
+    if (alreadySaved) { setError('이미 저장된 프로필 카드입니다.'); return; }
 
     addSavedCard({
       id: uuidv4(), ownerId: user?.id || 'guest',
@@ -252,8 +252,8 @@ export default function ScanPage() {
             <ArrowLeft size={24} className="text-white" />
           </button>
           <h1 className="text-lg font-semibold text-white">
-            {viewState === 'camera' && 'QR 명함 스캔'}
-            {viewState === 'qr-result' && 'QR 명함 인식'}
+            {viewState === 'camera' && 'QR 프로필 카드 스캔'}
+            {viewState === 'qr-result' && 'QR 프로필 카드 인식'}
           </h1>
           <div className="w-10" />
         </div>
@@ -332,18 +332,18 @@ export default function ScanPage() {
                         <span className="text-base">{scannedCard.position}</span>
                       </div>
                     )}
-                    {scannedCard.company && (
+                    {scannedCard.institution && (
                       <div className="flex items-center gap-2 text-[#8B949E]">
                         <Building2 size={14} />
-                        <span className="text-base">{scannedCard.company}</span>
+                        <span className="text-base">{scannedCard.institution}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {scannedCard.keywords && scannedCard.keywords.length > 0 && (
+                {scannedCard.researchInterests && scannedCard.researchInterests.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#30363D]">
-                    {scannedCard.keywords.map((keyword, idx) => (
+                    {scannedCard.researchInterests.map((keyword, idx) => (
                       <span key={idx} className="px-3 py-1 text-sm rounded-full bg-[#1F6FEB]/10 text-[#1F6FEB]">
                         {keyword}
                       </span>
@@ -361,7 +361,7 @@ export default function ScanPage() {
                   <div className="w-8 h-8 rounded-full bg-[#3FB950] flex items-center justify-center">
                     <Check size={18} className="text-black" />
                   </div>
-                  <p className="text-[#3FB950] font-medium">명함이 저장되었습니다!</p>
+                  <p className="text-[#3FB950] font-medium">프로필 카드가 저장되었습니다!</p>
                 </motion.div>
               )}
 
@@ -374,7 +374,7 @@ export default function ScanPage() {
                       className="py-4 rounded-xl bg-gradient-to-r from-[#58A6FF] to-[#1F6FEB] text-white font-medium flex items-center justify-center gap-2"
                     >
                       <Plus size={20} />
-                      명함 저장
+                      프로필 카드 저장
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
@@ -386,7 +386,7 @@ export default function ScanPage() {
                     </motion.button>
                   </div>
                   <button onClick={resetAndRestart} className="w-full py-3 text-[#8B949E] text-base">
-                    다른 명함 스캔하기
+                    다른 프로필 카드 스캔하기
                   </button>
                 </>
               )}

@@ -134,9 +134,9 @@ export default function NetworkPage() {
           const userInfo = {
             name: user.name,
             profileImage: user.profileImage,
-            company: user.company,
+            company: user.institution,
             position: user.position,
-            keywords: user.keywords,
+            keywords: user.researchInterests,
           };
           // 항상 getNetworkGraph 사용 (내부에서 실제 연결 우선, 데모 fallback 처리)
           const { nodes: fetchedNodes, edges } = await getNetworkGraph(user.id, userInfo);
@@ -157,9 +157,9 @@ export default function NetworkPage() {
           const targetUserData = targetNode ? {
             name: targetNode.name,
             profileImage: targetNode.profileImage,
-            company: targetNode.company,
+            company: targetNode.institution,
             position: targetNode.position,
-            keywords: targetNode.keywords,
+            keywords: targetNode.researchInterests,
           } : undefined;
 
           const { nodes: fetchedNodes, edges } = await getNetworkGraph(targetUserId, targetUserData);
@@ -371,7 +371,7 @@ export default function NetworkPage() {
                 />
                 <div>
                   <h3 className="font-semibold text-white">{user.name}</h3>
-                  <p className="text-sm text-[#8B949E]">{user.company}</p>
+                  <p className="text-sm text-[#8B949E]">{user.institution}</p>
                 </div>
               </div>
 
@@ -496,7 +496,7 @@ export default function NetworkPage() {
               />
               <div>
                 <h3 className="font-semibold text-white">{user.name}</h3>
-                <p className="text-base text-[#8B949E]">{user.company}</p>
+                <p className="text-base text-[#8B949E]">{user.institution}</p>
               </div>
             </div>
 
@@ -713,10 +713,10 @@ export default function NetworkPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white font-medium">{qc.name}</p>
-                        {qc.company && (
+                        {qc.institution && (
                           <p className="text-xs text-[#8B949E] flex items-center gap-1">
                             <Building size={10} />
-                            {qc.company}
+                            {qc.institution}
                           </p>
                         )}
                         {qc.memo && <p className="text-xs text-[#484F58] mt-0.5 truncate">{qc.memo}</p>}

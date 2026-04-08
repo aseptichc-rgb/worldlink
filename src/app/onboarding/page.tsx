@@ -51,7 +51,7 @@ function OnboardingContent() {
   // 정보 공개 설정
   const [privacyChoices, setPrivacyChoices] = useState({
     nameDisplay: 'full' as 'full' | 'partial',
-    companyDisplay: 'full' as 'full' | 'industry' | 'size' | 'hidden',
+    institutionDisplay: 'full' as 'full' | 'department' | 'hidden',
     positionDisplay: 'full' as 'full' | 'level' | 'hidden',
   });
 
@@ -149,18 +149,19 @@ function OnboardingContent() {
         email: email,
         phone: profile.phone,
         name: profile.name,
-        company: profile.company,
+        institution: profile.institution,
+        department: profile.department || undefined,
         position: profile.position,
-        companySize: profile.companySize,
-        industry: profile.industry,
-        positionLevel: profile.positionLevel,
+        degree: (profile.degree || undefined) as any,
+        orcid: profile.orcid || undefined,
         bio: profile.bio,
-        keywords: profile.keywords,
+        researchInterests: profile.researchInterests,
+        researchKeywords: [],
         profileImage: profileImageUrl,
         inviteCode: userInviteCode,
         invitesRemaining: 10,
         invitedBy: invitation?.senderId,
-        coffeeStatus: 'available',
+        meetingStatus: 'available',
         privacySettings: {
           allowProfileDiscovery: profile.privacyConsent.allowProfileDiscovery,
           displaySettings: profile.privacyConsent.displaySettings,
@@ -169,17 +170,17 @@ function OnboardingContent() {
         },
       });
 
-      // Firebase에 공개 명함 자동 저장
+      // Firebase에 공개 프로필 카드 자동 저장
       await savePublicCard({
         id: newUser.id,
         name: newUser.name,
-        company: newUser.company,
+        institution: newUser.institution,
         position: newUser.position,
         email: newUser.email,
         phone: newUser.phone,
         bio: newUser.bio,
         profileImage: newUser.profileImage,
-        keywords: newUser.keywords,
+        researchInterests: newUser.researchInterests,
       });
 
       setUser(newUser);
@@ -316,7 +317,7 @@ function OnboardingContent() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#007AFF]/20 to-[#0055CC]/20 blur-2xl -z-10" />
         </div>
         <p className="text-[#484F58] mt-3 text-base md:text-lg font-medium tracking-wide">
-          신뢰 기반 비즈니스 네트워크
+          신뢰 기반 연구 네트워크
         </p>
       </motion.div>
 
@@ -381,9 +382,9 @@ function OnboardingContent() {
                     </div>
                   </div>
                   <h3 className="text-xl font-bold text-white mt-4">{inviterInfo.name}</h3>
-                  {(inviterInfo.company || inviterInfo.position) && (
+                  {(inviterInfo.institution || inviterInfo.position) && (
                     <p className="text-[#8B949E] text-sm mt-1">
-                      {inviterInfo.company}{inviterInfo.company && inviterInfo.position ? ' · ' : ''}{inviterInfo.position}
+                      {inviterInfo.institution}{inviterInfo.institution && inviterInfo.position ? ' · ' : ''}{inviterInfo.position}
                     </p>
                   )}
                 </div>
@@ -393,7 +394,7 @@ function OnboardingContent() {
                   <p className="text-[#C9D1D9] text-base leading-relaxed">
                     <span className="text-white font-semibold">{inviterInfo.name}</span>님이
                     <br />
-                    당신을 소중한 비즈니스 인맥으로
+                    당신을 소중한 연구 인맥으로
                     <br />
                     <span className="text-[#007AFF] font-semibold">NODDED</span>에 초대했습니다.
                   </p>
@@ -408,7 +409,7 @@ function OnboardingContent() {
                     <div>
                       <p className="text-white text-sm font-medium">신뢰 기반 네트워킹</p>
                       <p className="text-[#8B949E] text-xs mt-0.5">
-                        초대를 통해서만 연결되는 검증된 비즈니스 네트워크
+                        초대를 통해서만 연결되는 검증된 연구 네트워크
                       </p>
                     </div>
                   </div>
@@ -419,7 +420,7 @@ function OnboardingContent() {
                     <div>
                       <p className="text-white text-sm font-medium">네트워킹 기회 확장</p>
                       <p className="text-[#8B949E] text-xs mt-0.5">
-                        {inviterInfo.name}님의 인맥을 시작으로 비즈니스 기회를 넓혀보세요
+                        {inviterInfo.name}님의 인맥을 시작으로 연구 협업 기회를 넓혀보세요
                       </p>
                     </div>
                   </div>
@@ -481,8 +482,8 @@ function OnboardingContent() {
                     <div>
                       <p className="text-sm text-[#007AFF]">초대한 사람</p>
                       <p className="text-base text-white font-medium">{inviterInfo.name}</p>
-                      {inviterInfo.company && (
-                        <p className="text-sm text-[#8B949E]">{inviterInfo.company} {inviterInfo.position}</p>
+                      {inviterInfo.institution && (
+                        <p className="text-sm text-[#8B949E]">{inviterInfo.institution} {inviterInfo.position}</p>
                       )}
                     </div>
                   </div>
@@ -594,12 +595,12 @@ function OnboardingContent() {
                 {inviterInfo.position && (
                   <p className="text-base text-[#8B949E] mt-1">{inviterInfo.position}</p>
                 )}
-                {inviterInfo.company && (
-                  <p className="text-base text-[#8B949E]">{inviterInfo.company}</p>
+                {inviterInfo.institution && (
+                  <p className="text-base text-[#8B949E]">{inviterInfo.institution}</p>
                 )}
-                {inviterInfo.keywords && inviterInfo.keywords.length > 0 && (
+                {inviterInfo.researchInterests && inviterInfo.researchInterests.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
-                    {inviterInfo.keywords.slice(0, 5).map((kw, i) => (
+                    {inviterInfo.researchInterests.slice(0, 5).map((kw, i) => (
                       <span key={i} className="px-2 py-0.5 text-sm rounded-full bg-[#007AFF]/10 text-[#007AFF]">
                         {kw}
                       </span>
@@ -643,14 +644,14 @@ function OnboardingContent() {
                     </div>
                   </div>
 
-                  {/* 회사 공개 */}
+                  {/* 소속 기관 공개 */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#8B949E]">회사</span>
+                    <span className="text-sm text-[#8B949E]">소속 기관</span>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setPrivacyChoices(p => ({ ...p, companyDisplay: 'full' }))}
+                        onClick={() => setPrivacyChoices(p => ({ ...p, institutionDisplay: 'full' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
-                          privacyChoices.companyDisplay === 'full'
+                          privacyChoices.institutionDisplay === 'full'
                             ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
                             : 'bg-[#30363D] text-[#484F58]'
                         }`}
@@ -658,9 +659,9 @@ function OnboardingContent() {
                         공개
                       </button>
                       <button
-                        onClick={() => setPrivacyChoices(p => ({ ...p, companyDisplay: 'hidden' }))}
+                        onClick={() => setPrivacyChoices(p => ({ ...p, institutionDisplay: 'hidden' }))}
                         className={`px-3 py-1 text-sm rounded-full transition-all ${
-                          privacyChoices.companyDisplay === 'hidden'
+                          privacyChoices.institutionDisplay === 'hidden'
                             ? 'bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/40'
                             : 'bg-[#30363D] text-[#484F58]'
                         }`}
@@ -748,20 +749,20 @@ function OnboardingContent() {
                 name: demo.name,
                 email: demo.email,
                 phone: demo.phone,
-                company: demo.company,
+                institution: demo.company,
                 position: demo.position,
                 bio: demo.bio,
-                keywords: demo.keywords,
-                category: demo.category,
+                researchInterests: demo.keywords,
+                researchKeywords: [],
                 profileImage: getDemoProfileImage(demo.id),
                 inviteCode: 'DEMO-001',
                 invitesRemaining: 999,
-                coffeeStatus: 'available' as const,
+                meetingStatus: 'available' as const,
                 privacySettings: {
                   allowProfileDiscovery: true,
                   displaySettings: {
                     nameDisplay: 'full' as const,
-                    companyDisplay: 'full' as const,
+                    institutionDisplay: 'full' as const,
                     positionDisplay: 'full' as const,
                   },
                 },

@@ -1,186 +1,257 @@
 // =============================================================================
-// 통합 카테고리 시스템 - 분야별 자동 분류 및 색상 매핑
+// ResearchNexus - 연구 분야 분류 시스템
 // =============================================================================
 
-/** 10개 표준 카테고리 */
+import type { ResearchField } from '@/types';
+
+/** 16개 연구 분야 */
 export const CATEGORIES = [
-  'IT/기술',
-  '투자/금융',
-  '헬스케어/바이오',
-  '법률/특허',
-  '미디어/콘텐츠',
-  '교육/연구',
-  '제조/에너지',
-  '공공/정책',
-  '디자인/건축',
-  'F&B/라이프스타일',
+  'computer-science',
+  'artificial-intelligence',
+  'biology',
+  'medicine',
+  'physics',
+  'chemistry',
+  'mathematics',
+  'engineering',
+  'social-sciences',
+  'economics',
+  'humanities',
+  'environmental-science',
+  'materials-science',
+  'neuroscience',
+  'interdisciplinary',
+  'other',
 ] as const;
 
-export type CategoryName = (typeof CATEGORIES)[number] | '기타';
+export type CategoryName = ResearchField;
 
-/** 카테고리별 색상 */
+/** 연구 분야 한국어 라벨 */
+export const FIELD_LABELS: Record<ResearchField, string> = {
+  'computer-science': '컴퓨터과학',
+  'artificial-intelligence': 'AI/머신러닝',
+  'biology': '생물학',
+  'medicine': '의학',
+  'physics': '물리학',
+  'chemistry': '화학',
+  'mathematics': '수학',
+  'engineering': '공학',
+  'social-sciences': '사회과학',
+  'economics': '경제학',
+  'humanities': '인문학',
+  'environmental-science': '환경과학',
+  'materials-science': '재료과학',
+  'neuroscience': '뇌과학',
+  'interdisciplinary': '융합연구',
+  'other': '기타',
+};
+
+/** 연구 분야별 색상 */
 export const CATEGORY_COLORS: Record<string, string> = {
-  'IT/기술':           '#58A6FF',  // 밝은 파랑
-  '투자/금융':         '#F85149',  // 빨강
-  '헬스케어/바이오':    '#3FB950',  // 초록
-  '법률/특허':         '#D29922',  // 주황/골드
-  '미디어/콘텐츠':     '#A371F7',  // 보라
-  '교육/연구':         '#79C0FF',  // 하늘
-  '제조/에너지':       '#F97316',  // 진한 주황
-  '공공/정책':         '#1ABC9C',  // 청록
-  '디자인/건축':       '#EC4899',  // 핑크
-  'F&B/라이프스타일':   '#FFC642',  // 노란색
-  '기타':              '#8B949E',  // 회색
+  'computer-science':        '#58A6FF',  // 파랑
+  'artificial-intelligence': '#A371F7',  // 보라
+  'biology':                 '#3FB950',  // 초록
+  'medicine':                '#F85149',  // 빨강
+  'physics':                 '#79C0FF',  // 하늘
+  'chemistry':               '#F97316',  // 주황
+  'mathematics':             '#D29922',  // 골드
+  'engineering':             '#1ABC9C',  // 청록
+  'social-sciences':         '#EC4899',  // 핑크
+  'economics':               '#FFC642',  // 노란색
+  'humanities':              '#C9D1D9',  // 은색
+  'environmental-science':   '#2EA043',  // 진한 초록
+  'materials-science':       '#8B5CF6',  // 진한 보라
+  'neuroscience':            '#06B6D4',  // 시안
+  'interdisciplinary':       '#0EA5E9',  // 틸블루
+  'other':                   '#8B949E',  // 회색
 };
 
-// 카테고리별 키워드 매핑 (자동 분류용)
+/** 연구 분야별 키워드 (자동 분류용) */
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  'IT/기술': [
-    'IT', '기술', '개발', '소프트웨어', 'AI', '인공지능', '머신러닝', '딥러닝',
-    '데이터', '클라우드', 'SaaS', '플랫폼', '앱', '모바일', '웹', '블록체인',
-    '보안', '인프라', 'DevOps', 'CTO', '프론트엔드', '백엔드', '풀스택',
-    '스타트업', 'IoT', '로봇', '자동화', '빅데이터', 'API',
-    'software', 'engineer', 'developer', 'tech', 'startup',
+  'computer-science': [
+    '컴퓨터', '소프트웨어', '알고리즘', '프로그래밍', '네트워크', '보안', '데이터베이스',
+    '운영체제', '컴파일러', '분산시스템', '병렬컴퓨팅', 'HCI', '컴퓨터비전',
+    'computer science', 'software', 'algorithm', 'database', 'distributed systems',
+    'cybersecurity', 'operating system', 'programming language',
   ],
-  '투자/금융': [
-    '투자', '금융', 'VC', 'PE', '벤처', '펀드', '자산운용', '증권', '은행',
-    '핀테크', '보험', '크라우드펀딩', '엔젤', 'M&A', 'IPO', '상장',
-    'IB', '심사역', '파트너', '대출', '보증', '리서치', '애널리스트',
-    '포트폴리오', '액셀러레이터', '시드', '성장투자',
-    'venture', 'capital', 'finance', 'investment',
+  'artificial-intelligence': [
+    'AI', '인공지능', '머신러닝', '딥러닝', 'NLP', '자연어처리', '강화학습',
+    '컴퓨터비전', '생성모델', 'LLM', '대규모언어모델', '신경망', 'GPT',
+    'transformer', '추천시스템', '자율주행', '로보틱스',
+    'machine learning', 'deep learning', 'reinforcement learning', 'neural network',
+    'natural language processing', 'computer vision', 'generative AI',
   ],
-  '헬스케어/바이오': [
-    '의료', '헬스케어', '바이오', '제약', '의료기기', '병원', '의원', '진료',
-    '임상', '신약', '의사', '간호', '건강', '웰니스', '진단', '치료',
-    '유전체', '의약', '식약처', 'FDA', 'GMP', '의공학', '생명공학',
-    'health', 'medical', 'pharma', 'bio', 'clinical',
+  'biology': [
+    '생물학', '유전학', '분자생물학', '세포생물학', '생태학', '진화', '미생물학',
+    '유전체', '게노믹스', '프로테오믹스', '생명공학', '바이오인포매틱스',
+    '합성생물학', 'CRISPR', '줄기세포',
+    'biology', 'genetics', 'genomics', 'molecular biology', 'ecology',
+    'bioinformatics', 'synthetic biology', 'microbiology',
   ],
-  '법률/특허': [
-    '법률', '특허', '변호사', '법무', '변리사', '지식재산', 'IP', '소송',
-    '계약', '컴플라이언스', '규제', '인허가', '로펌', '법무법인',
-    '라이선스', '상표', '저작권', '법학',
-    'legal', 'patent', 'lawyer', 'attorney',
+  'medicine': [
+    '의학', '의료', '임상', '진단', '치료', '제약', '신약', '약학', '간호',
+    '공중보건', '역학', '바이오마커', '면역학', '종양학', '암',
+    'FDA', '임상시험', '의생명', '재활', '정밀의료',
+    'medicine', 'clinical', 'pharmaceutical', 'oncology', 'immunology',
+    'epidemiology', 'public health', 'drug discovery',
   ],
-  '미디어/콘텐츠': [
-    '미디어', '콘텐츠', '방송', '영상', '출판', '마케팅', '광고', 'PR',
-    '브랜딩', '크리에이터', '유튜브', 'SNS', '소셜미디어', '저널리즘',
-    '기자', '편집', '작가', '엔터테인먼트', '게임', '음악', '영화',
-    'media', 'content', 'marketing', 'brand',
+  'physics': [
+    '물리학', '양자', '양자역학', '양자컴퓨팅', '입자물리', '천체물리',
+    '광학', '반도체', '초전도', '플라즈마', '핵물리', '응집물질',
+    '상대성이론', '열역학', '통계역학',
+    'physics', 'quantum', 'astrophysics', 'condensed matter', 'optics',
+    'particle physics', 'thermodynamics',
   ],
-  '교육/연구': [
-    '교육', '연구', '대학', '교수', '학원', '에듀테크', '학술', '논문',
-    '강의', '커리큘럼', '훈련', '멘토링', '장학', '연구소', '박사',
-    '석사', '학위', 'R&D', '연구개발', 'STEM',
-    'education', 'research', 'professor', 'university', 'academic',
+  'chemistry': [
+    '화학', '유기화학', '무기화학', '물리화학', '분석화학', '고분자',
+    '촉매', '전기화학', '나노화학', '계산화학', '약물화학',
+    'chemistry', 'organic', 'inorganic', 'catalysis', 'polymer',
+    'electrochemistry', 'computational chemistry',
   ],
-  '제조/에너지': [
-    '제조', '에너지', '공장', '생산', '산업', '전기', '전자', '반도체',
-    '배터리', '태양광', '신재생', '수소', '원자력', '석유', '화학',
-    '자동차', '조선', '항공', '건설', '철강', '소재', '부품',
-    'manufacturing', 'energy', 'semiconductor', 'battery',
+  'mathematics': [
+    '수학', '통계학', '확률론', '대수학', '위상수학', '해석학', '미분방정식',
+    '조합론', '수론', '최적화', '수치해석', '응용수학',
+    'mathematics', 'statistics', 'probability', 'optimization', 'algebra',
+    'topology', 'numerical analysis',
   ],
-  '공공/정책': [
-    '공공', '정책', '정부', '공무원', '국회', '지자체', '시청', '공기업',
-    '공단', '진흥원', '재단', 'NGO', '비영리', '사회적기업', '국제기구',
-    '외교', '통상', '규제', '행정', '복지',
-    'government', 'policy', 'public',
+  'engineering': [
+    '공학', '기계공학', '전기공학', '전자공학', '화학공학', '토목공학',
+    '항공우주', '산업공학', '로봇공학', '자동화', '제어시스템',
+    'IoT', '반도체공학', '통신공학', '에너지공학',
+    'engineering', 'mechanical', 'electrical', 'civil', 'aerospace',
+    'robotics', 'automation', 'semiconductor',
   ],
-  '디자인/건축': [
-    '디자인', '건축', 'UX', 'UI', '인테리어', '공간', '설계', '시각',
-    '그래픽', '제품디자인', '산업디자인', 'BX', '경험디자인', '조경',
-    '도시계획', '건설', '부동산', '개발', '시공',
-    'design', 'architect', 'UX', 'UI',
+  'social-sciences': [
+    '사회과학', '심리학', '사회학', '정치학', '인류학', '교육학',
+    '언어학', '커뮤니케이션', '미디어', '법학', '행정학', '국제관계',
+    'social science', 'psychology', 'sociology', 'political science',
+    'anthropology', 'education', 'linguistics',
   ],
-  'F&B/라이프스타일': [
-    'F&B', '식품', '음식', '요리', '셰프', '레스토랑', '카페', '베이커리',
-    '와인', '커피', '프랜차이즈', '유통', '리테일', '패션', '뷰티',
-    '화장품', '여행', '관광', '호텔', '스포츠', '피트니스', '라이프',
-    'food', 'fashion', 'beauty', 'lifestyle', 'retail',
+  'economics': [
+    '경제학', '경영학', '재무', '마케팅', '회계', '금융공학',
+    '행동경제학', '계량경제학', '국제경제', '거시경제', '미시경제',
+    'economics', 'finance', 'marketing', 'management', 'accounting',
+    'behavioral economics', 'econometrics',
+  ],
+  'humanities': [
+    '인문학', '철학', '역사학', '문학', '종교학', '고고학', '미술사',
+    '음악학', '윤리학', '논리학', '문화연구', '기호학',
+    'humanities', 'philosophy', 'history', 'literature', 'archaeology',
+    'art history', 'cultural studies',
+  ],
+  'environmental-science': [
+    '환경과학', '기후변화', '생태', '지구과학', '해양학', '대기과학',
+    '지질학', '수자원', '환경공학', '탄소중립', '신재생에너지',
+    '지속가능', 'ESG',
+    'environmental', 'climate', 'ecology', 'geoscience', 'oceanography',
+    'sustainability', 'renewable energy',
+  ],
+  'materials-science': [
+    '재료과학', '나노재료', '금속공학', '세라믹', '복합재료', '바이오소재',
+    '배터리', '에너지저장', '표면공학', '박막', '3D프린팅',
+    'materials science', 'nanomaterials', 'battery', 'thin film',
+    'biomaterials', 'composite', 'additive manufacturing',
+  ],
+  'neuroscience': [
+    '뇌과학', '신경과학', '인지과학', '뇌영상', 'fMRI', 'EEG',
+    '신경공학', '뇌-컴퓨터 인터페이스', 'BCI', '계산신경과학',
+    '신경심리학', '신경생물학',
+    'neuroscience', 'cognitive science', 'brain', 'neural',
+    'neuroimaging', 'brain-computer interface', 'computational neuroscience',
+  ],
+  'interdisciplinary': [
+    '융합', '학제간', '다학제', '바이오인포매틱스', '디지털휴먼',
+    '메디컬AI', 'AI헬스', '에너지AI', '핀테크', '에듀테크',
+    '디지털트윈', 'XR', '메타버스',
+    'interdisciplinary', 'multidisciplinary', 'cross-disciplinary',
+    'digital twin', 'fintech', 'edtech',
   ],
 };
 
-// 산업(industry) → 카테고리 매핑
-const INDUSTRY_CATEGORY_MAP: Record<string, CategoryName> = {
-  'IT': 'IT/기술',
-  'IT/통신': 'IT/기술',
-  '소프트웨어': 'IT/기술',
-  '인터넷': 'IT/기술',
-  '테크': 'IT/기술',
-  '금융': '투자/금융',
-  '은행': '투자/금융',
-  '증권': '투자/금융',
-  '보험': '투자/금융',
-  '핀테크': '투자/금융',
-  '의료': '헬스케어/바이오',
-  '제약': '헬스케어/바이오',
-  '바이오': '헬스케어/바이오',
-  '헬스케어': '헬스케어/바이오',
-  '병원': '헬스케어/바이오',
-  '법률': '법률/특허',
-  '법무': '법률/특허',
-  '미디어': '미디어/콘텐츠',
-  '광고': '미디어/콘텐츠',
-  '엔터테인먼트': '미디어/콘텐츠',
-  '게임': '미디어/콘텐츠',
-  '교육': '교육/연구',
-  '연구': '교육/연구',
-  '학술': '교육/연구',
-  '제조': '제조/에너지',
-  '에너지': '제조/에너지',
-  '반도체': '제조/에너지',
-  '자동차': '제조/에너지',
-  '화학': '제조/에너지',
-  '건설': '디자인/건축',
-  '부동산': '디자인/건축',
-  '건축': '디자인/건축',
-  '디자인': '디자인/건축',
-  '공공': '공공/정책',
-  '정부': '공공/정책',
-  '비영리': '공공/정책',
-  '식품': 'F&B/라이프스타일',
-  '외식': 'F&B/라이프스타일',
-  '유통': 'F&B/라이프스타일',
-  '패션': 'F&B/라이프스타일',
-  '뷰티': 'F&B/라이프스타일',
-  '여행': 'F&B/라이프스타일',
+/** 기관/학과명 → 연구 분야 매핑 */
+const INSTITUTION_FIELD_MAP: Record<string, ResearchField> = {
+  '컴퓨터': 'computer-science',
+  '소프트웨어': 'computer-science',
+  '정보': 'computer-science',
+  '전산': 'computer-science',
+  'AI': 'artificial-intelligence',
+  '인공지능': 'artificial-intelligence',
+  '데이터사이언스': 'artificial-intelligence',
+  '생물': 'biology',
+  '생명': 'biology',
+  '유전': 'biology',
+  '의학': 'medicine',
+  '의과': 'medicine',
+  '약학': 'medicine',
+  '간호': 'medicine',
+  '물리': 'physics',
+  '천문': 'physics',
+  '화학': 'chemistry',
+  '수학': 'mathematics',
+  '통계': 'mathematics',
+  '기계': 'engineering',
+  '전기': 'engineering',
+  '전자': 'engineering',
+  '토목': 'engineering',
+  '항공': 'engineering',
+  '산업': 'engineering',
+  '사회': 'social-sciences',
+  '심리': 'social-sciences',
+  '교육': 'social-sciences',
+  '경제': 'economics',
+  '경영': 'economics',
+  '철학': 'humanities',
+  '역사': 'humanities',
+  '문학': 'humanities',
+  '환경': 'environmental-science',
+  '지구': 'environmental-science',
+  '해양': 'environmental-science',
+  '재료': 'materials-science',
+  '나노': 'materials-science',
+  '뇌': 'neuroscience',
+  '신경': 'neuroscience',
+  '인지': 'neuroscience',
 };
 
 /**
- * 사용자 정보를 기반으로 카테고리를 자동 추론
- * 우선순위: category > industry > keywords > position > company
+ * 연구자 정보를 기반으로 연구 분야를 자동 추론
+ * 우선순위: researchField > department > researchInterests > position > institution
  */
 export function inferCategory(user: {
   category?: string;
+  researchField?: string;
   industry?: string;
+  department?: string;
   keywords?: string[];
+  researchInterests?: string[];
   position?: string;
   company?: string;
+  institution?: string;
 }): CategoryName {
-  // 1. 이미 유효한 카테고리가 있으면 그대로 사용
-  if (user.category && CATEGORIES.includes(user.category as any)) {
-    return user.category as CategoryName;
+  // 1. 이미 유효한 연구 분야가 있으면 그대로 사용
+  const field = user.researchField || user.category;
+  if (field && (CATEGORIES as readonly string[]).includes(field)) {
+    return field as CategoryName;
   }
 
-  // 2. industry 기반 매핑
-  if (user.industry) {
-    const mapped = INDUSTRY_CATEGORY_MAP[user.industry];
-    if (mapped) return mapped;
-
-    // industry 문자열이 카테고리 키워드에 포함되는지 확인
-    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-      if (keywords.some(k => user.industry!.toLowerCase().includes(k.toLowerCase()))) {
-        return cat as CategoryName;
+  // 2. department 기반 매핑
+  const dept = user.department || user.industry;
+  if (dept) {
+    for (const [keyword, fieldName] of Object.entries(INSTITUTION_FIELD_MAP)) {
+      if (dept.includes(keyword)) {
+        return fieldName;
       }
     }
   }
 
-  // 3. keywords 기반 스코어링 (가장 많이 매칭되는 카테고리)
-  if (user.keywords && user.keywords.length > 0) {
+  // 3. researchInterests/keywords 기반 스코어링
+  const interests = user.researchInterests || user.keywords;
+  if (interests && interests.length > 0) {
     const scores: Record<string, number> = {};
 
     for (const [cat, catKeywords] of Object.entries(CATEGORY_KEYWORDS)) {
       let score = 0;
-      for (const userKw of user.keywords) {
+      for (const userKw of interests) {
         const normalizedKw = userKw.toLowerCase().replace(/^#/, '');
         for (const catKw of catKeywords) {
           if (normalizedKw.includes(catKw.toLowerCase()) || catKw.toLowerCase().includes(normalizedKw)) {
@@ -205,20 +276,25 @@ export function inferCategory(user: {
     }
   }
 
-  // 5. company 기반 추론
-  if (user.company) {
-    const comp = user.company.toLowerCase();
-    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-      if (keywords.some(k => comp.includes(k.toLowerCase()))) {
-        return cat as CategoryName;
+  // 5. institution 기반 추론
+  const inst = user.institution || user.company;
+  if (inst) {
+    for (const [keyword, fieldName] of Object.entries(INSTITUTION_FIELD_MAP)) {
+      if (inst.includes(keyword)) {
+        return fieldName;
       }
     }
   }
 
-  return '기타';
+  return 'other';
 }
 
-/** 카테고리 색상 반환 */
-export function getCategoryColor(category: string): string {
-  return CATEGORY_COLORS[category] || CATEGORY_COLORS['기타'];
+/** 연구 분야 색상 반환 */
+export function getCategoryColor(field: string): string {
+  return CATEGORY_COLORS[field] || CATEGORY_COLORS['other'];
+}
+
+/** 연구 분야 한국어 라벨 반환 */
+export function getFieldLabel(field: string): string {
+  return FIELD_LABELS[field as ResearchField] || '기타';
 }

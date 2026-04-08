@@ -4,11 +4,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 interface MemberInput {
   id: string;
   name: string;
-  company: string;
+  institution: string;
   position: string;
   bio: string;
-  keywords: string[];
-  category: string;
+  researchInterests: string[];
+  researchField: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const membersContext = (members as MemberInput[]).map(m =>
-      `[${m.id}] ${m.name} | ${m.company} | ${m.position} | ${m.bio} | 키워드: ${m.keywords.join(', ')} | 분야: ${m.category}`
+      `[${m.id}] ${m.name} | ${m.institution} | ${m.position} | ${m.bio} | 연구관심사: ${m.researchInterests.join(', ')} | 분야: ${m.researchField}`
     ).join('\n');
 
     const genAI = new GoogleGenerativeAI(apiKey);
